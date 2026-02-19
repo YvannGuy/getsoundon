@@ -75,12 +75,37 @@ const faqSectionItems = [
   {
     question: "Les salles sont-elles toutes adaptées aux événements cultuels ?",
     answer:
-      "Chaque annonce précise les conditions d'accueil et d'usage. Vous pouvez filtrer selon vos critères pour voir uniquement les lieux compatibles.",
+      "Chaque annonce précise les conditions d'accueil et d'usage. Vous pouvez filtrer selon vos critères pour voir uniquement les lieux compatibles aux cultes, conférences, baptêmes ou autres célébrations.",
   },
   {
     question: "Puis-je annuler une demande ?",
     answer:
-      "Oui, vous pouvez retirer une demande depuis votre espace personnel tant qu'elle n'a pas été confirmée.",
+      "Oui, vous pouvez retirer une demande depuis votre espace personnel tant qu'elle n'a pas été confirmée par le propriétaire.",
+  },
+  {
+    question: "Pourquoi la recherche est-elle limitée à l'Île-de-France ?",
+    answer:
+      "salledeculte.com se concentre actuellement sur l'Île-de-France pour offrir un service localisé et de qualité. Toutes les communes de la région sont couvertes pour vous aider à trouver une salle près de chez vous.",
+  },
+  {
+    question: "Comment ajouter ma salle sur la plateforme ?",
+    answer:
+      "En créant un compte et en cliquant sur « Ajoutez ma salle », vous pouvez publier gratuitement votre lieu. Vous recevrez ensuite des demandes ciblées d'organisateurs d'événements cultuels.",
+  },
+  {
+    question: "Quels types d'événements puis-je organiser ?",
+    answer:
+      "La plateforme accueille les cultes réguliers, conférences, baptêmes, célébrations, retraites et autres événements à caractère cultuel. Vous pouvez préciser le type lors de votre recherche.",
+  },
+  {
+    question: "La consultation des annonces est-elle payante ?",
+    answer:
+      "La consultation des annonces est gratuite. Pour envoyer des demandes aux propriétaires, vous aurez besoin d'un pass (24h, 48h ou abonnement) selon vos besoins.",
+  },
+  {
+    question: "Sous quel délai obtient-on une réponse ?",
+    answer:
+      "Les propriétaires sont notifiés immédiatement de vos demandes. Le délai de réponse varie selon chacun, mais la plupart répondent sous 24 à 48 heures.",
   },
 ];
 
@@ -318,11 +343,6 @@ export default function Home() {
                 </AccordionItem>
               ))}
             </Accordion>
-            <div className="mt-8 text-center">
-              <a href="#" className="text-[14px] font-semibold text-sky-500 hover:text-sky-600">
-                Voir toutes les questions →
-              </a>
-            </div>
           </div>
         </div>
       </section>
