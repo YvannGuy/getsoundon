@@ -7,6 +7,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Exécute le proxy uniquement sur les routes qui nécessitent l'auth Supabase
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/proprietaire/:path*"],
 };

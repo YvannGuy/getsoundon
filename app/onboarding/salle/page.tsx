@@ -3,23 +3,26 @@
 import Link from "next/link";
 import { useState, useCallback, useRef } from "react";
 import {
-  Shield,
   Accessibility,
-  LayoutGrid,
-  Snowflake,
-  ParkingCircle,
   Armchair,
-  Volume2,
-  Sun,
-  VolumeX,
+  Bell,
+  Camera,
+  CheckCircle,
+  ChevronRight,
   Clock,
   Droplets,
-  Users,
-  Music,
-  Mountain,
-  Camera,
+  Eye,
+  LayoutGrid,
   Lightbulb,
-  ChevronRight,
+  Mountain,
+  Music,
+  ParkingCircle,
+  Shield,
+  Snowflake,
+  Sun,
+  Users,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -139,37 +142,37 @@ export default function OnboardingSallePage() {
       <div className="min-h-screen bg-white">
         <header className="border-b border-slate-200 bg-white">
           <div className="container flex h-14 max-w-3xl items-center justify-between px-4">
-            <Link href="/" className="text-lg font-semibold text-slate-800">
+            <Link href="/" className="text-lg font-semibold text-[#303B4A]">
               {siteConfig.name}
             </Link>
           </div>
         </header>
         <main className="container mx-auto max-w-2xl px-4 py-12">
           <div className="flex flex-col items-center text-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-amber-100">
-              <Clock className="h-10 w-10 text-amber-600" />
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-amber-100">
+              <Clock className="h-12 w-12 text-amber-600" />
             </div>
-            <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-sm font-medium text-amber-800">
+            <span className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-4 py-1.5 text-sm font-medium text-amber-800">
               <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
               Validation en cours
             </span>
-            <h1 className="mt-6 text-2xl font-bold text-slate-900">
+            <h1 className="mt-6 text-3xl font-bold text-slate-900">
               Annonce en cours de validation
             </h1>
-            <p className="mt-3 text-slate-600">
+            <p className="mt-4 max-w-md text-slate-600">
               Merci pour votre soumission. Notre équipe vérifie actuellement les informations et les
               photos de votre salle.
             </p>
-            <div className="mt-4 flex items-center gap-2 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            <div className="mt-5 flex items-center gap-2 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">
               <Clock className="h-4 w-4 text-slate-400" />
               Délai moyen de validation : 24 à 48 heures
             </div>
-            <div className="mt-6 flex w-full flex-col gap-3 rounded-xl bg-sky-50 p-4 text-left">
-              <div className="flex gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-100">
-                  <span className="text-sm font-semibold text-sky-600">!</span>
+            <div className="mt-6 flex w-full flex-col gap-3 rounded-xl border border-sky-100 bg-sky-50 p-5 text-left">
+              <div className="flex gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-100">
+                  <Bell className="h-5 w-5 text-sky-600" />
                 </div>
-                <p className="text-sm text-sky-900">
+                <p className="text-sm leading-relaxed text-sky-900">
                   Vous serez notifié dès que votre annonce sera validée. Un email de confirmation
                   vous sera envoyé avec toutes les informations nécessaires.
                 </p>
@@ -177,42 +180,58 @@ export default function OnboardingSallePage() {
             </div>
             <div className="mt-8 flex w-full flex-col gap-3">
               <Link
-                href="/dashboard"
-                className="flex h-11 w-full items-center justify-center rounded-md bg-[#5b4dbf] text-sm font-medium text-white transition-colors hover:bg-[#4a3dad]"
+                href="/proprietaire"
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-sky-500 text-sm font-semibold text-white transition-colors hover:bg-sky-600"
               >
                 Accéder à mon tableau de bord
+                <ChevronRight className="h-5 w-5" />
               </Link>
-              <Button variant="outline" className="h-11 w-full border-slate-300">
-                <span className="mr-2">Voir mon annonce (aperçu)</span>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <Link
+                href="#"
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                <Eye className="h-5 w-5" />
+                Voir mon annonce (aperçu)
+              </Link>
             </div>
-            <div className="mt-12 grid w-full gap-6 sm:grid-cols-3">
+            <h2 className="mt-14 w-full text-left text-lg font-semibold text-slate-900">
+              Pendant la validation
+            </h2>
+            <div className="mt-6 grid w-full gap-6 sm:grid-cols-3">
               <div className="flex flex-col items-center text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-                  <Shield className="h-6 w-6 text-slate-600" />
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+                  <Shield className="h-7 w-7 text-slate-600" />
                 </div>
-                <p className="mt-2 text-sm font-medium text-slate-900">Contrôle des informations</p>
+                <p className="mt-3 text-sm font-medium text-slate-900">Vérification</p>
+                <p className="mt-1 text-xs text-slate-500">Contrôle des informations</p>
               </div>
               <div className="flex flex-col items-center text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-                  <Camera className="h-6 w-6 text-slate-600" />
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+                  <Camera className="h-7 w-7 text-slate-600" />
                 </div>
-                <p className="mt-2 text-sm font-medium text-slate-900">Validation des visuels</p>
+                <p className="mt-3 text-sm font-medium text-slate-900">Photos</p>
+                <p className="mt-1 text-xs text-slate-500">Validation des visuels</p>
               </div>
               <div className="flex flex-col items-center text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-                  <Shield className="h-6 w-6 text-slate-600" />
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+                  <CheckCircle className="h-7 w-7 text-slate-600" />
                 </div>
-                <p className="mt-2 text-sm font-medium text-slate-900">Respect des standards</p>
+                <p className="mt-3 text-sm font-medium text-slate-900">Conformité</p>
+                <p className="mt-1 text-xs text-slate-500">Respect des standards</p>
               </div>
             </div>
-            <div className="mt-10 w-full rounded-lg bg-slate-50 p-4">
-              <p className="text-sm text-slate-600">
-                <strong>Pourquoi cette étape ?</strong> La validation manuelle garantit la qualité
-                et la fiabilité des annonces sur notre plateforme. Cette démarche protège à la fois
-                les propriétaires et les organisateurs d&apos;événements.
-              </p>
+            <div className="mt-10 flex w-full gap-3 rounded-lg bg-slate-50 p-5 text-left">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200">
+                <span className="text-sm font-semibold text-slate-600">i</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-900">Pourquoi cette étape ?</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                  La validation manuelle garantit la qualité et la fiabilité des annonces sur notre
+                  plateforme. Cette démarche protège à la fois les propriétaires et les
+                  organisateurs d&apos;événements.
+                </p>
+              </div>
             </div>
           </div>
         </main>

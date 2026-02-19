@@ -3,8 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useFormState } from "react-dom";
-import { useTransition, useState, Suspense } from "react";
+import { useActionState, useTransition, useState, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -50,8 +49,8 @@ function AuthPageContent() {
   );
 
   return (
-    <div className="grid min-h-[calc(100vh-3.5rem)] grid-cols-1 md:grid-cols-[0.95fr_1.05fr]">
-      <div className="relative flex flex-col justify-between bg-slate-100 p-8 md:p-10">
+    <div className="grid min-h-screen grid-cols-1 md:grid-cols-[0.95fr_1.05fr]">
+      <div className="relative flex flex-col justify-start gap-8 bg-slate-100 p-8 md:p-10">
         <div className="absolute inset-0 overflow-hidden">
           <Image
             src="/img.png"
@@ -77,7 +76,7 @@ function AuthPageContent() {
             Trouvez et réservez des salles adaptées à vos événements cultuels.
           </p>
         </div>
-        <ul className="relative z-10 mt-8 space-y-3">
+        <ul className="relative z-10 space-y-3">
           {features.map((f) => (
             <li key={f} className="flex items-center gap-2 text-sm text-slate-700">
               <CheckCircle2 className="h-4 w-4 text-[#3b82f6]" />
@@ -126,7 +125,7 @@ function AuthPageContent() {
 }
 
 function LoginFormContent({ onSwitchToSignup }: { onSwitchToSignup: () => void }) {
-  const [state, formAction] = useFormState(loginAction, initialState);
+  const [state, formAction] = useActionState(loginAction, initialState);
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -207,7 +206,7 @@ function LoginFormContent({ onSwitchToSignup }: { onSwitchToSignup: () => void }
 }
 
 function SignupFormContent({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
-  const [state, formAction] = useFormState(signupAction, initialState);
+  const [state, formAction] = useActionState(signupAction, initialState);
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -347,13 +346,6 @@ function SignupFormContent({ onSwitchToLogin }: { onSwitchToLogin: () => void })
 export default function AuthPage() {
   return (
     <div className="min-h-screen bg-white">
-      <header className="border-y border-slate-300 bg-[#f1f3f5]">
-        <div className="container flex h-14 max-w-[1120px] items-center justify-between">
-          <Link href="/" className="text-[34px] leading-none font-semibold text-slate-700 [zoom:0.37]">
-            {siteConfig.name}
-          </Link>
-        </div>
-      </header>
       <Suspense fallback={<div className="flex min-h-[50vh] items-center justify-center">Chargement...</div>}>
         <AuthPageContent />
       </Suspense>

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarDays, CheckCircle2, Facebook, Gift, ImageIcon, Instagram, Linkedin, ListChecks, MapPin, Shield, Twitter, Users } from "lucide-react";
+import { Building2, CalendarDays, CheckCircle2, Facebook, Gift, ImageIcon, Instagram, ListChecks, MapPin, Shield, Star, Users } from "lucide-react";
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -90,7 +90,7 @@ export default function Home() {
     <main className="bg-[#f3f6fa] text-slate-800">
       <header className="border-y border-slate-300 bg-[#f1f3f5]">
         <div className="container flex h-14 max-w-[1120px] items-center justify-between">
-          <Link href="/" className="text-[34px] leading-none font-semibold text-slate-700 [zoom:0.37]">
+          <Link href="/" className="text-xl font-semibold leading-none text-[#303B4A]">
             {siteConfig.name}
           </Link>
           <nav className="hidden items-center gap-8 text-[14px] font-semibold text-slate-500 md:flex">
@@ -103,9 +103,9 @@ export default function Home() {
             <a href="#tarifs" className="hover:text-slate-900">
               Tarifs
             </a>
-            <a href="#" className="hover:text-slate-900">
-              Déposer un lieu
-            </a>
+            <Link href="/auth?tab=signup" className="hover:text-slate-900">
+              Ajoutez ma salle
+            </Link>
           </nav>
           <div className="flex items-center">
             <HeaderAuth />
@@ -116,88 +116,112 @@ export default function Home() {
       <section className="container max-w-[1120px] py-8">
         <div className="rounded-xl bg-[#f3f6fa] p-3">
           <div className="grid items-center gap-8 rounded-xl px-5 pb-8 pt-6 lg:grid-cols-[1fr_1fr] lg:px-10">
-            <div className="space-y-5">
-              <h1 className="max-w-[480px] text-[56px] font-semibold leading-[1.03] tracking-[-0.03em] text-[#23384d] [zoom:0.56]">
-                Trouvez une salle adaptée à votre événement culturel
-              </h1>
-              <p className="max-w-[430px] text-[13px] leading-relaxed text-slate-500">
-                Une sélection de salles présentées avec précision, pour organiser vos événements culturels en toute sérénité.
-              </p>
+            <div className="space-y-6">
               <div className="flex flex-wrap gap-3">
-                <Button className="h-10 rounded-md bg-[#2a435c] px-5 text-[13px] hover:bg-[#22374d]">Rechercher une salle</Button>
-                <Button variant="outline" className="h-10 rounded-md border-slate-400 px-5 text-[13px] text-slate-700">
-                  Déposer un lieu
-                </Button>
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400 bg-white px-3 py-1.5 text-[12px] font-medium text-emerald-700">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Annonces vérifiées
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-sky-300 bg-white px-3 py-1.5 text-[12px] font-medium text-sky-600">
+                  <Users className="h-4 w-4" />
+                  +2 000 utilisateurs
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-violet-300 bg-white px-3 py-1.5 text-[12px] font-medium text-violet-600">
+                  <Star className="h-4 w-4" />
+                  Espaces adaptés
+                </span>
               </div>
-              <div className="flex flex-wrap items-center gap-3 text-[12px] text-slate-500">
+              <h1 className="max-w-[500px] text-[52px] font-semibold leading-[1.03] tracking-[-0.03em] text-[#23384d] [zoom:0.56]">
+                Trouvez une salle adaptée à votre événement cultuel
+              </h1>
+              <p className="max-w-[430px] text-[14px] leading-relaxed text-slate-500">
+                Une sélection de salles présentées avec clarté et précision.
+              </p>
+
+              <Card className="overflow-hidden rounded-xl border-0 border-slate-100 bg-white shadow-[0_4px_20px_rgba(15,23,42,0.08)]">
+                <CardContent className="p-5">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[13px] font-medium text-slate-700">Ville</label>
+                      <div className="relative">
+                        <MapPin className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-500" />
+                        <Input placeholder="Paris, Lyon..." className="h-11 rounded-lg border-slate-200 pl-10 pr-3 text-[14px]" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[13px] font-medium text-slate-700">Date</label>
+                      <div className="relative">
+                        <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-500" />
+                        <Input defaultValue="19/02/2026" className="h-11 rounded-lg border-slate-200 pl-10 pr-3 text-[14px]" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[13px] font-medium text-slate-700">Nombre de personnes</label>
+                      <div className="relative">
+                        <Users className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-500" />
+                        <Input type="number" defaultValue="50" min={1} className="h-11 rounded-lg border-slate-200 pl-10 pr-2 text-[14px]" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[13px] font-medium text-slate-700">Type d&apos;événement</label>
+                      <div className="relative">
+                        <Building2 className="pointer-events-none absolute left-3 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-sky-500" />
+                        <Select defaultValue="culte-regulier">
+                          <SelectTrigger className="h-11 rounded-lg border-slate-200 pl-10 pr-9 text-[14px]">
+                            <SelectValue placeholder="Culte régulier" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="culte-regulier">Culte régulier</SelectItem>
+                            <SelectItem value="conference">Conférence</SelectItem>
+                            <SelectItem value="celebration">Célébration</SelectItem>
+                            <SelectItem value="bapteme">Baptême</SelectItem>
+                            <SelectItem value="retraite">Retraite</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  <Button className="mt-5 h-12 w-full rounded-lg bg-sky-500 text-[15px] font-medium hover:bg-sky-600">Voir les salles</Button>
+                </CardContent>
+              </Card>
+
+              <Link href="#" className="inline-block text-[13px] font-medium text-sky-600 hover:text-sky-700">
+                Ou explorer toutes les salles →
+              </Link>
+
+              <div className="flex flex-wrap items-center gap-3 text-[13px] text-slate-600">
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                   Consultation gratuite
                 </span>
                 <span className="text-slate-300">•</span>
-                <span>Informations essentielles visibles</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  Informations claires
+                </span>
                 <span className="text-slate-300">•</span>
-                <span>Demandes rapides</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  Demandes rapides
+                </span>
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_22px_rgba(15,23,42,0.14)]">
+            <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_22px_rgba(15,23,42,0.14)]">
               <Image
                 src="/img.png"
                 alt="Salle de culte"
                 width={1200}
                 height={700}
-                className="h-[330px] w-full object-cover object-right-top"
+                className="h-[380px] w-full object-cover object-right-top"
                 priority
               />
+              <div className="absolute bottom-4 right-4 flex items-center gap-2 rounded-lg bg-white px-3 py-2 shadow-md">
+                <Star className="h-4 w-4 fill-emerald-500 text-emerald-500" />
+                <span className="text-[13px] font-semibold text-slate-700">Satisfaction 4.8/5 étoiles</span>
+              </div>
             </div>
           </div>
-
-          <Card className="mx-auto max-w-[860px] border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
-            <CardContent className="p-5">
-              <div className="grid gap-3 md:grid-cols-4">
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-medium text-slate-700">Ville</p>
-                  <div className="relative">
-                    <Input placeholder="Paris, Lyon..." className="h-9 border-slate-200 pr-8 text-[12px]" />
-                    <MapPin className="pointer-events-none absolute right-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-medium text-slate-700">Date</p>
-                  <div className="relative">
-                    <Input placeholder="mm/dd/yyyy" className="h-9 border-slate-200 pr-8 text-[12px]" />
-                    <CalendarDays className="pointer-events-none absolute right-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-medium text-slate-700">Nombre de personnes</p>
-                  <div className="relative">
-                    <Input placeholder="50" className="h-9 border-slate-200 pr-8 text-[12px]" />
-                    <Users className="pointer-events-none absolute right-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-medium text-slate-700">Type d&apos;événement</p>
-                  <Select defaultValue="culte-regulier">
-                    <SelectTrigger className="h-9 border-slate-200 text-[12px]">
-                      <SelectValue placeholder="Type d'événement" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="culte-regulier">Culte régulier</SelectItem>
-                      <SelectItem value="conference">Conférence</SelectItem>
-                      <SelectItem value="celebration">Célébration</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <Button className="mt-4 h-10 w-full rounded-md bg-sky-500 text-[14px] font-medium hover:bg-sky-600">Voir les salles</Button>
-            </CardContent>
-          </Card>
         </div>
       </section>
 
@@ -338,9 +362,11 @@ export default function Home() {
                 <p className="max-w-[520px] text-[24px] leading-[1.55] text-slate-500 [zoom:0.5]">
                   Publiez votre lieu gratuitement et recevez des demandes ciblées de la part d&apos;organisateurs d&apos;événements cultuels
                 </p>
-                <Button className="h-10 rounded-md bg-[#2a435c] px-6 text-[14px] font-semibold text-white hover:bg-[#22374d]">
-                  Déposer ma salle
-                </Button>
+                <Link href="/auth?tab=signup" className="mt-6 inline-block">
+                  <Button className="h-10 rounded-md bg-[#2a435c] px-6 text-[14px] font-semibold text-white hover:bg-[#22374d]">
+                    Ajoutez ma salle
+                  </Button>
+                </Link>
               </div>
               <div className="overflow-hidden rounded-xl border border-slate-200">
                 <Image
@@ -391,7 +417,7 @@ export default function Home() {
               <p className="text-[24px] font-semibold text-white [zoom:0.5]">Plateforme</p>
               <ul className="mt-3 space-y-2 text-[13px] text-slate-300">
                 <li>Rechercher une salle</li>
-                <li>Déposer un lieu</li>
+                <li><Link href="/auth?tab=signup" className="hover:text-white">Ajoutez ma salle</Link></li>
                 <li>Comment ça marche</li>
                 <li>Tarifs</li>
               </ul>
@@ -402,7 +428,6 @@ export default function Home() {
                 <li>À propos</li>
                 <li>Contact</li>
                 <li>Blog</li>
-                <li>Presse</li>
               </ul>
             </div>
             <div>
@@ -421,7 +446,7 @@ export default function Home() {
           <div className="mt-6 flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-[13px] text-slate-300">© 2024 salledeculte.com. Tous droits réservés.</p>
             <div className="flex items-center gap-3">
-              {[Facebook, Twitter, Linkedin, Instagram].map((Icon, index) => (
+              {[Facebook, Instagram].map((Icon, index) => (
                 <a key={index} href="#" className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-slate-200 hover:bg-white/20">
                   <Icon className="h-4 w-4" />
                 </a>

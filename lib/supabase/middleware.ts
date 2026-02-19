@@ -37,7 +37,9 @@ export async function updateSession(request: NextRequest) {
   // Rafraîchit le token et valide la session (important pour éviter les déconnexions aléatoires)
   const { data } = await supabase.auth.getUser();
 
-  if (!data.user && request.nextUrl.pathname.startsWith("/dashboard")) {
+  const protectedPaths = ["/dashboard", "/proprietaire"];
+  const isProtected = protectedPaths.some((p) => request.nextUrl.pathname.startsWith(p));
+  if (!data.user && isProtected) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/auth";
     redirectUrl.searchParams.set("redirectedFrom", request.nextUrl.pathname);

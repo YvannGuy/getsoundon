@@ -17,13 +17,19 @@ export async function loginAction(_: AuthFormState, formData: FormData): Promise
   const password = String(formData.get("password") ?? "");
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     return { error: error.message || defaultError };
   }
 
+  const userType = data.user?.user_metadata?.user_type ?? "seeker";
   revalidatePath("/", "layout");
+
+  if (userType === "owner") {
+    redirect("/proprietaire");
+  }
+
   redirect("/dashboard");
 }
 
@@ -49,6 +55,11 @@ export async function signupAction(_: AuthFormState, formData: FormData): Promis
   if (userType === "owner") {
     revalidatePath("/", "layout");
     redirect("/onboarding/salle");
+  }
+
+  if (userType === "seeker") {
+    revalidatePath("/", "layout");
+    redirect("/dashboard");
   }
 
   return {
