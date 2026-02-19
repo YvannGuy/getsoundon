@@ -11,6 +11,7 @@ import { buttonVariants } from "@/components/ui/button";
 export type CalendarProps = React.ComponentProps<typeof DayPicker> & { compact?: boolean };
 
 function Calendar({ className, classNames, showOutsideDays = true, compact = false, ...props }: CalendarProps) {
+  const cellSize = compact ? "w-8 min-w-8" : "w-9 min-w-9";
   return (
     <DayPicker
       locale={fr}
@@ -19,42 +20,49 @@ function Calendar({ className, classNames, showOutsideDays = true, compact = fal
       classNames={{
         months: "flex flex-col",
         month: compact ? "space-y-1" : "space-y-4",
-        caption: "flex justify-center py-1 relative items-center min-w-[196px]",
+        month_caption: "flex justify-center py-1 relative items-center",
         caption_label: compact ? "text-xs font-medium" : "text-sm font-medium",
         nav: "flex items-center",
-        nav_button: cn(
+        button_previous: cn(
           buttonVariants({ variant: "outline" }),
           compact ? "h-6 w-6" : "h-7 w-7",
-          "bg-transparent p-0 opacity-50 hover:opacity-100"
+          "absolute left-0 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
-        nav_button_previous: "absolute left-0",
-        nav_button_next: "absolute right-0",
-        table: "w-full border-collapse",
-        head_row: "grid grid-cols-7 gap-0",
-        head_cell: cn(
-          "text-slate-500 font-normal text-center",
-          compact ? "text-[10px] w-7" : "text-[0.75rem] w-8"
+        button_next: cn(
+          buttonVariants({ variant: "outline" }),
+          compact ? "h-6 w-6" : "h-7 w-7",
+          "absolute right-0 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
-        row: cn("grid grid-cols-7 gap-0", compact ? "mt-0.5" : "mt-2"),
-        cell: cn(
-          "relative p-0 text-center flex justify-center focus-within:relative focus-within:z-20",
-          "[&:has([aria-selected])]:bg-slate-100 [&:has([aria-selected].day-outside)]:bg-slate-100/50",
+        month_grid: "w-full table-fixed border-collapse",
+        weekdays: "border-0",
+        weekday: cn(
+          "text-slate-500 font-normal text-center p-0 align-middle whitespace-nowrap",
+          compact ? "text-[11px]" : "text-xs",
+          cellSize
+        ),
+        weeks: "border-0",
+        week: cn("border-0", compact ? "mt-0.5" : "mt-2"),
+        day: cn(
+          "relative p-0 text-center align-middle",
+          cellSize,
+          "[&:has([aria-selected])]:bg-slate-100",
           props.mode === "range"
             ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md"
             : "[&:has([aria-selected])]:rounded-md"
         ),
-        day: cn(
+        day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          compact ? "h-7 w-7 text-xs" : "h-8 w-8",
-          "p-0 font-normal aria-selected:opacity-100 w-7"
+          compact ? "h-8 w-8 text-xs" : "h-9 w-9",
+          "p-0 font-normal aria-selected:opacity-100 mx-auto"
         ),
-        day_range_start: "day-range-start",
-        day_range_end: "day-range-end",
-        day_selected: "bg-slate-900 text-slate-50 hover:bg-slate-900 hover:text-slate-50",
-        day_today: "bg-slate-100 text-slate-900",
-        day_outside: "text-slate-400 opacity-50",
-        day_disabled: "text-slate-400 opacity-50",
-        day_hidden: "invisible",
+        range_start: "day-range-start",
+        range_end: "day-range-end",
+        range_middle: "day-range-middle",
+        selected: "bg-slate-900 text-slate-50 hover:bg-slate-900 hover:text-slate-50",
+        today: "bg-slate-100 text-slate-900",
+        outside: "text-slate-400 opacity-50",
+        disabled: "text-slate-400 opacity-50",
+        hidden: "invisible",
         ...classNames,
       }}
       components={{
