@@ -2,18 +2,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  Calendar,
   CheckCircle2,
   Clock,
   Heart,
   ListChecks,
   MapPin,
   Share2,
+  Phone,
+  MessageCircle,
   Car,
   CookingPot,
+  HelpCircle,
   Piano,
   Tv,
   Volume2,
+  Users,
   Wifi,
 } from "lucide-react";
 
@@ -99,7 +102,8 @@ export default async function SalleDetailPage({
                     <MapPin className="h-4 w-4" />
                     {salle.address}
                   </span>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-[13px] font-medium text-slate-700">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-3 py-1 text-[13px] font-medium text-sky-800">
+                    <Users className="h-4 w-4" />
                     Jusqu&apos;à {salle.capacity} personnes
                   </span>
                 </div>
@@ -112,17 +116,27 @@ export default async function SalleDetailPage({
 
               <section>
                 <h2 className="mb-3 text-lg font-semibold text-[#304256]">Caractéristiques</h2>
-                <ul className="space-y-3">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {salle.features.map((f, i) => {
                     const Icon = iconMap[f.icon] ?? CheckCircle2;
+                    const hasSublabel = "sublabel" in f && f.sublabel;
                     return (
-                      <li key={i} className="flex items-start gap-3 text-sm text-slate-700">
-                        <Icon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                        {f.label}
-                      </li>
+                      <div key={i} className="flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50/50 p-4">
+                        <Icon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                        <div>
+                          {hasSublabel ? (
+                            <>
+                              <p className="font-medium text-slate-800">{f.label}</p>
+                              <p className="mt-0.5 text-[13px] text-slate-600">{f.sublabel}</p>
+                            </>
+                          ) : (
+                            <p className="text-[14px] text-slate-700">{f.label}</p>
+                          )}
+                        </div>
+                      </div>
                     );
                   })}
-                </ul>
+                </div>
               </section>
 
               <section>
@@ -142,11 +156,8 @@ export default async function SalleDetailPage({
 
               <section>
                 <h2 className="mb-3 text-lg font-semibold text-[#304256]">Tarification</h2>
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5">
+                <div className="rounded-xl border border-violet-200 bg-violet-50/60 p-5">
                   <p className="text-xl font-bold text-[#304256]">{salle.pricePerDay} € / jour</p>
-                  <p className="mt-1 text-[13px] text-slate-500">
-                    Le tarif est indicatif et est à confirmer par le propriétaire
-                  </p>
                   {salle.pricingInclusions.length > 0 && (
                     <>
                       <p className="mt-4 text-[13px] font-medium text-slate-700">Ce tarif comprend :</p>
@@ -170,7 +181,7 @@ export default async function SalleDetailPage({
                     <MapPin className="mx-auto h-12 w-12" />
                     <p className="mt-2 text-sm">Carte à venir</p>
                     <p className="mt-1 text-xs">
-                      Localisation exacte communiquée après validation de votre réservation
+                      Adresse exacte sera communiquée après validation de votre réservation
                     </p>
                   </div>
                 </div>
@@ -219,32 +230,44 @@ export default async function SalleDetailPage({
                 Envoyez une demande au propriétaire pour vérifier la disponibilité.
               </p>
               <Link href={`/rechercher?demande=${salle.slug}`}>
-                <Button className="mt-4 h-12 w-full bg-[#2d435a] font-semibold hover:bg-[#243a4d]">
+                <Button className="mt-4 h-12 w-full rounded-lg bg-violet-600 font-semibold hover:bg-violet-700">
                   Vérifier les disponibilités
                 </Button>
               </Link>
-              <div className="mt-4 flex flex-wrap gap-3 text-[13px] text-slate-500">
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="h-4 w-4" />
-                  Réserver sur ce site
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Heart className="h-4 w-4" />
-                  Pas d&apos;engagement
-                </span>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-4">
+                <a
+                  href="#"
+                  className="flex items-center gap-2 text-[13px] font-medium text-slate-600 hover:text-slate-900"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Envoyer un message
+                </a>
+                <a
+                  href="#"
+                  className="flex items-center gap-2 text-[13px] font-medium text-slate-600 hover:text-slate-900"
+                >
+                  <Phone className="h-4 w-4" />
+                  Appeler
+                </a>
               </div>
-              <p className="mt-4 text-[12px] text-slate-400">
+              <p className="mt-4 flex items-center gap-2 text-[12px] text-slate-400">
+                <Clock className="h-3.5 w-3.5" />
                 12 organisateurs ont consulté cette salle récemment.
               </p>
             </div>
-            <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50/80 p-6">
-              <h3 className="text-lg font-semibold text-[#304256]">Besoin d&apos;aide ?</h3>
-              <p className="mt-2 text-[14px] text-slate-600">
-                Notre équipe est disponible pour vous accompagner dans votre recherche.
-              </p>
-              <a href="#" className="mt-3 inline-block text-[14px] font-medium text-[#2d435a] hover:underline">
-                Contacter le support
-              </a>
+            <div className="mt-6 flex gap-4 rounded-xl border border-amber-200 bg-amber-50/80 p-6">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-400">
+                <HelpCircle className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[#304256]">Besoin d&apos;aide ?</h3>
+                <p className="mt-2 text-[14px] text-slate-600">
+                  Notre équipe est disponible pour vous accompagner dans votre recherche.
+                </p>
+                <a href="#" className="mt-3 inline-block text-[14px] font-medium text-[#2d435a] hover:underline">
+                  Contacter le support
+                </a>
+              </div>
             </div>
           </aside>
         </div>

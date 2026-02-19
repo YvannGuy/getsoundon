@@ -58,27 +58,45 @@ const ACCEPTED_EVENTS = [
   { id: "retraite", label: "Retraite", icon: Mountain },
 ] as const;
 
+const INCLUSIONS = [
+  { id: "location", label: "Location de la salle pour la journée" },
+  { id: "mobilier", label: "Mobilier et équipements" },
+  { id: "sono", label: "Système de sonorisation" },
+] as const;
+
 type WizardData = {
   nom: string;
   ville: string;
   capacite: string;
   adresse: string;
+  description: string;
+  tarifParJour: string;
+  inclusions: string[];
+  placesParking: string;
   features: string[];
   heureDebut: string;
   heureFin: string;
+  joursOuverture: string[];
   restrictionSonore: string;
   evenementsAcceptes: string[];
   photos: File[];
 };
+
+const JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"] as const;
 
 const initialData: WizardData = {
   nom: "",
   ville: "",
   capacite: "",
   adresse: "",
+  description: "",
+  tarifParJour: "",
+  inclusions: ["location"],
+  placesParking: "",
   features: [],
   heureDebut: "08:00",
   heureFin: "22:00",
+  joursOuverture: [],
   restrictionSonore: "",
   evenementsAcceptes: [],
   photos: [],
@@ -102,6 +120,24 @@ export default function OnboardingSallePage() {
       features: prev.features.includes(id)
         ? prev.features.filter((f) => f !== id)
         : [...prev.features, id],
+    }));
+  };
+
+  const toggleInclusion = (id: string) => {
+    setData((prev) => ({
+      ...prev,
+      inclusions: prev.inclusions.includes(id)
+        ? prev.inclusions.filter((i) => i !== id)
+        : [...prev.inclusions, id],
+    }));
+  };
+
+  const toggleJour = (jour: string) => {
+    setData((prev) => ({
+      ...prev,
+      joursOuverture: prev.joursOuverture.includes(jour)
+        ? prev.joursOuverture.filter((j) => j !== jour)
+        : [...prev.joursOuverture, jour],
     }));
   };
 
@@ -273,13 +309,21 @@ export default function OnboardingSallePage() {
           <Step1 data={data} updateData={updateData} onNext={() => setStep(2)} />
         )}
         {step === 2 && (
-          <Step2 data={data} toggleFeature={toggleFeature} onNext={() => setStep(3)} onBack={() => setStep(1)} />
+          <Step2
+            data={data}
+            updateData={updateData}
+            toggleFeature={toggleFeature}
+            onNext={() => setStep(3)}
+            onBack={() => setStep(1)}
+          />
         )}
         {step === 3 && (
           <Step3
             data={data}
             updateData={updateData}
             toggleEvent={toggleEvent}
+            toggleInclusion={toggleInclusion}
+            toggleJour={toggleJour}
             onNext={() => setStep(4)}
             onBack={() => setStep(2)}
           />
@@ -355,6 +399,27 @@ function Step1({
             className="h-11 border-slate-200"
           />
         </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">Description</label>
+          <textarea
+            placeholder="Décrivez votre salle : cadre, atouts, équipements, ambiance..."
+            value={data.description}
+            onChange={(e) => updateData({ description: e.target.value })}
+            rows={4}
+            className="w-full rounded-md border border-slate-200 px-3 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5b4dbf]"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">Tarif indicatif (€ / jour)</label>
+          <Input
+            type="number"
+            placeholder="Ex: 800"
+            value={data.tarifParJour}
+            onChange={(e) => updateData({ tarifParJour: e.target.value })}
+            min={0}
+            className="h-11 border-slate-200"
+          />
+        </div>
       </div>
       <Button
         onClick={onNext}
@@ -368,11 +433,13 @@ function Step1({
 
 function Step2({
   data,
+  updateData,
   toggleFeature,
   onNext,
   onBack,
 }: {
   data: WizardData;
+  updateData: (u: Partial<WizardData>) => void;
   toggleFeature: (id: string) => void;
   onNext: () => void;
   onBack: () => void;
@@ -405,6 +472,19 @@ function Step2({
           </button>
         ))}
       </div>
+      {data.features.includes("parking") && (
+        <div className="mt-4 space-y-2">
+          <label className="text-sm font-medium text-slate-700">Nombre de places de parking</label>
+          <Input
+            type="number"
+            placeholder="Ex: 30"
+            value={data.placesParking}
+            onChange={(e) => updateData({ placesParking: e.target.value })}
+            min={0}
+            className="h-11 w-40 border-slate-200"
+          />
+        </div>
+      )}
       <div className="mt-6 flex items-center gap-2 rounded-lg bg-[#5b4dbf]/10 p-3 text-sm text-[#5b4dbf]">
         <span className="text-base">i</span>
         Ces informations aident les organisateurs à mieux comprendre votre lieu
@@ -430,12 +510,16 @@ function Step3({
   data,
   updateData,
   toggleEvent,
+  toggleInclusion,
+  toggleJour,
   onNext,
   onBack,
 }: {
   data: WizardData;
   updateData: (u: Partial<WizardData>) => void;
   toggleEvent: (id: string) => void;
+  toggleInclusion: (id: string) => void;
+  toggleJour: (jour: string) => void;
   onNext: () => void;
   onBack: () => void;
 }) {
@@ -463,6 +547,28 @@ function Step3({
             />
           </div>
           <p className="mt-1.5 text-xs text-slate-500">Indiquez les plages horaires d&apos;ouverture</p>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-slate-700">Jours d&apos;ouverture</label>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {JOURS.map((jour) => (
+              <button
+                key={jour}
+                type="button"
+                onClick={() => toggleJour(jour)}
+                className={cn(
+                  "rounded-lg border px-3 py-2 text-sm capitalize transition-colors",
+                  data.joursOuverture.includes(jour)
+                    ? "border-[#5b4dbf] bg-[#5b4dbf]/10 text-[#5b4dbf]"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                )}
+              >
+                {jour}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs text-slate-500">Sélectionnez les jours où la salle est disponible</p>
         </div>
 
         <div>
@@ -522,6 +628,30 @@ function Step3({
           <p className="mt-1.5 text-xs text-slate-500">
             Ces choix permettent de recevoir uniquement des demandes adaptées
           </p>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-slate-700">Ce tarif comprend</label>
+          <div className="mt-3 space-y-2">
+            {INCLUSIONS.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => toggleInclusion(id)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg border p-3 text-left text-sm transition-colors",
+                  data.inclusions.includes(id)
+                    ? "border-[#5b4dbf] bg-[#5b4dbf]/10"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                )}
+              >
+                {data.inclusions.includes(id) && (
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#5b4dbf] text-xs text-white">✓</span>
+                )}
+                <span className={data.inclusions.includes(id) ? "" : "ml-8"}>{label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -646,9 +776,29 @@ function Step5({
           </div>
         </div>
         <div>
+          <p className="text-xs font-medium text-slate-500">Description</p>
+          <p className="mt-1 text-sm text-slate-900">{data.description || "—"}</p>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-slate-500">Tarif indicatif</p>
+          <p className="mt-1 font-medium text-slate-900">{data.tarifParJour ? `${data.tarifParJour} € / jour` : "—"}</p>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-slate-500">Ce tarif comprend</p>
+          <p className="mt-1 text-sm text-slate-900">
+            {data.inclusions.length ? data.inclusions.map((id) => INCLUSIONS.find((i) => i.id === id)?.label ?? id).join(", ") : "—"}
+          </p>
+        </div>
+        <div>
           <p className="text-xs font-medium text-slate-500">Caractéristiques</p>
           <p className="mt-1 text-sm text-slate-900">
             {data.features.length ? FEATURES.filter((f) => data.features.includes(f.id)).map((f) => f.label).join(", ") : "—"}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-slate-500">Jours d&apos;ouverture</p>
+          <p className="mt-1 text-sm text-slate-900 capitalize">
+            {data.joursOuverture.length ? data.joursOuverture.join(", ") : "—"}
           </p>
         </div>
       </div>

@@ -1,3 +1,7 @@
+/**
+ * Salles en Île-de-France uniquement.
+ * Les coordonnées lat/lng sont toutes dans la région.
+ */
 export type Salle = {
   id: string;
   slug: string;
@@ -8,7 +12,7 @@ export type Salle = {
   pricePerDay: number;
   description: string;
   images: string[];
-  features: { label: string; icon: string }[];
+  features: { label: string; sublabel?: string; icon: string }[];
   conditions: { label: string; icon: string }[];
   pricingInclusions: string[];
   lat?: number;
@@ -28,12 +32,12 @@ export const mockSalles: Salle[] = [
       "L'Espace Lumière est un lieu d'exception situé à proximité de Paris, idéal pour accueillir vos cérémonies religieuses, conférences ou événements culturels. Doté d'un cadre moderne et chaleureux, il offre des espaces polyvalents adaptés à tous types de rassemblements. La luminosité naturelle et l'équipement professionnel en font un choix privilégié pour vos événements.",
     images: ["/img.png", "/img.png", "/img2.png", "/img2.png"],
     features: [
-      { label: "ERP non soumis", icon: "check" },
-      { label: "Parking - 30 places disponibles à proximité", icon: "parking" },
-      { label: "Accès PMR - Accessible aux personnes à mobilité réduite", icon: "wheelchair" },
-      { label: "Mobilier - Chaises et tables modulables incluses", icon: "furniture" },
-      { label: "Sonorisation - Système audio professionnel inclus", icon: "speaker" },
-      { label: "Wi-Fi - Connexion internet haut débit incluse", icon: "wifi" },
+      { label: "ERP sur mesure", icon: "check" },
+      { label: "Parking", sublabel: "30 places disponibles à proximité", icon: "parking" },
+      { label: "Accès PMR", sublabel: "Accessible aux personnes à mobilité réduite", icon: "wheelchair" },
+      { label: "Mobilier", sublabel: "Chaises et tables modulables incluses", icon: "furniture" },
+      { label: "Sonorisation", sublabel: "Système audio professionnel inclus", icon: "speaker" },
+      { label: "Wi-Fi", sublabel: "Connexion internet très haut débit", icon: "wifi" },
     ],
     conditions: [
       { label: "Horaires d'accueil - Du mardi au dimanche, de 09h00 à 22h00", icon: "clock" },
@@ -52,6 +56,8 @@ export const mockSalles: Salle[] = [
       "Mobilier et équipements",
       "Système de sonorisation",
     ],
+    lat: 48.8566,
+    lng: 2.3522,
   },
   {
     id: "2",
@@ -60,7 +66,7 @@ export const mockSalles: Salle[] = [
     city: "Paris",
     address: "Paris, France",
     capacity: 100,
-    pricePerDay: 600,
+    pricePerDay: 900,
     description: "Salle polyvalente au cœur de Paris.",
     images: ["/img.png", "/img2.png"],
     features: [
@@ -70,6 +76,8 @@ export const mockSalles: Salle[] = [
     ],
     conditions: [{ label: "Du lundi au samedi, 8h-20h", icon: "clock" }],
     pricingInclusions: ["Location journée", "Mobilier"],
+    lat: 48.8628,
+    lng: 2.3292,
   },
   {
     id: "3",
@@ -87,6 +95,8 @@ export const mockSalles: Salle[] = [
     ],
     conditions: [{ label: "Tous les jours, 9h-21h", icon: "clock" }],
     pricingInclusions: ["Location journée", "Équipement sonore"],
+    lat: 48.8503,
+    lng: 2.3703,
   },
   {
     id: "4",
@@ -98,6 +108,8 @@ export const mockSalles: Salle[] = [
     pricePerDay: 450,
     description: "Grande salle de conférence.",
     images: ["/img.png"],
+    lat: 48.8595,
+    lng: 2.3272,
     features: [
       { label: "ERP", icon: "check" },
       { label: "Parking", icon: "parking" },
@@ -115,6 +127,8 @@ export const mockSalles: Salle[] = [
     pricePerDay: 380,
     description: "Auditorium équipé.",
     images: ["/img2.png"],
+    lat: 48.8402,
+    lng: 2.3225,
     features: [
       { label: "ERP", icon: "check" },
       { label: "Sono", icon: "speaker" },
@@ -132,6 +146,8 @@ export const mockSalles: Salle[] = [
     pricePerDay: 320,
     description: "Centre paroissial historique.",
     images: ["/img.png"],
+    lat: 48.8534,
+    lng: 2.3488,
     features: [
       { label: "ERP", icon: "check" },
       { label: "PMR", icon: "wheelchair" },
@@ -150,6 +166,8 @@ export const mockSalles: Salle[] = [
     pricePerDay: 520,
     description: "Espace culturel modulable.",
     images: ["/img2.png"],
+    lat: 48.8599,
+    lng: 2.3609,
     features: [
       { label: "ERP", icon: "check" },
       { label: "Vidéo", icon: "video" },
@@ -167,6 +185,8 @@ export const mockSalles: Salle[] = [
     pricePerDay: 280,
     description: "Chapelle patrimoniale.",
     images: ["/img.png"],
+    lat: 48.8476,
+    lng: 2.3397,
     features: [
       { label: "ERP", icon: "check" },
       { label: "Piano", icon: "piano" },
@@ -184,6 +204,8 @@ export const mockSalles: Salle[] = [
     pricePerDay: 420,
     description: "Salle communautaire avec scène.",
     images: ["/img2.png"],
+    lat: 48.8575,
+    lng: 2.3736,
     features: [
       { label: "ERP", icon: "check" },
       { label: "PMR", icon: "wheelchair" },

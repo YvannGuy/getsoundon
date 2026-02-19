@@ -1,25 +1,24 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Building2, CalendarDays, CheckCircle2, Facebook, Gift, ImageIcon, Instagram, ListChecks, MapPin, Shield, Star, Users } from "lucide-react";
+import { CheckCircle2, Facebook, Gift, ImageIcon, Instagram, ListChecks, Shield, Star } from "lucide-react";
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchForm } from "@/components/search/search-form";
 import { siteConfig } from "@/config/site";
 
 const plans = [
   {
     name: "Pass 24h",
-    price: "19€",
+    price: "9,90€",
     features: ["Demandes illimitées pendant 24h", "Accès complet aux annonces", "Support prioritaire"],
     cta: "Choisir ce pass",
   },
   {
     name: "Pass 48h",
-    price: "29€",
+    price: "19,90€",
     badge: "Plus populaire",
     features: ["Demandes illimitées pendant 48h", "Accès complet aux annonces", "Support prioritaire", "Historique des demandes"],
     cta: "Choisir ce pass",
@@ -27,7 +26,7 @@ const plans = [
   },
   {
     name: "Abonnement Récurrence",
-    price: "39€",
+    price: "29,90€",
     period: "/mois",
     features: ["Demandes illimitées", "Accès complet aux annonces", "Support prioritaire 7j/7", "Gestion multi-événements", "Notifications personnalisées"],
     cta: "Choisir ce pass",
@@ -90,9 +89,9 @@ export default function Home() {
     <main className="bg-[#f3f6fa] text-slate-800">
       <SiteHeader />
 
-      <section className="container max-w-[1120px] py-8">
-        <div className="rounded-xl bg-[#f3f6fa] p-3">
-          <div className="grid items-center gap-8 rounded-xl px-5 pb-8 pt-6 lg:grid-cols-[1fr_1fr] lg:px-10">
+      <section className="container max-w-[1120px] px-4 py-6 sm:py-8">
+        <div className="rounded-xl bg-[#f3f6fa] p-3 sm:p-4">
+          <div className="grid items-center gap-6 rounded-xl px-4 pb-6 pt-5 sm:gap-8 sm:px-5 sm:pb-8 sm:pt-6 lg:grid-cols-[1fr_1fr] lg:px-10">
             <div className="space-y-6">
               <div className="flex flex-wrap gap-3">
                 <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400 bg-white px-3 py-1.5 text-[12px] font-medium text-emerald-700">
@@ -104,77 +103,28 @@ export default function Home() {
                   Espaces adaptés
                 </span>
               </div>
-              <h1 className="max-w-[500px] text-[52px] font-semibold leading-[1.03] tracking-[-0.03em] text-[#23384d] [zoom:0.56]">
+              <h1 className="max-w-[500px] text-[26px] font-semibold leading-[1.2] tracking-[-0.03em] text-[#23384d] sm:text-[36px] lg:text-[52px] lg:leading-[1.03] lg:[zoom:0.56]">
                 Trouvez une salle adaptée à votre événement cultuel
               </h1>
               <p className="max-w-[430px] text-[14px] leading-relaxed text-slate-500">
                 Une sélection de salles présentées avec clarté et précision.
               </p>
 
-              <Card className="overflow-hidden rounded-xl border-0 border-slate-100 bg-white shadow-[0_4px_20px_rgba(15,23,42,0.08)]">
-                <CardContent className="p-5">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[13px] font-medium text-slate-700">Ville</label>
-                      <div className="relative">
-                        <MapPin className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-500" />
-                        <Input placeholder="Paris, Lyon..." className="h-11 rounded-lg border-slate-200 pl-10 pr-3 text-[14px]" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[13px] font-medium text-slate-700">Date</label>
-                      <div className="relative">
-                        <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-500" />
-                        <Input defaultValue="19/02/2026" className="h-11 rounded-lg border-slate-200 pl-10 pr-3 text-[14px]" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[13px] font-medium text-slate-700">Nombre de personnes</label>
-                      <div className="relative">
-                        <Users className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-500" />
-                        <Input type="number" defaultValue="50" min={1} className="h-11 rounded-lg border-slate-200 pl-10 pr-2 text-[14px]" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[13px] font-medium text-slate-700">Type d&apos;événement</label>
-                      <div className="relative">
-                        <Building2 className="pointer-events-none absolute left-3 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-sky-500" />
-                        <Select defaultValue="culte-regulier">
-                          <SelectTrigger className="h-11 rounded-lg border-slate-200 pl-10 pr-9 text-[14px]">
-                            <SelectValue placeholder="Culte régulier" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="culte-regulier">Culte régulier</SelectItem>
-                            <SelectItem value="conference">Conférence</SelectItem>
-                            <SelectItem value="celebration">Célébration</SelectItem>
-                            <SelectItem value="bapteme">Baptême</SelectItem>
-                            <SelectItem value="retraite">Retraite</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                  <Link href="/rechercher">
-                    <Button className="mt-5 h-12 w-full rounded-lg bg-sky-500 text-[15px] font-medium hover:bg-sky-600">
-                      Voir les salles
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+              <SearchForm />
 
-              <div className="flex flex-wrap items-center gap-3 text-[13px] text-slate-600">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] text-slate-600">
                 <span className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
                   Consultation gratuite
                 </span>
-                <span className="text-slate-300">•</span>
+                <span className="hidden text-slate-300 sm:inline">•</span>
                 <span className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
                   Informations claires
                 </span>
-                <span className="text-slate-300">•</span>
+                <span className="hidden text-slate-300 sm:inline">•</span>
                 <span className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
                   Demandes rapides
                 </span>
               </div>
