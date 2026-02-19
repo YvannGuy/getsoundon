@@ -38,7 +38,11 @@ Exécutez `config/supabase-salles.sql` dans l'éditeur SQL Supabase pour créer 
 
 ## Tables complètes (demandes, favoris, messagerie, abonnements)
 
-Exécutez `config/supabase-tables-complete.sql` après les scripts ci-dessus. Crée les tables :
+Exécutez `config/supabase-tables-complete.sql` après les scripts ci-dessus.
+
+Puis `config/supabase-demandes-alter.sql` pour les colonnes du formulaire « Vérifier la disponibilité » (frequence, horaires).
+
+Crée les tables :
 
 - **profiles** (colonnes user_type, phone, avatar_url, stripe_customer_id)
 - **salles** (colonnes heure_debut, heure_fin, jours_ouverture, evenements_acceptes, places_parking)

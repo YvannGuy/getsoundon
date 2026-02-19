@@ -229,7 +229,7 @@ export default async function SalleDetailPage({
               <p className="mt-2 text-[14px] text-slate-600">
                 Envoyez une demande au propriétaire pour vérifier la disponibilité.
               </p>
-              <Link href={`/rechercher?demande=${salle.slug}`}>
+              <Link href={`/salles/${salle.slug}/disponibilite`}>
                 <Button className="mt-4 h-12 w-full rounded-lg bg-violet-600 font-semibold hover:bg-violet-700">
                   Vérifier les disponibilités
                 </Button>
