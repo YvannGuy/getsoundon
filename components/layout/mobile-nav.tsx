@@ -1,7 +1,5 @@
 "use client";
 
-"use client";
-
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
@@ -24,7 +22,7 @@ export function MobileNav({ isLoggedIn, userType }: MobileNavProps) {
   const handleClose = () => setOpen(false);
 
   return (
-    <div className="md:hidden">
+    <div className="hidden max-md:flex">
       <button
         type="button"
         onClick={() => setOpen(!open)}

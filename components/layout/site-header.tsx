@@ -34,7 +34,7 @@ export async function SiteHeader() {
           </Link>
         </nav>
         <div className="flex items-center gap-3">
-          <div className="hidden md:block">
+          <div className="max-md:hidden md:flex">
             <HeaderAuth />
           </div>
           <MobileNav isLoggedIn={isLoggedIn} userType={userType} />
