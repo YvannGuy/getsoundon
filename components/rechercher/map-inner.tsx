@@ -3,7 +3,7 @@
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import type { Salle } from "@/lib/mock-salles";
+import type { Salle } from "@/lib/types/salle";
 import {
   ILE_DE_FRANCE_BOUNDS,
   ILE_DE_FRANCE_CENTER,

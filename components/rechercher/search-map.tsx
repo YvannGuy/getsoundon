@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Salle } from "@/lib/mock-salles";
+import type { Salle } from "@/lib/types/salle";
 
 // Coords Paris centre pour les salles sans lat/lng
 const PARIS_CENTER = { lat: 48.8566, lng: 2.3522 };

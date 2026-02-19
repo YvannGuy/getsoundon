@@ -10,7 +10,7 @@ import { Car, CheckCircle2, CookingPot, Heart, MapPin, Piano, Tv, Volume2, X } f
 
 import { Button } from "@/components/ui/button";
 import { SearchMap } from "@/components/rechercher/search-map";
-import { mockSalles } from "@/lib/mock-salles";
+import type { Salle } from "@/lib/types/salle";
 
 const TYPE_LABELS: Record<string, string> = {
   "culte-regulier": "Culte régulier",
@@ -30,7 +30,7 @@ const featureIcons: Record<string, React.ComponentType<{ className?: string }>> 
   cuisine: CookingPot,
 };
 
-export function RechercherContent() {
+export function RechercherContent({ salles }: { salles: Salle[] }) {
   const searchParams = useSearchParams();
   const initialFilters = useMemo(() => {
     const filters: { key: string; label: string }[] = [];
@@ -87,7 +87,7 @@ export function RechercherContent() {
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <p className="text-[15px] font-semibold text-slate-700">
-          {mockSalles.length} salles disponibles
+          {salles.length} salle{salles.length !== 1 ? "s" : ""} disponible{salles.length !== 1 ? "s" : ""}
         </p>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="h-9">
@@ -101,7 +101,7 @@ export function RechercherContent() {
 
       <div className="grid gap-4 lg:grid-cols-[400px_1fr]">
         <div className="flex flex-col gap-4 overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
-          {mockSalles.map((salle) => {
+          {salles.map((salle) => {
             const features = ["erp"];
             if (salle.features.some((f) => f.label.includes("Parking"))) features.push("parking");
             if (salle.features.some((f) => f.label.includes("PMR"))) features.push("pmr");
@@ -175,7 +175,7 @@ export function RechercherContent() {
         </div>
 
         <div className="relative hidden lg:block">
-          <SearchMap salles={mockSalles} />
+          <SearchMap salles={salles} />
         </div>
       </div>
     </main>

@@ -4,7 +4,7 @@
  * Les données sont transformées pour affichage sur /salles/[slug]
  */
 
-import type { Salle } from "./mock-salles";
+import type { Salle } from "./types/salle";
 
 type OnboardingWizardData = {
   nom: string;

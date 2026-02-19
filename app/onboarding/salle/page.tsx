@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useCallback, useRef } from "react";
+import { createSalleFromOnboarding } from "@/app/actions/create-salle";
 import {
   Accessibility,
   Armchair,
@@ -106,6 +107,8 @@ export default function OnboardingSallePage() {
   const [step, setStep] = useState(1);
   const [data, setData] = useState<WizardData>(initialData);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const progress = (step / TOTAL_STEPS) * 100;
@@ -169,8 +172,35 @@ export default function OnboardingSallePage() {
 
   const handleDragOver = (e: React.DragEvent) => e.preventDefault();
 
-  const handleSubmit = () => {
-    setSubmitted(true);
+  const handleSubmit = async () => {
+    setSubmitError(null);
+    setIsSubmitting(true);
+
+    const formData = new FormData();
+    formData.set("nom", data.nom);
+    formData.set("ville", data.ville);
+    formData.set("capacite", data.capacite);
+    formData.set("adresse", data.adresse);
+    formData.set("description", data.description);
+    formData.set("tarifParJour", data.tarifParJour);
+    formData.set("inclusions", JSON.stringify(data.inclusions));
+    formData.set("placesParking", data.placesParking);
+    formData.set("features", JSON.stringify(data.features));
+    formData.set("heureDebut", data.heureDebut);
+    formData.set("heureFin", data.heureFin);
+    formData.set("joursOuverture", JSON.stringify(data.joursOuverture));
+    formData.set("restrictionSonore", data.restrictionSonore);
+    formData.set("evenementsAcceptes", JSON.stringify(data.evenementsAcceptes));
+    data.photos.forEach((file) => formData.append("photos", file));
+
+    const result = await createSalleFromOnboarding(formData);
+
+    if (result.success) {
+      setSubmitted(true);
+    } else {
+      setSubmitError(result.error);
+    }
+    setIsSubmitting(false);
   };
 
   if (submitted) {
@@ -340,7 +370,13 @@ export default function OnboardingSallePage() {
           />
         )}
         {step === 5 && (
-          <Step5 data={data} onSubmit={handleSubmit} onBack={() => setStep(4)} />
+          <Step5
+            data={data}
+            onSubmit={handleSubmit}
+            onBack={() => setStep(4)}
+            isSubmitting={isSubmitting}
+            submitError={submitError}
+          />
         )}
       </main>
     </div>
@@ -751,15 +787,24 @@ function Step5({
   data,
   onSubmit,
   onBack,
+  isSubmitting,
+  submitError,
 }: {
   data: WizardData;
   onSubmit: () => void;
   onBack: () => void;
+  isSubmitting?: boolean;
+  submitError?: string | null;
 }) {
   return (
     <>
       <h2 className="text-2xl font-bold text-slate-900">Récapitulatif</h2>
       <p className="mt-2 text-slate-600">Vérifiez les informations avant de soumettre</p>
+      {submitError && (
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {submitError}
+        </div>
+      )}
       <div className="mt-8 space-y-4 rounded-xl border border-slate-200 bg-slate-50/50 p-6">
         <div>
           <p className="text-xs font-medium text-slate-500">Lieu</p>
@@ -803,11 +848,20 @@ function Step5({
         </div>
       </div>
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <Button variant="outline" onClick={onBack} className="h-11 flex-1 border-slate-300">
+        <Button
+          variant="outline"
+          onClick={onBack}
+          disabled={isSubmitting}
+          className="h-11 flex-1 border-slate-300"
+        >
           Retour
         </Button>
-        <Button onClick={onSubmit} className="h-11 flex-1 bg-[#5b4dbf] hover:bg-[#4a3dad]">
-          Soumettre mon annonce
+        <Button
+          onClick={onSubmit}
+          disabled={isSubmitting}
+          className="h-11 flex-1 bg-[#5b4dbf] hover:bg-[#4a3dad]"
+        >
+          {isSubmitting ? "Envoi en cours..." : "Soumettre mon annonce"}
         </Button>
       </div>
     </>

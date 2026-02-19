@@ -23,7 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
-import { getSalleBySlug, mockSalles } from "@/lib/mock-salles";
+import { getSalleBySlug, getSallesByCity } from "@/lib/salles";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   check: CheckCircle2,
@@ -40,8 +40,10 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   kitchen: CookingPot,
 };
 
+export const dynamic = "force-dynamic";
+
 export async function generateStaticParams() {
-  return mockSalles.map((s) => ({ slug: s.slug }));
+  return [];
 }
 
 export default async function SalleDetailPage({
@@ -50,12 +52,10 @@ export default async function SalleDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const salle = getSalleBySlug(slug);
+  const salle = await getSalleBySlug(slug);
   if (!salle) notFound();
 
-  const nearbySalles = mockSalles
-    .filter((s) => s.slug !== slug && s.city === salle.city)
-    .slice(0, 2);
+  const nearbySalles = await getSallesByCity(salle.city, slug);
 
   return (
     <div className="min-h-screen bg-white">
