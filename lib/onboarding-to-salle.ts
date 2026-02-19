@@ -6,6 +6,8 @@
 
 import type { Salle } from "./types/salle";
 
+type HorairesJour = { debut: string; fin: string };
+
 type OnboardingWizardData = {
   nom: string;
   ville: string;
@@ -16,8 +18,7 @@ type OnboardingWizardData = {
   inclusions: string[];
   placesParking: string;
   features: string[];
-  heureDebut: string;
-  heureFin: string;
+  horairesParJour?: Record<string, HorairesJour>;
   joursOuverture: string[];
   restrictionSonore: string;
   evenementsAcceptes: string[];
@@ -53,6 +54,7 @@ const EVENT_LABELS: Record<string, string> = {
   conference: "Conférence",
   concert: "Concert",
   retraite: "Retraite",
+  veillee_priere: "Veillée de prière",
 };
 
 export function mapOnboardingToSalle(
@@ -76,16 +78,16 @@ export function mapOnboardingToSalle(
 
   const conditions: { label: string; icon: string }[] = [];
 
-  if (data.joursOuverture.length > 0) {
-    const jours = data.joursOuverture.join(", ");
-    conditions.push({
-      label: `Horaires d'accueil - ${jours}, de ${data.heureDebut} à ${data.heureFin}`,
-      icon: "clock",
-    });
-  } else if (data.heureDebut && data.heureFin) {
-    conditions.push({
-      label: `Horaires d'accueil - De ${data.heureDebut} à ${data.heureFin}`,
-      icon: "clock",
+  if (data.joursOuverture.length > 0 && data.horairesParJour && Object.keys(data.horairesParJour).length > 0) {
+    data.joursOuverture.forEach((jour) => {
+      const h = data.horairesParJour![jour];
+      if (h?.debut && h?.fin) {
+        const jourCapitalized = jour.charAt(0).toUpperCase() + jour.slice(1);
+        conditions.push({
+          label: `Horaires - ${jourCapitalized} : ${h.debut} - ${h.fin}`,
+          icon: "clock",
+        });
+      }
     });
   }
 

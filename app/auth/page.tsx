@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useActionState, useTransition, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useActionState, useTransition, useState, Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -206,11 +206,18 @@ function LoginFormContent({ onSwitchToSignup }: { onSwitchToSignup: () => void }
 }
 
 function SignupFormContent({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
+  const router = useRouter();
   const [state, formAction] = useActionState(signupAction, initialState);
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [userType, setUserType] = useState<"seeker" | "owner">("seeker");
+
+  useEffect(() => {
+    if (state.redirectTo) {
+      router.push(state.redirectTo);
+    }
+  }, [state.redirectTo, router]);
 
   const form = useForm<SignupSchema>({
     resolver: zodResolver(signupSchema),

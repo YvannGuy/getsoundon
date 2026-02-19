@@ -18,6 +18,10 @@ npm install
 npm run dev
 ```
 
+## Supabase Auth (inscription propriétaire)
+
+Pour que la redirection vers l'onboarding fonctionne après création de compte « Je possède une salle », désactivez la confirmation email en développement : **Supabase Dashboard → Authentication → Providers → Email** → décochez « Confirm email ». Sinon l'utilisateur doit d'abord confirmer son email avant d'accéder à l'onboarding.
+
 ## SQL Supabase
 
 Exécutez le script `config/supabase.sql` dans l'éditeur SQL Supabase pour :

@@ -15,6 +15,7 @@ import {
   Eye,
   LayoutGrid,
   Lightbulb,
+  Moon,
   Mountain,
   Music,
   ParkingCircle,
@@ -24,10 +25,13 @@ import {
   Users,
   Volume2,
   VolumeX,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { VilleAutocomplete } from "@/components/search/ville-autocomplete";
+import { AdresseAutocomplete } from "@/components/search/adresse-autocomplete";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +61,7 @@ const ACCEPTED_EVENTS = [
   { id: "conference", label: "Conférence", icon: Users },
   { id: "concert", label: "Concert", icon: Music },
   { id: "retraite", label: "Retraite", icon: Mountain },
+  { id: "veillee_priere", label: "Veillée de prière", icon: Moon },
 ] as const;
 
 const INCLUSIONS = [
@@ -64,6 +69,8 @@ const INCLUSIONS = [
   { id: "mobilier", label: "Mobilier et équipements" },
   { id: "sono", label: "Système de sonorisation" },
 ] as const;
+
+type HorairesJour = { debut: string; fin: string };
 
 type WizardData = {
   nom: string;
@@ -75,8 +82,7 @@ type WizardData = {
   inclusions: string[];
   placesParking: string;
   features: string[];
-  heureDebut: string;
-  heureFin: string;
+  horairesParJour: Record<string, HorairesJour>;
   joursOuverture: string[];
   restrictionSonore: string;
   evenementsAcceptes: string[];
@@ -84,6 +90,8 @@ type WizardData = {
 };
 
 const JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"] as const;
+
+const DEFAULT_HORAIRES: HorairesJour = { debut: "08:00", fin: "22:00" };
 
 const initialData: WizardData = {
   nom: "",
@@ -95,8 +103,7 @@ const initialData: WizardData = {
   inclusions: ["location"],
   placesParking: "",
   features: [],
-  heureDebut: "08:00",
-  heureFin: "22:00",
+  horairesParJour: {},
   joursOuverture: [],
   restrictionSonore: "",
   evenementsAcceptes: [],
@@ -107,9 +114,13 @@ export default function OnboardingSallePage() {
   const [step, setStep] = useState(1);
   const [data, setData] = useState<WizardData>(initialData);
   const [submitted, setSubmitted] = useState(false);
+  const [createdSlug, setCreatedSlug] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const MIN_PHOTOS = 3;
+  const MAX_PHOTOS = 5;
 
   const progress = (step / TOTAL_STEPS) * 100;
 
@@ -136,12 +147,19 @@ export default function OnboardingSallePage() {
   };
 
   const toggleJour = (jour: string) => {
-    setData((prev) => ({
-      ...prev,
-      joursOuverture: prev.joursOuverture.includes(jour)
+    setData((prev) => {
+      const isSelected = prev.joursOuverture.includes(jour);
+      const newJours = isSelected
         ? prev.joursOuverture.filter((j) => j !== jour)
-        : [...prev.joursOuverture, jour],
-    }));
+        : [...prev.joursOuverture, jour];
+      const newHoraires = { ...prev.horairesParJour };
+      if (isSelected) {
+        delete newHoraires[jour];
+      } else {
+        newHoraires[jour] = { ...DEFAULT_HORAIRES };
+      }
+      return { ...prev, joursOuverture: newJours, horairesParJour: newHoraires };
+    });
   };
 
   const toggleEvent = (id: string) => {
@@ -154,10 +172,16 @@ export default function OnboardingSallePage() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
+    const files = Array.from(e.target.files ?? []).filter(
+      (f) => f.type === "image/jpeg" || f.type === "image/png"
+    );
     if (files.length) {
-      setData((prev) => ({ ...prev, photos: [...prev.photos, ...files] }));
+      setData((prev) => {
+        const combined = [...prev.photos, ...files];
+        return { ...prev, photos: combined.slice(0, MAX_PHOTOS) };
+      });
     }
+    e.target.value = "";
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -166,8 +190,18 @@ export default function OnboardingSallePage() {
       (f) => f.type === "image/jpeg" || f.type === "image/png"
     );
     if (files.length) {
-      setData((prev) => ({ ...prev, photos: [...prev.photos, ...files] }));
+      setData((prev) => {
+        const combined = [...prev.photos, ...files];
+        return { ...prev, photos: combined.slice(0, MAX_PHOTOS) };
+      });
     }
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    setData((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index),
+    }));
   };
 
   const handleDragOver = (e: React.DragEvent) => e.preventDefault();
@@ -186,8 +220,7 @@ export default function OnboardingSallePage() {
     formData.set("inclusions", JSON.stringify(data.inclusions));
     formData.set("placesParking", data.placesParking);
     formData.set("features", JSON.stringify(data.features));
-    formData.set("heureDebut", data.heureDebut);
-    formData.set("heureFin", data.heureFin);
+    formData.set("horairesParJour", JSON.stringify(data.horairesParJour));
     formData.set("joursOuverture", JSON.stringify(data.joursOuverture));
     formData.set("restrictionSonore", data.restrictionSonore);
     formData.set("evenementsAcceptes", JSON.stringify(data.evenementsAcceptes));
@@ -196,6 +229,7 @@ export default function OnboardingSallePage() {
     const result = await createSalleFromOnboarding(formData);
 
     if (result.success) {
+      setCreatedSlug(result.slug ?? null);
       setSubmitted(true);
     } else {
       setSubmitError(result.error);
@@ -253,11 +287,11 @@ export default function OnboardingSallePage() {
                 <ChevronRight className="h-5 w-5" />
               </Link>
               <Link
-                href="#"
+                href={createdSlug ? `/salles/${createdSlug}` : "/proprietaire/annonces"}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
               >
                 <Eye className="h-5 w-5" />
-                Voir mon annonce (aperçu)
+                Voir mon annonce
               </Link>
             </div>
             <h2 className="mt-14 w-full text-left text-lg font-semibold text-slate-900">
@@ -354,6 +388,15 @@ export default function OnboardingSallePage() {
             toggleEvent={toggleEvent}
             toggleInclusion={toggleInclusion}
             toggleJour={toggleJour}
+            updateHorairesPourJour={(jour, debut, fin) =>
+              setData((prev) => ({
+                ...prev,
+                horairesParJour: {
+                  ...prev.horairesParJour,
+                  [jour]: { debut, fin },
+                },
+              }))
+            }
             onNext={() => setStep(4)}
             onBack={() => setStep(2)}
           />
@@ -364,9 +407,12 @@ export default function OnboardingSallePage() {
             onFileChange={handleFileChange}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
+            onRemovePhoto={handleRemovePhoto}
             fileInputRef={fileInputRef}
             onNext={() => setStep(5)}
             onBack={() => setStep(3)}
+            minPhotos={MIN_PHOTOS}
+            maxPhotos={MAX_PHOTOS}
           />
         )}
         {step === 5 && (
@@ -376,6 +422,7 @@ export default function OnboardingSallePage() {
             onBack={() => setStep(4)}
             isSubmitting={isSubmitting}
             submitError={submitError}
+            minPhotos={MIN_PHOTOS}
           />
         )}
       </main>
@@ -392,6 +439,15 @@ function Step1({
   updateData: (u: Partial<WizardData>) => void;
   onNext: () => void;
 }) {
+  const isComplete =
+    data.nom.trim() !== "" &&
+    data.ville.trim() !== "" &&
+    data.capacite.trim() !== "" &&
+    data.adresse.trim() !== "" &&
+    data.description.trim() !== "" &&
+    data.tarifParJour.trim() !== "" &&
+    Number(data.tarifParJour) > 0;
+
   return (
     <>
       <h2 className="text-2xl font-bold text-slate-900">Parlez-nous de votre salle</h2>
@@ -409,11 +465,10 @@ function Step1({
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700">Ville</label>
-            <Input
-              placeholder="Ex: Paris"
+            <VilleAutocomplete
               value={data.ville}
-              onChange={(e) => updateData({ ville: e.target.value })}
-              className="h-11 border-slate-200"
+              onChange={(v) => updateData({ ville: v })}
+              placeholder="Ex: Paris, Versailles..."
             />
           </div>
           <div className="space-y-2">
@@ -428,12 +483,16 @@ function Step1({
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-700">Adresse</label>
-          <Input
-            placeholder="Ex: 12 rue de la République"
+          <AdresseAutocomplete
             value={data.adresse}
-            onChange={(e) => updateData({ adresse: e.target.value })}
-            className="h-11 border-slate-200"
+            onChange={(v) => updateData({ adresse: v })}
+            onSelectAddress={(addr, city) => {
+              updateData({ adresse: addr });
+              if (city) updateData({ ville: city });
+            }}
+            placeholder="Ex: 12 rue de la République, Paris"
           />
+          <p className="text-xs text-slate-500">Recherche limitée à l&apos;Île-de-France</p>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-700">Description</label>
@@ -459,7 +518,8 @@ function Step1({
       </div>
       <Button
         onClick={onNext}
-        className="mt-8 h-11 w-full bg-[#5b4dbf] hover:bg-[#4a3dad]"
+        disabled={!isComplete}
+        className="mt-8 h-11 w-full bg-[#5b4dbf] hover:bg-[#4a3dad] disabled:opacity-50"
       >
         Continuer
       </Button>
@@ -529,15 +589,17 @@ function Step2({
         <Button variant="outline" onClick={onBack} className="h-11 flex-1 border-slate-300">
           Retour
         </Button>
-        <Button onClick={onNext} className="h-11 flex-1 bg-[#5b4dbf] hover:bg-[#4a3dad]">
+        <Button
+          onClick={onNext}
+          disabled={!(
+            data.features.length >= 1 &&
+            (!data.features.includes("parking") || data.placesParking.trim() !== "")
+          )}
+          className="h-11 flex-1 bg-[#5b4dbf] hover:bg-[#4a3dad] disabled:opacity-50"
+        >
           Continuer
         </Button>
       </div>
-      <p className="mt-4 text-center text-sm text-slate-500">
-        <button type="button" className="hover:underline">
-          Passer cette étape
-        </button>
-      </p>
     </>
   );
 }
@@ -548,6 +610,7 @@ function Step3({
   toggleEvent,
   toggleInclusion,
   toggleJour,
+  updateHorairesPourJour,
   onNext,
   onBack,
 }: {
@@ -556,6 +619,7 @@ function Step3({
   toggleEvent: (id: string) => void;
   toggleInclusion: (id: string) => void;
   toggleJour: (jour: string) => void;
+  updateHorairesPourJour: (jour: string, debut: string, fin: string) => void;
   onNext: () => void;
   onBack: () => void;
 }) {
@@ -565,26 +629,6 @@ function Step3({
       <p className="mt-2 text-slate-600">Précisez les règles et contraintes de votre salle</p>
 
       <div className="mt-8 space-y-8">
-        <div>
-          <label className="text-sm font-medium text-slate-700">Horaires autorisés</label>
-          <div className="mt-2 flex items-center gap-3">
-            <Input
-              type="time"
-              value={data.heureDebut}
-              onChange={(e) => updateData({ heureDebut: e.target.value })}
-              className="h-11 w-32 border-slate-200"
-            />
-            <ChevronRight className="h-5 w-5 text-slate-400" />
-            <Input
-              type="time"
-              value={data.heureFin}
-              onChange={(e) => updateData({ heureFin: e.target.value })}
-              className="h-11 w-32 border-slate-200"
-            />
-          </div>
-          <p className="mt-1.5 text-xs text-slate-500">Indiquez les plages horaires d&apos;ouverture</p>
-        </div>
-
         <div>
           <label className="text-sm font-medium text-slate-700">Jours d&apos;ouverture</label>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -606,6 +650,41 @@ function Step3({
           </div>
           <p className="mt-1.5 text-xs text-slate-500">Sélectionnez les jours où la salle est disponible</p>
         </div>
+
+        {data.joursOuverture.length > 0 && (
+          <div>
+            <label className="text-sm font-medium text-slate-700">Horaires par jour</label>
+            <p className="mt-1 text-xs text-slate-500">
+              Indiquez les plages horaires pour chaque jour sélectionné
+            </p>
+            <div className="mt-3 space-y-4">
+              {data.joursOuverture.map((jour) => {
+                const h = data.horairesParJour[jour] ?? DEFAULT_HORAIRES;
+                return (
+                  <div
+                    key={jour}
+                    className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-slate-50/50 p-4"
+                  >
+                    <span className="w-24 text-sm font-medium capitalize text-slate-700">{jour}</span>
+                    <Input
+                      type="time"
+                      value={h.debut}
+                      onChange={(e) => updateHorairesPourJour(jour, e.target.value, h.fin)}
+                      className="h-10 w-32 border-slate-200"
+                    />
+                    <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
+                    <Input
+                      type="time"
+                      value={h.fin}
+                      onChange={(e) => updateHorairesPourJour(jour, h.debut, e.target.value)}
+                      className="h-10 w-32 border-slate-200"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div>
           <label className="text-sm font-medium text-slate-700">Restrictions sonores</label>
@@ -695,15 +774,18 @@ function Step3({
         <Button variant="outline" onClick={onBack} className="h-11 flex-1 border-slate-300">
           Retour
         </Button>
-        <Button onClick={onNext} className="h-11 flex-1 bg-[#5b4dbf] hover:bg-[#4a3dad]">
+        <Button
+          onClick={onNext}
+          disabled={!(
+            data.joursOuverture.length >= 1 &&
+            data.restrictionSonore !== "" &&
+            data.evenementsAcceptes.length >= 1
+          )}
+          className="h-11 flex-1 bg-[#5b4dbf] hover:bg-[#4a3dad] disabled:opacity-50"
+        >
           Continuer
         </Button>
       </div>
-      <p className="mt-4 text-center text-sm text-slate-500">
-        <button type="button" className="hover:underline">
-          Passer cette étape
-        </button>
-      </p>
     </>
   );
 }
@@ -713,72 +795,115 @@ function Step4({
   onFileChange,
   onDrop,
   onDragOver,
+  onRemovePhoto,
   fileInputRef,
   onNext,
   onBack,
+  minPhotos,
+  maxPhotos,
 }: {
   data: WizardData;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDrop: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
+  onRemovePhoto: (index: number) => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onNext: () => void;
   onBack: () => void;
+  minPhotos: number;
+  maxPhotos: number;
 }) {
+  const canAddMore = data.photos.length < maxPhotos;
+  const canContinue = data.photos.length >= minPhotos;
+
   return (
     <>
       <h2 className="text-2xl font-bold text-slate-900">Ajoutez des photos</h2>
-      <p className="mt-2 text-slate-600">Montrez votre salle sous son meilleur jour</p>
-      <div
-        className="mt-8 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-16 transition-colors hover:border-slate-300"
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-      >
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#5b4dbf]/10">
-          <Camera className="h-8 w-8 text-[#5b4dbf]" />
+      <p className="mt-2 text-slate-600">
+        Montrez votre salle sous son meilleur jour (minimum {minPhotos}, maximum {maxPhotos} photos)
+      </p>
+      {data.photos.length > 0 && (
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {data.photos.map((file, i) => (
+            <div
+              key={`${file.name}-${i}`}
+              className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100"
+            >
+              <img
+                src={URL.createObjectURL(file)}
+                alt={`Photo ${i + 1}`}
+                className="h-full w-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => onRemovePhoto(i)}
+                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500/90 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
+                aria-label="Supprimer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
         </div>
-        <p className="mt-4 font-semibold text-slate-900">Glissez vos photos ici</p>
-        <p className="mt-1 text-slate-500">ou</p>
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-3 border-slate-300 bg-white"
-          onClick={() => fileInputRef.current?.click()}
+      )}
+      {canAddMore && (
+        <div
+          className="mt-6 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-12 transition-colors hover:border-slate-300"
+          onDrop={onDrop}
+          onDragOver={onDragOver}
         >
-          Télécharger des fichiers
-        </Button>
-        <input
-          ref={fileInputRef as React.Ref<HTMLInputElement>}
-          type="file"
-          accept=".jpg,.jpeg,.png"
-          multiple
-          className="hidden"
-          onChange={onFileChange}
-        />
-        <p className="mt-4 text-xs text-slate-400">Formats acceptés : JPG, PNG</p>
-      </div>
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#5b4dbf]/10">
+            <Camera className="h-7 w-7 text-[#5b4dbf]" />
+          </div>
+          <p className="mt-3 font-semibold text-slate-900">Glissez vos photos ici</p>
+          <p className="mt-1 text-slate-500">ou</p>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-3 border-slate-300 bg-white"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Télécharger des fichiers
+          </Button>
+          <input
+            ref={fileInputRef as React.Ref<HTMLInputElement>}
+            type="file"
+            accept=".jpg,.jpeg,.png"
+            multiple
+            className="hidden"
+            onChange={onFileChange}
+          />
+          <p className="mt-3 text-xs text-slate-400">Formats acceptés : JPG, PNG</p>
+        </div>
+      )}
       <div className="mt-6 flex items-center gap-2 rounded-lg bg-[#5b4dbf]/10 p-3 text-sm text-[#5b4dbf]">
         <Lightbulb className="h-4 w-4 shrink-0" />
         Les annonces avec photos reçoivent beaucoup plus de demandes
       </div>
-      <p className="mt-2 flex items-center gap-2 text-sm text-slate-500">
+      <p
+        className={cn(
+          "mt-2 flex items-center gap-2 text-sm",
+          data.photos.length < minPhotos ? "text-amber-600" : "text-slate-500"
+        )}
+      >
         <Camera className="h-4 w-4" />
-        {data.photos.length} photo{data.photos.length !== 1 ? "s" : ""} ajoutée
-        {data.photos.length !== 1 ? "s" : ""}
+        {data.photos.length} / {maxPhotos} photo{maxPhotos > 1 ? "s" : ""}
+        {data.photos.length < minPhotos && (
+          <span className="ml-1">— ajoutez encore {minPhotos - data.photos.length}</span>
+        )}
       </p>
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <Button variant="outline" onClick={onBack} className="h-11 flex-1 border-slate-300">
           Retour
         </Button>
-        <Button onClick={onNext} className="h-11 flex-1 bg-[#5b4dbf] hover:bg-[#4a3dad]">
+        <Button
+          onClick={onNext}
+          disabled={!canContinue}
+          className="h-11 flex-1 bg-[#5b4dbf] hover:bg-[#4a3dad] disabled:opacity-50"
+        >
           Continuer
         </Button>
       </div>
-      <p className="mt-4 text-center text-sm text-slate-500">
-        <button type="button" className="hover:underline">
-          Passer cette étape
-        </button>
-      </p>
     </>
   );
 }
@@ -789,12 +914,14 @@ function Step5({
   onBack,
   isSubmitting,
   submitError,
+  minPhotos,
 }: {
   data: WizardData;
   onSubmit: () => void;
   onBack: () => void;
   isSubmitting?: boolean;
   submitError?: string | null;
+  minPhotos: number;
 }) {
   return (
     <>
@@ -841,10 +968,22 @@ function Step5({
           </p>
         </div>
         <div>
-          <p className="text-xs font-medium text-slate-500">Jours d&apos;ouverture</p>
-          <p className="mt-1 text-sm text-slate-900 capitalize">
-            {data.joursOuverture.length ? data.joursOuverture.join(", ") : "—"}
-          </p>
+          <p className="text-xs font-medium text-slate-500">Jours et horaires d&apos;ouverture</p>
+          <div className="mt-2 space-y-1">
+            {data.joursOuverture.length ? (
+              data.joursOuverture.map((jour) => {
+                const h = data.horairesParJour[jour];
+                const label = h ? `${jour} : ${h.debut} - ${h.fin}` : jour;
+                return (
+                  <p key={jour} className="text-sm capitalize text-slate-900">
+                    {label}
+                  </p>
+                );
+              })
+            ) : (
+              <p className="text-sm text-slate-900">—</p>
+            )}
+          </div>
         </div>
       </div>
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -858,8 +997,8 @@ function Step5({
         </Button>
         <Button
           onClick={onSubmit}
-          disabled={isSubmitting}
-          className="h-11 flex-1 bg-[#5b4dbf] hover:bg-[#4a3dad]"
+          disabled={isSubmitting || data.photos.length < minPhotos}
+          className="h-11 flex-1 bg-[#5b4dbf] hover:bg-[#4a3dad] disabled:opacity-50"
         >
           {isSubmitting ? "Envoi en cours..." : "Soumettre mon annonce"}
         </Button>

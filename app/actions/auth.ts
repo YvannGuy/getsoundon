@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 export type AuthFormState = {
   error?: string;
   success?: string;
+  redirectTo?: string;
 };
 
 const defaultError = "Une erreur est survenue. Veuillez réessayer.";
@@ -40,7 +41,7 @@ export async function signupAction(_: AuthFormState, formData: FormData): Promis
   const userType = String(formData.get("userType") ?? "seeker");
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -52,18 +53,23 @@ export async function signupAction(_: AuthFormState, formData: FormData): Promis
     return { error: error.message || defaultError };
   }
 
-  if (userType === "owner") {
-    revalidatePath("/", "layout");
-    redirect("/onboarding/salle");
+  revalidatePath("/", "layout");
+
+  // Session disponible = pas de confirmation email requise → redirection immédiate
+  const hasSession = !!data.session;
+
+  if (hasSession && userType === "owner") {
+    return { success: "Compte créé.", redirectTo: "/onboarding/salle" };
   }
 
-  if (userType === "seeker") {
-    revalidatePath("/", "layout");
-    redirect("/dashboard");
+  if (hasSession && userType === "seeker") {
+    return { success: "Compte créé.", redirectTo: "/dashboard" };
   }
 
+  // Confirmation email requise : pas de redirection (l'utilisateur n'a pas encore de session)
   return {
-    success: "Compte créé. Vérifiez votre email pour confirmer votre inscription.",
+    success:
+      "Compte créé. Vérifiez votre email pour confirmer votre inscription, puis connectez-vous.",
   };
 }
 

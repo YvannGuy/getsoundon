@@ -63,6 +63,9 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='salles' AND column_name='places_parking') THEN
     ALTER TABLE public.salles ADD COLUMN places_parking int;
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='salles' AND column_name='horaires_par_jour') THEN
+    ALTER TABLE public.salles ADD COLUMN horaires_par_jour jsonb default '{}';
+  END IF;
 END $$;
 
 -- -----------------------------------------------------------------------------

@@ -44,8 +44,9 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
   const inclusions = JSON.parse(String(formData.get("inclusions") ?? "[]")) as string[];
   const placesParking = String(formData.get("placesParking") ?? "");
   const features = JSON.parse(String(formData.get("features") ?? "[]")) as string[];
-  const heureDebut = String(formData.get("heureDebut") ?? "08:00");
-  const heureFin = String(formData.get("heureFin") ?? "22:00");
+  const horairesParJour = JSON.parse(
+    String(formData.get("horairesParJour") ?? "{}")
+  ) as Record<string, { debut: string; fin: string }>;
   const joursOuverture = JSON.parse(String(formData.get("joursOuverture") ?? "[]")) as string[];
   const restrictionSonore = String(formData.get("restrictionSonore") ?? "");
   const evenementsAcceptes = JSON.parse(
@@ -62,8 +63,7 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     inclusions,
     placesParking,
     features,
-    heureDebut,
-    heureFin,
+    horairesParJour,
     joursOuverture,
     restrictionSonore,
     evenementsAcceptes,
@@ -71,6 +71,13 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
 
   let imageUrls: string[] = [];
   const files = formData.getAll("photos") as File[];
+
+  if (files.length < 3) {
+    return {
+      success: false,
+      error: "Veuillez ajouter au moins 3 photos de votre salle.",
+    };
+  }
 
   if (files.length > 0) {
     const validFiles = files.filter(
@@ -126,8 +133,17 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     features: mapped.features ?? [],
     conditions: mapped.conditions ?? [],
     pricing_inclusions: mapped.pricingInclusions ?? [],
-    heure_debut: heureDebut || "08:00",
-    heure_fin: heureFin || "22:00",
+    heure_debut: (() => {
+      const first = joursOuverture[0];
+      const h = first ? horairesParJour[first] : null;
+      return h?.debut ?? "08:00";
+    })(),
+    heure_fin: (() => {
+      const first = joursOuverture[0];
+      const h = first ? horairesParJour[first] : null;
+      return h?.fin ?? "22:00";
+    })(),
+    horaires_par_jour: Object.keys(horairesParJour).length > 0 ? horairesParJour : {},
     jours_ouverture: joursOuverture.length > 0 ? joursOuverture : [],
     evenements_acceptes: evenementsAcceptes.length > 0 ? evenementsAcceptes : [],
     places_parking: placesParking ? parseInt(placesParking, 10) || null : null,
