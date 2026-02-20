@@ -38,13 +38,71 @@ export default async function AdminLayout({
   }
 
   let pendingCount = 0;
+  const notifications: { id: string; type: "user" | "annonce" | "paiement"; label: string; href: string; date: string }[] = [];
+
   try {
     const admin = createAdminClient();
-    const { count } = await admin
-      .from("salles")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "pending");
+    const [{ count }, { data: recentProfiles }, { data: recentSalles }, { data: recentPayments }] =
+      await Promise.all([
+        admin.from("salles").select("*", { count: "exact", head: true }).eq("status", "pending"),
+        admin
+          .from("profiles")
+          .select("id, full_name, email, created_at")
+          .order("created_at", { ascending: false })
+          .limit(5),
+        admin
+          .from("salles")
+          .select("id, name, slug, status, created_at")
+          .order("created_at", { ascending: false })
+          .limit(5),
+        admin
+          .from("payments")
+          .select("id, amount, product_type, created_at")
+          .eq("status", "paid")
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ]);
+
     pendingCount = count ?? 0;
+
+    (recentProfiles ?? []).forEach((p) => {
+      notifications.push({
+        id: `user-${p.id}`,
+        type: "user",
+        label: `Nouvel utilisateur : ${p.full_name || p.email || "—"}`,
+        href: `/admin/utilisateurs?userId=${p.id}`,
+        date: p.created_at ?? "",
+      });
+    });
+    (recentSalles ?? []).forEach((s) => {
+      notifications.push({
+        id: `annonce-${s.id}`,
+        type: "annonce",
+        label: `Nouvelle annonce : ${s.name ?? "—"}`,
+        href: s.status === "pending"
+          ? `/admin/annonces-a-valider?salleId=${s.id}`
+          : `/admin/annonces?salleId=${s.id}`,
+        date: s.created_at ?? "",
+      });
+    });
+    (recentPayments ?? []).forEach((p) => {
+      const productLabels: Record<string, string> = {
+        pass_24h: "Pass 24h",
+        pass_48h: "Pass 48h",
+        abonnement: "Abonnement",
+        autre: "Autre",
+      };
+      notifications.push({
+        id: `paiement-${p.id}`,
+        type: "paiement",
+        label: `Nouveau paiement : ${(p.amount ?? 0) / 100}€ - ${productLabels[p.product_type ?? ""] ?? p.product_type}`,
+        href: `/admin/paiements?paymentId=${p.id}`,
+        date: p.created_at ?? "",
+      });
+    });
+
+    notifications.sort((a, b) => (b.date < a.date ? -1 : 1));
+    notifications.splice(15);
   } catch {
     // Ignore if admin client fails (e.g. missing SUPABASE_SERVICE_ROLE_KEY)
   }
@@ -53,7 +111,7 @@ export default async function AdminLayout({
     <div className="flex min-h-screen bg-slate-100">
       <AdminSidebar pendingCount={pendingCount} userEmail={user.email} />
       <div className="flex flex-1 flex-col overflow-auto">
-        <AdminHeader />
+        <AdminHeader pendingCount={pendingCount} notifications={notifications} />
         <main className="flex-1 pl-14 lg:pl-0">{children}</main>
       </div>
     </div>

@@ -36,6 +36,7 @@ type SalleWithOwner = {
 
 type Props = {
   salles: SalleWithOwner[];
+  highlightSalleId?: string;
 };
 
 function formatDateShort(createdAt: string) {
@@ -48,12 +49,12 @@ function formatDateShort(createdAt: string) {
 }
 
 
-export function AnnoncesAValiderClient({ salles }: Props) {
+export function AnnoncesAValiderClient({ salles, highlightSalleId }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
   const [villeFilter, setVilleFilter] = useState("all");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(highlightSalleId ?? null);
 
   const villes = useMemo(() => {
     const set = new Set(salles.map((s) => s.city));

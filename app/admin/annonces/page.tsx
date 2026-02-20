@@ -1,7 +1,12 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AnnoncesClient } from "./annonces-client";
 
-export default async function AdminAnnoncesPage() {
+export default async function AdminAnnoncesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ salleId?: string }>;
+}) {
+  const { salleId } = await searchParams;
   const supabase = createAdminClient();
 
   const [
@@ -54,7 +59,7 @@ export default async function AdminAnnoncesPage() {
 
   return (
     <div className="p-6 md:p-8">
-      <AnnoncesClient salles={sallesWithCounts} stats={stats} />
+      <AnnoncesClient salles={sallesWithCounts} stats={stats} highlightSalleId={salleId} />
     </div>
   );
 }

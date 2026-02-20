@@ -41,6 +41,8 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
   const capacite = String(formData.get("capacite") ?? "");
   const adresse = String(formData.get("adresse") ?? "").trim();
   const telephone = String(formData.get("telephone") ?? "").trim();
+  const postalCode = String(formData.get("postalCode") ?? "").trim();
+  const department = postalCode ? postalCode.slice(0, 2) : null;
   const latStr = String(formData.get("lat") ?? "").trim();
   const lngStr = String(formData.get("lng") ?? "").trim();
   let lat = latStr ? parseFloat(latStr) : null;
@@ -153,6 +155,8 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     name: (mapped.name ?? nom) || "Ma salle",
     city: mapped.city ?? ville,
     address: mapped.address ?? adresse,
+    postal_code: postalCode || null,
+    department: department || null,
     contact_phone: telephone || null,
     lat: lat ?? null,
     lng: lng ?? null,

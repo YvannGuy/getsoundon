@@ -80,6 +80,7 @@ type WizardData = {
   telephone: string;
   lat?: number;
   lng?: number;
+  postalCode?: string;
   description: string;
   tarifParJour: string;
   inclusions: string[];
@@ -221,6 +222,7 @@ export default function OnboardingSallePage() {
     formData.set("capacite", data.capacite);
     formData.set("adresse", data.adresse);
     formData.set("telephone", data.telephone);
+    if (data.postalCode) formData.set("postalCode", data.postalCode);
     if (data.lat != null) formData.set("lat", String(data.lat));
     if (data.lng != null) formData.set("lng", String(data.lng));
     formData.set("description", data.description);
@@ -519,10 +521,11 @@ function Step1({
           <AdresseAutocomplete
             value={data.adresse}
             onChange={(v) => updateData({ adresse: v })}
-            onSelectAddress={(addr, city, _postcode, coords) => {
+            onSelectAddress={(addr, city, postcode, coords) => {
               updateData({
                 adresse: addr,
                 ...(city && { ville: city }),
+                ...(postcode && { postalCode: postcode }),
                 ...(coords && { lat: coords.lat, lng: coords.lng }),
               });
             }}

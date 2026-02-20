@@ -1,10 +1,22 @@
 import { Suspense } from "react";
 
 import { RechercherContent } from "@/components/rechercher/rechercher-content";
-import { getSalles } from "@/lib/salles";
+import { searchSalles } from "@/lib/salles";
 
-export default async function RechercherPage() {
-  const salles = await getSalles();
+type SearchParams = { [key: string]: string | string[] | undefined };
+
+export default async function RechercherPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+  const ville = typeof params.ville === "string" ? params.ville : undefined;
+  const date = typeof params.date === "string" ? params.date : undefined;
+  const personnes = typeof params.personnes === "string" ? params.personnes : undefined;
+  const type = typeof params.type === "string" ? params.type : undefined;
+
+  const salles = await searchSalles({ ville, date, personnes, type });
 
   return (
     <Suspense

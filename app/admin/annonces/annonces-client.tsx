@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -53,6 +53,7 @@ type SalleRow = {
 type Props = {
   salles: SalleRow[];
   stats: { active: number; pending: number; rejected: number };
+  highlightSalleId?: string;
 };
 
 function formatCity(city: string, address: string) {
@@ -60,7 +61,7 @@ function formatCity(city: string, address: string) {
   return postal ? `${city} ${postal}` : city;
 }
 
-export function AnnoncesClient({ salles, stats }: Props) {
+export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [villeFilter, setVilleFilter] = useState("all");
@@ -69,7 +70,7 @@ export function AnnoncesClient({ salles, stats }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const [previewSalle, setPreviewSalle] = useState<Salle | null>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(!!highlightSalleId);
   const [editSalle, setEditSalle] = useState<Salle | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
@@ -85,6 +86,17 @@ export function AnnoncesClient({ salles, stats }: Props) {
       setPreviewOpen(true);
     }
   };
+
+  useEffect(() => {
+    if (highlightSalleId) {
+      getSalleForAdminAction(highlightSalleId).then((res) => {
+        if (res.salle) {
+          setPreviewSalle(res.salle);
+          setPreviewOpen(true);
+        }
+      });
+    }
+  }, [highlightSalleId]);
 
   const handleModifier = async (s: SalleRow) => {
     const res = await getSalleForAdminAction(s.id);

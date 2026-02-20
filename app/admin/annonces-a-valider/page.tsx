@@ -1,7 +1,12 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AnnoncesAValiderClient } from "./annonces-a-valider-client";
 
-export default async function AnnoncesAValiderPage() {
+export default async function AnnoncesAValiderPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ salleId?: string }>;
+}) {
+  const { salleId } = await searchParams;
   const supabase = createAdminClient();
   const { data: salles } = await supabase
     .from("salles")
@@ -23,7 +28,7 @@ export default async function AnnoncesAValiderPage() {
 
   return (
     <div className="p-6 md:p-8">
-      <AnnoncesAValiderClient salles={sallesWithOwner} />
+      <AnnoncesAValiderClient salles={sallesWithOwner} highlightSalleId={salleId} />
     </div>
   );
 }
