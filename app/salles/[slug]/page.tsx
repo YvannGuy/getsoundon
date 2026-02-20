@@ -30,7 +30,7 @@ import { SalleMap } from "@/components/salles/salle-map";
 import { isFavori } from "@/app/actions/favoris";
 import { getSalleRecentViewerCount, recordSalleView } from "@/app/actions/salle-views";
 import { getSalleRatingStats } from "@/app/actions/salle-ratings";
-import { hasAccessToContact } from "@/lib/pass-utils";
+import { hasAccessToBrowseOthers, hasAccessToContact } from "@/lib/pass-utils";
 import { createClient } from "@/lib/supabase/server";
 import { getSalleBySlug, getSallesByCity } from "@/lib/salles";
 
@@ -66,17 +66,48 @@ export default async function SalleDetailPage({
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const [settings, favori, ratingStats, recentViewerCount] = await Promise.all([
+  const [settings, favori, ratingStats, recentViewerCount, canBrowseOthers] = await Promise.all([
     getPlatformSettings(),
     isFavori(user?.id ?? null, salle.id),
     getSalleRatingStats(salle.id),
     getSalleRecentViewerCount(salle.id),
+    user?.id ? hasAccessToBrowseOthers(user.id) : Promise.resolve(false),
   ]);
+  const isOwnSalle = salle.ownerId === user?.id;
+  const canViewFullPage = isOwnSalle || canBrowseOthers;
   const canContact = await hasAccessToContact(user?.id ?? null, settings);
 
   recordSalleView(salle.id, user?.id ?? null);
 
-  const nearbySalles = await getSallesByCity(salle.city, slug);
+  const nearbySalles = canViewFullPage ? await getSallesByCity(salle.city, slug) : [];
+
+  if (user && !isOwnSalle && !canBrowseOthers) {
+    return (
+      <div className="min-h-screen bg-white">
+        <SiteHeader />
+        <main className="container max-w-[1120px] py-12">
+          <div className="mx-auto max-w-lg rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="flex justify-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#213398]/10">
+                <Lock className="h-7 w-7 text-[#213398]" />
+              </div>
+            </div>
+            <h2 className="mt-6 text-center text-xl font-semibold text-black">Accès requis</h2>
+            <p className="mt-2 text-center text-sm text-slate-600">
+              En tant que propriétaire, activez un Pass pour consulter les annonces des autres propriétaires.
+            </p>
+            <div className="mt-6">
+              <UnlockAccessBloc
+                isLoggedIn={true}
+                paiementUrl="/proprietaire/paiement"
+              />
+            </div>
+          </div>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">

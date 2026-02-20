@@ -24,6 +24,13 @@ export async function handleStripeWebhook(event: Stripe.Event) {
           product_type: productType,
           status: "paid",
         });
+        const customerId = session.customer as string | null;
+        if (customerId) {
+          await supabase
+            .from("profiles")
+            .update({ stripe_customer_id: customerId })
+            .eq("id", metadata.user_id);
+        }
       }
 
       return {

@@ -3,6 +3,7 @@
  */
 export type Salle = {
   id: string;
+  ownerId?: string;
   slug: string;
   name: string;
   city: string;
@@ -44,6 +45,7 @@ export type SalleRow = {
 export function rowToSalle(row: SalleRow): Salle {
   return {
     id: row.id,
+    ownerId: row.owner_id,
     slug: row.slug,
     name: row.name,
     city: row.city,

@@ -12,18 +12,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const PAIEMENT_URL = "/dashboard/paiement";
-
 type UnlockAccessBlocProps = {
   isLoggedIn: boolean;
+  paiementUrl?: string;
 };
 
-export function UnlockAccessBloc({ isLoggedIn }: UnlockAccessBlocProps) {
+export function UnlockAccessBloc({ isLoggedIn, paiementUrl = "/dashboard/paiement" }: UnlockAccessBlocProps) {
   const [modalOpen, setModalOpen] = useState(false);
 
   if (isLoggedIn) {
     return (
-      <Link href={PAIEMENT_URL}>
+      <Link href={paiementUrl}>
         <Button className="h-12 w-full rounded-lg bg-[#213398] font-semibold hover:bg-[#1a2980]">
           Débloquer l&apos;accès
         </Button>
@@ -32,7 +31,7 @@ export function UnlockAccessBloc({ isLoggedIn }: UnlockAccessBlocProps) {
   }
 
   const authUrl = (tab: "login" | "signup") =>
-    `/auth?tab=${tab}&redirectedFrom=${encodeURIComponent(PAIEMENT_URL)}`;
+    `/auth?tab=${tab}&redirectedFrom=${encodeURIComponent(paiementUrl)}`;
 
   return (
     <>

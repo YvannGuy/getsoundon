@@ -13,9 +13,12 @@ type PassCheckoutButtonProps = {
   passType: PassType;
   children: React.ReactNode;
   className?: string;
+  size?: "default" | "sm" | "lg" | "icon";
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost";
+  returnBase?: string;
 };
 
-export function PassCheckoutButton({ passType, children, className }: PassCheckoutButtonProps) {
+export function PassCheckoutButton({ passType, children, className, size, variant, returnBase }: PassCheckoutButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleCheckout = async () => {
@@ -24,7 +27,7 @@ export function PassCheckoutButton({ passType, children, className }: PassChecko
       const response = await fetch("/api/stripe/checkout-pass", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ passType }),
+        body: JSON.stringify({ passType, ...(returnBase && { returnBase }) }),
       });
 
       const data = await response.json();
@@ -54,7 +57,7 @@ export function PassCheckoutButton({ passType, children, className }: PassChecko
   };
 
   return (
-    <Button type="button" className={className} onClick={handleCheckout} disabled={isLoading}>
+    <Button type="button" className={className} size={size} variant={variant} onClick={handleCheckout} disabled={isLoading}>
       {isLoading ? "Redirection..." : children}
     </Button>
   );

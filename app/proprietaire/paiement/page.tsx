@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, CreditCard, Gift, Infinity, Lock, Zap } from "lucide-react";
+import { AlertTriangle, CreditCard, Infinity, Lock, Zap } from "lucide-react";
 
-import { activateTrialAction } from "@/app/actions/trial";
 import { getPaymentMethods } from "@/app/actions/stripe-portal";
 import { getPlatformSettings } from "@/app/actions/admin-settings";
 import { PassCheckoutButton } from "@/components/pass-checkout-button";
@@ -11,6 +10,7 @@ import { PortalButton } from "@/components/paiement/portal-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
+import { hasAccessToBrowseOthers } from "@/lib/pass-utils";
 
 const PRODUCT_LABEL: Record<string, string> = {
   pass_24h: "Pass 24h",
@@ -43,62 +43,16 @@ const CARD_BRAND_LABEL: Record<string, string> = {
   unionpay: "UnionPay",
 };
 
-function hasActivePass(
-  payments: { product_type: string; created_at: string }[],
-  freeUsed: number,
-  freeTotal: number
-): boolean {
-  if (freeUsed < freeTotal) return true;
-  const now = new Date();
-  return (payments ?? []).some((p) => {
-    if (p.product_type === "abonnement") return true;
-    const created = new Date(p.created_at);
-    const hoursAgo = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
-    if (p.product_type === "pass_24h") return hoursAgo < 24;
-    if (p.product_type === "pass_48h") return hoursAgo < 48;
-    return false;
-  });
-}
-
-function hasPaidPass(
-  payments: { product_type: string; created_at: string }[],
-  freeUsed: number,
-  freeTotal: number
-): boolean {
-  if (freeUsed < freeTotal) return false;
-  const now = new Date();
-  return (payments ?? []).some((p) => {
-    if (p.product_type === "abonnement") return true;
-    const created = new Date(p.created_at);
-    const hoursAgo = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
-    if (p.product_type === "pass_24h") return hoursAgo < 24;
-    if (p.product_type === "pass_48h") return hoursAgo < 48;
-    return false;
-  });
-}
-
-export default async function PaiementPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+export default async function ProprietairePaiementPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const params = await searchParams;
-  if (params.trial === "1") {
-    await activateTrialAction();
-  }
-
-  const settings = await getPlatformSettings();
-  const pass = settings.pass;
-
-  const [{ count: demandesCount }, { data: payments }, { data: profile }, paymentMethods] =
+  const [settings, { data: payments }, { data: profile }, paymentMethods, canBrowse] =
     await Promise.all([
-      supabase.from("demandes").select("id", { count: "exact", head: true }).eq("seeker_id", user.id),
+      getPlatformSettings(),
       supabase
         .from("payments")
         .select("id, product_type, amount, status, created_at")
@@ -106,32 +60,28 @@ export default async function PaiementPage({
         .order("created_at", { ascending: false }),
       supabase.from("profiles").select("stripe_customer_id").eq("id", user.id).single(),
       getPaymentMethods(user.id),
+      hasAccessToBrowseOthers(user.id),
     ]);
 
-  const freeUsed = demandesCount ?? 0;
-  const freeTotal = pass.demandes_gratuites;
+  const pass = settings.pass;
   const paidList = (payments ?? []).filter((p) => p.status === "paid");
-  const activePass = hasActivePass(paidList, freeUsed, freeTotal);
-  const hasPaid = hasPaidPass(paidList, freeUsed, freeTotal);
-  const isTrialActive = freeUsed < freeTotal && !hasPaid;
-  const trialJustActivated = params.trial === "1";
 
   const plans = [
     {
       id: "pass_24h" as const,
       name: "Pass 24h",
-      description: "Accès illimité pendant 24 heures",
+      description: "Consultez les annonces des autres propriétaires",
       price: pass.price_24h / 100,
-      features: ["Demandes illimitées", "Messagerie complète", "Support prioritaire"],
+      features: ["Accès aux annonces", "Recherche illimitée", "Support prioritaire"],
       icon: Zap,
       enabled: pass.pass_24h_enabled,
     },
     {
       id: "pass_48h" as const,
       name: "Pass 48h",
-      description: "Accès illimité pendant 48 heures",
+      description: "Consultez les annonces des autres propriétaires",
       price: pass.price_48h / 100,
-      features: ["Demandes illimitées", "Messagerie complète", "Support prioritaire", "Économie de 35%"],
+      features: ["Accès aux annonces", "Recherche illimitée", "Support prioritaire", "Économie de 35%"],
       icon: Zap,
       highlighted: true,
       enabled: pass.pass_48h_enabled,
@@ -142,7 +92,7 @@ export default async function PaiementPage({
       description: "Accès illimité récurrent",
       price: pass.price_abonnement / 100,
       priceSuffix: "/mois",
-      features: ["Demandes illimitées", "Messagerie complète", "Support prioritaire", "Résiliation à tout moment"],
+      features: ["Accès aux annonces", "Recherche illimitée", "Support prioritaire", "Résiliation à tout moment"],
       icon: Infinity,
       enabled: pass.abonnement_enabled,
     },
@@ -153,22 +103,7 @@ export default async function PaiementPage({
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-bold text-black">Paiement</h1>
-      <p className="mt-2 text-slate-500">Gérez votre accès et vos transactions</p>
-
-      {/* Bannière essai venant d'être activé */}
-      {trialJustActivated && isTrialActive && (
-        <div className="mt-6 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 p-5">
-          <Gift className="h-8 w-8 shrink-0 text-emerald-600" />
-          <div>
-            <p className="font-semibold text-emerald-800">Votre essai est activé !</p>
-            <p className="mt-1 text-sm text-emerald-700">
-              Vous disposez de {freeTotal - freeUsed} demande{freeTotal - freeUsed > 1 ? "s" : ""} gratuite
-              {freeTotal - freeUsed > 1 ? "s" : ""} pour découvrir la plateforme. Envoyez vos demandes aux propriétaires
-              pour vérifier les disponibilités.
-            </p>
-          </div>
-        </div>
-      )}
+      <p className="mt-2 text-slate-500">Gérez votre accès pour consulter les annonces des autres propriétaires</p>
 
       {/* Mon accès */}
       <Card className="mt-8 border-0 shadow-sm">
@@ -179,47 +114,25 @@ export default async function PaiementPage({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {isTrialActive ? (
-            /* État : Essai (3 demandes offertes) */
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/80 p-4">
-                <Gift className="h-6 w-6 shrink-0 text-emerald-600" />
-                <div className="flex-1">
-                  <span className="font-semibold text-emerald-800">Essai actif</span>
-                  <p className="mt-0.5 text-sm text-emerald-700">
-                    {freeTotal - freeUsed} demande{freeTotal - freeUsed > 1 ? "s" : ""} gratuite
-                    {freeTotal - freeUsed > 1 ? "s" : ""} restante{freeTotal - freeUsed > 1 ? "s" : ""}
-                  </p>
-                </div>
-                <span className="rounded-full bg-emerald-200 px-2.5 py-1 text-xs font-medium text-emerald-800">
-                  Essai
-                </span>
-              </div>
-              <p className="text-xs text-slate-500">
-                Une fois vos demandes offertes épuisées, choisissez un Pass pour continuer à contacter les propriétaires.
-              </p>
-            </div>
-          ) : activePass && hasPaid ? (
-            /* État : Pass payant actif */
+          {canBrowse ? (
             <div className="flex items-center gap-3 rounded-lg bg-emerald-50 p-4">
               <Zap className="h-6 w-6 shrink-0 text-emerald-600" />
               <div>
                 <span className="font-semibold text-emerald-800">Pass actif</span>
-                <p className="mt-0.5 text-sm text-emerald-700">Accès illimité aux demandes</p>
+                <p className="mt-0.5 text-sm text-emerald-700">Vous pouvez consulter les annonces des autres propriétaires</p>
               </div>
               <span className="rounded-full bg-emerald-200 px-2.5 py-1 text-xs font-medium text-emerald-800">
                 Actif
               </span>
             </div>
           ) : (
-            /* État : Sans pass – essai épuisé */
             <>
               <div className="flex items-center gap-3 rounded-lg bg-slate-100 p-4">
                 <AlertTriangle className="h-6 w-6 shrink-0 text-slate-500" />
                 <div>
                   <span className="font-semibold text-slate-700">Accès limité</span>
                   <p className="mt-0.5 text-sm text-slate-600">
-                    Vos {freeTotal} demandes offertes sont épuisées
+                    Activez un Pass pour consulter les annonces des autres propriétaires
                   </p>
                 </div>
                 <span className="rounded-full bg-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600">
@@ -230,14 +143,14 @@ export default async function PaiementPage({
                 <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
                 <div>
                   <p className="text-sm font-medium text-amber-800">
-                    Activez un Pass pour continuer à envoyer des demandes illimitées aux propriétaires de salles.
+                    Sans Pass, vous ne pouvez consulter que vos propres annonces. Activez un Pass pour découvrir les salles des autres propriétaires.
                   </p>
                   <p className="mt-1 text-sm text-amber-700">
                     Pass 24h, 48h ou abonnement selon vos besoins
                   </p>
                 </div>
               </div>
-              <PassCheckoutButton passType="pass_24h" className="mt-4 bg-[#213398] hover:bg-[#1a2980]">
+              <PassCheckoutButton passType="pass_24h" returnBase="/proprietaire/paiement" className="mt-4 bg-[#213398] hover:bg-[#1a2980]">
                 Choisir un Pass
               </PassCheckoutButton>
             </>
@@ -271,7 +184,7 @@ export default async function PaiementPage({
                 <p className="text-2xl font-bold tabular-nums text-black">
                   {plan.price} €
                   {plan.priceSuffix && (
-                    <span className="text-base font-normal text-slate-500">{plan.priceSuffix}</span>
+                    <span className="ml-1 text-base font-normal text-slate-500">{plan.priceSuffix}</span>
                   )}
                 </p>
                 <ul className="mt-4 min-h-[7.5rem] space-y-2 text-sm text-slate-600">
@@ -285,6 +198,7 @@ export default async function PaiementPage({
                 <div className="mt-auto pt-6">
                   <PassCheckoutButton
                     passType={plan.id}
+                    returnBase="/proprietaire/paiement"
                     className={`w-full ${(plan as { highlighted?: boolean }).highlighted ? "bg-[#213398] hover:bg-[#1a2980]" : ""}`}
                   >
                     Choisir
@@ -304,12 +218,7 @@ export default async function PaiementPage({
             Moyen de paiement
           </CardTitle>
           {profile?.stripe_customer_id && (
-            <PortalButton
-              hasStripeCustomer={true}
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-            >
+            <PortalButton hasStripeCustomer={true} variant="outline" size="sm" className="shrink-0">
               Gérer mes moyens de paiement
             </PortalButton>
           )}
@@ -337,9 +246,6 @@ export default async function PaiementPage({
                   </div>
                 </div>
               ))}
-              <p className="text-xs text-slate-500">
-                Pour ajouter, modifier ou supprimer une carte, utilisez le portail sécurisé Stripe.
-              </p>
               <PortalButton hasStripeCustomer={!!profile?.stripe_customer_id} size="sm">
                 Ouvrir l&apos;espace gestion
               </PortalButton>
@@ -348,15 +254,7 @@ export default async function PaiementPage({
             <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center">
               <CreditCard className="mx-auto h-12 w-12 text-slate-300" />
               <p className="mt-2 text-sm text-slate-500">Aucune carte enregistrée</p>
-              <p className="mt-1 text-xs text-slate-400">
-                Effectuez un achat de Pass pour enregistrer votre carte. Elle sera réutilisable pour vos prochains achats.
-              </p>
-              <PortalButton
-                hasStripeCustomer={true}
-                variant="outline"
-                size="sm"
-                className="mt-4"
-              >
+              <PortalButton hasStripeCustomer={true} variant="outline" size="sm" className="mt-4">
                 Ouvrir l&apos;espace gestion Stripe
               </PortalButton>
             </div>
@@ -365,14 +263,7 @@ export default async function PaiementPage({
               <CreditCard className="mx-auto h-12 w-12 text-slate-300" />
               <p className="mt-2 text-sm text-slate-500">Aucune carte enregistrée</p>
               <p className="mt-1 text-xs text-slate-400">
-                Votre carte sera demandée lors de votre prochain achat de Pass (ci-dessus) et sera enregistrée pour vos futurs achats.
-              </p>
-            </div>
-          )}
-          {profile?.stripe_customer_id && (
-            <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <p className="text-xs text-slate-600">
-                <strong>Abonnement ?</strong> Utilisez l&apos;espace gestion Stripe pour annuler, suspendre ou modifier votre abonnement, et gérer vos factures.
+                Votre carte sera demandée lors de votre prochain achat de Pass (ci-dessus).
               </p>
             </div>
           )}

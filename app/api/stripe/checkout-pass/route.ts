@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import type Stripe from "stripe";
 
 import { getPlatformSettings } from "@/app/actions/admin-settings";
 import { siteConfig } from "@/config/site";
@@ -8,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const checkoutPassSchema = z.object({
   passType: z.enum(["pass_24h", "pass_48h", "abonnement"]),
+  returnBase: z.string().optional(),
 });
 
 export async function POST(request: Request) {
@@ -22,7 +24,8 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { passType } = checkoutPassSchema.parse(body);
+    const { passType, returnBase } = checkoutPassSchema.parse(body);
+    const base = returnBase || "/dashboard/paiement";
 
     const settings = await getPlatformSettings();
     const pass = settings.pass;
@@ -53,8 +56,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Ce Pass n'est pas disponible." }, { status: 400 });
     }
 
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("stripe_customer_id")
+      .eq("id", user.id)
+      .single();
+
     const stripe = getStripe();
-    const session = await stripe.checkout.sessions.create({
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       mode: "payment",
       line_items: [
         {
@@ -69,14 +78,21 @@ export async function POST(request: Request) {
           quantity: 1,
         },
       ],
-      success_url: `${siteConfig.url}/dashboard?checkout=success`,
-      cancel_url: `${siteConfig.url}/pricing?checkout=cancel`,
+      success_url: `${siteConfig.url}${base}?checkout=success`,
+      cancel_url: `${siteConfig.url}${base}?checkout=cancel`,
       metadata: {
         user_id: user.id,
         product_type: passType,
       },
-      customer_email: user.email ?? undefined,
-    });
+      payment_intent_data: {
+        setup_future_usage: "off_session",
+      },
+      ...(profile?.stripe_customer_id
+        ? { customer: profile.stripe_customer_id }
+        : { customer_email: user.email ?? undefined }),
+    };
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return NextResponse.json({ sessionId: session.id, url: session.url });
   } catch (error) {
