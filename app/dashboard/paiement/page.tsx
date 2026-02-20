@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, CreditCard, Infinity, Lock, Zap } from "lucide-react";
+import { AlertTriangle, CreditCard, Gift, Infinity, Lock, Zap } from "lucide-react";
 
+import { activateTrialAction } from "@/app/actions/trial";
 import { getPlatformSettings } from "@/app/actions/admin-settings";
 import { PassCheckoutButton } from "@/components/pass-checkout-button";
 import { Button } from "@/components/ui/button";
@@ -47,12 +48,38 @@ function hasActivePass(
   });
 }
 
-export default async function PaiementPage() {
+function hasPaidPass(
+  payments: { product_type: string; created_at: string }[],
+  freeUsed: number,
+  freeTotal: number
+): boolean {
+  if (freeUsed < freeTotal) return false;
+  const now = new Date();
+  return (payments ?? []).some((p) => {
+    if (p.product_type === "abonnement") return true;
+    const created = new Date(p.created_at);
+    const hoursAgo = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
+    if (p.product_type === "pass_24h") return hoursAgo < 24;
+    if (p.product_type === "pass_48h") return hoursAgo < 48;
+    return false;
+  });
+}
+
+export default async function PaiementPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
+
+  const params = await searchParams;
+  if (params.trial === "1") {
+    await activateTrialAction();
+  }
 
   const settings = await getPlatformSettings();
   const pass = settings.pass;
@@ -70,6 +97,9 @@ export default async function PaiementPage() {
   const freeTotal = pass.demandes_gratuites;
   const paidList = (payments ?? []).filter((p) => p.status === "paid");
   const activePass = hasActivePass(paidList, freeUsed, freeTotal);
+  const hasPaid = hasPaidPass(paidList, freeUsed, freeTotal);
+  const isTrialActive = freeUsed < freeTotal && !hasPaid;
+  const trialJustActivated = params.trial === "1";
 
   const plans = [
     {
@@ -110,6 +140,21 @@ export default async function PaiementPage() {
       <h1 className="text-2xl font-bold text-black">Paiement</h1>
       <p className="mt-2 text-slate-500">Gérez votre accès et vos transactions</p>
 
+      {/* Bannière essai venant d'être activé */}
+      {trialJustActivated && isTrialActive && (
+        <div className="mt-6 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 p-5">
+          <Gift className="h-8 w-8 shrink-0 text-emerald-600" />
+          <div>
+            <p className="font-semibold text-emerald-800">Votre essai est activé !</p>
+            <p className="mt-1 text-sm text-emerald-700">
+              Vous disposez de {freeTotal - freeUsed} demande{freeTotal - freeUsed > 1 ? "s" : ""} gratuite
+              {freeTotal - freeUsed > 1 ? "s" : ""} pour découvrir la plateforme. Envoyez vos demandes aux propriétaires
+              pour vérifier les disponibilités.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Mon accès */}
       <Card className="mt-8 border-0 shadow-sm">
         <CardHeader>
@@ -119,22 +164,50 @@ export default async function PaiementPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {activePass ? (
+          {isTrialActive ? (
+            /* État : Essai (3 demandes offertes) */
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/80 p-4">
+                <Gift className="h-6 w-6 shrink-0 text-emerald-600" />
+                <div className="flex-1">
+                  <span className="font-semibold text-emerald-800">Essai actif</span>
+                  <p className="mt-0.5 text-sm text-emerald-700">
+                    {freeTotal - freeUsed} demande{freeTotal - freeUsed > 1 ? "s" : ""} gratuite
+                    {freeTotal - freeUsed > 1 ? "s" : ""} restante{freeTotal - freeUsed > 1 ? "s" : ""}
+                  </p>
+                </div>
+                <span className="rounded-full bg-emerald-200 px-2.5 py-1 text-xs font-medium text-emerald-800">
+                  Essai
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">
+                Une fois vos demandes offertes épuisées, choisissez un Pass pour continuer à contacter les propriétaires.
+              </p>
+            </div>
+          ) : activePass && hasPaid ? (
+            /* État : Pass payant actif */
             <div className="flex items-center gap-3 rounded-lg bg-emerald-50 p-4">
-              <span className="text-emerald-700 font-medium">
-                {freeUsed < freeTotal
-                  ? `${freeTotal - freeUsed} demande${freeTotal - freeUsed > 1 ? "s" : ""} gratuite${freeTotal - freeUsed > 1 ? "s" : ""} restante${freeTotal - freeUsed > 1 ? "s" : ""}`
-                  : "Accès actif"}
-              </span>
-              <span className="rounded-full bg-emerald-200 px-2 py-0.5 text-xs font-medium text-emerald-800">
+              <Zap className="h-6 w-6 shrink-0 text-emerald-600" />
+              <div>
+                <span className="font-semibold text-emerald-800">Pass actif</span>
+                <p className="mt-0.5 text-sm text-emerald-700">Accès illimité aux demandes</p>
+              </div>
+              <span className="rounded-full bg-emerald-200 px-2.5 py-1 text-xs font-medium text-emerald-800">
                 Actif
               </span>
             </div>
           ) : (
+            /* État : Sans pass – essai épuisé */
             <>
               <div className="flex items-center gap-3 rounded-lg bg-slate-100 p-4">
-                <span className="font-medium text-slate-700">Accès limité</span>
-                <span className="rounded-full bg-slate-300 px-2 py-0.5 text-xs font-medium text-slate-600">
+                <AlertTriangle className="h-6 w-6 shrink-0 text-slate-500" />
+                <div>
+                  <span className="font-semibold text-slate-700">Accès limité</span>
+                  <p className="mt-0.5 text-sm text-slate-600">
+                    Vos {freeTotal} demandes offertes sont épuisées
+                  </p>
+                </div>
+                <span className="rounded-full bg-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600">
                   Inactif
                 </span>
               </div>
@@ -142,11 +215,10 @@ export default async function PaiementPage() {
                 <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
                 <div>
                   <p className="text-sm font-medium text-amber-800">
-                    Vous avez atteint vos demandes offertes. Activez un Pass pour continuer à envoyer des demandes
-                    illimitées aux propriétaires de salles.
+                    Activez un Pass pour continuer à envoyer des demandes illimitées aux propriétaires de salles.
                   </p>
                   <p className="mt-1 text-sm text-amber-700">
-                    Les Pass permettent d&apos;envoyer des demandes illimitées
+                    Pass 24h, 48h ou abonnement selon vos besoins
                   </p>
                 </div>
               </div>

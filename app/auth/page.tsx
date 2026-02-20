@@ -44,6 +44,7 @@ const features = [
 function AuthPageContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
+  const redirectedFrom = searchParams.get("redirectedFrom") ?? "";
   const [activeTab, setActiveTab] = useState<"login" | "signup">(
     tabParam === "signup" ? "signup" : "login"
   );
@@ -115,16 +116,16 @@ function AuthPageContent() {
         </div>
 
         {activeTab === "login" ? (
-          <LoginFormContent onSwitchToSignup={() => setActiveTab("signup")} />
+          <LoginFormContent redirectedFrom={redirectedFrom} onSwitchToSignup={() => setActiveTab("signup")} />
         ) : (
-          <SignupFormContent onSwitchToLogin={() => setActiveTab("login")} />
+          <SignupFormContent redirectedFrom={redirectedFrom} onSwitchToLogin={() => setActiveTab("login")} />
         )}
       </div>
     </div>
   );
 }
 
-function LoginFormContent({ onSwitchToSignup }: { onSwitchToSignup: () => void }) {
+function LoginFormContent({ redirectedFrom, onSwitchToSignup }: { redirectedFrom: string; onSwitchToSignup: () => void }) {
   const [state, formAction] = useActionState(loginAction, initialState);
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
@@ -138,6 +139,7 @@ function LoginFormContent({ onSwitchToSignup }: { onSwitchToSignup: () => void }
     const fd = new FormData();
     fd.append("email", values.email);
     fd.append("password", values.password);
+    if (redirectedFrom) fd.append("redirectedFrom", redirectedFrom);
     startTransition(() => formAction(fd));
   };
 
@@ -205,7 +207,7 @@ function LoginFormContent({ onSwitchToSignup }: { onSwitchToSignup: () => void }
   );
 }
 
-function SignupFormContent({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
+function SignupFormContent({ redirectedFrom, onSwitchToLogin }: { redirectedFrom: string; onSwitchToLogin: () => void }) {
   const router = useRouter();
   const [state, formAction] = useActionState(signupAction, initialState);
   const [isPending, startTransition] = useTransition();
@@ -236,6 +238,7 @@ function SignupFormContent({ onSwitchToLogin }: { onSwitchToLogin: () => void })
     fd.append("email", values.email);
     fd.append("password", values.password);
     fd.append("userType", userType);
+    if (redirectedFrom) fd.append("redirectedFrom", redirectedFrom);
     startTransition(() => formAction(fd));
   };
 

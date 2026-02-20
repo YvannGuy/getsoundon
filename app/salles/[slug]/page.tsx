@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Clock,
   ListChecks,
+  Lock,
   MapPin,
   Phone,
   MessageCircle,
@@ -18,6 +19,8 @@ import {
   Wifi,
 } from "lucide-react";
 
+import { getPlatformSettings } from "@/app/actions/admin-settings";
+import { UnlockAccessBloc } from "@/components/salles/unlock-access-bloc";
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -25,7 +28,9 @@ import { SalleActionsBar } from "@/components/salles/salle-actions-bar";
 import { SalleGallery } from "@/components/salles/salle-gallery";
 import { SalleMap } from "@/components/salles/salle-map";
 import { isFavori } from "@/app/actions/favoris";
+import { getSalleRecentViewerCount, recordSalleView } from "@/app/actions/salle-views";
 import { getSalleRatingStats } from "@/app/actions/salle-ratings";
+import { hasAccessToContact } from "@/lib/pass-utils";
 import { createClient } from "@/lib/supabase/server";
 import { getSalleBySlug, getSallesByCity } from "@/lib/salles";
 
@@ -61,10 +66,15 @@ export default async function SalleDetailPage({
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const [favori, ratingStats] = await Promise.all([
+  const [settings, favori, ratingStats, recentViewerCount] = await Promise.all([
+    getPlatformSettings(),
     isFavori(user?.id ?? null, salle.id),
     getSalleRatingStats(salle.id),
+    getSalleRecentViewerCount(salle.id),
   ]);
+  const canContact = await hasAccessToContact(user?.id ?? null, settings);
+
+  recordSalleView(salle.id, user?.id ?? null);
 
   const nearbySalles = await getSallesByCity(salle.city, slug);
 
@@ -207,39 +217,71 @@ export default async function SalleDetailPage({
           </div>
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-black">Intéressé par cette salle ?</h3>
-              <p className="mt-2 text-[14px] text-slate-600">
-                Envoyez une demande au propriétaire pour vérifier la disponibilité.
-              </p>
-              <Link href={`/salles/${salle.slug}/disponibilite`}>
-                <Button className="mt-4 h-12 w-full rounded-lg bg-violet-600 font-semibold hover:bg-violet-700">
-                  Vérifier les disponibilités
-                </Button>
-              </Link>
-              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-4">
-                <Link
-                  href={`/salles/${salle.slug}/disponibilite`}
-                  className="flex items-center gap-2 text-[13px] font-medium text-slate-600 hover:text-black"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  Envoyer un message
+            {canContact ? (
+              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="text-lg font-semibold text-black">Intéressé par cette salle ?</h3>
+                <p className="mt-2 text-[14px] text-slate-600">
+                  Envoyez une demande au propriétaire pour vérifier la disponibilité.
+                </p>
+                <Link href={`/salles/${salle.slug}/disponibilite`}>
+                  <Button className="mt-4 h-12 w-full rounded-lg bg-[#213398] font-semibold hover:bg-[#1a2980]">
+                    Vérifier les disponibilités
+                  </Button>
                 </Link>
-                {salle.contactPhone && (
-                  <a
-                    href={`tel:${salle.contactPhone.replace(/\s/g, "")}`}
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-4">
+                  <Link
+                    href={`/salles/${salle.slug}/disponibilite`}
                     className="flex items-center gap-2 text-[13px] font-medium text-slate-600 hover:text-black"
                   >
-                    <Phone className="h-4 w-4" />
-                    Appeler
-                  </a>
+                    <MessageCircle className="h-4 w-4" />
+                    Envoyer un message
+                  </Link>
+                  {salle.contactPhone && (
+                    <a
+                      href={`tel:${salle.contactPhone.replace(/\s/g, "")}`}
+                      className="flex items-center gap-2 text-[13px] font-medium text-slate-600 hover:text-black"
+                    >
+                      <Phone className="h-4 w-4" />
+                      Appeler
+                    </a>
+                  )}
+                </div>
+                {recentViewerCount > 0 && (
+                  <p className="mt-4 flex items-center gap-2 text-[12px] text-slate-400">
+                    <Clock className="h-3.5 w-3.5" />
+                    {recentViewerCount === 1
+                      ? "1 organisateur a consulté cette salle récemment."
+                      : `${recentViewerCount} organisateurs ont consulté cette salle récemment.`}
+                  </p>
                 )}
               </div>
-              <p className="mt-4 flex items-center gap-2 text-[12px] text-slate-400">
-                <Clock className="h-3.5 w-3.5" />
-                12 organisateurs ont consulté cette salle récemment.
-              </p>
-            </div>
+            ) : (
+              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex justify-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#213398]/10">
+                    <Lock className="h-6 w-6 text-[#213398]" />
+                  </div>
+                </div>
+                <h3 className="mt-4 text-center text-lg font-semibold text-black">Accès requis</h3>
+                <p className="mt-2 text-center text-[14px] text-slate-600">
+                  Activez un Pass pour contacter le propriétaire et vérifier la disponibilité.
+                </p>
+                <div className="mt-6">
+                  <UnlockAccessBloc isLoggedIn={!!user} />
+                </div>
+                <ul className="mt-6 space-y-2">
+                  {["Accès immédiat", "Devis personnalisés", "Suivi personnalisé"].map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-[13px] text-slate-600">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-4 text-center text-[12px] text-slate-500">
+                  Les paiements sont sécurisés sur notre site.
+                </p>
+              </div>
+            )}
             <div className="mt-6 flex gap-4 rounded-xl border border-amber-200 bg-amber-50/80 p-6">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-400">
                 <HelpCircle className="h-5 w-5 text-white" />
@@ -249,7 +291,7 @@ export default async function SalleDetailPage({
                 <p className="mt-2 text-[14px] text-slate-600">
                   Notre équipe est disponible pour vous accompagner dans votre recherche.
                 </p>
-                <a href="#" className="mt-3 inline-block text-[14px] font-medium text-black hover:underline">
+                <a href="mailto:contact@salledeculte.com" className="mt-3 inline-block text-[14px] font-medium text-black hover:underline">
                   Contacter le support
                 </a>
               </div>

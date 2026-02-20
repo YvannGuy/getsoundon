@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CheckCircle2, Crown, FileText, Heart, Inbox, Lock, MessageCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Crown, FileText, Heart, Inbox, Lock, MessageCircle } from "lucide-react";
 
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -111,6 +111,29 @@ export default async function DashboardPage() {
     return false;
   });
 
+  const passExpiryInfo =
+    activePass && activePass.product_type !== "abonnement"
+      ? (() => {
+          const created = new Date(activePass.created_at);
+          const durationHours = activePass.product_type === "pass_48h" ? 48 : 24;
+          const expiresAt = new Date(created.getTime() + durationHours * 60 * 60 * 1000);
+          const remainingMs = expiresAt.getTime() - now.getTime();
+          const remainingHours = remainingMs / (1000 * 60 * 60);
+          const threshold = activePass.product_type === "pass_48h" ? 6 : 4;
+          const isExpiringSoon = remainingHours > 0 && remainingHours < threshold;
+          const formatRemaining = () => {
+            if (remainingHours < 1) {
+              const mins = Math.floor((remainingMs / (1000 * 60)) % 60);
+              return `${mins} min`;
+            }
+            const h = Math.floor(remainingHours);
+            const m = Math.floor((remainingHours - h) * 60);
+            return m > 0 ? `${h}h ${m}min` : `${h}h`;
+          };
+          return { isExpiringSoon, remainingText: formatRemaining(), expiresAt };
+        })()
+      : null;
+
   const overviewCards = [
     { label: "Demandes envoyées", value: String(totalDemandes), icon: FileText, color: "text-black", bgColor: "bg-[#213398]/10" },
     { label: "Conversations actives", value: String(convsCount), icon: MessageCircle, color: "text-emerald-600", bgColor: "bg-emerald-100" },
@@ -183,6 +206,25 @@ export default async function DashboardPage() {
         <p className="mt-1 text-slate-500">Suivez vos recherches et demandes</p>
       </div>
 
+      {passExpiryInfo?.isExpiringSoon && (
+        <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 p-4">
+          <AlertTriangle className="h-6 w-6 shrink-0 text-amber-600" />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-amber-800">Votre Pass expire bientôt</p>
+            <p className="mt-1 text-sm text-amber-700">
+              Il vous reste environ <span className="font-medium">{passExpiryInfo.remainingText}</span> avant l&apos;expiration.
+              Prolongez votre accès pour continuer à envoyer des demandes illimitées.
+            </p>
+            <Link href="/dashboard/paiement" className="mt-3 inline-block">
+              <Button size="sm" className="bg-amber-600 hover:bg-amber-700">
+                <Clock className="mr-1.5 h-4 w-4" />
+                Prolonger maintenant
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {overviewCards.map((card) => {
           const Icon = card.icon;
@@ -217,9 +259,11 @@ export default async function DashboardPage() {
                         {activePass.product_type === "pass_48h" ? "Pass 48h" : "Pass 24h"} actif
                       </p>
                       <p className="text-sm text-white/80">
-                        {activePass.product_type === "pass_48h"
-                          ? "Valide 48h"
-                          : "Expire dans moins de 24h"}
+                        {passExpiryInfo
+                          ? `Expire dans ${passExpiryInfo.remainingText}`
+                          : activePass.product_type === "pass_48h"
+                            ? "Valide 48h"
+                            : "Valide 24h"}
                       </p>
                     </div>
                   </div>
@@ -316,9 +360,17 @@ export default async function DashboardPage() {
                     <p className="font-semibold text-black">
                       {activePass.product_type === "pass_48h" ? "Pass 48h" : "Pass 24h"} actif
                     </p>
-                    <p className="text-sm text-slate-500">En cours</p>
+                    <p className="text-sm text-slate-500">
+                      {passExpiryInfo ? `Expire dans ${passExpiryInfo.remainingText}` : "En cours"}
+                    </p>
                   </div>
                 </div>
+                {passExpiryInfo?.isExpiringSoon && activePass && (
+                  <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-100/80 px-3 py-2 text-sm text-amber-800">
+                    <Clock className="h-4 w-4 shrink-0" />
+                    <span>Moins de {activePass.product_type === "pass_48h" ? "6h" : "4h"} restantes</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

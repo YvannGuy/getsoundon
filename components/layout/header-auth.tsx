@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { HeaderAuthDropdown } from "@/components/layout/header-auth-dropdown";
 import { getDashboardHref, getEffectiveUserType } from "@/lib/auth-utils";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,14 +21,7 @@ export async function HeaderAuth() {
     };
     const userType = await getEffectiveUserType(user, getProfile);
     const dashboardHref = getDashboardHref(userType ?? "seeker");
-    return (
-      <Link
-        href={dashboardHref}
-        className="inline-flex h-9 items-center justify-center rounded-md bg-[#213398] px-6 text-[14px] font-medium text-white transition-colors hover:bg-[#1a2980]"
-      >
-        Tableau de bord
-      </Link>
-    );
+    return <HeaderAuthDropdown dashboardHref={dashboardHref} />;
   }
 
   return (

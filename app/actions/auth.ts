@@ -17,6 +17,7 @@ const defaultError = "Une erreur est survenue. Veuillez réessayer.";
 export async function loginAction(_: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
+  const redirectedFrom = String(formData.get("redirectedFrom") ?? "").trim();
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -30,6 +31,12 @@ export async function loginAction(_: AuthFormState, formData: FormData): Promise
     redirect("/auth");
   }
 
+  revalidatePath("/", "layout");
+
+  if (redirectedFrom && redirectedFrom.startsWith("/")) {
+    redirect(redirectedFrom);
+  }
+
   const getProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
@@ -39,8 +46,6 @@ export async function loginAction(_: AuthFormState, formData: FormData): Promise
     return data;
   };
   const userType = await getEffectiveUserType(user, getProfile);
-  revalidatePath("/", "layout");
-
   redirect(getDashboardHref(userType ?? "seeker"));
 }
 
@@ -49,6 +54,7 @@ export async function signupAction(_: AuthFormState, formData: FormData): Promis
   const password = String(formData.get("password") ?? "");
   const fullName = String(formData.get("fullName") ?? "");
   const userType = String(formData.get("userType") ?? "seeker");
+  const redirectedFrom = String(formData.get("redirectedFrom") ?? "").trim();
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -68,12 +74,19 @@ export async function signupAction(_: AuthFormState, formData: FormData): Promis
   // Session disponible = pas de confirmation email requise → redirection immédiate
   const hasSession = !!data.session;
 
-  if (hasSession && userType === "owner") {
+  if (hasSession && userType === "owner" && !redirectedFrom) {
     return { success: "Compte créé.", redirectTo: "/onboarding/salle" };
   }
 
   if (hasSession && userType === "seeker") {
-    return { success: "Compte créé.", redirectTo: "/dashboard" };
+    return {
+      success: "Compte créé.",
+      redirectTo: redirectedFrom && redirectedFrom.startsWith("/") ? redirectedFrom : "/dashboard",
+    };
+  }
+
+  if (hasSession && userType === "owner" && redirectedFrom) {
+    return { success: "Compte créé.", redirectTo: redirectedFrom };
   }
 
   // Confirmation email requise : pas de redirection (l'utilisateur n'a pas encore de session)

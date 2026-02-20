@@ -1,6 +1,16 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { PlatformSettings } from "@/app/actions/admin-settings";
 
+/** Retourne true si l'utilisateur peut contacter les propriétaires (pass actif ou demandes gratuites restantes) */
+export async function hasAccessToContact(
+  userId: string | null,
+  settings: PlatformSettings
+): Promise<boolean> {
+  if (!userId) return false;
+  const result = await checkCanCreateDemande(userId, settings);
+  return result.allowed;
+}
+
 export type PassCheckResult =
   | { allowed: true }
   | { allowed: false; reason: "pass_required"; message: string };

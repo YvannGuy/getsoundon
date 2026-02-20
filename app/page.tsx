@@ -2,7 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle2, Facebook, Gift, Instagram, Star } from "lucide-react";
 
+import { getTrialActivated } from "@/app/actions/trial";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ActiverEssaiButton } from "@/components/home/activer-essai-button";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +15,7 @@ import { SearchForm } from "@/components/search/search-form";
 import { siteConfig } from "@/config/site";
 import { getVilleImage } from "@/config/ville-images";
 import { getFeaturedCities } from "@/lib/salles";
+import { createClient } from "@/lib/supabase/server";
 
 const plans = [
   {
@@ -97,7 +100,14 @@ const faqSectionItems = [
 ];
 
 export default async function Home() {
-  const cityCards = await getFeaturedCities(getVilleImage);
+  const [cityCards, supabase] = await Promise.all([
+    getFeaturedCities(getVilleImage),
+    createClient(),
+  ]);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const trialActivated = await getTrialActivated(user?.id ?? null);
 
   return (
     <main className="bg-[#f3f6fa] text-black">
@@ -257,7 +267,7 @@ export default async function Home() {
                 3 demandes offertes pour découvrir la plateforme
               </h3>
               <p className="text-[24px] text-slate-500 [zoom:0.5]">Testez notre service sans engagement et trouvez la salle idéale</p>
-              <Button className="h-10 rounded-md bg-[#213398] px-7 text-[14px] hover:bg-[#1a2980]">Activer mon essai</Button>
+              <ActiverEssaiButton isLoggedIn={!!user} trialActivated={trialActivated} />
               <p className="text-[11px] text-slate-400">Valable une seule fois</p>
             </CardContent>
           </Card>
