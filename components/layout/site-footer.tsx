@@ -9,7 +9,9 @@ export function SiteFooter() {
       <div className="container max-w-[1120px]">
         <div className="grid gap-8 md:grid-cols-4">
           <div>
-            <p className="text-[34px] font-semibold leading-none text-white [zoom:0.38]">{siteConfig.name}</p>
+            <Link href="/" className="block text-xl font-semibold leading-none text-white hover:text-white">
+              {siteConfig.name}
+            </Link>
             <p className="mt-3 max-w-[240px] text-[12px] leading-[1.6] text-slate-300">
               La plateforme de référence pour trouver et proposer des salles dédiées aux événements cultuels.
             </p>
