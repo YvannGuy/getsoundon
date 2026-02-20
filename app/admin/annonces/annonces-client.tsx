@@ -23,6 +23,7 @@ import {
 } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ClientPagination } from "@/components/ui/pagination";
 import {
   Dialog,
   DialogContent,
@@ -69,6 +70,7 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  const [currentPage, setCurrentPage] = useState(1);
   const [previewSalle, setPreviewSalle] = useState<Salle | null>(null);
   const [previewOpen, setPreviewOpen] = useState(!!highlightSalleId);
   const [editSalle, setEditSalle] = useState<Salle | null>(null);
@@ -140,6 +142,8 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
     return Array.from(set).sort();
   }, [salles]);
 
+  const ADMIN_PAGE_SIZE = 20;
+
   const filtered = useMemo(() => {
     return salles.filter((s) => {
       const matchSearch = !search || s.name.toLowerCase().includes(search.toLowerCase());
@@ -152,12 +156,22 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
     });
   }, [salles, search, villeFilter, ownerFilter, statusFilter]);
 
-  const allSelected = filtered.length > 0 && selectedIds.size === filtered.length;
+  const totalFiltered = filtered.length;
+  const totalPages = Math.ceil(totalFiltered / ADMIN_PAGE_SIZE) || 1;
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+  const from = (safePage - 1) * ADMIN_PAGE_SIZE;
+  const paginatedFiltered = filtered.slice(from, from + ADMIN_PAGE_SIZE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, villeFilter, ownerFilter, statusFilter]);
+
+  const allSelected = paginatedFiltered.length > 0 && selectedIds.size === paginatedFiltered.length;
   const toggleAll = () => {
     if (allSelected) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filtered.map((s) => s.id)));
+      setSelectedIds(new Set(paginatedFiltered.map((s) => s.id)));
     }
   };
   const toggleOne = (id: string) => {
@@ -323,7 +337,7 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((s) => {
+                {paginatedFiltered.map((s) => {
                   const img = Array.isArray(s.images) && s.images[0] ? s.images[0] : "/img.png";
                   return (
                     <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50">
@@ -440,6 +454,13 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
               Aucune annonce ne correspond aux critères.
             </div>
           )}
+          <ClientPagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            totalItems={totalFiltered}
+            pageSize={ADMIN_PAGE_SIZE}
+            onPageChange={setCurrentPage}
+          />
         </CardContent>
       </Card>
 

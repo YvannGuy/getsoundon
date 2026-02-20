@@ -97,7 +97,7 @@ export default async function ProprietaireDashboardPage() {
   ];
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Tableau de bord</h1>
         <p className="mt-1 text-slate-500">Gérez vos annonces et vos demandes</p>

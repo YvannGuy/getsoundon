@@ -8,6 +8,7 @@ import { MoreHorizontal, Paperclip, Send, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Pagination } from "@/components/ui/pagination";
 import { getOrCreateConversation, sendMessage } from "@/app/actions/messagerie";
 import { createClient } from "@/lib/supabase/client";
 
@@ -34,12 +35,21 @@ type Message = {
   read_at: string | null;
 };
 
+type PaginationInfo = {
+  baseUrl: string;
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  pageSize: number;
+};
+
 type Props = {
   threads: Thread[];
   currentUserId: string;
+  pagination?: PaginationInfo | null;
 };
 
-export function MessagerieClient({ threads, currentUserId }: Props) {
+export function MessagerieClient({ threads, currentUserId, pagination }: Props) {
   const [selected, setSelected] = useState<Thread | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -190,6 +200,17 @@ export function MessagerieClient({ threads, currentUserId }: Props) {
             })
           )}
         </div>
+        {pagination && (
+          <div className="border-t border-slate-200 p-3">
+            <Pagination
+              baseUrl={pagination.baseUrl}
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              pageSize={pagination.pageSize}
+            />
+          </div>
+        )}
       </div>
 
       {/* Zone de chat */}

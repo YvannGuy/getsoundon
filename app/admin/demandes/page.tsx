@@ -1,13 +1,28 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardContent } from "@/components/ui/card";
+import { Pagination } from "@/components/ui/pagination";
 
-export default async function AdminDemandesPage() {
+const PAGE_SIZE = 20;
+
+export default async function AdminDemandesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(String(pageParam || "1"), 10) || 1);
   const supabase = createAdminClient();
-  const { data: demandes } = await supabase
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+  const { data: demandes, count: totalCount } = await supabase
     .from("demandes")
-    .select("id, date_debut, status, created_at")
+    .select("id, date_debut, status, created_at", { count: "exact" })
     .order("created_at", { ascending: false })
-    .limit(50);
+    .range(from, to);
+
+  const total = totalCount ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+  const currentPage = Math.min(page, totalPages);
 
   return (
     <div className="p-6 md:p-8">
@@ -31,6 +46,13 @@ export default async function AdminDemandesPage() {
           </Card>
         )}
       </div>
+      <Pagination
+        baseUrl="/admin/demandes"
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={total}
+        pageSize={PAGE_SIZE}
+      />
     </div>
   );
 }

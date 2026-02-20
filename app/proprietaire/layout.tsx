@@ -77,13 +77,13 @@ export default async function ProprietaireLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
+    <div className="flex min-h-screen flex-col overflow-hidden bg-slate-50 lg:flex-row">
       <OwnerSidebar
         user={{ ...user, displayName }}
         demandeCount={demandeCount ?? 0}
         messageCount={messageCount}
       />
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className="min-h-screen flex-1 overflow-auto">{children}</main>
     </div>
   );
 }

@@ -3,7 +3,13 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { MessagerieClient, type Thread } from "./messagerie-client";
 
-export default async function MessageriePage() {
+const PAGE_SIZE = 20;
+
+export default async function MessageriePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -121,9 +127,30 @@ export default async function MessageriePage() {
     return String(bTime).localeCompare(String(aTime));
   });
 
+  const pageParam = (await searchParams).page;
+  const page = Math.max(1, parseInt(String(pageParam || "1"), 10) || 1);
+  const totalPages = Math.ceil(threads.length / PAGE_SIZE) || 1;
+  const currentPage = Math.min(page, totalPages);
+  const from = (currentPage - 1) * PAGE_SIZE;
+  const paginatedThreads = threads.slice(from, from + PAGE_SIZE);
+
   return (
-    <div className="h-[calc(100vh-2rem)]">
-      <MessagerieClient threads={threads} currentUserId={user.id} />
+    <div className="flex h-[calc(100vh-2rem)] flex-col">
+      <MessagerieClient
+        threads={paginatedThreads}
+        currentUserId={user.id}
+        pagination={
+          totalPages > 1
+            ? {
+                baseUrl: "/proprietaire/messagerie",
+                currentPage,
+                totalPages,
+                totalItems: threads.length,
+                pageSize: PAGE_SIZE,
+              }
+            : null
+        }
+      />
     </div>
   );
 }

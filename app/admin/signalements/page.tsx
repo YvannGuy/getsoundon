@@ -1,6 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Flag } from "lucide-react";
 import { SignalementsClient } from "./signalements-client";
+import { Pagination } from "@/components/ui/pagination";
+
+const PAGE_SIZE = 25;
 
 const REASON_LABELS: Record<string, string> = {
   escroquerie: "Escroquerie",
@@ -17,7 +20,13 @@ const STATUS_LABELS: Record<string, string> = {
   action_taken: "Mesure prise",
 };
 
-export default async function SignalementsPage() {
+export default async function SignalementsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(String(pageParam || "1"), 10) || 1);
   const admin = createAdminClient();
   let reports: Array<{
     id: string;
@@ -32,12 +41,16 @@ export default async function SignalementsPage() {
     reporter_email: string | null;
   }> = [];
 
+  let total = 0;
   try {
-    const { data: rows } = await admin
+    const from = (page - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    const { data: rows, count: totalCount } = await admin
       .from("salles_reports")
-      .select("id, salle_id, reporter_id, reason, details, status, created_at")
+      .select("id, salle_id, reporter_id, reason, details, status, created_at", { count: "exact" })
       .order("created_at", { ascending: false })
-      .limit(100);
+      .range(from, to);
+    total = totalCount ?? 0;
 
     if (rows && rows.length > 0) {
       const salleIds = [...new Set(rows.map((r) => r.salle_id))];
@@ -63,6 +76,8 @@ export default async function SignalementsPage() {
   }
 
   const pendingCount = reports.filter((r) => r.status === "pending").length;
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+  const currentPage = Math.min(page, totalPages);
 
   return (
     <div className="p-6">
@@ -81,6 +96,13 @@ export default async function SignalementsPage() {
         reports={reports}
         reasonLabels={REASON_LABELS}
         statusLabels={STATUS_LABELS}
+      />
+      <Pagination
+        baseUrl="/admin/signalements"
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={total}
+        pageSize={PAGE_SIZE}
       />
     </div>
   );

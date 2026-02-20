@@ -5,7 +5,10 @@ import { fr } from "date-fns/locale";
 import { Zap, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/ui/pagination";
 import { createClient } from "@/lib/supabase/server";
+
+const PAGE_SIZE = 15;
 
 type StatusFilter = "all" | "sent" | "viewed" | "replied" | "rejected";
 
@@ -34,9 +37,10 @@ function formatTime(t: string | null): string {
 export default async function DemandesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; page?: string }>;
 }) {
-  const { status: statusParam } = await searchParams;
+  const { status: statusParam, page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(String(pageParam || "1"), 10) || 1);
   const statusFilter: StatusFilter =
     statusParam === "sent" || statusParam === "viewed" || statusParam === "replied" || statusParam === "rejected"
       ? statusParam
@@ -56,7 +60,7 @@ export default async function DemandesPage({
 
   if (salleIds.length === 0) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <h1 className="text-2xl font-bold text-slate-900">Demandes reçues</h1>
         <p className="mt-2 text-slate-500">Consultez et gérez vos demandes</p>
         <div className="mt-8 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 py-16 text-center">
@@ -72,7 +76,8 @@ export default async function DemandesPage({
   let demandesQuery = supabase
     .from("demandes")
     .select(
-      "id, seeker_id, salle_id, date_debut, date_fin, nb_personnes, type_evenement, status, created_at, replied_at, heure_debut_souhaitee, heure_fin_souhaitee"
+      "id, seeker_id, salle_id, date_debut, date_fin, nb_personnes, type_evenement, status, created_at, replied_at, heure_debut_souhaitee, heure_fin_souhaitee",
+      { count: "exact" }
     )
     .in("salle_id", salleIds)
     .order("created_at", { ascending: false });
@@ -83,7 +88,13 @@ export default async function DemandesPage({
     demandesQuery = demandesQuery.eq("status", statusFilter);
   }
 
-  const { data: demandesData } = await demandesQuery;
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+  const { data: demandesData, count: totalCount } = await demandesQuery.range(from, to);
+
+  const total = totalCount ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+  const currentPage = Math.min(page, totalPages);
 
   const allDemandes =
     salleIds.length > 0
@@ -151,7 +162,7 @@ export default async function DemandesPage({
   ];
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900">Demandes reçues</h1>
         <p className="mt-1 text-slate-500">Consultez et gérez vos demandes</p>
@@ -184,8 +195,8 @@ export default async function DemandesPage({
             (tab.key !== "all" && statusFilter === tab.key);
           const href =
             tab.key === "all"
-              ? "/proprietaire/demandes"
-              : `/proprietaire/demandes?status=${tab.key}`;
+              ? "/proprietaire/demandes?page=1"
+              : `/proprietaire/demandes?page=1&status=${tab.key}`;
           return (
             <Link
               key={tab.key}
@@ -218,6 +229,7 @@ export default async function DemandesPage({
           </p>
         </div>
       ) : (
+        <>
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="w-full min-w-[900px]">
             <thead>
@@ -302,6 +314,15 @@ export default async function DemandesPage({
             </tbody>
           </table>
         </div>
+        <Pagination
+          baseUrl="/proprietaire/demandes"
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={total}
+          pageSize={PAGE_SIZE}
+          queryParams={statusFilter !== "all" ? `&status=${statusFilter}` : ""}
+        />
+        </>
       )}
     </div>
   );

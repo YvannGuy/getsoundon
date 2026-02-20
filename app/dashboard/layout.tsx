@@ -39,9 +39,9 @@ export default async function DashboardLayout({
   const displayName = profile?.full_name ?? user.user_metadata?.full_name ?? "Utilisateur";
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-slate-50 lg:flex-row">
       <DashboardSidebar user={{ ...user, displayName }} />
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className="min-h-screen flex-1 overflow-auto">{children}</main>
     </div>
   );
 }

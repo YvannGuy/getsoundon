@@ -10,6 +10,7 @@ import {
   FolderOpen,
   Home,
   LogOut,
+  Menu,
   MessageCircle,
   Settings,
   User,
@@ -18,6 +19,8 @@ import {
 import { signOutAction } from "@/app/actions/auth";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
   { href: "/proprietaire", label: "Tableau de bord", icon: Home },
@@ -27,46 +30,25 @@ const navItems = [
   { href: "/proprietaire/parametres", label: "Paramètres", icon: Settings },
 ];
 
-export function OwnerSidebar({
-  user,
-  demandeCount = 0,
-  messageCount = 0,
+function NavContent({
+  pathname,
+  displayName,
+  userEmail,
+  demandeCount,
+  messageCount,
+  collapsed = false,
+  onItemClick,
 }: {
-  user: { email?: string | null; displayName?: string };
-  demandeCount?: number;
-  messageCount?: number;
+  pathname: string;
+  displayName: string;
+  userEmail?: string | null;
+  demandeCount: number;
+  messageCount: number;
+  collapsed?: boolean;
+  onItemClick?: () => void;
 }) {
-  const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
-  const displayName = user.displayName ?? "Utilisateur";
-
   return (
-    <aside
-      className={cn(
-        "sticky top-0 flex h-screen shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200",
-        collapsed ? "w-20" : "w-64"
-      )}
-    >
-      <div
-        className={cn(
-          "flex h-14 items-center border-b border-slate-200",
-          collapsed ? "justify-center px-2" : "justify-between px-4"
-        )}
-      >
-        {!collapsed && (
-          <Link href="/proprietaire" className="text-lg font-semibold text-[#303B4A]">
-            {siteConfig.name}
-          </Link>
-        )}
-        <button
-          type="button"
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
-          aria-label={collapsed ? "Ouvrir la sidebar" : "Réduire la sidebar"}
-        >
-          {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-        </button>
-      </div>
+    <>
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -75,6 +57,7 @@ export function OwnerSidebar({
             <Link
               key={item.href}
               href={item.href}
+              onClick={onItemClick}
               className={cn(
                 "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 collapsed ? "justify-center px-2" : "",
@@ -137,7 +120,7 @@ export function OwnerSidebar({
           {!collapsed && (
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-slate-900">{displayName}</p>
-              <p className="truncate text-xs text-slate-500">{user.email}</p>
+              <p className="truncate text-xs text-slate-500">{userEmail}</p>
             </div>
           )}
         </div>
@@ -154,6 +137,101 @@ export function OwnerSidebar({
           </button>
         </form>
       </div>
-    </aside>
+    </>
+  );
+}
+
+export function OwnerSidebar({
+  user,
+  demandeCount = 0,
+  messageCount = 0,
+}: {
+  user: { email?: string | null; displayName?: string };
+  demandeCount?: number;
+  messageCount?: number;
+}) {
+  const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const displayName = user.displayName ?? "Utilisateur";
+
+  return (
+    <>
+      {/* Mobile: header avec menu hamburger */}
+      <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Ouvrir le menu"
+        >
+          <Menu className="h-6 w-6" />
+        </Button>
+        <Link href="/proprietaire" className="text-lg font-semibold text-[#303B4A]">
+          {siteConfig.name}
+        </Link>
+        <div className="w-10" />
+      </header>
+
+      {/* Mobile: drawer */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side="left" className="flex w-72 max-w-[85vw] flex-col p-0">
+          <div className="flex h-14 items-center border-b border-slate-200 px-4">
+            <Link
+              href="/proprietaire"
+              className="text-lg font-semibold text-[#303B4A]"
+              onClick={() => setMobileOpen(false)}
+            >
+              {siteConfig.name}
+            </Link>
+          </div>
+          <NavContent
+            pathname={pathname}
+            displayName={displayName}
+            userEmail={user.email}
+            demandeCount={demandeCount}
+            messageCount={messageCount}
+            onItemClick={() => setMobileOpen(false)}
+          />
+        </SheetContent>
+      </Sheet>
+
+      {/* Desktop: sidebar avec collapse */}
+      <aside
+        className={cn(
+          "hidden shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 lg:flex",
+          collapsed ? "h-screen w-20" : "h-screen w-64"
+        )}
+      >
+        <div
+          className={cn(
+            "flex h-14 items-center border-b border-slate-200",
+            collapsed ? "justify-center px-2" : "justify-between px-4"
+          )}
+        >
+          {!collapsed && (
+            <Link href="/proprietaire" className="text-lg font-semibold text-[#303B4A]">
+              {siteConfig.name}
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => setCollapsed(!collapsed)}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+            aria-label={collapsed ? "Ouvrir la sidebar" : "Réduire la sidebar"}
+          >
+            {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+          </button>
+        </div>
+        <NavContent
+          pathname={pathname}
+          displayName={displayName}
+          userEmail={user.email}
+          demandeCount={demandeCount}
+          messageCount={messageCount}
+          collapsed={collapsed}
+        />
+      </aside>
+    </>
   );
 }

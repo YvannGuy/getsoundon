@@ -35,7 +35,7 @@ const favorites = [
 
 export default function DashboardPage() {
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Tableau de bord</h1>
         <p className="mt-1 text-slate-500">Suivez vos recherches et demandes</p>
@@ -63,10 +63,10 @@ export default function DashboardPage() {
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           <Card className="overflow-hidden border-0 bg-gradient-to-br from-[#6366f1] to-[#4f46e5] shadow-md">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20">
                     <Crown className="h-6 w-6 text-white" />
                   </div>
                   <div>
@@ -74,7 +74,7 @@ export default function DashboardPage() {
                     <p className="text-sm text-white/80">Expire dans : 18h</p>
                   </div>
                 </div>
-                <p className="max-w-[200px] text-right text-sm text-white/90">
+                <p className="text-sm text-white/90 sm:max-w-[200px] sm:text-right">
                   Les Pass permettent d&apos;envoyer des demandes illimitées
                 </p>
               </div>
@@ -86,7 +86,7 @@ export default function DashboardPage() {
           </Card>
 
           <Card className="border-0 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0 pb-2">
               <CardTitle className="text-lg">Paiement & accès</CardTitle>
               <Link href="/dashboard/paiement" className="text-sm font-medium text-[#6366f1] hover:underline">
                 Voir tout
@@ -136,29 +136,29 @@ export default function DashboardPage() {
       </div>
 
       <Card className="mt-6 border-0 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0 pb-2">
           <CardTitle className="text-lg">Demandes récentes</CardTitle>
           <Link href="/dashboard/demandes" className="text-sm font-medium text-[#6366f1] hover:underline">
             Voir tout →
           </Link>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="-mx-4 overflow-x-auto sm:mx-0">
+            <table className="w-full min-w-[560px]">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
-                  <th className="pb-3 pr-4">Salle</th>
-                  <th className="pb-3 pr-4">Type d&apos;événement</th>
-                  <th className="pb-3 pr-4">Date</th>
-                  <th className="pb-3 pr-4">Statut</th>
+                  <th className="pb-3 pr-3 sm:pr-4">Salle</th>
+                  <th className="pb-3 pr-3 sm:pr-4">Type</th>
+                  <th className="pb-3 pr-3 sm:pr-4">Date</th>
+                  <th className="pb-3 pr-3 sm:pr-4">Statut</th>
                   <th className="pb-3">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {recentRequests.map((req) => (
                   <tr key={req.salle + req.date} className="group">
-                    <td className="py-4 pr-4">
-                      <div className="flex items-center gap-3">
+                    <td className="py-3 pr-3 sm:py-4 sm:pr-4">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-100">
                           <Image src={req.image} alt="" fill className="object-cover" />
                         </div>
@@ -168,12 +168,12 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 pr-4 text-sm text-slate-600">{req.type}</td>
-                    <td className="py-4 pr-4 text-sm text-slate-600">{req.date}</td>
-                    <td className="py-4 pr-4">
+                    <td className="py-3 pr-3 text-sm text-slate-600 sm:py-4 sm:pr-4">{req.type}</td>
+                    <td className="py-3 pr-3 text-sm text-slate-600 sm:py-4 sm:pr-4">{req.date}</td>
+                    <td className="py-3 pr-3 sm:py-4 sm:pr-4">
                       <span className={`text-sm font-medium ${req.statusColor}`}>• {req.status}</span>
                     </td>
-                    <td className="py-4">
+                    <td className="py-3 sm:py-4">
                       <Link href="#" className="text-sm font-medium text-[#6366f1] hover:underline">
                         Voir la demande
                       </Link>
@@ -188,7 +188,7 @@ export default function DashboardPage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0 pb-2">
             <CardTitle className="text-lg">Conversations</CardTitle>
             <Link href="/dashboard/messagerie" className="text-sm font-medium text-[#6366f1] hover:underline">
               Ouvrir la messagerie →
@@ -224,7 +224,7 @@ export default function DashboardPage() {
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0 pb-2">
             <CardTitle className="text-lg">Favoris</CardTitle>
             <Link href="/dashboard/favoris" className="text-sm font-medium text-[#6366f1] hover:underline">
               Voir mes favoris →
@@ -255,9 +255,9 @@ export default function DashboardPage() {
 
       <Link
         href="/"
-        className="fixed bottom-8 right-8 flex items-center gap-2 rounded-full bg-[#6366f1] px-6 py-3 text-white shadow-lg hover:bg-[#4f46e5]"
+        className="fixed bottom-4 right-4 flex items-center gap-2 rounded-full bg-[#6366f1] px-4 py-2.5 text-sm text-white shadow-lg hover:bg-[#4f46e5] sm:bottom-8 sm:right-8 sm:px-6 sm:py-3 sm:text-base"
       >
-        <Search className="h-5 w-5" />
+        <Search className="h-4 w-4 sm:h-5 sm:w-5" />
         Nouvelle recherche
       </Link>
     </div>

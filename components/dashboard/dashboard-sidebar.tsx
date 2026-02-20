@@ -1,13 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CreditCard, FileText, Heart, Home, MessageCircle, Search, Settings, User } from "lucide-react";
+import { useState } from "react";
+import { CreditCard, FileText, Heart, Home, Menu, MessageCircle, Search, Settings, User } from "lucide-react";
 
 import { signOutAction } from "@/app/actions/auth";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: Home },
@@ -19,21 +21,19 @@ const navItems = [
   { href: "/dashboard/parametres", label: "Paramètres", icon: Settings },
 ];
 
-export function DashboardSidebar({
-  user,
+function NavContent({
+  pathname,
+  displayName,
+  userEmail,
+  onItemClick,
 }: {
-  user: { email?: string | null; displayName?: string };
+  pathname: string;
+  displayName: string;
+  userEmail?: string | null;
+  onItemClick?: () => void;
 }) {
-  const pathname = usePathname();
-  const displayName = user.displayName ?? "Utilisateur";
-
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-slate-200 bg-white">
-      <div className="flex h-14 items-center px-6">
-        <Link href="/dashboard" className="text-lg font-semibold text-[#303B4A]">
-          {siteConfig.name}
-        </Link>
-      </div>
+    <>
       <nav className="flex-1 space-y-0.5 px-3 py-4">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -42,6 +42,7 @@ export function DashboardSidebar({
             <Link
               key={item.href}
               href={item.href}
+              onClick={onItemClick}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
@@ -72,7 +73,7 @@ export function DashboardSidebar({
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-slate-900">{displayName}</p>
-            <p className="truncate text-xs text-slate-500">{user.email}</p>
+            <p className="truncate text-xs text-slate-500">{userEmail}</p>
           </div>
         </div>
         <form action={signOutAction} className="mt-3">
@@ -84,6 +85,67 @@ export function DashboardSidebar({
           </button>
         </form>
       </div>
-    </aside>
+    </>
+  );
+}
+
+export function DashboardSidebar({
+  user,
+}: {
+  user: { email?: string | null; displayName?: string };
+}) {
+  const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const displayName = user.displayName ?? "Utilisateur";
+
+  return (
+    <>
+      {/* Mobile: header avec menu hamburger */}
+      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Ouvrir le menu"
+        >
+          <Menu className="h-6 w-6" />
+        </Button>
+        <Link href="/dashboard" className="text-lg font-semibold text-[#303B4A]">
+          {siteConfig.name}
+        </Link>
+        <div className="w-10" />
+      </header>
+
+      {/* Mobile: drawer */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side="left" className="flex w-72 max-w-[85vw] flex-col p-0">
+          <div className="flex h-14 items-center border-b border-slate-200 px-4">
+            <Link
+              href="/dashboard"
+              className="text-lg font-semibold text-[#303B4A]"
+              onClick={() => setMobileOpen(false)}
+            >
+              {siteConfig.name}
+            </Link>
+          </div>
+          <NavContent
+            pathname={pathname}
+            displayName={displayName}
+            userEmail={user.email}
+            onItemClick={() => setMobileOpen(false)}
+          />
+        </SheetContent>
+      </Sheet>
+
+      {/* Desktop: sidebar fixe */}
+      <aside className="hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white lg:flex">
+        <div className="flex h-14 items-center px-6">
+          <Link href="/dashboard" className="text-lg font-semibold text-[#303B4A]">
+            {siteConfig.name}
+          </Link>
+        </div>
+        <NavContent pathname={pathname} displayName={displayName} userEmail={user.email} />
+      </aside>
+    </>
   );
 }

@@ -1,5 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PaiementsClient } from "./paiements-client";
+import { Pagination } from "@/components/ui/pagination";
+
+const PAGE_SIZE = 20;
 
 type TransactionRow = {
   id: string;
@@ -13,7 +16,13 @@ type TransactionRow = {
   created_at: string;
 };
 
-export default async function AdminPaiementsPage() {
+export default async function AdminPaiementsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(String(pageParam || "1"), 10) || 1);
   const supabase = createAdminClient();
 
   const [{ data: subscriptions }, { data: profiles }] = await Promise.all([
@@ -80,9 +89,21 @@ export default async function AdminPaiementsPage() {
     conversionRate,
   };
 
+  const totalPages = Math.ceil(transactions.length / PAGE_SIZE) || 1;
+  const currentPage = Math.min(page, totalPages);
+  const from = (currentPage - 1) * PAGE_SIZE;
+  const paginatedTx = transactions.slice(from, from + PAGE_SIZE);
+
   return (
     <div className="p-6 md:p-8">
-      <PaiementsClient transactions={transactions.slice(0, 50)} stats={stats} />
+      <PaiementsClient transactions={paginatedTx} stats={stats} />
+      <Pagination
+        baseUrl="/admin/paiements"
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={transactions.length}
+        pageSize={PAGE_SIZE}
+      />
     </div>
   );
 }

@@ -130,7 +130,7 @@ export default async function DemandeDetailPage({
     : "/img.png";
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <Link
         href="/proprietaire/demandes"
         className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"
