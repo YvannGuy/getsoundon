@@ -5,6 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 
 const PAGE_SIZE = 20;
 
+function formatTime(t: string | null): string {
+  if (!t) return "";
+  const m = String(t).match(/(\d{1,2}):(\d{2})/);
+  return m ? `${m[1]}h${m[2]}` : "";
+}
+
 export default async function MessageriePage({
   searchParams,
 }: {
@@ -22,24 +28,15 @@ export default async function MessageriePage({
     .eq("owner_id", user.id);
   const salleIds = (mySalles ?? []).map((s) => s.id);
 
-  if (salleIds.length === 0) {
-    return (
-      <div className="flex flex-1 items-center justify-center p-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-black">Messagerie</h1>
-          <p className="mt-2 text-slate-500">
-            Vos conversations apparaîtront ici une fois que vous aurez des annonces et des demandes.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const { data: demandes } = await supabase
-    .from("demandes")
-    .select("id, seeker_id, salle_id, date_debut, type_evenement, created_at")
-    .in("salle_id", salleIds)
-    .order("created_at", { ascending: false });
+  const demandesRes =
+    salleIds.length > 0
+      ? await supabase
+          .from("demandes")
+          .select("id, seeker_id, salle_id, date_debut, type_evenement, status, nb_personnes, message, heure_debut_souhaitee, heure_fin_souhaitee, created_at")
+          .in("salle_id", salleIds)
+          .order("created_at", { ascending: false })
+      : { data: [] };
+  const demandes = demandesRes.data ?? [];
 
   const demandeIds = (demandes ?? []).map((d) => d.id);
   const seekerIds = [...new Set((demandes ?? []).map((d) => d.seeker_id))];
@@ -50,7 +47,7 @@ export default async function MessageriePage({
       ? supabase.from("profiles").select("id, full_name, email").in("id", seekerIds)
       : { data: [] },
     salleIdsDem.length > 0
-      ? supabase.from("salles").select("id, name").in("id", salleIdsDem)
+      ? supabase.from("salles").select("id, name, city, capacity, images, slug").in("id", salleIdsDem)
       : { data: [] },
     demandeIds.length > 0
       ? supabase
@@ -105,6 +102,11 @@ export default async function MessageriePage({
         })
       : "";
 
+    const salleRow = salle as { images?: string[]; city?: string; capacity?: number; slug?: string } | undefined;
+    const salleImage = salleRow?.images && Array.isArray(salleRow.images) && salleRow.images[0] ? String(salleRow.images[0]) : "/img.png";
+    const hDebut = formatTime((d as { heure_debut_souhaitee?: string }).heure_debut_souhaitee ?? null);
+    const hFin = formatTime((d as { heure_fin_souhaitee?: string }).heure_fin_souhaitee ?? null);
+    const horaires = hDebut && hFin ? `${hDebut} - ${hFin}` : hDebut || "";
     return {
       demandeId: d.id,
       conversationId: convId,
@@ -112,8 +114,17 @@ export default async function MessageriePage({
       seekerName: profile?.full_name ?? "Organisateur",
       seekerEmail: profile?.email ?? "",
       salleName: salle?.name ?? "Salle",
+      salleImage,
+      salleCity: salleRow?.city ?? "",
+      salleCapacity: salleRow?.capacity ?? null,
+      salleSlug: salleRow?.slug ?? "",
       typeEvenement: d.type_evenement ?? null,
       dateDebut: dateStr,
+      dateDebutHeure: horaires || undefined,
+      demandeStatus: (d as { status?: string }).status ?? "sent",
+      contactRole: "Organisateur",
+      nbPersonnes: (d as { nb_personnes?: number }).nb_personnes ?? null,
+      message: (d as { message?: string }).message ?? null,
       lastMessageAt: conv?.last_message_at ?? null,
       lastMessagePreview: conv?.last_message_preview ?? null,
       lastMessageSenderId: null,
@@ -135,10 +146,11 @@ export default async function MessageriePage({
   const paginatedThreads = threads.slice(from, from + PAGE_SIZE);
 
   return (
-    <div className="flex h-[calc(100vh-2rem)] flex-col">
+    <div className="flex min-h-0 flex-1 flex-col md:h-[calc(100vh-2rem)]">
       <MessagerieClient
         threads={paginatedThreads}
         currentUserId={user.id}
+        userType="owner"
         pagination={
           totalPages > 1
             ? {

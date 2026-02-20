@@ -24,29 +24,16 @@ export default async function MessageriePage({
 
   const { data: demandes } = await supabase
     .from("demandes")
-    .select("id, salle_id, date_debut, type_evenement, heure_debut_souhaitee, heure_fin_souhaitee, created_at")
+    .select("id, salle_id, date_debut, type_evenement, status, nb_personnes, message, heure_debut_souhaitee, heure_fin_souhaitee, created_at")
     .eq("seeker_id", user.id)
     .order("created_at", { ascending: false });
 
-  if (!demandes?.length) {
-    return (
-      <div className="flex flex-1 items-center justify-center p-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-black">Messagerie</h1>
-          <p className="mt-2 text-slate-500">
-            Vos conversations apparaîtront ici une fois que vous aurez envoyé des demandes aux propriétaires.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const demandeIds = demandes.map((d) => d.id);
-  const salleIds = [...new Set(demandes.map((d) => d.salle_id))];
+  const demandeIds = (demandes ?? []).map((d) => d.id);
+  const salleIds = [...new Set((demandes ?? []).map((d) => d.salle_id))];
 
   const [sallesRes, convsResRaw] = await Promise.all([
     salleIds.length > 0
-      ? supabase.from("salles").select("id, name, owner_id").in("id", salleIds)
+      ? supabase.from("salles").select("id, name, city, capacity, images, slug, owner_id").in("id", salleIds)
       : { data: [] },
     supabase
       .from("conversations")
@@ -87,7 +74,7 @@ export default async function MessageriePage({
     }
   }
 
-  const threads: Thread[] = demandes.map((d) => {
+  const threads: Thread[] = (demandes ?? []).map((d) => {
     const conv = convsData.find((c) => c.demande_id === d.id);
     const salle = salleMap.get(d.salle_id);
     const ownerId = salleToOwner.get(d.salle_id);
@@ -106,6 +93,8 @@ export default async function MessageriePage({
     const hFin = formatTime(d.heure_fin_souhaitee ?? null);
     const horaires = hDebut && hFin ? `${hDebut} - ${hFin}` : hDebut || "";
 
+    const salleRow = salle as { images?: string[]; city?: string; capacity?: number; slug?: string } | undefined;
+    const salleImage = salleRow?.images && Array.isArray(salleRow.images) && salleRow.images[0] ? String(salleRow.images[0]) : "/img.png";
     return {
       demandeId: d.id,
       conversationId: convId,
@@ -113,9 +102,17 @@ export default async function MessageriePage({
       seekerName: profile?.full_name ?? "Propriétaire",
       seekerEmail: profile?.email ?? "",
       salleName: salle?.name ?? "Salle",
+      salleImage,
+      salleCity: salleRow?.city ?? "",
+      salleCapacity: salleRow?.capacity ?? null,
+      salleSlug: salleRow?.slug ?? "",
       typeEvenement: d.type_evenement ?? null,
       dateDebut: dateStr,
       dateDebutHeure: horaires || undefined,
+      demandeStatus: (d as { status?: string }).status ?? "sent",
+      contactRole: "Propriétaire",
+      nbPersonnes: (d as { nb_personnes?: number }).nb_personnes ?? null,
+      message: (d as { message?: string }).message ?? null,
       lastMessageAt: conv?.last_message_at ?? null,
       lastMessagePreview: conv?.last_message_preview ?? null,
       lastMessageSenderId: null,
@@ -137,10 +134,11 @@ export default async function MessageriePage({
   const paginatedThreads = threads.slice(from, from + PAGE_SIZE);
 
   return (
-    <div className="flex h-[calc(100vh-2rem)] flex-col">
+    <div className="flex min-h-0 flex-1 flex-col md:h-[calc(100vh-2rem)]">
       <MessagerieClient
         threads={paginatedThreads}
         currentUserId={user.id}
+        userType="seeker"
         pagination={
           totalPages > 1
             ? {
