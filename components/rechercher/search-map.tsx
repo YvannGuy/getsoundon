@@ -9,14 +9,21 @@ type SearchMapProps = {
   salles: Salle[];
   highlightedSalleId?: string | null;
   ratingStats?: RatingStats;
+  onMarkerClick?: (salleId: string) => void;
 };
 
-export function SearchMap({ salles, highlightedSalleId = null, ratingStats = {} }: SearchMapProps) {
+export function SearchMap({
+  salles,
+  highlightedSalleId = null,
+  ratingStats = {},
+  onMarkerClick,
+}: SearchMapProps) {
   const [MapComponent, setMapComponent] = useState<
     React.ComponentType<{
       salles: Salle[];
       highlightedSalleId?: string | null;
       ratingStats?: RatingStats;
+      onMarkerClick?: (salleId: string) => void;
     }> | null
   >(null);
 
@@ -37,6 +44,7 @@ export function SearchMap({ salles, highlightedSalleId = null, ratingStats = {} 
       salles={salles}
       highlightedSalleId={highlightedSalleId}
       ratingStats={ratingStats}
+      onMarkerClick={onMarkerClick}
     />
   );
 }

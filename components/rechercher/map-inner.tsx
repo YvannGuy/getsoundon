@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { Circle, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import MarkerClusterGroup from "react-leaflet-cluster";
 import { Check, Home, MapPin, Star, Users } from "lucide-react";
 import "leaflet/dist/leaflet.css";
+import "react-leaflet-cluster/dist/assets/MarkerCluster.css";
+import "react-leaflet-cluster/dist/assets/MarkerCluster.Default.css";
 
 // Éviter toute exécution Leaflet côté serveur / avant montage DOM
 const isBrowser = typeof window !== "undefined";
@@ -37,8 +40,9 @@ function createPriceMarkerIcon(pricePerDay: number) {
   });
 }
 
-// Décalage aléatoire déterministe pour masquer la localisation exacte (~150–350 m)
-const OFFSET_DEG = 0.002;
+// Décalage fixe de 1 km pour masquer l'adresse exacte
+const OFFSET_KM = 1;
+const METERS_PER_DEG_LAT = 111320;
 function hashId(id: string): number {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h << 5) - h + id.charCodeAt(i) | 0;
@@ -47,23 +51,51 @@ function hashId(id: string): number {
 function getObfuscatedCoords(lat: number, lng: number, salleId: string) {
   const h = hashId(salleId);
   const angle = (h % 360) * (Math.PI / 180);
-  const dist = OFFSET_DEG * (0.5 + (h % 100) / 100);
+  const distMeters = OFFSET_KM * 1000;
+  const cosLat = Math.cos((lat * Math.PI) / 180);
+  const deltaLat = (distMeters / METERS_PER_DEG_LAT) * Math.cos(angle);
+  const deltaLng =
+    cosLat !== 0
+      ? (distMeters / (METERS_PER_DEG_LAT * cosLat)) * Math.sin(angle)
+      : 0;
   return {
-    lat: lat + Math.cos(angle) * dist,
-    lng: lng + Math.sin(angle) * dist,
+    lat: lat + deltaLat,
+    lng: lng + deltaLng,
   };
+}
+
+const MIN_LAT = ILE_DE_FRANCE_BOUNDS[0][0];
+const MAX_LAT = ILE_DE_FRANCE_BOUNDS[1][0];
+const MIN_LNG = ILE_DE_FRANCE_BOUNDS[0][1];
+const MAX_LNG = ILE_DE_FRANCE_BOUNDS[1][1];
+
+function isInIdfBounds(lat: number, lng: number): boolean {
+  return lat >= MIN_LAT && lat <= MAX_LAT && lng >= MIN_LNG && lng <= MAX_LNG;
 }
 
 export function getCoords(salle: Salle, index: number) {
   const lat = Number(salle.lat);
   const lng = Number(salle.lng);
   if (Number.isFinite(lat) && Number.isFinite(lng)) {
-    return getObfuscatedCoords(lat, lng, salle.id);
+    const coords = getObfuscatedCoords(lat, lng, salle.id);
+    if (
+      Number.isFinite(coords.lat) &&
+      Number.isFinite(coords.lng) &&
+      isInIdfBounds(coords.lat, coords.lng)
+    ) {
+      return coords;
+    }
   }
+  const offsetLat = (index % 5) * 0.03 - 0.06;
+  const offsetLng = Math.floor(index / 5) * 0.04 - 0.08;
   return {
-    lat: ILE_DE_FRANCE_CENTER.lat + (index % 3) * 0.01 - 0.01,
-    lng: ILE_DE_FRANCE_CENTER.lng + Math.floor(index / 3) * 0.015 - 0.015,
+    lat: ILE_DE_FRANCE_CENTER.lat + offsetLat,
+    lng: ILE_DE_FRANCE_CENTER.lng + offsetLng,
   };
+}
+
+function isValidCoords(c: { lat: number; lng: number }): boolean {
+  return Number.isFinite(c.lat) && Number.isFinite(c.lng);
 }
 
 function MapPanController({
@@ -74,14 +106,39 @@ function MapPanController({
   highlightedSalleId: string | null;
 }) {
   const map = useMap();
+
+  useEffect(() => {
+    if (salles.length === 0) return;
+    const points = salles.map((s, i) => getCoords(s, i));
+    const valid = points.filter((p) => isValidCoords(p));
+    if (valid.length === 0) return;
+    try {
+      const bounds = L.latLngBounds(
+        valid.map((p) => [p.lat, p.lng] as [number, number])
+      );
+      map.fitBounds(bounds, { maxZoom: 14, padding: [40, 40] });
+    } catch {
+      // Ignore fitBounds errors (e.g. invalid bounds, map not ready)
+    }
+  }, [salles, map]);
+
   useEffect(() => {
     if (!highlightedSalleId) return;
     const idx = salles.findIndex((s) => s.id === highlightedSalleId);
     if (idx < 0) return;
-    const coords = getCoords(salles[idx], idx);
-    if (!Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) return;
-    map.flyTo([coords.lat, coords.lng], Math.min(map.getZoom(), 15), { duration: 0.5 });
+    const salle = salles[idx];
+    if (!salle) return;
+    const coords = getCoords(salle, idx);
+    if (!isValidCoords(coords)) return;
+    try {
+      const zoom = map.getZoom();
+      const safeZoom = Number.isFinite(zoom) ? Math.min(zoom, 15) : 12;
+      map.flyTo([coords.lat, coords.lng], safeZoom, { duration: 0.5 });
+    } catch {
+      // Ignore flyTo errors
+    }
   }, [highlightedSalleId, salles, map]);
+
   return null;
 }
 
@@ -92,16 +149,87 @@ const idfBounds = L.latLngBounds(
 
 type RatingStats = Record<string, { avg: number; count: number }>;
 
-export function MapInner({
+function ViewportFilter({
+  salles,
+  onVisibleChange,
+}: {
+  salles: Salle[];
+  onVisibleChange: (visible: Salle[]) => void;
+}) {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onVisibleChangeRef = useRef(onVisibleChange);
+  onVisibleChangeRef.current = onVisibleChange;
+
+  const map = useMapEvents({
+    moveend: () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        timeoutRef.current = null;
+        try {
+          const bounds = map.getBounds();
+          if (!bounds || typeof bounds.contains !== "function") return;
+          const visible = salles.filter((s, i) => {
+            const c = getCoords(s, i);
+            if (!isValidCoords(c)) return false;
+            try {
+              return bounds.contains([c.lat, c.lng]);
+            } catch {
+              return false;
+            }
+          });
+          onVisibleChangeRef.current(visible.length > 0 ? visible : salles);
+        } catch {
+          onVisibleChangeRef.current(salles);
+        }
+      }, 100);
+    },
+  });
+
+  useEffect(() => {
+    try {
+      const bounds = map.getBounds();
+      if (!bounds || typeof bounds.contains !== "function") return;
+      const visible = salles.filter((s, i) => {
+        const c = getCoords(s, i);
+        if (!isValidCoords(c)) return false;
+        try {
+          return bounds.contains([c.lat, c.lng]);
+        } catch {
+          return false;
+        }
+      });
+      onVisibleChangeRef.current(visible.length > 0 ? visible : salles);
+    } catch {
+      onVisibleChangeRef.current(salles);
+    }
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [salles, map]);
+  return null;
+}
+
+const ZONE_RADIUS_M = 1000;
+
+function MapInnerComponent({
   salles,
   highlightedSalleId = null,
   ratingStats = {},
+  onMarkerClick,
 }: {
   salles: Salle[];
   highlightedSalleId?: string | null;
   ratingStats?: RatingStats;
+  onMarkerClick?: (salleId: string) => void;
 }) {
   const [mounted, setMounted] = useState(false);
+  const [visibleSalles, setVisibleSalles] = useState(salles);
+  const onVisibleChange = useCallback((v: Salle[]) => setVisibleSalles(v), []);
+
+  useEffect(() => {
+    setVisibleSalles(salles);
+  }, [salles]);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -131,8 +259,32 @@ export function MapInner({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MapPanController salles={salles} highlightedSalleId={highlightedSalleId} />
-        {salles.map((salle, i) => {
+        <ViewportFilter salles={salles} onVisibleChange={onVisibleChange} />
+        {visibleSalles.map((salle) => {
+          const origIdx = salles.findIndex((s) => s.id === salle.id);
+          const i = origIdx >= 0 ? origIdx : 0;
           const coords = getCoords(salle, i);
+          if (!isValidCoords(coords)) return null;
+          return (
+            <Circle
+              key={`zone-${salle.id}`}
+              center={[coords.lat, coords.lng]}
+              radius={ZONE_RADIUS_M}
+              pathOptions={{
+                color: "#2d435a",
+                fillColor: "#2d435a",
+                fillOpacity: 0.08,
+                weight: 1,
+              }}
+            />
+          );
+        })}
+        <MarkerClusterGroup chunkedLoading>
+        {visibleSalles.map((salle) => {
+          const origIdx = salles.findIndex((s) => s.id === salle.id);
+          const i = origIdx >= 0 ? origIdx : 0;
+          const coords = getCoords(salle, i);
+          if (!isValidCoords(coords)) return null;
           const rating = ratingStats[salle.id];
           const avg = rating?.avg ?? 0;
           const count = rating?.count ?? 0;
@@ -141,6 +293,9 @@ export function MapInner({
               key={salle.id}
               position={[coords.lat, coords.lng]}
               icon={createPriceMarkerIcon(salle.pricePerDay)}
+              eventHandlers={{
+                click: () => onMarkerClick?.(salle.id),
+              }}
             >
               <Popup
                 maxWidth={320}
@@ -203,7 +358,10 @@ export function MapInner({
             </Marker>
           );
         })}
+        </MarkerClusterGroup>
       </MapContainer>
     </div>
   );
-}
+};
+
+export const MapInner = memo(MapInnerComponent);

@@ -3,12 +3,14 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Car, CheckCircle2, CookingPot, Filter, Heart, Piano, SlidersHorizontal, Tv, Volume2, X } from "lucide-react";
+import { Building2, Car, CheckCircle2, CookingPot, Filter, Heart, Piano, Search, SlidersHorizontal, Tv, Volume2, X } from "lucide-react";
 
+import { DatePicker } from "@/components/search/date-picker";
+import { VilleAutocomplete } from "@/components/search/ville-autocomplete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -56,25 +58,26 @@ export function RechercherContent({
   salles: Salle[];
   ratingStats?: RatingStats;
 }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const initialFilters = useMemo(() => {
-    const filters: { key: string; label: string }[] = [];
+    const filters: { key: string; label: string; paramKey: string }[] = [];
     const ville = searchParams.get("ville");
     const date = searchParams.get("date");
     const personnes = searchParams.get("personnes");
     const type = searchParams.get("type");
-    if (ville) filters.push({ key: "ville", label: ville });
+    if (ville) filters.push({ key: "ville", label: ville, paramKey: "ville" });
     if (date) {
       try {
         const d = new Date(date);
-        if (!isNaN(d.getTime())) filters.push({ key: "date", label: format(d, "d MMMM yyyy", { locale: fr }) });
+        if (!isNaN(d.getTime())) filters.push({ key: "date", label: format(d, "d MMMM yyyy", { locale: fr }), paramKey: "date" });
       } catch {
-        filters.push({ key: "date", label: date });
+        filters.push({ key: "date", label: date, paramKey: "date" });
       }
     }
-    if (personnes) filters.push({ key: "capacite", label: `${personnes} pers.` });
-    if (type) filters.push({ key: "type", label: TYPE_LABELS[type] ?? type });
-    return filters.length ? filters : [{ key: "ville", label: "Paris" }, { key: "date", label: "12 Mars 2026" }, { key: "capacite", label: "120 pers." }, { key: "type", label: "Conférence" }];
+    if (personnes) filters.push({ key: "capacite", label: `${personnes} pers.`, paramKey: "personnes" });
+    if (type) filters.push({ key: "type", label: TYPE_LABELS[type] ?? type, paramKey: "type" });
+    return filters;
   }, [searchParams]);
 
   const [filters, setFilters] = useState(initialFilters);
@@ -83,13 +86,50 @@ export function RechercherContent({
   const [prixMax, setPrixMax] = useState("");
   const [filtresOpen, setFiltresOpen] = useState(false);
   const [hoveredSalleId, setHoveredSalleId] = useState<string | null>(null);
+  const [selectedSalleId, setSelectedSalleId] = useState<string | null>(null);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [mapVisible, setMapVisible] = useState(false);
+  const [searchVille, setSearchVille] = useState(searchParams.get("ville") ?? "");
+  const [searchDate, setSearchDate] = useState<Date | undefined>(() => {
+    const d = searchParams.get("date");
+    if (!d) return undefined;
+    const parsed = new Date(d);
+    return isNaN(parsed.getTime()) ? undefined : parsed;
+  });
+  const [searchType, setSearchType] = useState(searchParams.get("type") ?? "");
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const handler = () => setMapVisible(mq.matches);
+    handler();
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   useEffect(() => {
     setFilters(initialFilters);
-  }, [initialFilters]);
+    setSearchVille(searchParams.get("ville") ?? "");
+    const d = searchParams.get("date");
+    setSearchDate(d ? (isNaN(new Date(d).getTime()) ? undefined : new Date(d)) : undefined);
+    setSearchType(searchParams.get("type") ?? "");
+  }, [initialFilters, searchParams]);
 
-  const removeFilter = (key: string) => {
-    setFilters((prev) => prev.filter((f) => f.key !== key));
+  const removeFilter = (paramKey: string) => {
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.delete(paramKey);
+    router.push(`/rechercher${sp.toString() ? `?${sp.toString()}` : ""}`);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const sp = new URLSearchParams(searchParams.toString());
+    if (searchVille.trim()) sp.set("ville", searchVille.trim());
+    else sp.delete("ville");
+    if (searchDate && !isNaN(searchDate.getTime())) sp.set("date", searchDate.toISOString().slice(0, 10));
+    else sp.delete("date");
+    if (searchType?.trim()) sp.set("type", searchType.trim());
+    else sp.delete("type");
+    router.push(`/rechercher${sp.toString() ? `?${sp.toString()}` : ""}`);
   };
 
   const filteredSalles = useMemo(() => {
@@ -100,6 +140,11 @@ export function RechercherContent({
     if (!isNaN(max) && max > 0) list = list.filter((s) => s.pricePerDay <= max);
     return list;
   }, [salles, prixMin, prixMax]);
+
+  const handleMarkerClick = useCallback((salleId: string) => {
+    setSelectedSalleId(salleId);
+    cardRefs.current[salleId]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, []);
 
   const sortedSalles = useMemo(() => {
     const list = [...filteredSalles];
@@ -117,26 +162,69 @@ export function RechercherContent({
 
   return (
     <main className="container max-w-[1400px] py-6">
-      <p className="mb-3 text-[13px] text-slate-500">
-        Recherche limitée à l&apos;Île-de-France
-      </p>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        {filters.map((f) => (
-          <span
-            key={f.key}
-            className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-[13px] font-medium text-slate-700"
-          >
-            {f.label}
-            <button
-              type="button"
-              onClick={() => removeFilter(f.key)}
-              className="rounded-full p-0.5 hover:bg-slate-200"
+      {/* Mini barre de recherche */}
+      <form onSubmit={handleSearchSubmit} className="mb-4">
+        <div className="flex flex-wrap gap-2">
+          <div className="min-w-[180px] flex-1">
+            <VilleAutocomplete
+              value={searchVille}
+              onChange={setSearchVille}
+              placeholder="Paris, Versailles, Meaux..."
+              className="h-10"
+              inputClassName="h-10 rounded-lg border-slate-200 pl-10 pr-3"
+            />
+          </div>
+          <div className="w-[140px] shrink-0">
+            <DatePicker
+              value={searchDate}
+              onChange={setSearchDate}
+              placeholder="jj/mm/aaaa"
+            />
+          </div>
+          <div className="relative w-[180px] shrink-0">
+            <Building2 className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Select value={searchType || "all"} onValueChange={(v) => setSearchType(v === "all" ? "" : v)}>
+              <SelectTrigger className="h-10 rounded-lg border-slate-200 pl-9 pr-9">
+                <SelectValue placeholder="Type d'événement" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les types</SelectItem>
+                <SelectItem value="culte-regulier">Culte régulier</SelectItem>
+                <SelectItem value="conference">Conférence</SelectItem>
+                <SelectItem value="celebration">Célébration</SelectItem>
+                <SelectItem value="bapteme">Baptême</SelectItem>
+                <SelectItem value="retraite">Retraite</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button type="submit" size="sm" className="h-10 shrink-0 gap-2 bg-[#2d435a] px-4 hover:bg-[#243a4d]">
+            <Search className="h-4 w-4" />
+            Rechercher
+          </Button>
+        </div>
+      </form>
+
+      {/* Filtres actifs (cliquables pour les retirer) */}
+      {filters.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          {filters.map((f) => (
+            <span
+              key={f.key}
+              className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-[13px] font-medium text-slate-700"
             >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </span>
-        ))}
-      </div>
+              {f.label}
+              <button
+                type="button"
+                onClick={() => removeFilter(f.paramKey)}
+                className="rounded-full p-0.5 hover:bg-slate-200"
+                title="Retirer ce filtre"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="relative z-10 mb-6 flex flex-wrap items-center justify-between gap-4">
         <p className="text-[15px] font-semibold text-slate-700">
@@ -213,12 +301,19 @@ export function RechercherContent({
             if (salle.features.some((f) => f.label.includes("Piano"))) features.push("piano");
             if (salle.features.some((f) => f.label.includes("Cuisine"))) features.push("cuisine");
 
+            const isHighlighted = hoveredSalleId === salle.id || selectedSalleId === salle.id;
             return (
               <div
                 key={salle.id}
-                className="flex gap-4 rounded-xl border-2 border-slate-200 bg-white p-4 shadow-sm transition hover:border-sky-500"
+                ref={(el) => {
+                  cardRefs.current[salle.id] = el;
+                }}
+                className={`flex gap-4 rounded-xl border-2 bg-white p-4 shadow-sm transition ${
+                  isHighlighted ? "border-sky-500 ring-2 ring-sky-200" : "border-slate-200 hover:border-sky-500"
+                }`}
                 onMouseEnter={() => setHoveredSalleId(salle.id)}
                 onMouseLeave={() => setHoveredSalleId(null)}
+                onClick={() => setSelectedSalleId(salle.id)}
               >
                 <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-slate-100">
                   <Image
@@ -275,11 +370,15 @@ export function RechercherContent({
         </div>
 
         <div className="relative z-0 min-w-0 overflow-hidden hidden lg:block">
-          <SearchMap
-            salles={sortedSalles}
-            highlightedSalleId={hoveredSalleId}
-            ratingStats={ratingStats}
-          />
+          {mapVisible && (
+            <SearchMap
+              key="search-map"
+              salles={sortedSalles}
+              highlightedSalleId={hoveredSalleId ?? selectedSalleId}
+              ratingStats={ratingStats}
+              onMarkerClick={handleMarkerClick}
+            />
+          )}
         </div>
       </div>
     </main>
