@@ -18,4 +18,6 @@ create index if not exists idx_payments_created on public.payments(created_at);
 
 alter table public.payments enable row level security;
 
--- Admin via service_role only (no public policy)
+create policy "users_select_own_payments"
+  on public.payments for select
+  using (auth.uid() = user_id);

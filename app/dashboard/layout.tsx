@@ -38,10 +38,38 @@ export default async function DashboardLayout({
 
   const displayName = profile?.full_name ?? user.user_metadata?.full_name ?? "Utilisateur";
 
+  const [{ count: demandeCount }, { data: demandesForMessagerie }] = await Promise.all([
+    supabase.from("demandes").select("id", { count: "exact", head: true }).eq("seeker_id", user.id),
+    supabase.from("demandes").select("id").eq("seeker_id", user.id),
+  ]);
+
+  let messageCount = 0;
+  const demandeIds = (demandesForMessagerie ?? []).map((d) => d.id);
+  if (demandeIds.length > 0) {
+    const convsRes = await supabase
+      .from("conversations")
+      .select("id")
+      .in("demande_id", demandeIds);
+    if (!convsRes.error && (convsRes.data ?? []).length > 0) {
+      const convIds = (convsRes.data ?? []).map((c) => c.id);
+      const msgRes = await supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .in("conversation_id", convIds)
+        .neq("sender_id", user.id)
+        .is("read_at", null);
+      if (!msgRes.error) messageCount = msgRes.count ?? 0;
+    }
+  }
+
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 lg:flex-row">
-      <DashboardSidebar user={{ ...user, displayName }} />
-      <main className="min-h-screen flex-1 overflow-auto">{children}</main>
+    <div className="flex h-screen flex-col overflow-hidden bg-slate-50 lg:flex-row">
+      <DashboardSidebar
+        user={{ ...user, displayName }}
+        demandeCount={demandeCount ?? 0}
+        messageCount={messageCount}
+      />
+      <main className="flex-1 overflow-auto">{children}</main>
     </div>
   );
 }

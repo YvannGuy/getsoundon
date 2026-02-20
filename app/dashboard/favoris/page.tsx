@@ -5,6 +5,7 @@ import { rowToSalle } from "@/lib/types/salle";
 import type { Salle } from "@/lib/types/salle";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
+import { SearchModalButton } from "@/components/search/search-modal";
 import { Heart } from "lucide-react";
 
 const PAGE_SIZE = 12;
@@ -68,11 +69,11 @@ export default async function FavorisPage({
           <p className="mt-2 text-sm text-slate-500">
             Parcourez les annonces et cliquez sur &quot;Sauvegarder&quot; pour les retrouver ici.
           </p>
-          <Link href="/rechercher">
+          <SearchModalButton>
             <Button variant="outline" className="mt-6">
               Rechercher une salle
             </Button>
-          </Link>
+          </SearchModalButton>
         </div>
       ) : (
         <>
