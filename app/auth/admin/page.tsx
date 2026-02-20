@@ -59,14 +59,14 @@ export default function AdminAuthPage() {
         <div className="relative z-10">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"
+            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-black"
           >
             <ArrowLeft className="h-4 w-4" />
             Retour à l&apos;accueil
           </Link>
-          <p className="mt-6 text-lg font-semibold text-[#2d435a]">{siteConfig.name}</p>
-          <div className="mt-1 h-0.5 w-12 bg-[#2d435a]" />
-          <h2 className="mt-6 flex items-center gap-2 text-2xl font-bold text-[#2d435a]">
+          <p className="mt-6 text-lg font-semibold text-black">{siteConfig.name}</p>
+          <div className="mt-1 h-0.5 w-12 bg-[#213398]" />
+          <h2 className="mt-6 flex items-center gap-2 text-2xl font-bold text-black">
             <Shield className="h-7 w-7" />
             Espace administrateur
           </h2>
@@ -86,7 +86,7 @@ export default function AdminAuthPage() {
 
       <div className="relative flex flex-col justify-center bg-white p-6 md:p-10">
         <form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto flex max-w-md flex-col">
-          <h3 className="text-xl font-bold text-slate-900">Connexion admin</h3>
+          <h3 className="text-xl font-bold text-black">Connexion admin</h3>
           <p className="mt-1 text-sm text-slate-500">
             Utilisez vos identifiants administrateur
           </p>
@@ -127,7 +127,7 @@ export default function AdminAuthPage() {
           {state.error && <p className="mt-3 text-sm text-red-600">{state.error}</p>}
           <Button
             type="submit"
-            className="mt-5 h-11 w-full bg-[#2d435a] hover:bg-[#243a4d]"
+            className="mt-5 h-11 w-full bg-[#213398] hover:bg-[#1a2980]"
             disabled={isPending}
           >
             {isPending ? "Connexion..." : "Se connecter"}

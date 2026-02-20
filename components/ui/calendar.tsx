@@ -59,7 +59,7 @@ function Calendar({ className, classNames, showOutsideDays = true, compact = fal
         range_end: "day-range-end",
         range_middle: "day-range-middle",
         selected: "bg-slate-900 text-slate-50 hover:bg-slate-900 hover:text-slate-50",
-        today: "bg-slate-100 text-slate-900",
+        today: "bg-slate-100 text-black",
         outside: "text-slate-400 opacity-50",
         disabled: "text-slate-400 opacity-50",
         hidden: "invisible",

@@ -56,7 +56,7 @@ export default async function PricingPage() {
   return (
     <main className="container py-16">
       <div className="mx-auto max-w-3xl text-center">
-        <h1 className="text-4xl font-semibold tracking-tight text-slate-900">Tarifs transparents</h1>
+        <h1 className="text-4xl font-semibold tracking-tight text-black">Tarifs transparents</h1>
         <p className="mt-4 text-slate-600">
           {pass.demandes_gratuites} demandes gratuites pour débuter. Puis choisissez un Pass pour continuer.
         </p>
@@ -73,7 +73,7 @@ export default async function PricingPage() {
               <CardDescription>{plan.description}</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-semibold text-slate-900">
+              <p className="text-3xl font-semibold text-black">
                 {plan.price}€
                 {plan.id === "abonnement" ? (
                   <span className="text-base font-normal text-slate-500">/mois</span>
@@ -84,7 +84,7 @@ export default async function PricingPage() {
               <ul className="mt-4 space-y-2 text-sm text-slate-600">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-slate-800" />
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-black" />
                     {feature}
                   </li>
                 ))}

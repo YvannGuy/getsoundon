@@ -97,10 +97,10 @@ export default async function AnnoncesPage({
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Mes annonces</h1>
+          <h1 className="text-2xl font-bold text-black">Mes annonces</h1>
           <p className="mt-1 text-slate-500">Gérez et modifiez vos salles</p>
         </div>
-        <AddSalleButton className="bg-[#6366f1] hover:bg-[#4f46e5]">
+        <AddSalleButton className="bg-[#213398] hover:bg-[#1a2980]">
           Ajouter une salle
         </AddSalleButton>
       </div>
@@ -117,8 +117,8 @@ export default async function AnnoncesPage({
               href={href}
               className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-[#6366f1] text-white"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  ? "bg-[#213398] text-white"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-black"
               }`}
             >
               {tab.label}
@@ -142,7 +142,7 @@ export default async function AnnoncesPage({
               : `Aucune annonce ${STATUT_SALLE_LABEL[statusFilter] ?? statusFilter.toLowerCase()}`}
           </p>
           {statusFilter === "all" && (
-            <AddSalleButton className="mt-4 bg-[#6366f1] hover:bg-[#4f46e5]">
+            <AddSalleButton className="mt-4 bg-[#213398] hover:bg-[#1a2980]">
               Ajouter une salle
             </AddSalleButton>
           )}
@@ -181,7 +181,7 @@ export default async function AnnoncesPage({
                       href={`${baseUrl}?page=${p}${statusQ}`}
                       className={`flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium transition-colors ${
                         p === currentPage
-                          ? "bg-[#6366f1] text-white"
+                          ? "bg-[#213398] text-white"
                           : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                       }`}
                     >

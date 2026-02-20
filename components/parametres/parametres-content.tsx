@@ -68,7 +68,7 @@ export function ParametresContent({
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#6366f1] text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#213398] text-white">
               <User className="h-5 w-5" />
             </div>
             <div>
@@ -144,7 +144,7 @@ export function ParametresContent({
             <Button
               type="submit"
               disabled={profilePending}
-              className="bg-[#6366f1] hover:bg-[#4f46e5]"
+              className="bg-[#213398] hover:bg-[#1a2980]"
             >
               {profilePending ? "Enregistrement..." : "Enregistrer les modifications"}
             </Button>
@@ -156,7 +156,7 @@ export function ParametresContent({
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#6366f1] text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#213398] text-white">
               <Lock className="h-5 w-5" />
             </div>
             <div>
@@ -166,7 +166,7 @@ export function ParametresContent({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-lg bg-indigo-50/80 p-4 text-sm text-slate-700">
+          <div className="rounded-lg bg-[#213398]/10 p-4 text-sm text-slate-700">
             Vos informations sont protégées et ne sont jamais partagées publiquement.
           </div>
           <form

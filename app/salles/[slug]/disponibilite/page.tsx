@@ -37,7 +37,7 @@ export default async function DisponibilitePage({
                 sizes="(max-width: 1024px) 100vw, 50vw"
               />
             </div>
-            <h1 className="text-2xl font-bold text-[#304256]">{salle.name}</h1>
+            <h1 className="text-2xl font-bold text-black">{salle.name}</h1>
             <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
               <span className="flex items-center gap-1.5">
                 <MapPin className="h-4 w-4 text-slate-400" />

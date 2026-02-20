@@ -90,7 +90,7 @@ export function AdminHeader({ title, subtitle, pendingCount = 0, notifications =
   return (
     <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-4 pl-16 lg:pl-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">{title ?? "Dashboard Admin"}</h1>
+        <h1 className="text-xl font-bold text-black">{title ?? "Dashboard Admin"}</h1>
         <p className="text-sm text-slate-600">
           {subtitle ?? "Vue d'ensemble de votre plateforme"}
         </p>
@@ -113,7 +113,7 @@ export function AdminHeader({ title, subtitle, pendingCount = 0, notifications =
           {notifOpen && (
             <div className="absolute right-0 top-full z-50 mt-1 w-80 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
               <div className="border-b border-slate-100 px-4 py-3">
-                <h3 className="font-semibold text-slate-900">Nouveautés</h3>
+                <h3 className="font-semibold text-black">Nouveautés</h3>
               </div>
               <div className="max-h-80 overflow-y-auto">
                 {visibleNotifications.length === 0 ? (
@@ -136,7 +136,7 @@ export function AdminHeader({ title, subtitle, pendingCount = 0, notifications =
                             <Icon className="h-4 w-4 text-slate-600" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-slate-900 truncate">{n.label}</p>
+                            <p className="text-sm font-medium text-black truncate">{n.label}</p>
                             <p className="text-xs text-slate-500">
                               {n.date
                                 ? formatDistanceToNow(new Date(n.date), { addSuffix: true, locale: fr })
@@ -196,7 +196,7 @@ export function AdminHeader({ title, subtitle, pendingCount = 0, notifications =
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200">
               <User className="h-5 w-5 text-slate-600" />
             </div>
-            <span className="text-sm font-medium text-slate-900">Admin</span>
+            <span className="text-sm font-medium text-black">Admin</span>
             <ChevronDown className={`h-4 w-4 text-slate-500 transition ${open ? "rotate-180" : ""}`} />
           </button>
           {open && (

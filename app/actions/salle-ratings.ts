@@ -20,7 +20,7 @@ export async function rateSalle(salleId: string, stars: number): Promise<RatingR
   const { error } = await supabase
     .from("salles_ratings")
     .upsert(
-      { user_id: user.id, salle_id: salleId, stars },
+      [{ user_id: user.id, salle_id: salleId, stars }],
       { onConflict: "user_id,salle_id" }
     );
   if (error) return { success: false, error: error.message };

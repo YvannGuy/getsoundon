@@ -177,7 +177,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex h-20 w-20 flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 text-slate-500 hover:border-[#6366f1] hover:text-[#6366f1]"
+                  className="flex h-20 w-20 flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 text-slate-500 hover:border-[#213398] hover:text-black"
                 >
                   <Plus className="h-6 w-6" />
                   <span className="text-xs">Ajouter</span>
@@ -280,7 +280,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
             </Button>
             <Button
               type="submit"
-              className="bg-[#6366f1] hover:bg-[#4f46e5]"
+              className="bg-[#213398] hover:bg-[#1a2980]"
               disabled={isPending || (images.length === 0 && newFiles.length === 0)}
             >
               {isPending ? "Enregistrement..." : "Enregistrer"}

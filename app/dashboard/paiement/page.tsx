@@ -107,7 +107,7 @@ export default async function PaiementPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="text-2xl font-bold text-slate-900">Paiement</h1>
+      <h1 className="text-2xl font-bold text-black">Paiement</h1>
       <p className="mt-2 text-slate-500">Gérez votre accès et vos transactions</p>
 
       {/* Mon accès */}
@@ -150,7 +150,7 @@ export default async function PaiementPage() {
                   </p>
                 </div>
               </div>
-              <PassCheckoutButton passType="pass_24h" className="mt-4 bg-[#6366f1] hover:bg-[#4f46e5]">
+              <PassCheckoutButton passType="pass_24h" className="mt-4 bg-[#213398] hover:bg-[#1a2980]">
                 Choisir un Pass
               </PassCheckoutButton>
             </>
@@ -159,29 +159,29 @@ export default async function PaiementPage() {
       </Card>
 
       {/* Pass & abonnements */}
-      <h2 className="mt-10 text-lg font-semibold text-slate-900">Pass & abonnements</h2>
+      <h2 className="mt-10 text-lg font-semibold text-black">Pass & abonnements</h2>
       <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-3 md:items-stretch">
         {plans.map((plan) => {
           const Icon = plan.icon;
           return (
             <Card
               key={plan.id}
-              className={`relative flex h-full flex-col border-0 shadow-sm ${(plan as { highlighted?: boolean }).highlighted ? "ring-1 ring-[#6366f1]" : ""}`}
+              className={`relative flex h-full flex-col border-0 shadow-sm ${(plan as { highlighted?: boolean }).highlighted ? "ring-1 ring-[#213398]" : ""}`}
             >
               {(plan as { highlighted?: boolean }).highlighted && (
-                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-[#6366f1] px-3 py-0.5 text-xs font-medium text-white">
+                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-[#213398] px-3 py-0.5 text-xs font-medium text-white">
                   Offre recommandée
                 </div>
               )}
               <CardHeader className="shrink-0 pb-2">
                 <div className="flex items-center gap-2">
-                  <Icon className="h-5 w-5 shrink-0 text-[#6366f1]" />
+                  <Icon className="h-5 w-5 shrink-0 text-black" />
                   <CardTitle className="text-lg">{plan.name}</CardTitle>
                 </div>
                 <CardDescription>{plan.description}</CardDescription>
               </CardHeader>
               <CardContent className="flex min-h-0 flex-1 flex-col pt-0">
-                <p className="text-2xl font-bold tabular-nums text-slate-900">
+                <p className="text-2xl font-bold tabular-nums text-black">
                   {plan.price} €
                   {plan.priceSuffix && (
                     <span className="text-base font-normal text-slate-500">{plan.priceSuffix}</span>
@@ -198,7 +198,7 @@ export default async function PaiementPage() {
                 <div className="mt-auto pt-6">
                   <PassCheckoutButton
                     passType={plan.id}
-                    className={`w-full ${(plan as { highlighted?: boolean }).highlighted ? "bg-[#6366f1] hover:bg-[#4f46e5]" : ""}`}
+                    className={`w-full ${(plan as { highlighted?: boolean }).highlighted ? "bg-[#213398] hover:bg-[#1a2980]" : ""}`}
                   >
                     Choisir
                   </PassCheckoutButton>
@@ -241,7 +241,7 @@ export default async function PaiementPage() {
       <Card className="mt-10 border-0 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Historique</CardTitle>
-          <Link href="/dashboard/paiement/historique" className="text-sm font-medium text-[#6366f1] hover:underline">
+          <Link href="/dashboard/paiement/historique" className="text-sm font-medium text-black hover:underline">
             Voir tout →
           </Link>
         </CardHeader>

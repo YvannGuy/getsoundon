@@ -23,8 +23,8 @@ const STATUT_LABEL: Record<string, string> = {
 const STATUT_BADGE: Record<string, string> = {
   sent: "bg-emerald-100 text-emerald-700",
   viewed: "bg-amber-100 text-amber-700",
-  replied: "bg-sky-100 text-sky-700",
-  accepted: "bg-sky-100 text-sky-700",
+  replied: "bg-[#213398]/10 text-black",
+  accepted: "bg-[#213398]/10 text-black",
   rejected: "bg-red-100 text-red-700",
 };
 
@@ -61,7 +61,7 @@ export default async function DemandesPage({
   if (salleIds.length === 0) {
     return (
       <div className="p-4 sm:p-6 lg:p-8">
-        <h1 className="text-2xl font-bold text-slate-900">Demandes reçues</h1>
+        <h1 className="text-2xl font-bold text-black">Demandes reçues</h1>
         <p className="mt-2 text-slate-500">Consultez et gérez vos demandes</p>
         <div className="mt-8 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 py-16 text-center">
           <p className="text-slate-500">Aucune demande pour le moment.</p>
@@ -164,7 +164,7 @@ export default async function DemandesPage({
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Demandes reçues</h1>
+        <h1 className="text-2xl font-bold text-black">Demandes reçues</h1>
         <p className="mt-1 text-slate-500">Consultez et gérez vos demandes</p>
       </div>
 
@@ -175,7 +175,7 @@ export default async function DemandesPage({
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Temps de réponse moyen</p>
-            <p className="text-2xl font-bold text-slate-900">
+            <p className="text-2xl font-bold text-black">
               {avgResponseHours >= 24
                 ? `${Math.round(avgResponseHours / 24)}j`
                 : `${avgResponseHours}h`}
@@ -203,8 +203,8 @@ export default async function DemandesPage({
               href={href}
               className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-[#6366f1] text-white"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  ? "bg-[#213398] text-white"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-black"
               }`}
             >
               {tab.label}
@@ -263,7 +263,7 @@ export default async function DemandesPage({
                           {(profile?.full_name ?? profile?.email ?? "?").charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium text-black">
                             {profile?.full_name ?? "—"}
                           </p>
                           <p className="text-sm text-slate-500">{profile?.email ?? "—"}</p>
@@ -303,7 +303,7 @@ export default async function DemandesPage({
                     </td>
                     <td className="px-4 py-4">
                       <Link href={`/proprietaire/demandes/${d.id}`}>
-                        <Button size="sm" className="bg-[#6366f1] hover:bg-[#4f46e5]">
+                        <Button size="sm" className="bg-[#213398] hover:bg-[#1a2980]">
                           Voir
                         </Button>
                       </Link>

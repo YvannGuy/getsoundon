@@ -21,7 +21,7 @@ const STATUT_LABEL: Record<string, string> = {
 const STATUT_COLOR: Record<string, string> = {
   sent: "text-emerald-600",
   viewed: "text-amber-600",
-  replied: "text-sky-600",
+  replied: "text-black",
   accepted: "text-emerald-600",
   rejected: "text-red-600",
 };
@@ -112,10 +112,10 @@ export default async function DashboardPage() {
   });
 
   const overviewCards = [
-    { label: "Demandes envoyées", value: String(totalDemandes), icon: FileText, color: "text-[#6366f1]", bgColor: "bg-[#6366f1]/10" },
+    { label: "Demandes envoyées", value: String(totalDemandes), icon: FileText, color: "text-black", bgColor: "bg-[#213398]/10" },
     { label: "Conversations actives", value: String(convsCount), icon: MessageCircle, color: "text-emerald-600", bgColor: "bg-emerald-100" },
     { label: "Salles favorites", value: String(totalFavoris), icon: Heart, color: "text-amber-500", bgColor: "bg-amber-100" },
-    { label: "Réponses reçues", value: String(totalReplied), icon: CheckCircle2, color: "text-sky-500", bgColor: "bg-sky-100" },
+    { label: "Réponses reçues", value: String(totalReplied), icon: CheckCircle2, color: "text-black", bgColor: "bg-[#213398]/10" },
   ];
 
   const recentRequests = (demandesList ?? []).map((d) => {
@@ -179,7 +179,7 @@ export default async function DashboardPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Tableau de bord</h1>
+        <h1 className="text-2xl font-bold text-black">Tableau de bord</h1>
         <p className="mt-1 text-slate-500">Suivez vos recherches et demandes</p>
       </div>
 
@@ -193,7 +193,7 @@ export default async function DashboardPage() {
                   <Icon className={`h-6 w-6 ${card.color}`} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-900">{card.value}</p>
+                  <p className="text-2xl font-bold text-black">{card.value}</p>
                   <p className="text-sm text-slate-500">{card.label}</p>
                 </div>
               </CardContent>
@@ -205,7 +205,7 @@ export default async function DashboardPage() {
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           {activePass ? (
-            <Card className="overflow-hidden border-0 bg-gradient-to-br from-[#6366f1] to-[#4f46e5] shadow-md">
+            <Card className="overflow-hidden border-0 bg-gradient-to-br from-[#213398] to-[#1a2980] shadow-md">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
@@ -228,7 +228,7 @@ export default async function DashboardPage() {
                   </p>
                 </div>
                 <Link href="/dashboard/paiement">
-                  <Button className="mt-4 flex items-center gap-2 bg-white text-[#6366f1] hover:bg-white/90">
+                  <Button className="mt-4 flex items-center gap-2 bg-white text-black hover:bg-white/90">
                     <Lock className="h-4 w-4" />
                     Prolonger mon accès
                   </Button>
@@ -243,13 +243,13 @@ export default async function DashboardPage() {
                     <Crown className="h-6 w-6 text-slate-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900">Aucun Pass actif</p>
+                    <p className="font-semibold text-black">Aucun Pass actif</p>
                     <p className="text-sm text-slate-500">
                       Acquérez un Pass pour envoyer des demandes illimitées aux propriétaires
                     </p>
                   </div>
                   <Link href="/dashboard/paiement" className="ml-auto">
-                    <Button className="bg-[#6366f1] hover:bg-[#4f46e5]">
+                    <Button className="bg-[#213398] hover:bg-[#1a2980]">
                       Voir les offres
                     </Button>
                   </Link>
@@ -261,7 +261,7 @@ export default async function DashboardPage() {
           <Card className="border-0 shadow-sm">
             <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0 pb-2">
               <CardTitle className="text-lg">Paiement & accès</CardTitle>
-              <Link href="/dashboard/paiement" className="text-sm font-medium text-[#6366f1] hover:underline">
+              <Link href="/dashboard/paiement" className="text-sm font-medium text-black hover:underline">
                 Voir tout
               </Link>
             </CardHeader>
@@ -284,7 +284,7 @@ export default async function DashboardPage() {
                       className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4"
                     >
                       <div>
-                        <p className="font-medium text-slate-900">
+                        <p className="font-medium text-black">
                           {p.product_type === "pass_24h" ? "Pass 24h" : p.product_type === "pass_48h" ? "Pass 48h" : "Abonnement"}
                         </p>
                         <p className="text-sm text-slate-500">
@@ -292,7 +292,7 @@ export default async function DashboardPage() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-slate-900">{(p.amount / 100).toFixed(2)}€</p>
+                        <p className="font-semibold text-black">{(p.amount / 100).toFixed(2)}€</p>
                         <p className="text-sm text-emerald-600">Payé</p>
                       </div>
                     </div>
@@ -309,11 +309,11 @@ export default async function DashboardPage() {
               <CardTitle className="text-lg">Mon Pass</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="rounded-xl bg-gradient-to-br from-[#6366f1]/10 to-[#4f46e5]/10 p-4">
+              <div className="rounded-xl bg-gradient-to-br from-[#213398]/10 to-[#1a2980]/10 p-4">
                 <div className="flex items-center gap-3">
-                  <Crown className="h-8 w-8 text-[#6366f1]" />
+                  <Crown className="h-8 w-8 text-black" />
                   <div>
-                    <p className="font-semibold text-slate-900">
+                    <p className="font-semibold text-black">
                       {activePass.product_type === "pass_48h" ? "Pass 48h" : "Pass 24h"} actif
                     </p>
                     <p className="text-sm text-slate-500">En cours</p>
@@ -328,7 +328,7 @@ export default async function DashboardPage() {
       <Card className="mt-6 border-0 shadow-sm">
         <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0 pb-2">
           <CardTitle className="text-lg">Demandes récentes</CardTitle>
-          <Link href="/dashboard/demandes" className="text-sm font-medium text-[#6366f1] hover:underline">
+          <Link href="/dashboard/demandes" className="text-sm font-medium text-black hover:underline">
             Voir tout →
           </Link>
         </CardHeader>
@@ -338,7 +338,7 @@ export default async function DashboardPage() {
               <Inbox className="mb-3 h-12 w-12 text-slate-300" />
               <p className="text-slate-500">Aucune demande envoyée</p>
               <SearchModalButton className="mt-3 inline-flex">
-                <Button className="bg-[#6366f1] hover:bg-[#4f46e5]">
+                <Button className="bg-[#213398] hover:bg-[#1a2980]">
                   Rechercher une salle
                 </Button>
               </SearchModalButton>
@@ -364,7 +364,7 @@ export default async function DashboardPage() {
                             <Image src={req.image} alt="" fill className="object-cover" />
                           </div>
                           <div>
-                            <p className="font-medium text-slate-900">{req.salle}</p>
+                            <p className="font-medium text-black">{req.salle}</p>
                             <p className="text-sm text-slate-500">{req.location}</p>
                           </div>
                         </div>
@@ -377,7 +377,7 @@ export default async function DashboardPage() {
                       <td className="py-3 sm:py-4">
                         <Link
                           href={`/dashboard/demandes`}
-                          className="text-sm font-medium text-[#6366f1] hover:underline"
+                          className="text-sm font-medium text-black hover:underline"
                         >
                           Voir la demande
                         </Link>
@@ -395,7 +395,7 @@ export default async function DashboardPage() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0 pb-2">
             <CardTitle className="text-lg">Conversations</CardTitle>
-            <Link href="/dashboard/messagerie" className="text-sm font-medium text-[#6366f1] hover:underline">
+            <Link href="/dashboard/messagerie" className="text-sm font-medium text-black hover:underline">
               Ouvrir la messagerie →
             </Link>
           </CardHeader>
@@ -421,7 +421,7 @@ export default async function DashboardPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-medium text-slate-900">{conv.name}</p>
+                        <p className="font-medium text-black">{conv.name}</p>
                         <span className="text-xs text-slate-400">{conv.time}</span>
                       </div>
                       <p className="text-xs text-slate-500">{conv.venue}</p>
@@ -437,7 +437,7 @@ export default async function DashboardPage() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0 pb-2">
             <CardTitle className="text-lg">Favoris</CardTitle>
-            <Link href="/dashboard/favoris" className="text-sm font-medium text-[#6366f1] hover:underline">
+            <Link href="/dashboard/favoris" className="text-sm font-medium text-black hover:underline">
               Voir mes favoris →
             </Link>
           </CardHeader>

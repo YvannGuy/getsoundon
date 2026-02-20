@@ -8,9 +8,9 @@ export default function BlogPage() {
     <div className="min-h-screen bg-white">
       <SiteHeader />
       <main className="container max-w-[1120px] py-16">
-        <h1 className="text-[36px] font-bold text-[#304256]">Blog</h1>
+        <h1 className="text-[36px] font-bold text-black">Blog</h1>
         <p className="mt-4 text-slate-600">À venir prochainement.</p>
-        <Link href="/" className="mt-6 inline-block text-[14px] font-medium text-[#2d435a] hover:underline">
+        <Link href="/" className="mt-6 inline-block text-[14px] font-medium text-black hover:underline">
           ← Retour à l&apos;accueil
         </Link>
       </main>

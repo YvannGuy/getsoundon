@@ -87,13 +87,13 @@ export default async function SalleDetailPage({
 
             <div className="space-y-8">
               <div>
-                <h1 className="text-[28px] font-bold text-[#304256]">{salle.name}</h1>
+                <h1 className="text-[28px] font-bold text-black">{salle.name}</h1>
                 <div className="mt-2 flex flex-wrap items-center gap-3">
                   <span className="flex items-center gap-1.5 text-sm text-slate-500">
                     <MapPin className="h-4 w-4" />
                     {salle.city}
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-3 py-1 text-[13px] font-medium text-sky-800">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#213398]/10 px-3 py-1 text-[13px] font-medium text-black">
                     <Users className="h-4 w-4" />
                     Jusqu&apos;à {salle.capacity} personnes
                   </span>
@@ -101,12 +101,12 @@ export default async function SalleDetailPage({
               </div>
 
               <section>
-                <h2 className="mb-3 text-lg font-semibold text-[#304256]">Description</h2>
+                <h2 className="mb-3 text-lg font-semibold text-black">Description</h2>
                 <p className="text-[15px] leading-[1.6] text-slate-600">{salle.description}</p>
               </section>
 
               <section>
-                <h2 className="mb-3 text-lg font-semibold text-[#304256]">Caractéristiques</h2>
+                <h2 className="mb-3 text-lg font-semibold text-black">Caractéristiques</h2>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {salle.features.map((f, i) => {
                     const Icon = iconMap[f.icon] ?? CheckCircle2;
@@ -117,7 +117,7 @@ export default async function SalleDetailPage({
                         <div>
                           {hasSublabel ? (
                             <>
-                              <p className="font-medium text-slate-800">{f.label}</p>
+                              <p className="font-medium text-black">{f.label}</p>
                               <p className="mt-0.5 text-[13px] text-slate-600">{f.sublabel}</p>
                             </>
                           ) : (
@@ -131,7 +131,7 @@ export default async function SalleDetailPage({
               </section>
 
               <section>
-                <h2 className="mb-3 text-lg font-semibold text-[#304256]">Conditions d&apos;accueil</h2>
+                <h2 className="mb-3 text-lg font-semibold text-black">Conditions d&apos;accueil</h2>
                 <ul className="space-y-3">
                   {salle.conditions.map((c, i) => {
                     const Icon = iconMap[c.icon] ?? Clock;
@@ -146,9 +146,9 @@ export default async function SalleDetailPage({
               </section>
 
               <section>
-                <h2 className="mb-3 text-lg font-semibold text-[#304256]">Tarification</h2>
+                <h2 className="mb-3 text-lg font-semibold text-black">Tarification</h2>
                 <div className="rounded-xl border border-violet-200 bg-violet-50/60 p-5">
-                  <p className="text-xl font-bold text-[#304256]">{salle.pricePerDay} € / jour</p>
+                  <p className="text-xl font-bold text-black">{salle.pricePerDay} € / jour</p>
                   {salle.pricingInclusions.length > 0 && (
                     <>
                       <p className="mt-4 text-[13px] font-medium text-slate-700">Ce tarif comprend :</p>
@@ -166,13 +166,13 @@ export default async function SalleDetailPage({
               </section>
 
               <section>
-                <h2 className="mb-3 text-lg font-semibold text-[#304256]">Localisation</h2>
+                <h2 className="mb-3 text-lg font-semibold text-black">Localisation</h2>
                 <SalleMap salle={salle} />
               </section>
 
               {nearbySalles.length > 0 && (
                 <section>
-                  <h2 className="mb-4 text-lg font-semibold text-[#304256]">Autres salles proches</h2>
+                  <h2 className="mb-4 text-lg font-semibold text-black">Autres salles proches</h2>
                   <div className="grid gap-4 sm:grid-cols-2">
                     {nearbySalles.map((s) => (
                       <Link
@@ -190,11 +190,11 @@ export default async function SalleDetailPage({
                           />
                         </div>
                         <div className="p-4">
-                          <p className="font-semibold text-[#304256]">{s.name}</p>
+                          <p className="font-semibold text-black">{s.name}</p>
                           <p className="mt-1 text-[13px] text-slate-500">
                             {s.city} • Jusqu&apos;à {s.capacity} personnes
                           </p>
-                          <p className="mt-2 text-sm font-medium text-[#2d435a]">
+                          <p className="mt-2 text-sm font-medium text-black">
                             À partir de {s.pricePerDay} € / jour
                           </p>
                         </div>
@@ -208,7 +208,7 @@ export default async function SalleDetailPage({
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
             <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-[#304256]">Intéressé par cette salle ?</h3>
+              <h3 className="text-lg font-semibold text-black">Intéressé par cette salle ?</h3>
               <p className="mt-2 text-[14px] text-slate-600">
                 Envoyez une demande au propriétaire pour vérifier la disponibilité.
               </p>
@@ -220,7 +220,7 @@ export default async function SalleDetailPage({
               <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-4">
                 <Link
                   href={`/salles/${salle.slug}/disponibilite`}
-                  className="flex items-center gap-2 text-[13px] font-medium text-slate-600 hover:text-slate-900"
+                  className="flex items-center gap-2 text-[13px] font-medium text-slate-600 hover:text-black"
                 >
                   <MessageCircle className="h-4 w-4" />
                   Envoyer un message
@@ -228,7 +228,7 @@ export default async function SalleDetailPage({
                 {salle.contactPhone && (
                   <a
                     href={`tel:${salle.contactPhone.replace(/\s/g, "")}`}
-                    className="flex items-center gap-2 text-[13px] font-medium text-slate-600 hover:text-slate-900"
+                    className="flex items-center gap-2 text-[13px] font-medium text-slate-600 hover:text-black"
                   >
                     <Phone className="h-4 w-4" />
                     Appeler
@@ -245,11 +245,11 @@ export default async function SalleDetailPage({
                 <HelpCircle className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-[#304256]">Besoin d&apos;aide ?</h3>
+                <h3 className="text-lg font-semibold text-black">Besoin d&apos;aide ?</h3>
                 <p className="mt-2 text-[14px] text-slate-600">
                   Notre équipe est disponible pour vous accompagner dans votre recherche.
                 </p>
-                <a href="#" className="mt-3 inline-block text-[14px] font-medium text-[#2d435a] hover:underline">
+                <a href="#" className="mt-3 inline-block text-[14px] font-medium text-black hover:underline">
                   Contacter le support
                 </a>
               </div>

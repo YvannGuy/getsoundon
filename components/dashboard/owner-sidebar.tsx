@@ -62,8 +62,8 @@ function NavContent({
                 "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 collapsed ? "justify-center px-2" : "",
                 isActive
-                  ? "bg-[#6366f1] text-white"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  ? "bg-[#213398] text-white"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-black"
               )}
               title={collapsed ? item.label : undefined}
             >
@@ -85,7 +85,7 @@ function NavContent({
                     <span
                       className={cn(
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                        isActive ? "bg-white/20 text-white" : "bg-[#6366f1]/20 text-[#4f46e5]"
+                        isActive ? "bg-white/20 text-white" : "bg-[#213398]/20 text-[#1a2980]"
                       )}
                     >
                       {messageCount}
@@ -99,7 +99,7 @@ function NavContent({
                 </span>
               )}
               {collapsed && item.badgeKey === "messagerie" && messageCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#6366f1] px-1 text-[10px] font-semibold text-white">
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#213398] px-1 text-[10px] font-semibold text-white">
                   {messageCount > 99 ? "99+" : messageCount}
                 </span>
               )}
@@ -114,12 +114,12 @@ function NavContent({
             collapsed && "justify-center px-0"
           )}
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#6366f1] text-white">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#213398] text-white">
             <User className="h-5 w-5" />
           </div>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-slate-900">{displayName}</p>
+              <p className="truncate text-sm font-medium text-black">{displayName}</p>
               <p className="truncate text-xs text-slate-500">{userEmail}</p>
             </div>
           )}
@@ -128,7 +128,7 @@ function NavContent({
           <button
             type="submit"
             className={cn(
-              "flex w-full items-center gap-2 text-left text-sm font-medium text-slate-600 hover:text-slate-900",
+              "flex w-full items-center gap-2 text-left text-sm font-medium text-slate-600 hover:text-black",
               collapsed && "justify-center px-0"
             )}
           >
@@ -217,7 +217,7 @@ export function OwnerSidebar({
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-black"
             aria-label={collapsed ? "Ouvrir la sidebar" : "Réduire la sidebar"}
           >
             {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}

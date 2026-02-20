@@ -85,7 +85,7 @@ export function AnnoncesAValiderClient({ salles, highlightSalleId }: Props) {
     <div className="flex gap-0">
       <div className="min-w-0 flex-1">
         <div className="mb-6">
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-black">
             <Clock className="h-7 w-7 text-amber-500" />
             Annonces à valider
           </h1>
@@ -181,7 +181,7 @@ export function AnnoncesAValiderClient({ salles, highlightSalleId }: Props) {
                           <Image src={img} alt="" fill className="object-cover" sizes="64px" />
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900">{s.name}</p>
+                          <p className="font-medium text-black">{s.name}</p>
                           <p className="text-xs text-slate-500">{s.capacity} places</p>
                         </div>
                       </button>
@@ -283,7 +283,7 @@ export function AnnoncesAValiderClient({ salles, highlightSalleId }: Props) {
         <aside className="hidden w-[380px] shrink-0 border-l border-slate-200 bg-white lg:block">
           <div className="sticky top-0 max-h-screen overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-200 p-4">
-              <h3 className="font-semibold text-slate-900">Prévisualisation</h3>
+              <h3 className="font-semibold text-black">Prévisualisation</h3>
               <button
                 type="button"
                 onClick={() => setSelectedId(null)}
@@ -302,7 +302,7 @@ export function AnnoncesAValiderClient({ salles, highlightSalleId }: Props) {
                   sizes="380px"
                 />
               </div>
-              <h2 className="text-lg font-bold text-slate-900">{selected.name}</h2>
+              <h2 className="text-lg font-bold text-black">{selected.name}</h2>
               <p className="mt-2 flex items-center gap-2 text-sm text-slate-600">
                 <MapPin className="h-4 w-4 shrink-0" />
                 {selected.address}, {selected.city}

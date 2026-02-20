@@ -55,8 +55,8 @@ function NavContent({
             "relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors",
             collapsed ? "justify-center px-2" : "",
             isActive
-              ? "bg-[#6366f1] text-white"
-              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              ? "bg-[#213398] text-white"
+              : "text-slate-600 hover:bg-slate-100 hover:text-black"
           );
           const content = (
             <>
@@ -111,12 +111,12 @@ function NavContent({
       </nav>
       <div className="border-t border-slate-200 p-4">
         <div className={cn("flex items-center gap-3 rounded-lg bg-slate-50 p-3", collapsed && "justify-center px-0")}>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#6366f1] text-white">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#213398] text-white">
             <User className="h-5 w-5" />
           </div>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-slate-900">{displayName}</p>
+              <p className="truncate text-sm font-medium text-black">{displayName}</p>
               <p className="truncate text-xs text-slate-500">{userEmail}</p>
             </div>
           )}
@@ -125,7 +125,7 @@ function NavContent({
           <button
             type="submit"
             className={cn(
-              "flex w-full items-center gap-2 text-left text-sm font-medium text-slate-600 hover:text-slate-900",
+              "flex w-full items-center gap-2 text-left text-sm font-medium text-slate-600 hover:text-black",
               collapsed && "justify-center px-0"
             )}
           >
@@ -222,7 +222,7 @@ export function DashboardSidebar({
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-black"
             aria-label={collapsed ? "Ouvrir la sidebar" : "Réduire la sidebar"}
           >
             {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}

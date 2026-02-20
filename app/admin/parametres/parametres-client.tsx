@@ -140,7 +140,7 @@ export function ParametresClient({
   return (
     <div className="max-w-3xl space-y-6">
       <div className="mb-8">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
+        <h1 className="flex items-center gap-2 text-2xl font-bold text-black">
           <Settings className="h-7 w-7 text-slate-600" />
           Paramètres
         </h1>
@@ -511,7 +511,7 @@ export function ParametresClient({
                         {(u.full_name || u.email || "?")[0].toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-slate-900 truncate">{u.full_name || "—"}</p>
+                        <p className="font-medium text-black truncate">{u.full_name || "—"}</p>
                         <p className="text-sm text-slate-500 truncate">{u.email}</p>
                       </div>
                       <span className="text-xs text-slate-400 capitalize">{u.user_type}</span>

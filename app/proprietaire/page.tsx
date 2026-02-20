@@ -31,8 +31,8 @@ const STATUT_DEMANDE_LABEL: Record<string, string> = {
 
 const STATUT_DEMANDE_COLOR: Record<string, string> = {
   sent: "text-emerald-600",
-  viewed: "text-sky-600",
-  replied: "text-sky-600",
+  viewed: "text-black",
+  replied: "text-black",
   accepted: "text-emerald-600",
   rejected: "text-red-600",
 };
@@ -90,16 +90,16 @@ export default async function ProprietaireDashboardPage() {
   const tauxReponse = demandesRecues > 0 ? Math.round((repondues / demandesRecues) * 100) : 0;
 
   const metrics = [
-    { label: "Demandes reçues", value: String(demandesRecues), icon: FolderOpen, color: "text-[#6366f1]", bgColor: "bg-[#6366f1]/10" },
+    { label: "Demandes reçues", value: String(demandesRecues), icon: FolderOpen, color: "text-black", bgColor: "bg-[#213398]/10" },
     { label: "Annonces actives", value: String(annoncesActives), icon: CheckCircle, color: "text-emerald-600", bgColor: "bg-emerald-100" },
     { label: "En validation", value: String(enValidation), icon: Clock, color: "text-amber-600", bgColor: "bg-amber-100" },
-    { label: "Taux de réponse", value: `${tauxReponse}%`, icon: Star, color: "text-sky-500", bgColor: "bg-sky-100" },
+    { label: "Taux de réponse", value: `${tauxReponse}%`, icon: Star, color: "text-sky-500", bgColor: "bg-[#213398]/10" },
   ];
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Tableau de bord</h1>
+        <h1 className="text-2xl font-bold text-black">Tableau de bord</h1>
         <p className="mt-1 text-slate-500">Gérez vos annonces et vos demandes</p>
       </div>
 
@@ -113,7 +113,7 @@ export default async function ProprietaireDashboardPage() {
                   <Icon className={`h-6 w-6 ${m.color}`} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-900">{m.value}</p>
+                  <p className="text-2xl font-bold text-black">{m.value}</p>
                   <p className="text-sm text-slate-500">{m.label}</p>
                 </div>
               </CardContent>
@@ -125,7 +125,7 @@ export default async function ProprietaireDashboardPage() {
       <Card className="mt-6 border-0 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-lg">Mes annonces</CardTitle>
-          <Link href="/proprietaire/annonces" className="text-sm font-medium text-[#6366f1] hover:underline">
+          <Link href="/proprietaire/annonces" className="text-sm font-medium text-black hover:underline">
             Voir tout →
           </Link>
         </CardHeader>
@@ -134,7 +134,7 @@ export default async function ProprietaireDashboardPage() {
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-12 text-center">
               <Inbox className="mb-3 h-12 w-12 text-slate-300" />
               <p className="text-slate-500">Aucune annonce pour le moment</p>
-              <AddSalleButton size="sm" className="mt-3 bg-[#6366f1] hover:bg-[#4f46e5]">
+              <AddSalleButton size="sm" className="mt-3 bg-[#213398] hover:bg-[#1a2980]">
                 Créer une annonce
               </AddSalleButton>
             </div>
@@ -154,7 +154,7 @@ export default async function ProprietaireDashboardPage() {
                     />
                   </div>
                   <div className="p-4">
-                    <p className="font-semibold text-slate-900">{s.name}</p>
+                    <p className="font-semibold text-black">{s.name}</p>
                     <p className="text-sm text-slate-500">{s.city}</p>
                     <span className={`mt-2 inline-block text-sm font-medium ${STATUT_SALLE_COLOR[s.status] ?? "text-slate-600"}`}>
                       • {STATUT_SALLE_LABEL[s.status] ?? s.status}
@@ -166,7 +166,7 @@ export default async function ProprietaireDashboardPage() {
                         </Button>
                       </Link>
                       <Link href={`/proprietaire/annonces?edit=${s.id}`}>
-                        <Button size="sm" className="flex-1 bg-[#6366f1] hover:bg-[#4f46e5]">
+                        <Button size="sm" className="flex-1 bg-[#213398] hover:bg-[#1a2980]">
                           Modifier
                         </Button>
                       </Link>
@@ -182,7 +182,7 @@ export default async function ProprietaireDashboardPage() {
       <Card className="mt-6 border-0 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-lg">Demandes récentes</CardTitle>
-          <Link href="/proprietaire/demandes" className="text-sm font-medium text-[#6366f1] hover:underline">
+          <Link href="/proprietaire/demandes" className="text-sm font-medium text-black hover:underline">
             Voir tout →
           </Link>
         </CardHeader>
@@ -213,7 +213,7 @@ export default async function ProprietaireDashboardPage() {
                             {(d.seeker?.full_name ?? d.seeker?.email ?? "?").charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-medium text-slate-900">{d.seeker?.full_name ?? "—"}</p>
+                            <p className="font-medium text-black">{d.seeker?.full_name ?? "—"}</p>
                             <p className="text-sm text-slate-500">{d.seeker?.email ?? "—"}</p>
                           </div>
                         </div>
@@ -230,7 +230,7 @@ export default async function ProprietaireDashboardPage() {
                       <td className="py-4">
                         <Link
                           href={`/proprietaire/demandes?id=${d.id}`}
-                          className="text-sm font-medium text-[#6366f1] hover:underline"
+                          className="text-sm font-medium text-black hover:underline"
                         >
                           Voir la demande
                         </Link>

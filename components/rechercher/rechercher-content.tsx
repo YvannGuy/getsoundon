@@ -197,7 +197,7 @@ export function RechercherContent({
               </SelectContent>
             </Select>
           </div>
-          <Button type="submit" size="sm" className="h-10 shrink-0 gap-2 bg-[#2d435a] px-4 hover:bg-[#243a4d]">
+          <Button type="submit" size="sm" className="h-10 shrink-0 gap-2 bg-[#213398] px-4 hover:bg-[#1a2980]">
             <Search className="h-4 w-4" />
             Rechercher
           </Button>
@@ -237,14 +237,14 @@ export function RechercherContent({
                 <Filter className="h-4 w-4" />
                 Filtres
                 {(prixMin || prixMax) && (
-                  <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-sky-100 px-1.5 text-xs font-medium text-sky-700">
+                  <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#213398]/10 px-1.5 text-xs font-medium text-black">
                     1
                   </span>
                 )}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="z-[9999] w-72 p-4" align="end">
-              <h4 className="mb-3 font-medium text-slate-900">Filtres avancés</h4>
+              <h4 className="mb-3 font-medium text-black">Filtres avancés</h4>
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <label className="text-[13px] font-medium text-slate-700">Prix min (€)</label>
@@ -309,7 +309,7 @@ export function RechercherContent({
                   cardRefs.current[salle.id] = el;
                 }}
                 className={`flex gap-4 rounded-xl border-2 bg-white p-4 shadow-sm transition ${
-                  isHighlighted ? "border-sky-500 ring-2 ring-sky-200" : "border-slate-200 hover:border-sky-500"
+                  isHighlighted ? "border-[#213398] ring-2 ring-[#213398]/20" : "border-slate-200 hover:border-[#213398]"
                 }`}
                 onMouseEnter={() => setHoveredSalleId(salle.id)}
                 onMouseLeave={() => setHoveredSalleId(null)}
@@ -331,7 +331,7 @@ export function RechercherContent({
                   </button>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold text-[#304256]">{salle.name}</h3>
+                  <h3 className="font-semibold text-black">{salle.name}</h3>
                   <p className="mt-1 text-[13px] text-slate-600">
                     {salle.capacity > 150
                       ? `${salle.capacity - 50}-${salle.capacity + 50} pers.`
@@ -354,11 +354,11 @@ export function RechercherContent({
                     })}
                   </div>
                   <div className="mt-3 flex items-center justify-between">
-                    <p className="text-[15px] font-semibold text-[#304256]">
+                    <p className="text-[15px] font-semibold text-black">
                       {salle.pricePerDay}€ <span className="font-normal text-slate-500">/jour</span>
                     </p>
                     <Link href={`/salles/${salle.slug}`}>
-                      <Button size="sm" className="h-8 bg-[#2d435a] text-[13px] hover:bg-[#243a4d]">
+                      <Button size="sm" className="h-8 bg-[#213398] text-[13px] hover:bg-[#1a2980]">
                         Voir la salle
                       </Button>
                     </Link>

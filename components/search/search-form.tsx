@@ -44,7 +44,7 @@ export function SearchForm() {
           <div className="space-y-2">
             <label className="text-[13px] font-medium text-slate-700">Nombre de personnes</label>
             <div className="relative">
-              <Users className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-sky-500" />
+              <Users className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-black" />
               <Input
                 type="number"
                 value={personnes}
@@ -57,7 +57,7 @@ export function SearchForm() {
           <div className="space-y-2">
             <label className="text-[13px] font-medium text-slate-700">Type d&apos;événement</label>
             <div className="relative">
-              <Building2 className="pointer-events-none absolute left-3 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-sky-500" />
+              <Building2 className="pointer-events-none absolute left-3 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-black" />
               <Select value={type} onValueChange={setType}>
                 <SelectTrigger className="h-11 rounded-lg border-slate-200 pl-10 pr-9 text-[14px]">
                   <SelectValue placeholder="Culte régulier" />
@@ -73,7 +73,7 @@ export function SearchForm() {
             </div>
           </div>
           <div className="sm:col-span-2">
-            <Button type="submit" className="mt-1 h-12 w-full rounded-lg bg-sky-500 px-4 text-[15px] font-medium hover:bg-sky-600">
+            <Button type="submit" className="mt-1 h-12 w-full rounded-lg bg-[#213398] px-4 text-[15px] font-medium hover:bg-[#1a2980]">
               Voir les salles
             </Button>
           </div>

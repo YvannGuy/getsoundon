@@ -11,6 +11,11 @@ module.exports = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        heading: "#000000",
+        primary: {
+          DEFAULT: "#213398",
+          hover: "#1a2980",
+        },
       },
       keyframes: {
         "accordion-down": {

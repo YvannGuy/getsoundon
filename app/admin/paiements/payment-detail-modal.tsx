@@ -78,26 +78,26 @@ export function PaymentDetailModal({ transaction, open, onOpenChange }: Props) {
         <div className="space-y-4">
           <div>
             <p className="text-sm font-medium text-slate-500">Utilisateur</p>
-            <p className="font-medium text-slate-900">{transaction.user_name || "—"}</p>
+            <p className="font-medium text-black">{transaction.user_name || "—"}</p>
             <p className="text-sm text-slate-600">{transaction.user_email}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Produit</p>
-            <p className="text-slate-900">{formatProduct(transaction.product_type)}</p>
+            <p className="text-black">{formatProduct(transaction.product_type)}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Montant</p>
-            <p className="text-lg font-semibold text-slate-900">
+            <p className="text-lg font-semibold text-black">
               {(transaction.amount / 100).toFixed(2)} €
             </p>
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Statut</p>
-            <p className="text-slate-900">{formatStatus(transaction.status)}</p>
+            <p className="text-black">{formatStatus(transaction.status)}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Date</p>
-            <p className="text-slate-900">{formatDate(transaction.created_at)}</p>
+            <p className="text-black">{formatDate(transaction.created_at)}</p>
           </div>
           {transaction.reference && (
             <div>

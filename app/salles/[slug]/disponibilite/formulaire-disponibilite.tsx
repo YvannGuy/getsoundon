@@ -106,7 +106,7 @@ export function FormulaireDisponibilite({ salle }: { salle: Salle }) {
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-xl font-bold text-[#304256]">Vérifier la disponibilité</h2>
+      <h2 className="text-xl font-bold text-black">Vérifier la disponibilité</h2>
       <p className="mt-1 text-sm text-slate-600">
         Décrivez votre événement pour contacter le propriétaire
       </p>

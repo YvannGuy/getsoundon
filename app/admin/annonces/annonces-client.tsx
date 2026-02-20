@@ -208,7 +208,7 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
+        <h1 className="flex items-center gap-2 text-2xl font-bold text-black">
           <Building2 className="h-7 w-7 text-slate-600" />
           Annonces
         </h1>
@@ -273,7 +273,7 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
               <Check className="h-6 w-6 text-emerald-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{stats.active}</p>
+              <p className="text-2xl font-bold text-black">{stats.active}</p>
               <p className="text-sm text-slate-600">Annonces actives</p>
             </div>
           </CardContent>
@@ -284,7 +284,7 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
               <Clock className="h-6 w-6 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{stats.pending}</p>
+              <p className="text-2xl font-bold text-black">{stats.pending}</p>
               <p className="text-sm text-slate-600">En validation</p>
             </div>
           </CardContent>
@@ -295,7 +295,7 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
               <Pause className="h-6 w-6 text-slate-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{stats.rejected}</p>
+              <p className="text-2xl font-bold text-black">{stats.rejected}</p>
               <p className="text-sm text-slate-600">Désactivées</p>
             </div>
           </CardContent>
@@ -356,7 +356,7 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
                       </td>
                       <td className="px-4 py-3">
                         <div>
-                          <p className="font-medium text-slate-900">{s.name}</p>
+                          <p className="font-medium text-black">{s.name}</p>
                           <p className="text-xs text-slate-500">{shortId(s.id)}</p>
                         </div>
                       </td>

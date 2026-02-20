@@ -142,7 +142,7 @@ export function DatePicker({ value, onChange, placeholder = "jj/mm/aaaa", classN
             maxLength={10}
             className={cn(
               "h-11 rounded-lg border-slate-200 pl-10 pr-20 text-[14px]",
-              "focus-visible:border-sky-400 focus-visible:ring-sky-100",
+              "focus-visible:border-[#213398] focus-visible:ring-[#213398]/20",
               validationState === "invalid" && "border-rose-300 bg-rose-50/30"
             )}
           />
@@ -161,7 +161,7 @@ export function DatePicker({ value, onChange, placeholder = "jj/mm/aaaa", classN
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="flex h-7 w-7 items-center justify-center rounded text-sky-500 hover:bg-sky-50"
+                className="flex h-7 w-7 items-center justify-center rounded text-black hover:bg-[#213398]/5"
                 aria-label="Ouvrir le calendrier"
               >
                 <ChevronDown className="h-5 w-5" />
@@ -185,7 +185,7 @@ export function DatePicker({ value, onChange, placeholder = "jj/mm/aaaa", classN
                       onClick={() => !isDisabled && handleSelect(d)}
                       className={cn(
                         "rounded px-2 py-1.5 text-left text-[11px]",
-                        isDisabled ? "text-slate-300" : "text-slate-600 hover:bg-sky-50 hover:text-sky-700"
+                        isDisabled ? "text-slate-300" : "text-slate-600 hover:bg-[#213398]/5 hover:text-black"
                       )}
                     >
                       {preset.label}

@@ -18,17 +18,10 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { toggleFavori } from "@/app/actions/favoris";
-import { reportSalle, type ReportReason } from "@/app/actions/salle-reports";
+import { reportSalle } from "@/app/actions/salle-reports";
 import { rateSalle } from "@/app/actions/salle-ratings";
+import { REPORT_REASONS, type ReportReason } from "@/lib/salle-reports";
 import { useRouter } from "next/navigation";
-
-const REPORT_REASONS: { id: ReportReason; label: string }[] = [
-  { id: "escroquerie", label: "Escroquerie" },
-  { id: "fausse_annonce", label: "Fausse annonce" },
-  { id: "contenu_inappropriate", label: "Contenu inapproprié" },
-  { id: "informations_fausses", label: "Informations fausses ou trompeuses" },
-  { id: "autres", label: "Autres (préciser dans les détails)" },
-];
 
 type SalleActionsBarProps = {
   salleId: string;
@@ -54,6 +47,7 @@ export function SalleActionsBar({
   const [count, setCount] = useState(initialRating.count);
   const [userStars, setUserStars] = useState<number | null>(initialRating.userStars);
   const [pendingRate, setPendingRate] = useState(false);
+  const [rateError, setRateError] = useState<string | null>(null);
 
   useEffect(() => {
     setAvg(initialRating.avg);
@@ -111,12 +105,17 @@ export function SalleActionsBar({
       window.location.href = `/auth?redirectTo=${encodeURIComponent(`/salles/${slug}`)}`;
       return;
     }
+    setRateError(null);
     setPendingRate(true);
+    const prevStars = userStars;
+    setUserStars(stars);
     const result = await rateSalle(salleId, stars);
     setPendingRate(false);
     if (result.success) {
-      setUserStars(stars);
       router.refresh();
+    } else {
+      setUserStars(prevStars);
+      setRateError(result.error ?? "Erreur lors de la notation");
     }
   };
 
@@ -148,7 +147,7 @@ export function SalleActionsBar({
               type="button"
               disabled={pendingRate}
               onClick={() => handleRate(s)}
-              className="rounded p-0.5 transition hover:scale-110 disabled:opacity-50"
+              className="cursor-pointer rounded p-0.5 transition hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label={`Noter ${s} étoile${s > 1 ? "s" : ""}`}
             >
               <Star
@@ -164,13 +163,16 @@ export function SalleActionsBar({
         <span className="text-[13px] text-slate-500">
           {avg > 0 ? `${avg.toFixed(1)}` : "—"} ({count} avis)
         </span>
+        {rateError && (
+          <span className="text-xs text-red-600">{rateError}</span>
+        )}
       </div>
       <Popover open={shareOpen} onOpenChange={setShareOpen}>
         <PopoverAnchor asChild>
           <button
             type="button"
             onClick={handleShare}
-            className="flex items-center gap-2 text-sm text-slate-600 transition hover:text-slate-900"
+            className="flex items-center gap-2 text-sm text-slate-600 transition hover:text-black"
           >
             <Share2 className="h-4 w-4" />
             Partager
@@ -211,7 +213,7 @@ export function SalleActionsBar({
         type="button"
         onClick={handleFavori}
         disabled={pendingFavori}
-        className="flex items-center gap-2 text-sm text-slate-600 transition hover:text-slate-900 disabled:opacity-50"
+        className="flex items-center gap-2 text-sm text-slate-600 transition hover:text-black disabled:opacity-50"
       >
         <Heart
           className={`h-4 w-4 ${isFavori ? "fill-rose-500 text-rose-500" : ""}`}
@@ -222,7 +224,7 @@ export function SalleActionsBar({
         <button
           type="button"
           onClick={() => setReportOpen(true)}
-          className="flex items-center gap-2 text-sm text-slate-600 transition hover:text-slate-900"
+          className="flex items-center gap-2 text-sm text-slate-600 transition hover:text-black"
         >
           <Flag className="h-4 w-4" />
           Signaler
@@ -243,7 +245,7 @@ export function SalleActionsBar({
                 {REPORT_REASONS.map((r) => (
                   <label
                     key={r.id}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 transition has-[:checked]:border-sky-400 has-[:checked]:bg-sky-50/50"
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 transition has-[:checked]:border-[#213398] has-[:checked]:bg-[#213398]/10"
                   >
                     <input
                       type="radio"
@@ -251,7 +253,7 @@ export function SalleActionsBar({
                       value={r.id}
                       checked={reportReason === r.id}
                       onChange={() => setReportReason(r.id)}
-                      className="h-4 w-4 border-slate-300 text-sky-600"
+                      className="h-4 w-4 border-slate-300 text-black"
                     />
                     <span className="text-sm text-slate-700">{r.label}</span>
                   </label>

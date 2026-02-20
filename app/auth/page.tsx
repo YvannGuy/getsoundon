@@ -62,14 +62,14 @@ function AuthPageContent() {
         <div className="relative z-10">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"
+            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-black"
           >
             <ArrowLeft className="h-4 w-4" />
             Retour à l&apos;accueil
           </Link>
-          <p className="mt-6 text-lg font-semibold text-[#2d435a]">{siteConfig.name}</p>
-          <div className="mt-1 h-0.5 w-12 bg-[#2d435a]" />
-          <h2 className="mt-6 text-2xl font-bold text-[#2d435a]">
+          <p className="mt-6 text-lg font-semibold text-black">{siteConfig.name}</p>
+          <div className="mt-1 h-0.5 w-12 bg-[#213398]" />
+          <h2 className="mt-6 text-2xl font-bold text-black">
             Bienvenue sur {siteConfig.name}
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-600">
@@ -94,7 +94,7 @@ function AuthPageContent() {
             className={cn(
               "pb-3 text-sm font-semibold",
               activeTab === "login"
-                ? "border-b-2 border-[#2d435a] text-[#2d435a]"
+                ? "border-b-2 border-[#213398] text-black"
                 : "text-slate-500 hover:text-slate-700"
             )}
           >
@@ -106,7 +106,7 @@ function AuthPageContent() {
             className={cn(
               "pb-3 text-sm font-semibold",
               activeTab === "signup"
-                ? "border-b-2 border-[#2d435a] text-[#2d435a]"
+                ? "border-b-2 border-[#213398] text-black"
                 : "text-slate-500 hover:text-slate-700"
             )}
           >
@@ -143,7 +143,7 @@ function LoginFormContent({ onSwitchToSignup }: { onSwitchToSignup: () => void }
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 flex max-w-md flex-col">
-      <h3 className="text-xl font-bold text-slate-900">Connexion</h3>
+      <h3 className="text-xl font-bold text-black">Connexion</h3>
       <div className="mt-5 space-y-4">
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-700">Email</label>
@@ -159,7 +159,7 @@ function LoginFormContent({ onSwitchToSignup }: { onSwitchToSignup: () => void }
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-slate-700">Mot de passe</label>
-            <a href="#" className="text-xs font-medium text-[#2d435a] hover:underline">
+            <a href="#" className="text-xs font-medium text-black hover:underline">
               Mot de passe oublié ?
             </a>
           </div>
@@ -186,7 +186,7 @@ function LoginFormContent({ onSwitchToSignup }: { onSwitchToSignup: () => void }
       {state.error && <p className="mt-3 text-sm text-red-600">{state.error}</p>}
       <Button
         type="submit"
-        className="mt-5 h-11 w-full bg-[#2d435a] hover:bg-[#243a4d]"
+        className="mt-5 h-11 w-full bg-[#213398] hover:bg-[#1a2980]"
         disabled={isPending}
       >
         {isPending ? "Connexion..." : "Se connecter"}
@@ -196,7 +196,7 @@ function LoginFormContent({ onSwitchToSignup }: { onSwitchToSignup: () => void }
         <button
           type="button"
           onClick={onSwitchToSignup}
-          className="font-semibold text-[#2d435a] hover:underline"
+          className="font-semibold text-black hover:underline"
         >
           Créer un compte
         </button>
@@ -241,7 +241,7 @@ function SignupFormContent({ onSwitchToLogin }: { onSwitchToLogin: () => void })
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 flex max-w-md flex-col">
-      <h3 className="text-xl font-bold text-slate-900">Créer un compte</h3>
+      <h3 className="text-xl font-bold text-black">Créer un compte</h3>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-700">Prénom</label>
@@ -316,7 +316,7 @@ function SignupFormContent({ onSwitchToLogin }: { onSwitchToLogin: () => void })
               name="userType"
               checked={userType === "seeker"}
               onChange={() => setUserType("seeker")}
-              className="h-4 w-4 border-slate-300 text-[#2d435a] focus:ring-[#2d435a]"
+              className="h-4 w-4 border-slate-300 text-black focus:ring-[#213398]"
             />
             <Search className="h-4 w-4 text-slate-500" />
             <span className="text-sm">Je cherche une salle</span>
@@ -327,7 +327,7 @@ function SignupFormContent({ onSwitchToLogin }: { onSwitchToLogin: () => void })
               name="userType"
               checked={userType === "owner"}
               onChange={() => setUserType("owner")}
-              className="h-4 w-4 border-slate-300 text-[#2d435a] focus:ring-[#2d435a]"
+              className="h-4 w-4 border-slate-300 text-black focus:ring-[#213398]"
             />
             <Building2 className="h-4 w-4 text-slate-500" />
             <span className="text-sm">Je possède une salle</span>
@@ -336,13 +336,13 @@ function SignupFormContent({ onSwitchToLogin }: { onSwitchToLogin: () => void })
       </div>
       {state.error && <p className="mt-3 text-sm text-red-600">{state.error}</p>}
       {state.success && <p className="mt-3 text-sm text-emerald-600">{state.success}</p>}
-      <Button type="submit" className="mt-5 h-11 w-full bg-[#2d435a] hover:bg-[#243a4d]" disabled={isPending}>
+      <Button type="submit" className="mt-5 h-11 w-full bg-[#213398] hover:bg-[#1a2980]" disabled={isPending}>
         {isPending ? "Création..." : "Créer mon compte"}
       </Button>
       <p className="mt-4 text-center text-xs text-slate-500">Création de compte gratuite</p>
       <p className="mt-6 text-center text-sm text-slate-500">
         Déjà inscrit ?{" "}
-        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-[#2d435a] hover:underline">
+        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-black hover:underline">
           Se connecter
         </button>
       </p>

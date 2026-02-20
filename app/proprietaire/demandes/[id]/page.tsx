@@ -133,7 +133,7 @@ export default async function DemandeDetailPage({
     <div className="p-4 sm:p-6 lg:p-8">
       <Link
         href="/proprietaire/demandes"
-        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"
+        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-black"
       >
         <ArrowLeft className="h-4 w-4" />
         Retour aux demandes
@@ -146,7 +146,7 @@ export default async function DemandeDetailPage({
             {(profile?.full_name ?? profile?.email ?? "?").charAt(0).toUpperCase()}
           </div>
           <div>
-            <h1 className="text-lg font-bold text-slate-900">
+            <h1 className="text-lg font-bold text-black">
               {profile?.full_name ?? "Organisateur"}
             </h1>
             <p className="text-sm text-slate-600">
@@ -163,7 +163,7 @@ export default async function DemandeDetailPage({
                   ? "bg-amber-100 text-amber-700"
                   : demande.status === "rejected"
                     ? "bg-red-100 text-red-700"
-                    : "bg-sky-100 text-sky-700"
+                    : "bg-[#213398]/10 text-black"
             }`}
           >
             {STATUT_LABEL[demande.status] ?? demande.status}
@@ -174,9 +174,9 @@ export default async function DemandeDetailPage({
 
       {/* Bannière réactivité */}
       {!["replied", "accepted", "rejected"].includes(demande.status) && (
-        <div className="mb-6 flex items-center gap-3 rounded-xl border border-[#6366f1]/30 bg-[#6366f1]/5 px-4 py-3">
-          <Zap className="h-5 w-5 text-[#6366f1]" />
-          <p className="text-sm font-medium text-[#4f46e5]">
+        <div className="mb-6 flex items-center gap-3 rounded-xl border border-[#213398]/30 bg-[#213398]/5 px-4 py-3">
+          <Zap className="h-5 w-5 text-black" />
+          <p className="text-sm font-medium text-[#1a2980]">
             Répondre rapidement augmente vos chances de réservation
           </p>
         </div>
@@ -187,7 +187,7 @@ export default async function DemandeDetailPage({
         <div className="space-y-6">
           {/* Détails de l'événement */}
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-base font-bold text-slate-900">
+            <h2 className="mb-4 text-base font-bold text-black">
               Détails de l&apos;événement
             </h2>
             <dl className="space-y-4">
@@ -195,13 +195,13 @@ export default async function DemandeDetailPage({
                 <dt className="text-xs font-medium uppercase text-slate-500">
                   Date et horaires
                 </dt>
-                <dd className="mt-1 text-slate-800">{dateHoraires || "—"}</dd>
+                <dd className="mt-1 text-black">{dateHoraires || "—"}</dd>
               </div>
               <div>
                 <dt className="text-xs font-medium uppercase text-slate-500">
                   Nombre de participants
                 </dt>
-                <dd className="mt-1 text-slate-800">
+                <dd className="mt-1 text-black">
                   {demande.nb_personnes ?? "—"} personnes
                 </dd>
               </div>
@@ -221,13 +221,13 @@ export default async function DemandeDetailPage({
 
           {/* Organisateur */}
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-base font-bold text-slate-900">Organisateur</h2>
+            <h2 className="mb-4 text-base font-bold text-black">Organisateur</h2>
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-base font-semibold text-slate-600">
                 {(profile?.full_name ?? profile?.email ?? "?").charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-slate-900">
+                <p className="font-semibold text-black">
                   {profile?.full_name ?? "—"}
                 </p>
                 {membreDepuis && (
@@ -272,7 +272,7 @@ export default async function DemandeDetailPage({
               />
             </div>
             <div className="p-4">
-              <h3 className="font-semibold text-slate-900">{salle.name}</h3>
+              <h3 className="font-semibold text-black">{salle.name}</h3>
               <p className="text-sm text-slate-500">{salle.city}</p>
               <Link href={`/salles/${salle.slug}`} className="mt-3 block">
                 <Button variant="outline" size="sm" className="w-full">
@@ -286,7 +286,7 @@ export default async function DemandeDetailPage({
           {!["replied", "accepted", "rejected"].includes(demande.status) && (
             <div className="space-y-2">
               <Button
-                className="w-full bg-[#6366f1] hover:bg-[#4f46e5]"
+                className="w-full bg-[#213398] hover:bg-[#1a2980]"
                 size="lg"
               >
                 <Reply className="mr-2 h-4 w-4" />
@@ -308,7 +308,7 @@ export default async function DemandeDetailPage({
 
           {demande.reply_message && (
             <div className="rounded-xl border border-sky-100 bg-sky-50 p-4">
-              <p className="text-xs font-medium uppercase text-sky-700">
+              <p className="text-xs font-medium uppercase text-black">
                 Votre réponse
               </p>
               <p className="mt-2 text-sm text-slate-700">{demande.reply_message}</p>
@@ -324,11 +324,11 @@ export default async function DemandeDetailPage({
 
           {/* Vos performances */}
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-900">Vos performances</h3>
+            <h3 className="text-sm font-bold text-black">Vos performances</h3>
             <div className="mt-3 grid grid-cols-2 gap-3">
               <div>
                 <p className="text-xs text-slate-500">Temps de réponse</p>
-                <p className="text-lg font-semibold text-slate-900">
+                <p className="text-lg font-semibold text-black">
                   {avgResponseHours >= 24
                     ? `${Math.round(avgResponseHours / 24)}j`
                     : `${avgResponseHours}h`}{" "}
@@ -337,7 +337,7 @@ export default async function DemandeDetailPage({
               </div>
               <div>
                 <p className="text-xs text-slate-500">Taux d&apos;acceptation</p>
-                <p className="text-lg font-semibold text-slate-900">{tauxAcceptation}%</p>
+                <p className="text-lg font-semibold text-black">{tauxAcceptation}%</p>
               </div>
             </div>
           </div>

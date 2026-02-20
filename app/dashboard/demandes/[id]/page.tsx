@@ -19,8 +19,8 @@ const STATUT_LABEL: Record<string, string> = {
 const STATUT_BADGE: Record<string, string> = {
   sent: "bg-emerald-100 text-emerald-700",
   viewed: "bg-amber-100 text-amber-700",
-  replied: "bg-sky-100 text-sky-700",
-  accepted: "bg-sky-100 text-sky-700",
+  replied: "bg-[#213398]/10 text-black",
+  accepted: "bg-[#213398]/10 text-black",
   rejected: "bg-red-100 text-red-700",
 };
 
@@ -80,7 +80,7 @@ export default async function DemandeDetailPage({
     <div className="p-4 sm:p-6 lg:p-8">
       <Link
         href="/dashboard/demandes"
-        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"
+        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-black"
       >
         <ArrowLeft className="h-4 w-4" />
         Retour aux demandes
@@ -92,7 +92,7 @@ export default async function DemandeDetailPage({
             <Image src={salleImage} alt="" fill className="object-cover" sizes="80px" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-slate-900">{salle.name}</h1>
+            <h1 className="text-lg font-bold text-black">{salle.name}</h1>
             <p className="text-sm text-slate-500">
               {salle.city}
               {salle.capacity ? ` • Capacité ${salle.capacity} pers.` : ""}
@@ -114,7 +114,7 @@ export default async function DemandeDetailPage({
           </Link>
           {conv && (
             <Link href="/dashboard/messagerie">
-              <Button size="sm" className="bg-[#6366f1] hover:bg-[#4f46e5]">
+              <Button size="sm" className="bg-[#213398] hover:bg-[#1a2980]">
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Messagerie
               </Button>
@@ -131,21 +131,21 @@ export default async function DemandeDetailPage({
           <dl className="space-y-4">
             <div>
               <dt className="text-xs font-medium text-slate-500">Type d&apos;événement</dt>
-              <dd className="mt-0.5 text-slate-900">{demande.type_evenement ?? "—"}</dd>
+              <dd className="mt-0.5 text-black">{demande.type_evenement ?? "—"}</dd>
             </div>
             <div>
               <dt className="text-xs font-medium text-slate-500">Date</dt>
-              <dd className="mt-0.5 text-slate-900">{dateStr || "—"}</dd>
+              <dd className="mt-0.5 text-black">{dateStr || "—"}</dd>
             </div>
             {horairesStr && (
               <div>
                 <dt className="text-xs font-medium text-slate-500">Horaires souhaités</dt>
-                <dd className="mt-0.5 text-slate-900">{horairesStr}</dd>
+                <dd className="mt-0.5 text-black">{horairesStr}</dd>
               </div>
             )}
             <div>
               <dt className="text-xs font-medium text-slate-500">Nombre de participants</dt>
-              <dd className="mt-0.5 text-slate-900">{demande.nb_personnes ?? "—"}</dd>
+              <dd className="mt-0.5 text-black">{demande.nb_personnes ?? "—"}</dd>
             </div>
             {demande.message && (
               <div>

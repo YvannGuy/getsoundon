@@ -126,7 +126,7 @@ export function VilleAutocomplete({
         spellCheck={false}
         className={cn(
           "h-11 rounded-lg border-slate-200 pl-10 pr-3 text-[14px]",
-          "focus-visible:border-sky-400 focus-visible:ring-sky-100",
+          "focus-visible:border-[#213398] focus-visible:ring-[#213398]/20",
           inputClassName
         )}
         role="combobox"
@@ -147,7 +147,7 @@ export function VilleAutocomplete({
                 aria-selected={i === highlightedIndex}
                 className={cn(
                   "cursor-pointer px-3 py-2 text-[13px] text-slate-700",
-                  i === highlightedIndex && "bg-sky-50 text-sky-800"
+                  i === highlightedIndex && "bg-[#213398]/5 text-black"
                 )}
                 onMouseDown={(e) => {
                   e.preventDefault();

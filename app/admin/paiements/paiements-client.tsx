@@ -143,7 +143,7 @@ export function PaiementsClient({ transactions, stats }: Props) {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
+        <h1 className="flex items-center gap-2 text-2xl font-bold text-black">
           <CreditCard className="h-7 w-7 text-slate-600" />
           Paiements
         </h1>
@@ -227,7 +227,7 @@ export function PaiementsClient({ transactions, stats }: Props) {
         <Card>
           <CardContent className="p-4">
             <p className="text-xs font-medium text-slate-500">Revenu (30j)</p>
-            <p className="text-xl font-bold text-slate-900">
+            <p className="text-xl font-bold text-black">
               €{(stats.revenue30 / 100).toLocaleString("fr-FR")}
             </p>
             <p className="text-xs text-emerald-600">+12%</p>
@@ -236,35 +236,35 @@ export function PaiementsClient({ transactions, stats }: Props) {
         <Card>
           <CardContent className="p-4">
             <p className="text-xs font-medium text-slate-500">Pass 24h</p>
-            <p className="text-xl font-bold text-slate-900">{stats.pass24h}</p>
+            <p className="text-xl font-bold text-black">{stats.pass24h}</p>
             <p className="text-xs text-blue-600">+8%</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-xs font-medium text-slate-500">Pass 48h</p>
-            <p className="text-xl font-bold text-slate-900">{stats.pass48h}</p>
+            <p className="text-xl font-bold text-black">{stats.pass48h}</p>
             <p className="text-xs text-violet-600">+15%</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-xs font-medium text-slate-500">Abonnements</p>
-            <p className="text-xl font-bold text-slate-900">{stats.abonnements}</p>
+            <p className="text-xl font-bold text-black">{stats.abonnements}</p>
             <p className="text-xs text-amber-600">+5%</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-xs font-medium text-slate-500">Échoués</p>
-            <p className="text-xl font-bold text-slate-900">{stats.failed}</p>
+            <p className="text-xl font-bold text-black">{stats.failed}</p>
             <p className="text-xs text-red-600">-3%</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-xs font-medium text-slate-500">Taux conversion</p>
-            <p className="text-xl font-bold text-slate-900">{stats.conversionRate.toFixed(1)}%</p>
+            <p className="text-xl font-bold text-black">{stats.conversionRate.toFixed(1)}%</p>
             <p className="text-xs text-emerald-600">+2%</p>
           </CardContent>
         </Card>
@@ -321,7 +321,7 @@ export function PaiementsClient({ transactions, stats }: Props) {
       <Card>
         <CardContent className="p-0">
           <div className="border-b border-slate-200 px-4 py-3">
-            <h3 className="font-semibold text-slate-900">Transactions récentes</h3>
+            <h3 className="font-semibold text-black">Transactions récentes</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[700px]">
@@ -351,7 +351,7 @@ export function PaiementsClient({ transactions, stats }: Props) {
                             {(t.user_name || t.user_email || "?")[0].toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-medium text-slate-900">
+                            <p className="font-medium text-black">
                               {t.user_name || "—"}
                             </p>
                             <p className="text-xs text-slate-500">{t.user_email}</p>
@@ -372,7 +372,7 @@ export function PaiementsClient({ transactions, stats }: Props) {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="font-medium text-slate-900">
+                        <p className="font-medium text-black">
                           {(t.amount / 100).toFixed(2)} €
                         </p>
                       </td>

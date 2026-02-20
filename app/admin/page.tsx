@@ -89,7 +89,7 @@ export default async function AdminDashboardPage() {
             <Clock className="absolute right-6 top-6 h-5 w-5 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-slate-900">{pendingCount ?? 0}</p>
+            <p className="text-2xl font-bold text-black">{pendingCount ?? 0}</p>
             <p className="text-xs text-amber-600">Action requise</p>
           </CardContent>
         </Card>
@@ -101,7 +101,7 @@ export default async function AdminDashboardPage() {
             <Building2 className="absolute right-6 top-6 h-5 w-5 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-slate-900">{activeCount ?? 0}</p>
+            <p className="text-2xl font-bold text-black">{activeCount ?? 0}</p>
           </CardContent>
         </Card>
         <Card className="relative bg-white shadow-sm">
@@ -112,7 +112,7 @@ export default async function AdminDashboardPage() {
             <Mail className="absolute right-6 top-6 h-5 w-5 text-violet-500" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-slate-900">{demandesCount7j ?? 0}</p>
+            <p className="text-2xl font-bold text-black">{demandesCount7j ?? 0}</p>
             <p className="text-xs text-slate-500">
               {demandesCount7j ? Math.round((demandesCount7j / 7) * 10) / 10 : 0} par jour en moyenne
             </p>
@@ -126,7 +126,7 @@ export default async function AdminDashboardPage() {
             <Euro className="absolute right-6 top-6 h-5 w-5 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-slate-900">—</p>
+            <p className="text-2xl font-bold text-black">—</p>
             <p className="text-xs text-slate-500">À configurer (Stripe)</p>
           </CardContent>
         </Card>
@@ -138,7 +138,7 @@ export default async function AdminDashboardPage() {
             <Star className="absolute right-6 top-6 h-5 w-5 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-slate-900">{passActifs}</p>
+            <p className="text-2xl font-bold text-black">{passActifs}</p>
             <p className="text-xs text-slate-500">{passPremium} Premium, {passBasic} Basic</p>
           </CardContent>
         </Card>
@@ -150,7 +150,7 @@ export default async function AdminDashboardPage() {
             <TrendingUp className="absolute right-6 top-6 h-5 w-5 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-slate-900">—</p>
+            <p className="text-2xl font-bold text-black">—</p>
             <p className="text-xs text-slate-500">À calculer</p>
           </CardContent>
         </Card>
@@ -231,7 +231,7 @@ export default async function AdminDashboardPage() {
                     className="flex flex-col gap-1 rounded-lg border border-slate-100 p-3 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
-                      <p className="font-medium text-slate-900">{s.name}</p>
+                      <p className="font-medium text-black">{s.name}</p>
                       <p className="text-xs text-slate-500">{s.city} • {formatAgo(s.created_at)}</p>
                     </div>
                     <form action={validateSalleFormAction} className="shrink-0">
@@ -280,7 +280,7 @@ export default async function AdminDashboardPage() {
                       {(p.full_name || p.email || "?")[0].toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium text-slate-900">
+                      <p className="truncate font-medium text-black">
                         {p.full_name || "—"}
                       </p>
                       <p className="truncate text-xs text-slate-500">{p.email}</p>

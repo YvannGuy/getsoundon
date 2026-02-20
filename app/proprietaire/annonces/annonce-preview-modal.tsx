@@ -41,13 +41,13 @@ export function AnnoncePreviewModal({ salle, open, onOpenChange }: Props) {
             />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">{salle.name}</h2>
+            <h2 className="text-xl font-bold text-black">{salle.name}</h2>
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <span className="flex items-center gap-1.5 text-sm text-slate-500">
                 <MapPin className="h-4 w-4" />
                 {salle.city}
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-3 py-1 text-[13px] font-medium text-sky-800">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#213398]/10 px-3 py-1 text-[13px] font-medium text-black">
                 <Users className="h-4 w-4" />
                 Jusqu&apos;à {salle.capacity} personnes
               </span>
@@ -55,14 +55,14 @@ export function AnnoncePreviewModal({ salle, open, onOpenChange }: Props) {
           </div>
           {salle.description && (
             <section>
-              <h3 className="mb-2 text-sm font-semibold text-slate-800">Description</h3>
+              <h3 className="mb-2 text-sm font-semibold text-black">Description</h3>
               <p className="text-sm leading-relaxed text-slate-600">{salle.description}</p>
             </section>
           )}
           <section>
-            <h3 className="mb-2 text-sm font-semibold text-slate-800">Tarification</h3>
+            <h3 className="mb-2 text-sm font-semibold text-black">Tarification</h3>
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <p className="text-lg font-bold text-slate-900">{salle.pricePerDay} € / jour</p>
+              <p className="text-lg font-bold text-black">{salle.pricePerDay} € / jour</p>
             </div>
           </section>
           <div className="flex justify-end gap-2 pt-2">
@@ -70,7 +70,7 @@ export function AnnoncePreviewModal({ salle, open, onOpenChange }: Props) {
               Fermer
             </Button>
             <Link href={`/salles/${salle.slug}`}>
-              <Button className="bg-[#6366f1] hover:bg-[#4f46e5]">
+              <Button className="bg-[#213398] hover:bg-[#1a2980]">
                 Voir la fiche publique
               </Button>
             </Link>

@@ -28,20 +28,20 @@ export async function SiteHeader() {
   return (
     <header className="border-y border-slate-300 bg-[#f1f3f5]">
       <div className="container flex h-14 max-w-[1120px] items-center justify-between">
-        <Link href="/" className="text-xl font-semibold leading-none text-[#303B4A]">
+        <Link href="/" className="text-xl font-semibold leading-none text-black">
           {siteConfig.name}
         </Link>
         <nav className="hidden items-center gap-8 text-[14px] font-semibold text-slate-500 md:flex">
-          <Link href="/#categories-evenement" className="hover:text-slate-800">
+          <Link href="/#categories-evenement" className="hover:text-black">
             Catégories
           </Link>
-          <a href="/#comment-ca-marche" className="hover:text-slate-900">
+          <a href="/#comment-ca-marche" className="hover:text-black">
             Comment ça marche
           </a>
-          <a href="/#tarifs" className="hover:text-slate-900">
+          <a href="/#tarifs" className="hover:text-black">
             Tarifs
           </a>
-          <Link href="/auth?tab=signup" className="hover:text-slate-900">
+          <Link href="/auth?tab=signup" className="hover:text-black">
             Ajoutez ma salle
           </Link>
         </nav>

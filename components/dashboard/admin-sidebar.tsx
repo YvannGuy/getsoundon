@@ -61,14 +61,14 @@ export function AdminSidebar({ pendingCount, reportsCount = 0, userEmail }: Admi
             className="flex flex-col justify-center overflow-hidden"
             onClick={() => setMobileOpen(false)}
           >
-            <span className="truncate text-base font-bold text-slate-900">{siteConfig.name}</span>
+            <span className="truncate text-base font-bold text-black">{siteConfig.name}</span>
             <span className="truncate text-xs text-slate-500">Admin Dashboard</span>
           </Link>
         )}
         <button
           type="button"
           onClick={() => setCollapsed(!collapsed)}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-black"
           aria-label={collapsed ? "Ouvrir la sidebar" : "Réduire la sidebar"}
         >
           {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
@@ -89,7 +89,7 @@ export function AdminSidebar({ pendingCount, reportsCount = 0, userEmail }: Admi
                 collapsed ? "justify-center px-2" : "",
                 isActive
                   ? "bg-blue-600 text-white"
-                  : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                  : "text-slate-700 hover:bg-slate-100 hover:text-black"
               )}
             >
               <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-white" : "text-slate-600")} />
@@ -122,7 +122,7 @@ export function AdminSidebar({ pendingCount, reportsCount = 0, userEmail }: Admi
           <button
             type="submit"
             className={cn(
-              "flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900",
+              "flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-black",
               collapsed && "justify-center px-2"
             )}
           >
@@ -176,7 +176,7 @@ export function AdminSidebar({ pendingCount, reportsCount = 0, userEmail }: Admi
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4 lg:hidden">
           <div className="flex flex-col justify-center">
-            <Link href="/admin" className="text-base font-bold text-slate-900" onClick={() => setMobileOpen(false)}>
+            <Link href="/admin" className="text-base font-bold text-black" onClick={() => setMobileOpen(false)}>
               {siteConfig.name}
             </Link>
             <p className="text-xs text-slate-500">Admin Dashboard</p>
@@ -204,7 +204,7 @@ export function AdminSidebar({ pendingCount, reportsCount = 0, userEmail }: Admi
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
                     ? "bg-blue-600 text-white"
-                    : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                    : "text-slate-700 hover:bg-slate-100 hover:text-black"
                 )}
               >
                 <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-white" : "text-slate-600")} />

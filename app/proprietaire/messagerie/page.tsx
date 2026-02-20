@@ -26,7 +26,7 @@ export default async function MessageriePage({
     return (
       <div className="flex flex-1 items-center justify-center p-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900">Messagerie</h1>
+          <h1 className="text-2xl font-bold text-black">Messagerie</h1>
           <p className="mt-2 text-slate-500">
             Vos conversations apparaîtront ici une fois que vous aurez des annonces et des demandes.
           </p>

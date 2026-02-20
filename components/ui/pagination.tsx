@@ -66,7 +66,7 @@ export function Pagination({
                 href={`${baseUrl}?page=${p}${queryParams}`}
                 className={`flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium transition-colors ${
                   p === currentPage
-                    ? "bg-[#6366f1] text-white"
+                    ? "bg-[#213398] text-white"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                 }`}
               >
@@ -139,7 +139,7 @@ export function ClientPagination({
                 onClick={() => onPageChange(p)}
                 className={`flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium transition-colors ${
                   p === currentPage
-                    ? "bg-[#6366f1] text-white"
+                    ? "bg-[#213398] text-white"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                 }`}
               >

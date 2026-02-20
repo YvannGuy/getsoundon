@@ -56,23 +56,23 @@ export function UserInfoModal({ user, open, onOpenChange }: Props) {
         <div className="space-y-4">
           <div>
             <p className="text-sm font-medium text-slate-500">Nom</p>
-            <p className="text-slate-900">{user.full_name || "—"}</p>
+            <p className="text-black">{user.full_name || "—"}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Email</p>
-            <p className="text-slate-900">{user.email}</p>
+            <p className="text-black">{user.email}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Type</p>
-            <p className="text-slate-900">{formatType(user.user_type)}</p>
+            <p className="text-black">{formatType(user.user_type)}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Inscription</p>
-            <p className="text-slate-900">{formatDate(user.created_at)}</p>
+            <p className="text-black">{formatDate(user.created_at)}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Statut</p>
-            <p className="text-slate-900">
+            <p className="text-black">
               {user.suspended ? (
                 <span className="text-amber-600 font-medium">Suspendu</span>
               ) : (
@@ -83,13 +83,13 @@ export function UserInfoModal({ user, open, onOpenChange }: Props) {
           {user.salles_count !== undefined && (
             <div>
               <p className="text-sm font-medium text-slate-500">Annonces</p>
-              <p className="text-slate-900">{user.salles_count}</p>
+              <p className="text-black">{user.salles_count}</p>
             </div>
           )}
           {user.demandes_count !== undefined && (
             <div>
               <p className="text-sm font-medium text-slate-500">Demandes envoyées</p>
-              <p className="text-slate-900">{user.demandes_count}</p>
+              <p className="text-black">{user.demandes_count}</p>
             </div>
           )}
         </div>

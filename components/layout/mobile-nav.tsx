@@ -26,7 +26,7 @@ export function MobileNav({ isLoggedIn, userType }: MobileNavProps) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex h-10 w-10 items-center justify-center rounded-md text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+        className="flex h-10 w-10 items-center justify-center rounded-md text-slate-600 hover:bg-slate-200 hover:text-black"
         aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
       >
         {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -50,7 +50,7 @@ export function MobileNav({ isLoggedIn, userType }: MobileNavProps) {
                   key={link.href}
                   href={link.href}
                   onClick={handleClose}
-                  className="border-b border-slate-100 px-6 py-3 text-[15px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                  className="border-b border-slate-100 px-6 py-3 text-[15px] font-medium text-slate-700 hover:bg-slate-50 hover:text-black"
                 >
                   {link.label}
                 </Link>
@@ -66,7 +66,7 @@ export function MobileNav({ isLoggedIn, userType }: MobileNavProps) {
                           : "/dashboard"
                     }
                     onClick={handleClose}
-                    className="flex w-full items-center justify-center rounded-md bg-[#263e55] py-3 text-[14px] font-medium text-white hover:bg-[#213449]"
+                    className="flex w-full items-center justify-center rounded-md bg-[#213398] py-3 text-[14px] font-medium text-white hover:bg-[#1a2980]"
                   >
                     Tableau de bord
                   </Link>
@@ -75,14 +75,14 @@ export function MobileNav({ isLoggedIn, userType }: MobileNavProps) {
                     <Link
                       href="/auth"
                       onClick={handleClose}
-                      className="block py-2 text-center text-[14px] font-medium text-slate-700 hover:text-slate-900"
+                      className="block py-2 text-center text-[14px] font-medium text-slate-700 hover:text-black"
                     >
                       Connexion
                     </Link>
                     <Link
                       href="/auth?tab=signup"
                       onClick={handleClose}
-                      className="flex w-full items-center justify-center rounded-md bg-[#263e55] py-3 text-[14px] font-medium text-white hover:bg-[#213449]"
+                      className="flex w-full items-center justify-center rounded-md bg-[#213398] py-3 text-[14px] font-medium text-white hover:bg-[#1a2980]"
                     >
                       Inscription
                     </Link>

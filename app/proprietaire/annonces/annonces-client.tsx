@@ -81,7 +81,7 @@ export function AnnoncesClient({ salles }: Props) {
               </button>
             </div>
             <div className="p-4">
-              <p className="font-semibold text-slate-900">{s.name}</p>
+              <p className="font-semibold text-black">{s.name}</p>
               <p className="text-sm text-slate-500">{s.city}</p>
               <span
                 className={`mt-2 inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -101,7 +101,7 @@ export function AnnoncesClient({ salles }: Props) {
                 </Button>
                 <Button
                   size="sm"
-                  className="flex-1 bg-[#6366f1] hover:bg-[#4f46e5]"
+                  className="flex-1 bg-[#213398] hover:bg-[#1a2980]"
                   onClick={() => handleModifier(s)}
                 >
                   Modifier

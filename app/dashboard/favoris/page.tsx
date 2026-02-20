@@ -75,7 +75,7 @@ export default async function FavorisPage({
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Mes favoris</h1>
+          <h1 className="text-2xl font-bold text-black">Mes favoris</h1>
           <p className="mt-1 text-slate-600">Salles enregistrées</p>
         </div>
         {allSalles.length > 0 && (
@@ -84,7 +84,7 @@ export default async function FavorisPage({
               href="/dashboard/favoris?sort=ville"
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 sort === "ville"
-                  ? "bg-[#6366f1] text-white"
+                  ? "bg-[#213398] text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -94,7 +94,7 @@ export default async function FavorisPage({
               href="/dashboard/favoris?sort=capacite"
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 sort === "capacite"
-                  ? "bg-[#6366f1] text-white"
+                  ? "bg-[#213398] text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -104,7 +104,7 @@ export default async function FavorisPage({
               href="/dashboard/favoris?sort=budget"
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 sort === "budget"
-                  ? "bg-[#6366f1] text-white"
+                  ? "bg-[#213398] text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -148,7 +148,7 @@ export default async function FavorisPage({
                   </div>
                 </div>
                 <div className="p-4">
-                  <h3 className="font-semibold text-slate-900">{salle.name}</h3>
+                  <h3 className="font-semibold text-black">{salle.name}</h3>
                   <div className="mt-2 flex items-center gap-1.5 text-sm text-slate-600">
                     <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
                     <span>{salle.city}</span>
@@ -157,11 +157,11 @@ export default async function FavorisPage({
                     <Users className="h-4 w-4 shrink-0 text-slate-400" />
                     <span>{salle.capacity} personnes</span>
                   </div>
-                  <p className="mt-3 text-sm font-semibold text-slate-900">
+                  <p className="mt-3 text-sm font-semibold text-black">
                     {salle.pricePerDay} € / jour
                   </p>
                   <Link href={`/salles/${salle.slug}`} className="mt-4 block">
-                    <Button className="w-full bg-[#6366f1] hover:bg-[#4f46e5]">
+                    <Button className="w-full bg-[#213398] hover:bg-[#1a2980]">
                       Voir la salle
                     </Button>
                   </Link>

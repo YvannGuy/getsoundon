@@ -26,7 +26,7 @@ export default async function AdminDemandesPage({
 
   return (
     <div className="p-6 md:p-8">
-      <h1 className="mb-6 text-2xl font-bold text-slate-900">Demandes</h1>
+      <h1 className="mb-6 text-2xl font-bold text-black">Demandes</h1>
       <div className="space-y-3">
         {demandes?.length ? (
           demandes.map((d) => (

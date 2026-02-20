@@ -263,7 +263,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
               <CheckCircle className="h-8 w-8 text-emerald-600" />
             </div>
-            <p className="mt-4 text-lg font-semibold text-slate-900">Annonce publiée !</p>
+            <p className="mt-4 text-lg font-semibold text-black">Annonce publiée !</p>
             <p className="mt-2 text-sm text-slate-600">Votre annonce est en ligne et visible par les organisateurs.</p>
           </>
         ) : (
@@ -271,12 +271,12 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
               <Clock className="h-8 w-8 text-amber-600" />
             </div>
-            <p className="mt-4 text-lg font-semibold text-slate-900">Annonce en cours de validation</p>
+            <p className="mt-4 text-lg font-semibold text-black">Annonce en cours de validation</p>
             <p className="mt-2 text-sm text-slate-600">Délai moyen : 24 à 48 heures.</p>
           </>
         )}
         <div className="mt-6 flex w-full flex-col gap-2">
-          <Button onClick={onClose} className="w-full bg-[#6366f1] hover:bg-[#4f46e5]">
+          <Button onClick={onClose} className="w-full bg-[#213398] hover:bg-[#1a2980]">
             Fermer
           </Button>
           <Link
@@ -310,7 +310,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
                 <span className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-4 py-1.5 text-sm font-medium text-emerald-800">
                   Publiée
                 </span>
-                <h1 className="mt-6 text-3xl font-bold text-slate-900">
+                <h1 className="mt-6 text-3xl font-bold text-black">
                   Annonce publiée !
                 </h1>
                 <p className="mt-4 max-w-md text-slate-600">
@@ -326,7 +326,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
                   <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
                   Validation en cours
                 </span>
-                <h1 className="mt-6 text-3xl font-bold text-slate-900">
+                <h1 className="mt-6 text-3xl font-bold text-black">
                   Annonce en cours de validation
                 </h1>
                 <p className="mt-4 max-w-md text-slate-600">
@@ -336,12 +336,12 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
                   <Clock className="h-4 w-4 text-slate-400" />
                   Délai moyen de validation : 24 à 48 heures
                 </div>
-                <div className="mt-6 flex w-full flex-col gap-3 rounded-xl border border-sky-100 bg-sky-50 p-5 text-left">
+                <div className="mt-6 flex w-full flex-col gap-3 rounded-xl border border-[#213398]/20 bg-[#213398]/5 p-5 text-left">
                   <div className="flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-100">
-                      <Bell className="h-5 w-5 text-sky-600" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#213398]/10">
+                      <Bell className="h-5 w-5 text-black" />
                     </div>
-                    <p className="text-sm leading-relaxed text-sky-900">
+                    <p className="text-sm leading-relaxed text-black">
                       Vous serez notifié dès que votre annonce sera validée.
                     </p>
                   </div>
@@ -351,7 +351,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
             <div className="mt-8 flex w-full flex-col gap-3">
               <Link
                 href="/proprietaire"
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-sky-500 text-sm font-semibold text-white transition-colors hover:bg-sky-600"
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-sky-500 text-sm font-semibold text-white transition-colors hover:bg-[#1a2980]"
               >
                 Accéder à mon tableau de bord
                 <ChevronRight className="h-5 w-5" />
@@ -365,7 +365,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
               </Link>
             </div>
             {createdStatus === "pending" && (
-            <h2 className="mt-14 w-full text-left text-lg font-semibold text-slate-900">
+            <h2 className="mt-14 w-full text-left text-lg font-semibold text-black">
               Pendant la validation
             </h2>
             )}
@@ -375,21 +375,21 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
                   <Shield className="h-7 w-7 text-slate-600" />
                 </div>
-                <p className="mt-3 text-sm font-medium text-slate-900">Vérification</p>
+                <p className="mt-3 text-sm font-medium text-black">Vérification</p>
                 <p className="mt-1 text-xs text-slate-500">Contrôle des informations</p>
               </div>
               <div className="flex flex-col items-center text-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
                   <Camera className="h-7 w-7 text-slate-600" />
                 </div>
-                <p className="mt-3 text-sm font-medium text-slate-900">Photos</p>
+                <p className="mt-3 text-sm font-medium text-black">Photos</p>
                 <p className="mt-1 text-xs text-slate-500">Validation des visuels</p>
               </div>
               <div className="flex flex-col items-center text-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
                   <CheckCircle className="h-7 w-7 text-slate-600" />
                 </div>
-                <p className="mt-3 text-sm font-medium text-slate-900">Conformité</p>
+                <p className="mt-3 text-sm font-medium text-black">Conformité</p>
                 <p className="mt-1 text-xs text-slate-500">Respect des standards</p>
               </div>
             </div>
@@ -400,7 +400,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
                 <span className="text-sm font-semibold text-slate-600">i</span>
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-900">Pourquoi cette étape ?</p>
+                <p className="text-sm font-medium text-black">Pourquoi cette étape ?</p>
                 <p className="mt-1 text-sm leading-relaxed text-slate-600">
                   La validation manuelle garantit la qualité et la fiabilité des annonces sur notre
                   plateforme. Cette démarche protège à la fois les propriétaires et les
@@ -499,7 +499,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
     <div className="min-h-screen bg-white">
       <header className="border-b border-slate-200 bg-white">
         <div className="container flex h-14 max-w-3xl items-center justify-between px-4">
-          <Link href="/" className="text-lg font-semibold text-slate-800">
+          <Link href="/" className="text-lg font-semibold text-black">
             {siteConfig.name}
           </Link>
           <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -537,7 +537,7 @@ function Step1({
 
   return (
     <>
-      <h2 className="text-2xl font-bold text-slate-900">Parlez-nous de votre salle</h2>
+      <h2 className="text-2xl font-bold text-black">Parlez-nous de votre salle</h2>
       <p className="mt-2 text-slate-600">Commencez par les informations essentielles de votre lieu</p>
       <div className="mt-8 space-y-5">
         <div className="space-y-2">
@@ -643,7 +643,7 @@ function Step2({
 }) {
   return (
     <>
-      <h2 className="text-2xl font-bold text-slate-900">Caractéristiques principales</h2>
+      <h2 className="text-2xl font-bold text-black">Caractéristiques principales</h2>
       <p className="mt-2 text-slate-600">Sélectionnez les éléments correspondant à votre salle</p>
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         {FEATURES.map(({ id, label, icon: Icon }) => (
@@ -659,7 +659,7 @@ function Step2({
             )}
           >
             <Icon className="h-5 w-5 shrink-0 text-slate-500" />
-            <span className="flex-1 text-sm font-medium text-slate-900">{label}</span>
+            <span className="flex-1 text-sm font-medium text-black">{label}</span>
             <input
               type="checkbox"
               checked={data.features.includes(id)}
@@ -726,7 +726,7 @@ function Step3({
 }) {
   return (
     <>
-      <h2 className="text-2xl font-bold text-slate-900">Conditions d&apos;accueil</h2>
+      <h2 className="text-2xl font-bold text-black">Conditions d&apos;accueil</h2>
       <p className="mt-2 text-slate-600">Précisez les règles et contraintes de votre salle</p>
 
       <div className="mt-8 space-y-8">
@@ -803,7 +803,7 @@ function Step3({
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0 text-slate-500" />
-                <span className="text-sm font-medium text-slate-900">{label}</span>
+                <span className="text-sm font-medium text-black">{label}</span>
                 {data.restrictionSonore === id && (
                   <span className="ml-auto h-5 w-5 rounded-full bg-[#5b4dbf] text-white">✓</span>
                 )}
@@ -829,7 +829,7 @@ function Step3({
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0 text-slate-500" />
-                <span className="text-sm font-medium text-slate-900">{label}</span>
+                <span className="text-sm font-medium text-black">{label}</span>
                 {data.evenementsAcceptes.includes(id) && (
                   <input
                     type="checkbox"
@@ -919,7 +919,7 @@ function Step4({
 
   return (
     <>
-      <h2 className="text-2xl font-bold text-slate-900">Ajoutez des photos</h2>
+      <h2 className="text-2xl font-bold text-black">Ajoutez des photos</h2>
       <p className="mt-2 text-slate-600">
         Montrez votre salle sous son meilleur jour (minimum {minPhotos}, maximum {maxPhotos} photos)
       </p>
@@ -956,7 +956,7 @@ function Step4({
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#5b4dbf]/10">
             <Camera className="h-7 w-7 text-[#5b4dbf]" />
           </div>
-          <p className="mt-3 font-semibold text-slate-900">Glissez vos photos ici</p>
+          <p className="mt-3 font-semibold text-black">Glissez vos photos ici</p>
           <p className="mt-1 text-slate-500">ou</p>
           <Button
             type="button"
@@ -1026,7 +1026,7 @@ function Step5({
 }) {
   return (
     <>
-      <h2 className="text-2xl font-bold text-slate-900">Récapitulatif</h2>
+      <h2 className="text-2xl font-bold text-black">Récapitulatif</h2>
       <p className="mt-2 text-slate-600">Vérifiez les informations avant de soumettre</p>
       {submitError && (
         <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -1036,39 +1036,39 @@ function Step5({
       <div className="mt-8 space-y-4 rounded-xl border border-slate-200 bg-slate-50/50 p-6">
         <div>
           <p className="text-xs font-medium text-slate-500">Lieu</p>
-          <p className="mt-1 font-medium text-slate-900">{data.nom || "—"}</p>
+          <p className="mt-1 font-medium text-black">{data.nom || "—"}</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <p className="text-xs font-medium text-slate-500">Ville</p>
-            <p className="mt-1 font-medium text-slate-900">{data.ville || "—"}</p>
+            <p className="mt-1 font-medium text-black">{data.ville || "—"}</p>
           </div>
           <div>
             <p className="text-xs font-medium text-slate-500">Capacité</p>
-            <p className="mt-1 font-medium text-slate-900">{data.capacite || "—"}</p>
+            <p className="mt-1 font-medium text-black">{data.capacite || "—"}</p>
           </div>
         </div>
         <div>
           <p className="text-xs font-medium text-slate-500">Téléphone</p>
-          <p className="mt-1 font-medium text-slate-900">{data.telephone || "—"}</p>
+          <p className="mt-1 font-medium text-black">{data.telephone || "—"}</p>
         </div>
         <div>
           <p className="text-xs font-medium text-slate-500">Description</p>
-          <p className="mt-1 text-sm text-slate-900">{data.description || "—"}</p>
+          <p className="mt-1 text-sm text-black">{data.description || "—"}</p>
         </div>
         <div>
           <p className="text-xs font-medium text-slate-500">Tarif indicatif</p>
-          <p className="mt-1 font-medium text-slate-900">{data.tarifParJour ? `${data.tarifParJour} € / jour` : "—"}</p>
+          <p className="mt-1 font-medium text-black">{data.tarifParJour ? `${data.tarifParJour} € / jour` : "—"}</p>
         </div>
         <div>
           <p className="text-xs font-medium text-slate-500">Ce tarif comprend</p>
-          <p className="mt-1 text-sm text-slate-900">
+          <p className="mt-1 text-sm text-black">
             {data.inclusions.length ? data.inclusions.map((id) => INCLUSIONS.find((i) => i.id === id)?.label ?? id).join(", ") : "—"}
           </p>
         </div>
         <div>
           <p className="text-xs font-medium text-slate-500">Caractéristiques</p>
-          <p className="mt-1 text-sm text-slate-900">
+          <p className="mt-1 text-sm text-black">
             {data.features.length ? FEATURES.filter((f) => data.features.includes(f.id)).map((f) => f.label).join(", ") : "—"}
           </p>
         </div>
@@ -1080,13 +1080,13 @@ function Step5({
                 const h = data.horairesParJour[jour];
                 const label = h ? `${jour} : ${h.debut} - ${h.fin}` : jour;
                 return (
-                  <p key={jour} className="text-sm capitalize text-slate-900">
+                  <p key={jour} className="text-sm capitalize text-black">
                     {label}
                   </p>
                 );
               })
             ) : (
-              <p className="text-sm text-slate-900">—</p>
+              <p className="text-sm text-black">—</p>
             )}
           </div>
         </div>

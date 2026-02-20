@@ -23,7 +23,7 @@ export async function HeaderAuth() {
     return (
       <Link
         href={dashboardHref}
-        className="inline-flex h-9 items-center justify-center rounded-md bg-[#263e55] px-6 text-[14px] font-medium text-white transition-colors hover:bg-[#213449]"
+        className="inline-flex h-9 items-center justify-center rounded-md bg-[#213398] px-6 text-[14px] font-medium text-white transition-colors hover:bg-[#1a2980]"
       >
         Tableau de bord
       </Link>
@@ -34,13 +34,13 @@ export async function HeaderAuth() {
     <div className="flex items-center gap-3">
       <Link
         href="/auth"
-        className="text-[14px] font-medium text-slate-600 transition-colors hover:text-slate-900"
+        className="text-[14px] font-medium text-slate-600 transition-colors hover:text-black"
       >
         Connexion
       </Link>
       <Link
         href="/auth?tab=signup"
-        className="inline-flex h-9 items-center justify-center rounded-md bg-[#263e55] px-6 text-[14px] font-medium text-white transition-colors hover:bg-[#213449]"
+        className="inline-flex h-9 items-center justify-center rounded-md bg-[#213398] px-6 text-[14px] font-medium text-white transition-colors hover:bg-[#1a2980]"
       >
         Inscription
       </Link>

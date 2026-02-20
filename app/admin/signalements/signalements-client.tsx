@@ -83,7 +83,7 @@ export function SignalementsClient({
                 <Building2 className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-slate-900">{r.salle_name}</p>
+                <p className="font-semibold text-black">{r.salle_name}</p>
                 <p className="text-sm text-slate-500">
                   {reasonLabels[r.reason] ?? r.reason} •{" "}
                   {formatDistanceToNow(new Date(r.created_at), { addSuffix: true, locale: fr })}

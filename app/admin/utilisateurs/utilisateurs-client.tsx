@@ -215,7 +215,7 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
+        <h1 className="flex items-center gap-2 text-2xl font-bold text-black">
           <Users className="h-7 w-7 text-slate-600" />
           Utilisateurs
         </h1>
@@ -267,7 +267,7 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
               <Users className="h-6 w-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+              <p className="text-2xl font-bold text-black">{stats.total}</p>
               <p className="text-sm text-slate-600">Utilisateurs</p>
             </div>
           </CardContent>
@@ -278,7 +278,7 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
               <Check className="h-6 w-6 text-emerald-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{stats.actifs}</p>
+              <p className="text-2xl font-bold text-black">{stats.actifs}</p>
               <p className="text-sm text-slate-600">Actifs</p>
             </div>
           </CardContent>
@@ -289,7 +289,7 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
               <Building2 className="h-6 w-6 text-violet-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{stats.owners}</p>
+              <p className="text-2xl font-bold text-black">{stats.owners}</p>
               <p className="text-sm text-slate-600">Propriétaires</p>
             </div>
           </CardContent>
@@ -300,7 +300,7 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
               <Zap className="h-6 w-6 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">
+              <p className="text-2xl font-bold text-black">
                 {stats.nouveaux7j}
               </p>
               <p className="text-sm text-slate-600">Nouveaux (7j)</p>
@@ -364,7 +364,7 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
                           {(u.full_name || u.email || "?")[0].toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium text-black">
                             {u.full_name || "—"}
                           </p>
                           <p className="text-xs text-slate-500">ID: {shortId(u.id)}</p>

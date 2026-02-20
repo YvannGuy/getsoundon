@@ -61,13 +61,13 @@ export default async function HistoriquePaiementPage({
     <div className="p-4 sm:p-6 lg:p-8">
       <Link
         href="/dashboard/paiement"
-        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"
+        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-black"
       >
         <ArrowLeft className="h-4 w-4" />
         Retour au paiement
       </Link>
 
-      <h1 className="text-2xl font-bold text-slate-900">Historique des transactions</h1>
+      <h1 className="text-2xl font-bold text-black">Historique des transactions</h1>
       <p className="mt-2 text-slate-500">Toutes vos transactions passées</p>
 
       <Card className="mt-8 border-0 shadow-sm">

@@ -82,7 +82,7 @@ export default async function SignalementsPage({
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
+        <h1 className="flex items-center gap-2 text-2xl font-bold text-black">
           <Flag className="h-7 w-7 text-rose-500" />
           Signalements
         </h1>

@@ -165,7 +165,7 @@ export function MessagerieClient({ threads, currentUserId, pagination }: Props) 
       {/* Liste des conversations */}
       <div className="flex w-[380px] flex-col border-r border-slate-200 bg-white">
         <div className="border-b border-slate-200 p-4">
-          <h1 className="text-xl font-bold text-slate-900">Messagerie</h1>
+          <h1 className="text-xl font-bold text-black">Messagerie</h1>
           <div className="relative mt-3">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
@@ -193,7 +193,7 @@ export function MessagerieClient({ threads, currentUserId, pagination }: Props) 
                   type="button"
                   onClick={() => setSelected(t)}
                   className={`flex w-full items-start gap-3 border-b border-slate-100 p-4 text-left transition hover:bg-slate-50 ${
-                    isSelected ? "bg-[#6366f1]/10" : ""
+                    isSelected ? "bg-[#213398]/10" : ""
                   }`}
                 >
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-base font-semibold text-slate-600">
@@ -201,7 +201,7 @@ export function MessagerieClient({ threads, currentUserId, pagination }: Props) 
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="truncate font-semibold text-slate-900">
+                      <p className="truncate font-semibold text-black">
                         {t.seekerName}
                       </p>
                       <span className="shrink-0 text-xs text-slate-500">
@@ -257,7 +257,7 @@ export function MessagerieClient({ threads, currentUserId, pagination }: Props) 
                 {otherName.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-slate-900">{otherName}</p>
+                <p className="font-semibold text-black">{otherName}</p>
                 <p className="text-sm text-slate-600">{headerSubtitle}</p>
               </div>
               <div className="flex items-center gap-2 text-sm text-emerald-600">
@@ -288,8 +288,8 @@ export function MessagerieClient({ threads, currentUserId, pagination }: Props) 
                       <div
                         className={`max-w-[70%] rounded-2xl px-4 py-2 ${
                           isMe
-                            ? "bg-[#6366f1] text-white"
-                            : "bg-white text-slate-800 shadow-sm"
+                            ? "bg-[#213398] text-white"
+                            : "bg-white text-black shadow-sm"
                         }`}
                       >
                         <p className="text-sm">{m.content}</p>
@@ -335,7 +335,7 @@ export function MessagerieClient({ threads, currentUserId, pagination }: Props) 
                 <Button
                   onClick={handleSend}
                   disabled={sending || !input.trim()}
-                  className="bg-[#6366f1] hover:bg-[#4f46e5]"
+                  className="bg-[#213398] hover:bg-[#1a2980]"
                 >
                   <Send className="mr-2 h-4 w-4" />
                   Envoyer
