@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Facebook, Instagram } from "lucide-react";
 
@@ -7,9 +8,10 @@ export function SiteFooter() {
   return (
     <footer className="bg-[#213398] py-12 text-slate-300">
       <div className="container max-w-[1120px]">
-        <div className="grid gap-8 md:grid-cols-4">
+        <div className="grid gap-8 md:grid-cols-4 md:items-start">
           <div>
-            <Link href="/" className="block text-xl font-semibold leading-none text-white hover:text-white">
+            <Link href="/" className="flex items-center text-xl font-semibold leading-none text-white hover:text-white">
+              <Image src="/loheadb.png" alt="" width={60} height={60} className="h-[60px] w-[60px] shrink-0 object-contain -mr-3" />
               {siteConfig.name}
             </Link>
             <p className="mt-3 max-w-[240px] text-[12px] leading-[1.6] text-slate-300">
@@ -17,7 +19,7 @@ export function SiteFooter() {
             </p>
           </div>
           <div>
-            <p className="text-[24px] font-semibold text-white [zoom:0.5]">Plateforme</p>
+            <p className="text-[24px] font-semibold leading-none text-white [zoom:0.5]">Plateforme</p>
             <ul className="mt-3 space-y-2 text-[13px] text-slate-300">
               <li>
                 <Link href="/rechercher" className="hover:text-white">
@@ -37,7 +39,7 @@ export function SiteFooter() {
             </ul>
           </div>
           <div>
-            <p className="text-[24px] font-semibold text-white [zoom:0.5]">Entreprise</p>
+            <p className="text-[24px] font-semibold leading-none text-white [zoom:0.5]">Entreprise</p>
             <ul className="mt-3 space-y-2 text-[13px] text-slate-300">
               <li>À propos</li>
               <li>
@@ -53,7 +55,7 @@ export function SiteFooter() {
             </ul>
           </div>
           <div>
-            <p className="text-[24px] font-semibold text-white [zoom:0.5]">Légal</p>
+            <p className="text-[24px] font-semibold leading-none text-white [zoom:0.5]">Légal</p>
             <ul className="mt-3 space-y-2 text-[13px] text-slate-300">
               <li>Mentions légales</li>
               <li>CGU</li>

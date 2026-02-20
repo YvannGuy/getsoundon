@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { HeaderAuth } from "@/components/layout/header-auth";
@@ -28,7 +29,8 @@ export async function SiteHeader() {
   return (
     <header className="border-y border-slate-300 bg-[#f1f3f5]">
       <div className="container flex h-14 max-w-[1120px] items-center justify-between">
-        <Link href="/" className="text-xl font-semibold leading-none text-black">
+        <Link href="/" className="flex items-center text-xl font-semibold leading-none text-[#213398] hover:text-[#1a2980]">
+          <Image src="/lohead.png" alt="" width={60} height={60} className="h-[60px] w-[60px] shrink-0 object-contain -mr-3" />
           {siteConfig.name}
         </Link>
         <nav className="hidden items-center gap-8 text-[14px] font-semibold text-slate-500 md:flex">
