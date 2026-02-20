@@ -1,6 +1,5 @@
+import { ParametresContent } from "@/components/parametres/parametres-content";
 import { createClient } from "@/lib/supabase/server";
-
-import { ParametresContent } from "@/components/proprietaire/parametres-content";
 
 export default async function ParametresPage() {
   const supabase = await createClient();
@@ -36,6 +35,7 @@ export default async function ParametresPage() {
           phone: profile?.phone ?? null,
           last_password_change: profile?.last_password_change ?? null,
         }}
+        deleteDataLabel="annonces, demandes et messages"
       />
     </div>
   );

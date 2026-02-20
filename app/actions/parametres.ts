@@ -48,6 +48,7 @@ export async function updateProfileAction(
   }
 
   revalidatePath("/proprietaire/parametres");
+  revalidatePath("/dashboard/parametres");
   revalidatePath("/proprietaire", "layout");
   return { success: "Profil enregistré." };
 }
@@ -87,6 +88,7 @@ export async function updatePasswordAction(
     .eq("id", user.id);
 
   revalidatePath("/proprietaire/parametres");
+  revalidatePath("/dashboard/parametres");
   return { success: "Mot de passe mis à jour." };
 }
 

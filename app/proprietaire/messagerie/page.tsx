@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
+import { MessagerieClient, type Thread } from "@/components/messagerie/messagerie-client";
 import { createClient } from "@/lib/supabase/server";
-import { MessagerieClient, type Thread } from "./messagerie-client";
 
 const PAGE_SIZE = 20;
 
