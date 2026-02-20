@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { CategoryCarousel } from "@/components/home/category-carousel";
+import { HeroRotatingTitle } from "@/components/home/hero-rotating-title";
 import { SectionReveal } from "@/components/ui/section-reveal";
 import { SearchForm } from "@/components/search/search-form";
 import { siteConfig } from "@/config/site";
@@ -116,9 +117,7 @@ export default async function Home() {
                   Espaces adaptés
                 </span>
               </div>
-              <h1 className="max-w-[500px] text-[26px] font-semibold leading-[1.2] tracking-[-0.03em] text-black sm:text-[36px] lg:text-[52px] lg:leading-[1.03] lg:[zoom:0.56]">
-                Trouvez une salle adaptée à votre événement cultuel
-              </h1>
+              <HeroRotatingTitle />
               <p className="max-w-[430px] text-[14px] leading-relaxed text-slate-500">
                 Une sélection de salles présentées avec clarté et précision.
               </p>
