@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,7 +23,7 @@ type SignupSchema = z.infer<typeof signupSchema>;
 const initialState: AuthFormState = {};
 
 export function SignupForm() {
-  const [state, formAction] = useFormState(signupAction, initialState);
+  const [state, formAction] = useActionState(signupAction, initialState);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<SignupSchema>({

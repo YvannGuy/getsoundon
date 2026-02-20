@@ -43,17 +43,46 @@ export default async function ProprietaireLayout({
     .select("id")
     .eq("owner_id", user.id);
   const salleIds = (mySalles ?? []).map((s) => s.id);
-  const { count: demandeCount } =
+  const [{ count: demandeCount }, { data: demandesForMessagerie }] = await Promise.all([
     salleIds.length > 0
-      ? await supabase
+      ? supabase
           .from("demandes")
           .select("id", { count: "exact", head: true })
           .in("salle_id", salleIds)
-      : { count: 0 };
+      : { count: 0 },
+    salleIds.length > 0
+      ? supabase.from("demandes").select("id").in("salle_id", salleIds)
+      : { data: [] },
+  ]);
+
+  let messageCount = 0;
+  const demandeIdsForConv = (demandesForMessagerie ?? []).map((d) => d.id);
+  if (demandeIdsForConv.length > 0) {
+    const convsRes = await supabase
+      .from("conversations")
+      .select("id")
+      .in("demande_id", demandeIdsForConv);
+    if (!convsRes.error) {
+      const convIds = (convsRes.data ?? []).map((c) => c.id);
+      if (convIds.length > 0) {
+        const msgRes = await supabase
+          .from("messages")
+          .select("id", { count: "exact", head: true })
+          .in("conversation_id", convIds)
+          .neq("sender_id", user.id)
+          .is("read_at", null);
+        if (!msgRes.error) messageCount = msgRes.count ?? 0;
+      }
+    }
+  }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <OwnerSidebar user={{ ...user, displayName }} demandeCount={demandeCount ?? 0} />
+    <div className="flex h-screen overflow-hidden bg-slate-50">
+      <OwnerSidebar
+        user={{ ...user, displayName }}
+        demandeCount={demandeCount ?? 0}
+        messageCount={messageCount}
+      />
       <main className="flex-1 overflow-auto">{children}</main>
     </div>
   );
