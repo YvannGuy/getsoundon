@@ -3,9 +3,10 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AlertTriangle, CreditCard, Gift, Infinity, Lock, Zap } from "lucide-react";
 
-import { activateTrialAction } from "@/app/actions/trial";
+import { activateTrialAction, getTrialActivated } from "@/app/actions/trial";
 import { getPaymentMethods } from "@/app/actions/stripe-portal";
 import { getPlatformSettings } from "@/app/actions/admin-settings";
+import { ActiverEssaiSeekerButton } from "@/components/paiement/activer-essai-seeker-button";
 import { PassCheckoutButton } from "@/components/pass-checkout-button";
 import { PortalButton } from "@/components/paiement/portal-button";
 import { Button } from "@/components/ui/button";
@@ -100,7 +101,7 @@ export default async function PaiementPage({
   const settings = await getPlatformSettings();
   const pass = settings.pass;
 
-  const [{ count: demandesCount }, { data: payments }, { data: profile }, paymentMethods] =
+  const [{ count: demandesCount }, { data: payments }, { data: profile }, paymentMethods, trialActivated] =
     await Promise.all([
       supabase.from("demandes").select("id", { count: "exact", head: true }).eq("seeker_id", user.id),
       supabase
@@ -111,6 +112,7 @@ export default async function PaiementPage({
         .order("created_at", { ascending: false }),
       supabase.from("profiles").select("stripe_customer_id").eq("id", user.id).single(),
       getPaymentMethods(user.id),
+      getTrialActivated(user.id),
     ]);
 
   const freeUsed = demandesCount ?? 0;
@@ -184,8 +186,27 @@ export default async function PaiementPage({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {isTrialActive ? (
-            /* État : Essai (3 demandes offertes) */
+          {!trialActivated && !activePass ? (
+            /* État : Essai pas encore activé */
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <Gift className="h-6 w-6 shrink-0 text-slate-500" />
+                <div>
+                  <span className="font-semibold text-slate-700">Essai gratuit disponible</span>
+                  <p className="mt-0.5 text-sm text-slate-600">
+                    Activez votre essai pour obtenir {freeTotal} demande{freeTotal > 1 ? "s" : ""} gratuite
+                    {freeTotal > 1 ? "s" : ""}
+                  </p>
+                </div>
+              </div>
+              <ActiverEssaiSeekerButton
+                freeTotal={freeTotal}
+                freeUsed={freeUsed}
+                className="w-full bg-[#213398] hover:bg-[#1a2980]"
+              />
+            </div>
+          ) : isTrialActive ? (
+            /* État : Essai activé (demandes offertes restantes) */
             <div className="space-y-3">
               <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/80 p-4">
                 <Gift className="h-6 w-6 shrink-0 text-emerald-600" />

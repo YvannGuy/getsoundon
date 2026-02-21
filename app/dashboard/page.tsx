@@ -7,6 +7,7 @@ import { AlertTriangle, CheckCircle2, Clock, Crown, FileText, Heart, Inbox, Lock
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SearchModalButton } from "@/components/search/search-modal";
+import { getTrialActivated } from "@/app/actions/trial";
 import { createClient } from "@/lib/supabase/server";
 
 const STATUT_LABEL: Record<string, string> = {
@@ -39,6 +40,7 @@ export default async function DashboardPage() {
     { count: favorisCount },
     { data: demandesList },
     { data: favorisList },
+    trialActivated,
     { data: payments },
   ] = await Promise.all([
     supabase.from("demandes").select("id", { count: "exact", head: true }).eq("seeker_id", seekerId),
@@ -53,6 +55,7 @@ export default async function DashboardPage() {
       .from("favoris")
       .select("salle_id")
       .eq("user_id", seekerId),
+    getTrialActivated(seekerId),
     supabase
       .from("payments")
       .select("product_type, status, amount, created_at")
@@ -276,6 +279,29 @@ export default async function DashboardPage() {
                     Prolonger mon accès
                   </Button>
                 </Link>
+              </CardContent>
+            </Card>
+          ) : !trialActivated ? (
+            <Card className="overflow-hidden border-0 border-emerald-200 bg-emerald-50/50 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-100">
+                      <Crown className="h-6 w-6 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-black">Activez votre essai gratuit</p>
+                      <p className="text-sm text-slate-600">
+                        Bénéficiez de demandes gratuites pour découvrir la plateforme
+                      </p>
+                    </div>
+                  </div>
+                  <Link href="/dashboard/paiement" className="sm:ml-auto">
+                    <Button className="w-full sm:w-auto bg-[#213398] hover:bg-[#1a2980]">
+                      Activez mon essai gratuit
+                    </Button>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           ) : (
