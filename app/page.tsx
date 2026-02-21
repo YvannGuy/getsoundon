@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle2, Facebook, Gift, Instagram, Shield, Star, Zap } from "lucide-react";
+import { CheckCircle2, Facebook, Headphones, Instagram, Shield, Star, Zap } from "lucide-react";
 
 import { getTrialActivated } from "@/app/actions/trial";
 import { getEffectiveUserType } from "@/lib/auth-utils";
@@ -88,16 +88,6 @@ const faqSectionItems = [
     answer:
       "La plateforme accueille les cultes réguliers, conférences, baptêmes, célébrations, retraites et autres événements à caractère cultuel. Vous pouvez préciser le type lors de votre recherche.",
   },
-  {
-    question: "La consultation des annonces est-elle payante ?",
-    answer:
-      "La consultation des annonces est gratuite. Pour envoyer des demandes aux propriétaires, vous aurez besoin d'un pass (24h, 48h ou abonnement) selon vos besoins.",
-  },
-  {
-    question: "Sous quel délai obtient-on une réponse ?",
-    answer:
-      "Les propriétaires sont notifiés immédiatement de vos demandes. Le délai de réponse varie selon chacun, mais la plupart répondent sous 24 à 48 heures.",
-  },
 ];
 
 export default async function Home() {
@@ -122,7 +112,7 @@ export default async function Home() {
     <main className="bg-[#f3f6fa] text-black">
       <SiteHeader />
 
-      <SectionReveal className="relative min-h-[480px] overflow-hidden md:min-h-[560px]">
+      <SectionReveal id="recherche" className="relative min-h-[480px] overflow-hidden md:min-h-[560px]">
         <div className="absolute inset-0">
           <Image
             src="/img.png"
@@ -251,29 +241,31 @@ export default async function Home() {
         </div>
       </SectionReveal>
 
-      <SectionReveal className="bg-[#edf2f7] py-12">
-        <div className="container max-w-[1120px]">
-          <Card className="mx-auto max-w-3xl rounded-2xl border-slate-200 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.09)]">
-            <CardContent className="space-y-4 p-10 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#213398]/10">
-                <Gift className="h-5 w-5 text-black" />
-              </div>
-              <h3 className="text-[48px] font-semibold tracking-[-0.02em] text-black [zoom:0.5]">
-                3 demandes offertes pour découvrir la plateforme
-              </h3>
-              <p className="text-[24px] text-slate-500 [zoom:0.5]">Testez notre service sans engagement et trouvez la salle idéale</p>
-              <ActiverEssaiButton isLoggedIn={!!user} trialActivated={trialActivated} paiementTrialUrl={paiementTrialUrl} />
-              <p className="text-[11px] text-slate-400">Valable une seule fois</p>
-            </CardContent>
-          </Card>
-        </div>
-      </SectionReveal>
-
       <SectionReveal id="tarifs" className="bg-[#f3f6fa] py-12">
         <div className="container max-w-[1120px]">
           <h2 className="text-center text-[52px] font-semibold tracking-[-0.02em] text-black [zoom:0.5]">Tarifs transparents</h2>
           <p className="mt-1 text-center text-[24px] text-slate-500 [zoom:0.5]">Choisissez la formule adaptée à vos besoins</p>
-          <div className="mx-auto mt-8 grid max-w-5xl gap-4 md:grid-cols-3">
+          <div className="mx-auto mt-8 grid max-w-5xl gap-4 md:grid-cols-4">
+            <Card className="h-full border-slate-200 bg-white">
+              <CardContent className="flex h-full flex-col p-6">
+                <div className="h-6" />
+                <p className="mt-3 min-h-[50px] text-[19px] font-semibold leading-[1.2] text-black">Pass Découverte</p>
+                <p className="mt-1 flex min-h-[44px] items-end text-[42px] font-semibold leading-none text-black">
+                  Gratuit
+                </p>
+                <ul className="mt-5 flex-1 space-y-2.5">
+                  {["3 demandes offertes", "Accès complet aux annonces", "Contact direct avec les propriétaires", "Aucune carte requise"].map((feature) => (
+                    <li key={feature} className="flex items-start gap-2 text-[13px] leading-[1.35] text-slate-600">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-black" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-8 flex-shrink-0">
+                  <ActiverEssaiButton isLoggedIn={!!user} trialActivated={trialActivated} paiementTrialUrl={paiementTrialUrl} variant="gradient" className="w-full" />
+                </div>
+              </CardContent>
+            </Card>
             {plans.map((plan) => (
               <Card
                 key={plan.name}
@@ -337,32 +329,57 @@ export default async function Home() {
         </div>
       </SectionReveal>
 
-      <SectionReveal className="py-12">
+      <SectionReveal className="bg-slate-50 py-12">
         <div className="container max-w-[1120px]">
-          <Card className="mx-auto max-w-5xl rounded-2xl border-slate-200 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-            <CardContent className="grid items-center gap-8 p-8 md:grid-cols-2 md:p-10">
-              <div className="space-y-5">
-                <h3 className="text-[52px] font-semibold leading-[1.08] tracking-[-0.02em] text-black [zoom:0.5]">Vous possédez une salle ?</h3>
-                <p className="max-w-[520px] text-[24px] leading-[1.55] text-slate-500 [zoom:0.5]">
-                  Publiez votre lieu gratuitement et recevez des demandes ciblées de la part d&apos;organisateurs d&apos;événements cultuels
-                </p>
-                <Link href="/auth?tab=signup" className="mt-6 inline-block">
-                  <Button className="h-10 rounded-md bg-[#213398] px-6 text-[14px] font-semibold text-white hover:bg-[#1a2980]">
-                    Ajoutez ma salle
-                  </Button>
-                </Link>
+          <h2 className="text-center text-[52px] font-semibold tracking-[-0.02em] text-black [zoom:0.5]">
+            Vous cherchez une salle ou vous en proposez une ?
+          </h2>
+          <div className="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-2 sm:items-stretch">
+            <div className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 hover:shadow-md">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#213398]/10 text-2xl">
+                🏛
               </div>
-              <div className="overflow-hidden rounded-xl border border-slate-200">
-                <Image
-                  src="/img2.png"
-                  alt="Photo de salle"
-                  width={1200}
-                  height={700}
-                  className="h-[230px] w-full object-cover object-center"
-                />
+              <h3 className="mt-4 text-xl font-semibold text-black">Trouver un lieu</h3>
+              <p className="mt-2 flex-1 text-[15px] leading-relaxed text-slate-600">
+                Explorez des salles adaptées à votre événement.
+              </p>
+              <Link
+                href="/#recherche"
+                className="mt-5 flex h-10 w-full items-center justify-center rounded-lg bg-[#213398] px-5 text-[14px] font-semibold text-white transition hover:bg-[#1a2980]"
+              >
+                Rechercher une salle
+              </Link>
+            </div>
+            <div className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 hover:shadow-md">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-2xl">
+                🏢
               </div>
-            </CardContent>
-          </Card>
+              <h3 className="mt-4 text-xl font-semibold text-black">Proposer votre salle</h3>
+              <p className="mt-2 flex-1 text-[15px] leading-relaxed text-slate-600">
+                Recevez des demandes ciblées et qualifiées.
+              </p>
+              <Link
+                href="/auth?tab=signup&userType=owner"
+                className="mt-5 flex h-10 w-full items-center justify-center rounded-lg border-0 bg-slate-800 px-5 text-[14px] font-semibold text-white transition hover:bg-slate-900"
+              >
+                Déposer mon lieu
+              </Link>
+            </div>
+          </div>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-[14px] text-slate-500">
+            <span className="inline-flex items-center gap-2">
+              <Shield className="h-4 w-4 shrink-0 text-slate-400" />
+              Paiement sécurisé
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <Star className="h-4 w-4 shrink-0 text-slate-400" />
+              Lieux vérifiés
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <Headphones className="h-4 w-4 shrink-0 text-slate-400" />
+              Support dédié
+            </span>
+          </div>
         </div>
       </SectionReveal>
 
@@ -379,6 +396,11 @@ export default async function Home() {
                 </AccordionItem>
               ))}
             </Accordion>
+            <div className="mt-6 text-center">
+              <Link href="/centre-aide" className="inline-flex items-center gap-2 text-[15px] font-semibold text-[#213398] hover:underline">
+                Accéder au centre d&apos;aide →
+              </Link>
+            </div>
           </div>
         </div>
       </SectionReveal>

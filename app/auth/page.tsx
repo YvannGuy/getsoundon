@@ -44,7 +44,9 @@ const features = [
 function AuthPageContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
+  const userTypeParam = searchParams.get("userType");
   const redirectedFrom = searchParams.get("redirectedFrom") ?? "";
+  const initialUserType = userTypeParam === "owner" ? "owner" : undefined;
   const [activeTab, setActiveTab] = useState<"login" | "signup">(
     tabParam === "signup" ? "signup" : "login"
   );
@@ -118,7 +120,7 @@ function AuthPageContent() {
         {activeTab === "login" ? (
           <LoginFormContent redirectedFrom={redirectedFrom} onSwitchToSignup={() => setActiveTab("signup")} />
         ) : (
-          <SignupFormContent redirectedFrom={redirectedFrom} onSwitchToLogin={() => setActiveTab("login")} />
+          <SignupFormContent redirectedFrom={redirectedFrom} onSwitchToLogin={() => setActiveTab("login")} initialUserType={initialUserType} />
         )}
       </div>
     </div>
@@ -207,13 +209,13 @@ function LoginFormContent({ redirectedFrom, onSwitchToSignup }: { redirectedFrom
   );
 }
 
-function SignupFormContent({ redirectedFrom, onSwitchToLogin }: { redirectedFrom: string; onSwitchToLogin: () => void }) {
+function SignupFormContent({ redirectedFrom, onSwitchToLogin, initialUserType }: { redirectedFrom: string; onSwitchToLogin: () => void; initialUserType?: "seeker" | "owner" }) {
   const router = useRouter();
   const [state, formAction] = useActionState(signupAction, initialState);
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [userType, setUserType] = useState<"seeker" | "owner">("seeker");
+  const [userType, setUserType] = useState<"seeker" | "owner">(initialUserType ?? "seeker");
 
   useEffect(() => {
     if (state.redirectTo) {
