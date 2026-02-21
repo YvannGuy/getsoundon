@@ -71,6 +71,23 @@ export default async function MessageriePage({
   const convByDemande = new Map(convsData.map((c) => [c.demande_id, c]));
 
   const convIds = convsData.map((c) => c.id);
+
+  const { data: prefsData } =
+    convIds.length > 0
+      ? await supabase
+          .from("user_conversation_preferences")
+          .select("conversation_id, archived_at, deleted_at")
+          .eq("user_id", user.id)
+          .in("conversation_id", convIds)
+      : { data: [] };
+
+  const prefsByConv = new Map(
+    (prefsData ?? []).map((p) => [
+      p.conversation_id,
+      { archivedAt: (p as { archived_at?: string | null }).archived_at ?? null, deletedAt: (p as { deleted_at?: string | null }).deleted_at ?? null },
+    ])
+  );
+
   let unreadByConv = new Map<string, number>();
   const lastMsgByConv = new Map<string, string>();
   if (convIds.length > 0) {
@@ -168,10 +185,14 @@ export default async function MessageriePage({
         (convId ? lastMsgByConv.get(convId) : null) ?? conv?.last_message_preview ?? null,
       lastMessageSenderId: null,
       unreadCount,
+      archivedAt: convId ? prefsByConv.get(convId)?.archivedAt ?? null : null,
+      deletedAt: convId ? prefsByConv.get(convId)?.deletedAt ?? null : null,
     };
   });
 
-  threads.sort((a, b) => {
+  const visibleThreads = threads.filter((t) => !t.deletedAt);
+
+  visibleThreads.sort((a, b) => {
     const aTime = a.lastMessageAt ?? a.demandeId;
     const bTime = b.lastMessageAt ?? b.demandeId;
     return String(bTime).localeCompare(String(aTime));
@@ -205,7 +226,7 @@ export default async function MessageriePage({
                 baseUrl: "/proprietaire/messagerie",
                 currentPage,
                 totalPages,
-                totalItems: threads.length,
+                totalItems: visibleThreads.length,
                 pageSize: PAGE_SIZE,
               }
             : null

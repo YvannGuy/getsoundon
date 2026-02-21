@@ -1,5 +1,6 @@
 "use server";
 
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { randomUUID } from "crypto";
 
@@ -59,6 +60,30 @@ export async function getOrCreateConversation(demandeId: string) {
   return { conversationId: newConv.id, error: null };
 }
 
+async function clearRecipientArchiveOnNewMessage(conversationId: string, senderId: string) {
+  const supabase = await createClient();
+  const admin = createAdminClient();
+  const { data: conv } = await supabase
+    .from("conversations")
+    .select("seeker_id, owner_id")
+    .eq("id", conversationId)
+    .single();
+  if (!conv) return;
+  const recipientId = conv.seeker_id === senderId ? conv.owner_id : conv.seeker_id;
+  await admin
+    .from("user_conversation_preferences")
+    .upsert(
+      {
+        user_id: recipientId,
+        conversation_id: conversationId,
+        archived_at: null,
+        deleted_at: null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,conversation_id" }
+    );
+}
+
 export async function sendMessage(
   conversationId: string,
   content: string
@@ -77,6 +102,8 @@ export async function sendMessage(
   });
 
   if (error) return { success: false, error: error.message };
+
+  await clearRecipientArchiveOnNewMessage(conversationId, user.id);
 
   const preview = trimmed.length > 80 ? trimmed.slice(0, 77) + "..." : trimmed;
   await supabase
@@ -180,6 +207,8 @@ export async function sendMessageWithAttachments(formData: FormData): Promise<{
     }
   }
 
+  await clearRecipientArchiveOnNewMessage(conversationId, user.id);
+
   const preview =
     content.length > 80 ? content.slice(0, 77) + "..." : content || "[Pièce(s) jointe(s)]";
   await supabase
@@ -218,6 +247,182 @@ export async function getAttachmentSignedUrl(storagePath: string): Promise<strin
     .createSignedUrl(storagePath, 3600); // 1h
 
   return data?.signedUrl ?? null;
+}
+
+export async function editMessage(
+  messageId: string,
+  content: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecté" };
+
+  const trimmed = content.trim();
+  if (!trimmed) return { success: false, error: "Message vide" };
+
+  const { data: msg } = await supabase
+    .from("messages")
+    .select("id, sender_id, conversation_id, deleted_at")
+    .eq("id", messageId)
+    .single();
+
+  if (!msg || msg.deleted_at)
+    return { success: false, error: "Message introuvable" };
+  if ((msg as { sender_id: string }).sender_id !== user.id)
+    return { success: false, error: "Vous ne pouvez modifier que vos propres messages" };
+
+  const { error } = await supabase
+    .from("messages")
+    .update({ content: trimmed, edited_at: new Date().toISOString() })
+    .eq("id", messageId);
+
+  if (error) return { success: false, error: error.message };
+
+  const convId = (msg as { conversation_id: string }).conversation_id;
+  const preview = trimmed.length > 80 ? trimmed.slice(0, 77) + "..." : trimmed;
+  await supabase
+    .from("conversations")
+    .update({
+      last_message_at: new Date().toISOString(),
+      last_message_preview: preview,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", convId);
+
+  return { success: true };
+}
+
+export async function deleteMessage(messageId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecté" };
+
+  const { data: msg } = await supabase
+    .from("messages")
+    .select("id, sender_id, conversation_id, content, deleted_at")
+    .eq("id", messageId)
+    .single();
+
+  if (!msg || msg.deleted_at)
+    return { success: false, error: "Message introuvable" };
+  if ((msg as { sender_id: string }).sender_id !== user.id)
+    return { success: false, error: "Vous ne pouvez supprimer que vos propres messages" };
+
+  const { error } = await supabase
+    .from("messages")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", messageId);
+
+  if (error) return { success: false, error: error.message };
+
+  const convId = (msg as { conversation_id: string }).conversation_id;
+
+  const { data: lastMsg } = await supabase
+    .from("messages")
+    .select("content, sent_at")
+    .eq("conversation_id", convId)
+    .is("deleted_at", null)
+    .order("sent_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const preview = lastMsg?.content
+    ? lastMsg.content.length > 80
+      ? lastMsg.content.slice(0, 77) + "..."
+      : lastMsg.content
+    : "";
+  const lastAt = lastMsg?.sent_at ?? null;
+
+  await supabase
+    .from("conversations")
+    .update({
+      last_message_at: lastAt,
+      last_message_preview: preview,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", convId);
+
+  return { success: true };
+}
+
+export async function archiveConversation(conversationId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecté" };
+
+  const { data: conv } = await supabase
+    .from("conversations")
+    .select("seeker_id, owner_id")
+    .eq("id", conversationId)
+    .single();
+
+  if (!conv || (conv.seeker_id !== user.id && conv.owner_id !== user.id))
+    return { success: false, error: "Accès refusé" };
+
+  const { error } = await supabase
+    .from("user_conversation_preferences")
+    .upsert(
+      {
+        user_id: user.id,
+        conversation_id: conversationId,
+        archived_at: new Date().toISOString(),
+        deleted_at: null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,conversation_id" }
+    );
+
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function unarchiveConversation(conversationId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecté" };
+
+  const { error } = await supabase
+    .from("user_conversation_preferences")
+    .update({
+      archived_at: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", user.id)
+    .eq("conversation_id", conversationId);
+
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function deleteConversation(conversationId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecté" };
+
+  const { data: conv } = await supabase
+    .from("conversations")
+    .select("seeker_id, owner_id")
+    .eq("id", conversationId)
+    .single();
+
+  if (!conv || (conv.seeker_id !== user.id && conv.owner_id !== user.id))
+    return { success: false, error: "Accès refusé" };
+
+  const { error } = await supabase
+    .from("user_conversation_preferences")
+    .upsert(
+      {
+        user_id: user.id,
+        conversation_id: conversationId,
+        archived_at: null,
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,conversation_id" }
+    );
+
+  if (error) return { success: false, error: error.message };
+  return { success: true };
 }
 
 export async function getAttachmentSignedUrls(

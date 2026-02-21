@@ -6,14 +6,25 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Check, ChevronDown, ChevronLeft, Lightbulb, MessageCircle, Paperclip, Send, Search } from "lucide-react";
+import { Archive, Check, ChevronDown, ChevronLeft, Lightbulb, MessageCircle, MoreVertical, Paperclip, Pencil, RotateCcw, Send, Search, Trash2 } from "lucide-react";
 
 import { updateDemandeStatusAction } from "@/app/actions/demande-owner";
-import { getOrCreateConversation, sendMessage, sendMessageWithAttachments } from "@/app/actions/messagerie";
+import {
+  archiveConversation,
+  deleteConversation,
+  deleteMessage,
+  editMessage,
+  getOrCreateConversation,
+  sendMessage,
+  sendMessageWithAttachments,
+  unarchiveConversation,
+} from "@/app/actions/messagerie";
 import { AddSalleButton } from "@/components/proprietaire/add-salle-modal";
 import { SearchModalButton } from "@/components/search/search-modal";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Pagination } from "@/components/ui/pagination";
 import { createClient } from "@/lib/supabase/client";
 
@@ -41,6 +52,9 @@ export type Thread = {
   lastMessagePreview: string | null;
   lastMessageSenderId: string | null;
   unreadCount: number;
+  /** Préférences utilisateur : archivé / supprimé */
+  archivedAt?: string | null;
+  deletedAt?: string | null;
 };
 
 type MessageAttachment = {
@@ -56,6 +70,7 @@ type Message = {
   content: string;
   sent_at: string;
   read_at: string | null;
+  edited_at?: string | null;
   attachments?: MessageAttachment[];
 };
 
@@ -108,8 +123,16 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [mobileShowChat, setMobileShowChat] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  const [threadPreferences, setThreadPreferences] = useState<Map<string, { archivedAt?: string | null; deletedAt?: string | null }>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const getThreadArchived = (t: Thread) => threadPreferences.get(t.demandeId)?.archivedAt ?? t.archivedAt;
+  const getThreadDeleted = (t: Thread) => threadPreferences.get(t.demandeId)?.deletedAt ?? t.deletedAt;
 
   const filteredBySearch = threads.filter(
     (t) =>
@@ -119,10 +142,13 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
   );
 
   const filteredThreads = filteredBySearch.filter((t) => {
-    if (filterTab === "all") return true;
-    if (filterTab === "unread") return t.unreadCount > 0;
-    if (filterTab === "pending") return ["sent", "viewed"].includes(t.demandeStatus ?? "sent");
-    if (filterTab === "archived") return t.demandeStatus === "rejected";
+    const isArchived = !!getThreadArchived(t);
+    const isDeleted = !!getThreadDeleted(t);
+    if (isDeleted) return false;
+    if (filterTab === "all") return !isArchived;
+    if (filterTab === "unread") return !isArchived && t.unreadCount > 0;
+    if (filterTab === "pending") return !isArchived && ["sent", "viewed"].includes(t.demandeStatus ?? "sent");
+    if (filterTab === "archived") return isArchived;
     return true;
   });
 
@@ -130,15 +156,17 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
     const supabase = createClient();
     const { data } = await supabase
       .from("messages")
-      .select("id, sender_id, content, sent_at, read_at")
+      .select("id, sender_id, content, sent_at, read_at, edited_at")
       .eq("conversation_id", convId)
+      .is("deleted_at", null)
       .order("sent_at", { ascending: true });
     let msgs: Message[];
     if (!data?.length) {
       const { data: alt } = await supabase
         .from("messages")
-        .select("id, sender_id, content, created_at, read_at")
+        .select("id, sender_id, content, created_at, read_at, edited_at")
         .eq("conversation_id", convId)
+        .is("deleted_at", null)
         .order("created_at", { ascending: true });
       msgs = (alt ?? []).map((m) => ({
         id: m.id,
@@ -146,9 +174,13 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
         content: m.content,
         sent_at: (m as { created_at?: string }).created_at ?? new Date().toISOString(),
         read_at: m.read_at,
+        edited_at: (m as { edited_at?: string | null }).edited_at ?? null,
       })) as Message[];
     } else {
-      msgs = data as Message[];
+      msgs = data.map((m) => ({
+        ...m,
+        edited_at: (m as { edited_at?: string | null }).edited_at ?? null,
+      })) as Message[];
     }
 
     const msgIds = msgs.map((m) => m.id);
@@ -310,6 +342,95 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
     }
   };
 
+  const handleEditMessage = async () => {
+    if (!editingMessage) return;
+    setEditSaving(true);
+    const res = await editMessage(editingMessage.id, editContent);
+    setEditSaving(false);
+    if (res.success) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === editingMessage.id
+            ? { ...m, content: editContent, edited_at: new Date().toISOString() }
+            : m
+        )
+      );
+      setEditModalOpen(false);
+      setEditingMessage(null);
+      setEditContent("");
+      router.refresh();
+    } else if (res.error) {
+      alert(res.error);
+    }
+  };
+
+  const handleArchiveConversation = async (t: Thread) => {
+    let convId = t.conversationId;
+    if (!convId) {
+      const cres = await getOrCreateConversation(t.demandeId);
+      if (!cres.conversationId) {
+        alert(cres.error ?? "Impossible de créer la conversation.");
+        return;
+      }
+      convId = cres.conversationId;
+    }
+    const res = await archiveConversation(convId!);
+    if (res.success) {
+      setThreadPreferences((prev) => new Map(prev).set(t.demandeId, { archivedAt: new Date().toISOString(), deletedAt: null }));
+      router.refresh();
+    } else if (res.error) alert(res.error);
+  };
+
+  const handleUnarchiveConversation = async (t: Thread) => {
+    const convId = t.conversationId;
+    if (!convId) return;
+    const res = await unarchiveConversation(convId);
+    if (res.success) {
+      setThreadPreferences((prev) => new Map(prev).set(t.demandeId, { archivedAt: null, deletedAt: null }));
+      router.refresh();
+    } else if (res.error) alert(res.error);
+  };
+
+  const handleDeleteConversation = async (t: Thread) => {
+    let convId = t.conversationId;
+    if (!convId) {
+      const cres = await getOrCreateConversation(t.demandeId);
+      if (!cres.conversationId) return;
+      convId = cres.conversationId;
+    }
+    if (!convId || !confirm("Supprimer définitivement cette conversation ? Elle réapparaîtra si l'autre personne vous écrit.")) return;
+    const res = await deleteConversation(convId);
+    if (res.success) {
+      setThreadPreferences((prev) => new Map(prev).set(t.demandeId, { archivedAt: null, deletedAt: new Date().toISOString() }));
+      if (selected?.demandeId === t.demandeId) {
+        setSelected(null);
+        setConversationId(null);
+        setMessages([]);
+        setMobileShowChat(false);
+      }
+      router.refresh();
+    } else if (res.error) alert(res.error);
+  };
+
+  const handleDeleteMessage = async (m: Message) => {
+    if (!confirm("Supprimer ce message ?")) return;
+    const res = await deleteMessage(m.id);
+    if (res.success) {
+      setMessages((prev) => prev.filter((x) => x.id !== m.id));
+      if (selected) {
+        const remaining = messages.filter((x) => x.id !== m.id);
+        const last = remaining[remaining.length - 1];
+        if (last) {
+          const preview = last.content.length > 80 ? last.content.slice(0, 77) + "..." : last.content;
+          setLastPreviews((prev) => new Map(prev).set(selected.demandeId, preview));
+        }
+      }
+      router.refresh();
+    } else if (res.error) {
+      alert(res.error);
+    }
+  };
+
   const handleStatusUpdate = async (status: "accepted" | "rejected" | "replied") => {
     if (!selected) return;
     setStatusUpdating(status);
@@ -457,39 +578,87 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
         ) : (
           filteredThreads.map((t) => {
             const isSelected = selected?.demandeId === t.demandeId;
+            const isArchivedTab = filterTab === "archived";
             return (
-              <button
+              <div
                 key={t.demandeId}
-                type="button"
-                onClick={() => {
-                  setSelected(t);
-                  setMobileShowChat(true);
-                }}
-                className={`flex w-full items-start gap-4 border-b border-slate-100 p-4 text-left transition hover:bg-slate-50 active:bg-slate-100 ${
+                className={`group flex w-full items-start gap-4 border-b border-slate-100 p-4 transition hover:bg-slate-50 ${
                   isSelected ? "bg-[#213398]/5" : ""
                 }`}
               >
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-200">
-                  <Image src={t.salleImage ?? "/img.png"} alt="" fill className="object-cover" sizes="56px" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="truncate font-semibold text-black">{t.salleName}</p>
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      {t.unreadCount > 0 && (
-                        <span className="h-2.5 w-2.5 rounded-full bg-[#213398]" aria-hidden />
-                      )}
-                      <span className="text-xs text-slate-500">{formatTime(t.lastMessageAt ?? t.createdAt ?? null)}</span>
-                    </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelected(t);
+                    setMobileShowChat(true);
+                  }}
+                  className="flex min-w-0 flex-1 items-start gap-4 text-left"
+                >
+                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-200">
+                    <Image src={t.salleImage ?? "/img.png"} alt="" fill className="object-cover" sizes="56px" />
                   </div>
-                  <p className="mt-0.5 truncate text-sm text-slate-600">
-                    {t.seekerName} • {t.contactRole ?? (userType === "seeker" ? "Propriétaire" : "Organisateur")}
-                  </p>
-                  <p className="mt-1 line-clamp-1 text-sm text-slate-500">
-                    {lastPreviews.get(t.demandeId) ?? t.lastMessagePreview ?? t.message ?? "Aucun message"}
-                  </p>
-                </div>
-              </button>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="truncate font-semibold text-black">{t.salleName}</p>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        {t.unreadCount > 0 && (
+                          <span className="h-2.5 w-2.5 rounded-full bg-[#213398]" aria-hidden />
+                        )}
+                        <span className="text-xs text-slate-500">{formatTime(t.lastMessageAt ?? t.createdAt ?? null)}</span>
+                      </div>
+                    </div>
+                    <p className="mt-0.5 truncate text-sm text-slate-600">
+                      {t.seekerName} • {t.contactRole ?? (userType === "seeker" ? "Propriétaire" : "Organisateur")}
+                    </p>
+                    <p className="mt-1 line-clamp-1 text-sm text-slate-500">
+                      {lastPreviews.get(t.demandeId) ?? t.lastMessagePreview ?? t.message ?? "Aucun message"}
+                    </p>
+                  </div>
+                </button>
+                <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-200 hover:text-slate-700"
+                        aria-label="Options de la conversation"
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-1" align="end" onClick={(e) => e.stopPropagation()}>
+                      {isArchivedTab ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleUnarchiveConversation(t)}
+                            className="flex w-full items-center gap-2 rounded px-2 py-2 text-sm hover:bg-slate-100"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                            Relancer
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteConversation(t)}
+                            className="flex w-full items-center gap-2 rounded px-2 py-2 text-sm text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Supprimer définitivement
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleArchiveConversation(t)}
+                          className="flex w-full items-center gap-2 rounded px-2 py-2 text-sm hover:bg-slate-100"
+                        >
+                          <Archive className="h-4 w-4" />
+                          Archiver
+                        </button>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+              </div>
             );
           })
         )}
@@ -636,10 +805,45 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
                       {isMe ? "M" : otherName.charAt(0)}
                     </div>
                     <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-2 ${
+                      className={`group relative max-w-[85%] rounded-2xl px-4 py-2 ${
                         isMe ? "bg-[#213398] text-white" : "bg-white text-black shadow-sm"
                       }`}
                     >
+                      {isMe && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              type="button"
+                              className="absolute -right-1 -top-1 rounded p-1 opacity-0 transition hover:bg-black/10 group-hover:opacity-100"
+                              aria-label="Options"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-40 p-1" align="end">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingMessage(m);
+                                setEditContent(m.content && m.content !== "[Pièce(s) jointe(s)]" ? m.content : "");
+                                setEditModalOpen(true);
+                              }}
+                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-slate-100"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                              Modifier
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteMessage(m)}
+                              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              Supprimer
+                            </button>
+                          </PopoverContent>
+                        </Popover>
+                      )}
                       {m.content && m.content !== "[Pièce(s) jointe(s)]" && (
                         <p className="text-sm">{m.content}</p>
                       )}
@@ -676,6 +880,9 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
                       )}
                       <p className={`mt-1 text-xs ${isMe ? "text-white/80" : "text-slate-500"}`}>
                         {format(new Date(m.sent_at), "HH:mm", { locale: fr })}
+                        {m.edited_at && (
+                          <span className="ml-1 italic">(modifié)</span>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -781,6 +988,47 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
               </div>
             )}
           </div>
+
+          <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+            <DialogContent showClose={true}>
+              <DialogHeader>
+                <DialogTitle>Modifier le message</DialogTitle>
+              </DialogHeader>
+              <div className="py-2">
+                <Input
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  placeholder="Votre message..."
+                  className="min-h-[80px]"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleEditMessage();
+                    }
+                  }}
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditModalOpen(false);
+                    setEditingMessage(null);
+                    setEditContent("");
+                  }}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={handleEditMessage}
+                  disabled={editSaving || !editContent.trim()}
+                  className="bg-[#213398] hover:bg-[#1a2980]"
+                >
+                  {editSaving ? "Enregistrement…" : "Enregistrer"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>

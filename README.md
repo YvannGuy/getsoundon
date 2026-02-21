@@ -41,6 +41,14 @@ Exécutez le script `config/supabase.sql` dans l'éditeur SQL Supabase pour :
 1. Créez le bucket : `npm run supabase:init-message-storage`
 2. Exécutez `config/supabase-message-attachments.sql` dans l'éditeur SQL Supabase (table `message_attachments` + politiques storage)
 
+## Éditer / supprimer les messages
+
+Exécutez `config/supabase-messages-edit-delete.sql` dans l'éditeur SQL Supabase pour ajouter les colonnes `edited_at` et `deleted_at` à la table `messages`.
+
+## Archiver / supprimer les conversations
+
+Exécutez `config/supabase-user-conversation-preferences.sql` dans l'éditeur SQL Supabase pour créer la table `user_conversation_preferences` (archiver, relancer, supprimer définitivement).
+
 ## Table salles
 
 Exécutez `config/supabase-salles.sql` dans l'éditeur SQL Supabase pour créer la table des annonces.
