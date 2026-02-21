@@ -7,6 +7,7 @@ import { AlertTriangle, CheckCircle2, Clock, Crown, FileText, Heart, Inbox, Lock
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SearchModalButton } from "@/components/search/search-modal";
+import { getPlatformSettings } from "@/app/actions/admin-settings";
 import { getTrialActivated } from "@/app/actions/trial";
 import { createClient } from "@/lib/supabase/server";
 
@@ -35,6 +36,7 @@ export default async function DashboardPage() {
 
   const seekerId = user.id;
 
+  const settings = await getPlatformSettings();
   const [
     { count: demandesCount },
     { count: favorisCount },
@@ -102,6 +104,10 @@ export default async function DashboardPage() {
 
   const convIds = (convsData.data ?? []).map((c) => c.demande_id);
   const convsCount = convIds.length;
+
+  const freeUsed = totalDemandes;
+  const freeTotal = settings?.pass?.demandes_gratuites ?? 3;
+  const isTrialActive = trialActivated && freeUsed < freeTotal;
 
   const now = new Date();
   const activePass = (payments ?? []).find((p) => {
@@ -299,6 +305,29 @@ export default async function DashboardPage() {
                   <Link href="/dashboard/paiement?trial=1" className="sm:ml-auto">
                     <Button className="w-full sm:w-auto bg-[#1A3E92] hover:bg-[#15317a] font-semibold">
                       Activez mon essai gratuit
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          ) : isTrialActive ? (
+            <Card className="overflow-hidden border-0 border-emerald-200 bg-emerald-50/80 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#D9F7E0]">
+                      <Crown className="h-6 w-6 text-[#189D52]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-emerald-800">Essai actif</p>
+                      <p className="text-sm text-emerald-700">
+                        {freeTotal - freeUsed} demande{freeTotal - freeUsed > 1 ? "s" : ""} gratuite{freeTotal - freeUsed > 1 ? "s" : ""} restante{freeTotal - freeUsed > 1 ? "s" : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <Link href="/dashboard/paiement">
+                    <Button variant="outline" size="sm" className="border-emerald-300 text-emerald-700 hover:bg-emerald-50">
+                      Voir mon accès
                     </Button>
                   </Link>
                 </div>
