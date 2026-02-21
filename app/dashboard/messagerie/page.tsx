@@ -175,7 +175,7 @@ export default async function MessageriePage({
   const paginatedThreads = threads.slice(from, from + PAGE_SIZE);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col md:h-[calc(100vh-2rem)]">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden md:h-[calc(100vh-2rem)]">
       <MessagerieClient
         threads={paginatedThreads}
         currentUserId={user.id}

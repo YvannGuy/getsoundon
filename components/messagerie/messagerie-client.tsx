@@ -449,7 +449,7 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
   );
 
   const chatPanel = (
-    <div className="flex flex-1 flex-col bg-slate-50">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-slate-50">
       {!selected ? (
         <div className="hidden flex-1 flex-col items-center justify-center text-slate-500 md:flex">
           <p className="text-lg font-medium">Sélectionnez une conversation</p>
@@ -565,7 +565,7 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
           )}
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className="min-h-0 flex-1 shrink overflow-y-auto overscroll-contain p-4 md:p-6">
             <p className="mb-4 text-xs font-medium text-slate-400">Aujourd&apos;hui</p>
             <div className="space-y-4">
               {messages.map((m) => {
@@ -593,7 +593,7 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
           </div>
 
           {/* Zone de saisie */}
-          <div className="border-t border-slate-200 bg-white p-4">
+          <div className="shrink-0 border-t border-slate-200 bg-white p-4">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -765,7 +765,7 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
       <div className={`flex min-h-0 flex-col md:w-[380px] ${mobileShowChat && selected ? "hidden md:flex" : ""}`}>
         {listPanel}
       </div>
-      <div className={`flex min-h-0 flex-1 flex-col ${!selected ? "hidden md:flex" : ""} ${!mobileShowChat && selected ? "hidden md:flex" : ""}`}>
+      <div className={`flex min-h-0 flex-1 flex-col overflow-hidden ${!selected ? "hidden md:flex" : ""} ${!mobileShowChat && selected ? "hidden md:flex" : ""}`}>
         {chatPanel}
       </div>
     </div>
