@@ -176,9 +176,22 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
 
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || !conversationId) return;
+    if (!text || !selected) return;
+
+    let convId: string | null = conversationId;
+    if (!convId) {
+      const cres = await getOrCreateConversation(selected.demandeId);
+      if (!cres.conversationId) {
+        alert(cres.error ?? "Impossible de créer la conversation.");
+        return;
+      }
+      convId = cres.conversationId;
+      setConversationId(convId);
+    }
+    if (!convId) return;
+
     setSending(true);
-    const res = await sendMessage(conversationId, text);
+    const res = await sendMessage(convId, text);
     setSending(false);
     if (res.success) {
       setInput("");
@@ -190,6 +203,8 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
         read_at: null,
       };
       setMessages((prev) => [...prev, newMsg]);
+    } else if (res.error) {
+      alert(res.error);
     }
   };
 
@@ -535,7 +550,13 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
 
           {/* Zone de saisie */}
           <div className="border-t border-slate-200 bg-white p-4">
-            <div className="flex gap-2">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSend();
+              }}
+              className="flex gap-2"
+            >
               <button
                 type="button"
                 className="shrink-0 rounded p-2 text-slate-500 hover:bg-slate-100"
@@ -547,22 +568,16 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
                 placeholder="Écrivez votre message..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
                 className="flex-1"
               />
               <Button
-                onClick={handleSend}
+                type="submit"
                 disabled={sending || !input.trim()}
                 className="shrink-0 bg-[#213398] hover:bg-[#1a2980]"
               >
                 <Send className="h-4 w-4" />
               </Button>
-            </div>
+            </form>
             {userType === "owner" && !["replied", "accepted", "rejected"].includes(selected.demandeStatus ?? "") && (
               <div className="mt-2 flex flex-wrap gap-2">
                 <Button

@@ -15,9 +15,32 @@ export async function getOrCreateConversation(demandeId: string) {
 
   if (conv) return { conversationId: conv.id, error: null };
 
+  const { data: demande } = await supabase
+    .from("demandes")
+    .select("seeker_id, salle_id")
+    .eq("id", demandeId)
+    .maybeSingle();
+
+  if (!demande) return { error: "Demande introuvable", conversationId: null };
+
+  const { data: salle } = await supabase
+    .from("salles")
+    .select("owner_id")
+    .eq("id", (demande as { salle_id: string }).salle_id)
+    .maybeSingle();
+
+  if (!salle) return { error: "Salle introuvable", conversationId: null };
+
+  const demandeRow = demande as { seeker_id: string; salle_id: string };
+  const salleRow = salle as { owner_id: string };
   const { data: newConv, error } = await supabase
     .from("conversations")
-    .insert({ demande_id: demandeId })
+    .insert({
+      demande_id: demandeId,
+      seeker_id: demandeRow.seeker_id,
+      owner_id: salleRow.owner_id,
+      salle_id: demandeRow.salle_id,
+    })
     .select("id")
     .single();
 

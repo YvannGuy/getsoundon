@@ -4,25 +4,31 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 
-/** Vérifie que l'utilisateur est propriétaire de la salle de la demande. */
+/** Vérifie que l'utilisateur est propriétaire de la salle de la demande. Retourne aussi seeker_id et owner_id. */
 async function ensureOwnerAccess(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   demandeId: string
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; seekerId?: string; ownerId?: string; salleId?: string }> {
   const { data: demande } = await supabase
     .from("demandes")
-    .select("salle_id")
+    .select("salle_id, seeker_id")
     .eq("id", demandeId)
     .maybeSingle();
   if (!demande) return { ok: false };
+  const d = demande as { salle_id: string; seeker_id: string };
   const { data: salle } = await supabase
     .from("salles")
     .select("owner_id")
-    .eq("id", (demande as { salle_id: string }).salle_id)
+    .eq("id", d.salle_id)
     .eq("owner_id", userId)
     .maybeSingle();
-  return { ok: !!salle };
+  return {
+    ok: !!salle,
+    seekerId: d.seeker_id,
+    ownerId: salle ? (salle as { owner_id: string }).owner_id : undefined,
+    salleId: d.salle_id,
+  };
 }
 
 /** Met à jour le statut d'une demande (accepted, rejected, replied). Pour replied, envoie aussi le message dans la conversation. */
@@ -37,7 +43,7 @@ export async function updateDemandeStatusAction(
   } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Non connecté" };
 
-  const { ok } = await ensureOwnerAccess(supabase, user.id, demandeId);
+  const { ok, seekerId, ownerId, salleId } = await ensureOwnerAccess(supabase, user.id, demandeId);
   if (!ok) return { success: false, error: "Non autorisé" };
 
   const msg =
@@ -65,10 +71,10 @@ export async function updateDemandeStatusAction(
       .eq("demande_id", demandeId)
       .maybeSingle();
     let convId = conv?.id;
-    if (!convId) {
+    if (!convId && seekerId && ownerId && salleId) {
       const { data: newConv } = await supabase
         .from("conversations")
-        .insert({ demande_id: demandeId })
+        .insert({ demande_id: demandeId, seeker_id: seekerId, owner_id: ownerId, salle_id: salleId })
         .select("id")
         .single();
       convId = newConv?.id;
