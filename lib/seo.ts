@@ -15,7 +15,7 @@ const defaultOgImage = `${baseUrl}/og-image.png`;
 export const defaultMetadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: `${siteName} - Trouvez et réservez une salle pour vos événements cultuels`,
+    default: `${siteName} - Salledeculte.com`,
     template: `%s | ${siteName}`,
   },
   description:

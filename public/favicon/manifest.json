@@ -4,15 +4,15 @@
   "description": "Trouvez et réservez une salle pour vos événements cultuels en Île-de-France",
   "icons": [
     {
-      "src": "/favicon/icon-192.png",
+      "src": "/favicon/icon0.svg",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/favicon/icon-512.png",
+      "src": "/favicon/icon0.svg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "maskable"
     }
   ],
