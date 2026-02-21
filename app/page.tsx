@@ -283,7 +283,7 @@ export default async function Home() {
                   Gratuit
                 </p>
                 <ul className="mt-5 flex-1 space-y-2.5">
-                  {["3 demandes offertes", "Accès complet aux annonces", "Contact direct avec les propriétaires", "Aucune carte requise"].map((feature) => (
+                  {["2 demandes offertes", "Accès complet aux annonces", "Contact direct avec les propriétaires", "Aucune carte requise"].map((feature) => (
                     <li key={feature} className="flex items-start gap-2 text-[13px] leading-[1.35] text-slate-600">
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-black" />
                       {feature}

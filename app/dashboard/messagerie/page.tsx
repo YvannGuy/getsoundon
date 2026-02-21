@@ -25,6 +25,12 @@ export default async function MessageriePage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth");
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const { data: demandes } = await supabase
     .from("demandes")
     .select("id, salle_id, date_debut, type_evenement, status, nb_personnes, message, heure_debut_souhaitee, heure_fin_souhaitee, created_at")
@@ -206,6 +212,7 @@ export default async function MessageriePage({
       <MessagerieClient
         threads={paginatedThreads}
         currentUserId={user.id}
+        currentUserFullName={(profile as { full_name?: string } | null)?.full_name ?? user.user_metadata?.full_name}
         userType="seeker"
         pagination={
           totalPages > 1

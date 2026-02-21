@@ -72,7 +72,7 @@ export function ActiverEssaiButton(props: ActiverEssaiButtonProps) {
           <DialogHeader>
             <DialogTitle>Connectez-vous pour activer votre essai</DialogTitle>
             <DialogDescription>
-              Créez un compte ou connectez-vous pour bénéficier de 3 demandes offertes, puis accédez à l&apos;espace paiement.
+              Créez un compte ou connectez-vous pour bénéficier de 2 demandes offertes, puis accédez à l&apos;espace paiement.
             </DialogDescription>
           </DialogHeader>
           <div className="mt-6 flex flex-col gap-3">

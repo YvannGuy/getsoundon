@@ -134,6 +134,11 @@ export function PaiementsClient({ transactions, stats, trialStats }: Props) {
   const maxRevenue = Math.max(...revenueData, 1);
   const pieData = [
     {
+      label: "Pass gratuit",
+      count: trialStats.totalUsersOnTrial ?? 0,
+      color: "bg-emerald-500",
+    },
+    {
       label: "Pass 24h",
       count: filtered.filter((t) => t.product_type === "pass_24h" && (t.status === "paid" || t.status === "active")).length,
       color: "bg-blue-500",
@@ -392,9 +397,10 @@ export function PaiementsClient({ transactions, stats, trialStats }: Props) {
                 className="h-24 w-24 flex-shrink-0 rounded-full"
                 style={{
                   background: `conic-gradient(
-                    #3b82f6 0deg ${pieTotal > 0 ? (pieData[0].count / pieTotal) * 360 : 0}deg,
-                    #8b5cf6 ${pieTotal > 0 ? (pieData[0].count / pieTotal) * 360 : 0}deg ${pieTotal > 0 ? ((pieData[0].count + pieData[1].count) / pieTotal) * 360 : 0}deg,
-                    #f59e0b ${pieTotal > 0 ? ((pieData[0].count + pieData[1].count) / pieTotal) * 360 : 0}deg 360deg
+                    #10b981 0deg ${pieTotal > 0 ? (pieData[0].count / pieTotal) * 360 : 0}deg,
+                    #3b82f6 ${pieTotal > 0 ? (pieData[0].count / pieTotal) * 360 : 0}deg ${pieTotal > 0 ? ((pieData[0].count + pieData[1].count) / pieTotal) * 360 : 0}deg,
+                    #8b5cf6 ${pieTotal > 0 ? ((pieData[0].count + pieData[1].count) / pieTotal) * 360 : 0}deg ${pieTotal > 0 ? ((pieData[0].count + pieData[1].count + pieData[2].count) / pieTotal) * 360 : 0}deg,
+                    #f59e0b ${pieTotal > 0 ? ((pieData[0].count + pieData[1].count + pieData[2].count) / pieTotal) * 360 : 0}deg 360deg
                   )`,
                 }}
               />

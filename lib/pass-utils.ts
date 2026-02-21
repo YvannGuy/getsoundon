@@ -31,7 +31,7 @@ export async function hasAccessToBrowseOthers(
   if (!userId) return false;
   const supabase = createAdminClient();
   const settings = options?.settings ?? (await import("@/app/actions/admin-settings").then((m) => m.getPlatformSettings()));
-  const freeTotal = settings?.pass?.demandes_gratuites ?? 3;
+  const freeTotal = settings?.pass?.demandes_gratuites ?? 2;
 
   const paidOrActive = ["paid", "active"];
 

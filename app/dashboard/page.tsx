@@ -106,7 +106,7 @@ export default async function DashboardPage() {
   const convsCount = convIds.length;
 
   const freeUsed = totalDemandes;
-  const freeTotal = settings?.pass?.demandes_gratuites ?? 3;
+  const freeTotal = settings?.pass?.demandes_gratuites ?? 2;
   const isTrialActive = trialActivated && freeUsed < freeTotal;
 
   const now = new Date();

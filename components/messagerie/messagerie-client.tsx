@@ -86,9 +86,17 @@ type PaginationInfo = {
   pageSize: number;
 };
 
+function getInitials(fullName: string): string {
+  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
 type Props = {
   threads: Thread[];
   currentUserId: string;
+  currentUserFullName?: string | null;
   userType: "seeker" | "owner";
   pagination?: PaginationInfo | null;
   /** Quand défini, ouvre automatiquement la conversation correspondante */
@@ -111,7 +119,14 @@ const TYPE_EVENEMENT_LABEL: Record<string, string> = {
   retraite: "Retraite",
 };
 
-export function MessagerieClient({ threads, currentUserId, userType, pagination, initialDemandeId }: Props) {
+export function MessagerieClient({
+  threads,
+  currentUserId,
+  currentUserFullName,
+  userType,
+  pagination,
+  initialDemandeId,
+}: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<Thread | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -497,6 +512,8 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
   };
 
   const otherName = selected?.seekerName ?? "";
+  const myInitials = getInitials(currentUserFullName ?? "") || "?";
+  const otherInitials = getInitials(otherName) || "?";
   const statusTag = STATUS_TAG[selected?.demandeStatus ?? "sent"] ?? STATUS_TAG.sent;
   const demandeLink = userType === "seeker" ? "/dashboard/demandes" : "/proprietaire/demandes";
 
@@ -844,7 +861,7 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
                 return (
                   <div key={m.id} className={`flex gap-3 ${isMe ? "flex-row-reverse" : ""}`}>
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-medium text-slate-600">
-                      {isMe ? "M" : otherName.charAt(0)}
+                      {isMe ? myInitials : otherInitials}
                     </div>
                     <div
                       className={`group relative max-w-[85%] rounded-2xl px-4 py-2 ${

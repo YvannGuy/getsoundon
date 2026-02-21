@@ -25,6 +25,12 @@ export default async function MessageriePage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth");
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const { data: mySalles } = await supabase
     .from("salles")
     .select("id")
@@ -226,6 +232,7 @@ export default async function MessageriePage({
         threads={paginatedThreads}
         initialDemandeId={demandeIdParam}
         currentUserId={user.id}
+        currentUserFullName={(profile as { full_name?: string } | null)?.full_name ?? user.user_metadata?.full_name}
         userType="owner"
         pagination={
           totalPages > 1
