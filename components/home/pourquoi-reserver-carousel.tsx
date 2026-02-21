@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Info } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 import { SectionReveal } from "@/components/ui/section-reveal";
+
+const AUTOPLAY_INTERVAL_MS = 5000;
 
 const BLOCS = [
   {
@@ -41,7 +43,16 @@ const BLOCS = [
 
 export function PourquoiReserverCarousel() {
   const [index, setIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const bloc = BLOCS[index];
+
+  useEffect(() => {
+    if (isPaused) return;
+    const id = setInterval(() => {
+      setIndex((i) => (i === BLOCS.length - 1 ? 0 : i + 1));
+    }, AUTOPLAY_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [isPaused]);
 
   return (
     <SectionReveal className="bg-white py-12">
@@ -51,7 +62,11 @@ export function PourquoiReserverCarousel() {
           <span className="font-bold text-[#213398]">{siteConfig.name}</span>
         </h2>
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_1.2fr] lg:items-start">
+        <div
+          className="mt-10 grid gap-8 lg:grid-cols-[1fr_1.2fr] lg:items-start"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
           {/* Bloc texte + contrôles */}
           <div className="flex flex-col">
             <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-6">

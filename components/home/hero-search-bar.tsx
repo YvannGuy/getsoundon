@@ -41,7 +41,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
           value={ville}
           onChange={setVille}
           placeholder="Ville"
-          inputClassName="h-11 border-0 bg-transparent pl-9 pr-2 focus-visible:ring-0"
+          inputClassName="h-11 rounded-lg border border-slate-200 bg-white pl-9 pr-2 focus-visible:border-[#213398] focus-visible:ring-[#213398]/20"
         />
       </div>
       <div className="relative flex-1 px-4 py-3 sm:min-w-0">
@@ -49,7 +49,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
           value={date}
           onChange={setDate}
           placeholder="Date"
-          inputClassName="border-0 bg-transparent pr-20 focus-visible:ring-0"
+          inputClassName="h-11 rounded-lg border border-slate-200 bg-white pr-20 focus-visible:border-[#213398] focus-visible:ring-[#213398]/20"
         />
       </div>
       <div className="relative flex-1 px-4 py-3 sm:min-w-0">
@@ -59,13 +59,13 @@ export function HeroSearchBar({ className }: { className?: string }) {
           value={personnes}
           onChange={(e) => setPersonnes(e.target.value)}
           placeholder="Nombre de personnes"
-          className="h-11 border-0 bg-transparent pl-9 pr-2 focus-visible:ring-0"
+          className="h-11 rounded-lg border border-slate-200 bg-white pl-9 pr-2 focus-visible:border-[#213398] focus-visible:ring-[#213398]/20"
         />
       </div>
       <div className="relative flex-1 px-4 py-3 sm:min-w-0">
         <Building2 className="pointer-events-none absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Select value={type || "all"} onValueChange={(v) => setType(v === "all" ? "" : v)}>
-          <SelectTrigger className="h-11 w-full border-0 bg-transparent pl-9 pr-8 shadow-none ring-0 focus:ring-0">
+          <SelectTrigger className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-8 shadow-none focus:border-[#213398] focus:ring-[#213398]/20">
             <SelectValue placeholder="Type d'événement" />
           </SelectTrigger>
           <SelectContent>
