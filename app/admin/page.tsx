@@ -4,12 +4,14 @@ import {
   Clock,
   CreditCard,
   Euro,
+  Gift,
   Mail,
   Star,
   TrendingUp,
 } from "lucide-react";
 
 import { validateSalleFormAction } from "@/app/actions/admin";
+import { getAdminTrialStats } from "@/lib/admin-trial-stats";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,15 +25,20 @@ export default async function AdminDashboardPage() {
     { count: pendingCount },
     { count: activeCount },
     { count: demandesCount7j },
-    { data: subscriptions },
+    { data: payments },
     { data: demandes30j },
     { data: recentSalles },
     { data: recentProfiles },
+    trialStats,
   ] = await Promise.all([
     supabase.from("salles").select("*", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("salles").select("*", { count: "exact", head: true }).eq("status", "approved"),
     supabase.from("demandes").select("*", { count: "exact", head: true }).gte("created_at", weekAgo),
-    supabase.from("subscriptions").select("plan_id").eq("status", "active"),
+    supabase
+      .from("payments")
+      .select("id, user_id, amount, product_type, status, created_at")
+      .eq("status", "paid")
+      .order("created_at", { ascending: false }),
     supabase
       .from("demandes")
       .select("created_at")
@@ -47,11 +54,17 @@ export default async function AdminDashboardPage() {
       .select("id, email, full_name, user_type")
       .order("created_at", { ascending: false })
       .limit(5),
+    getAdminTrialStats(),
   ]);
 
-  const passPremium = subscriptions?.filter((s) => s.plan_id === "pro" || s.plan_id === "premium").length ?? 0;
-  const passBasic = (subscriptions?.length ?? 0) - passPremium;
-  const passActifs = subscriptions?.length ?? 0;
+  const paidPayments = (payments ?? []).filter((p) => p.status === "paid");
+  const passActifs = paidPayments.length;
+  const pass24h = paidPayments.filter((p) => p.product_type === "pass_24h").length;
+  const pass48h = paidPayments.filter((p) => p.product_type === "pass_48h").length;
+  const passAbonnement = paidPayments.filter((p) => p.product_type === "abonnement").length;
+  const revenue30 = paidPayments
+    .filter((p) => new Date(p.created_at) >= new Date(monthAgo))
+    .reduce((s, p) => s + (p.amount ?? 0), 0);
 
   const demandesParJour = Array.from({ length: 30 }, (_, i) => {
     const d = new Date();
@@ -126,8 +139,12 @@ export default async function AdminDashboardPage() {
             <Euro className="absolute right-6 top-6 h-5 w-5 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-black">—</p>
-            <p className="text-xs text-slate-500">À configurer (Stripe)</p>
+            <p className="text-2xl font-bold text-black">
+              {(revenue30 / 100).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
+            </p>
+            <p className="text-xs text-slate-500">
+              {paidPayments.filter((p) => new Date(p.created_at) >= new Date(monthAgo)).length} transactions
+            </p>
           </CardContent>
         </Card>
         <Card className="relative bg-white shadow-sm">
@@ -139,7 +156,23 @@ export default async function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-black">{passActifs}</p>
-            <p className="text-xs text-slate-500">{passPremium} Premium, {passBasic} Basic</p>
+            <p className="text-xs text-slate-500">
+              {pass24h} Pass 24h, {pass48h} Pass 48h, {passAbonnement} Abonnement
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="relative overflow-hidden border-l-4 border-l-teal-500 bg-white shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">
+              Pass gratuit
+            </CardTitle>
+            <Gift className="absolute right-6 top-6 h-5 w-5 text-teal-500" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-black">{trialStats.totalUsersOnTrial}</p>
+            <p className="text-xs text-slate-500">
+              {trialStats.organisateursOnTrial} organisateurs, {trialStats.proprietairesOnTrial} propriétaires • {trialStats.totalClicksRemaining} clics restants
+            </p>
           </CardContent>
         </Card>
         <Card className="relative bg-white shadow-sm">
@@ -257,7 +290,32 @@ export default async function AdminDashboardPage() {
             </Link>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-500">Aucun paiement récent</p>
+            {!paidPayments.length ? (
+              <p className="text-sm text-slate-500">Aucun paiement récent</p>
+            ) : (
+              <ul className="space-y-3">
+                {paidPayments.slice(0, 5).map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center justify-between rounded-lg border border-slate-100 p-3"
+                  >
+                    <div>
+                      <p className="font-medium text-black">
+                        {(p.amount ?? 0) / 100} €
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {p.product_type === "pass_24h" ? "Pass 24h" : p.product_type === "pass_48h" ? "Pass 48h" : "Abonnement"} • {formatAgo(p.created_at)}
+                      </p>
+                    </div>
+                    <Link href={`/admin/paiements?paymentId=${p.id}`}>
+                      <Button variant="ghost" size="sm">
+                        Voir
+                      </Button>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
         <Card className="bg-white shadow-sm">

@@ -4,7 +4,6 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AlertTriangle, CheckCircle2, Clock, Crown, FileText, Heart, Inbox, Lock, MessageCircle } from "lucide-react";
 
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SearchModalButton } from "@/components/search/search-modal";

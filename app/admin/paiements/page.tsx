@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getAdminTrialStats } from "@/lib/admin-trial-stats";
 import { PaiementsClient } from "./paiements-client";
 import { Pagination } from "@/components/ui/pagination";
 
@@ -25,44 +26,34 @@ export default async function AdminPaiementsPage({
   const page = Math.max(1, parseInt(String(pageParam || "1"), 10) || 1);
   const supabase = createAdminClient();
 
-  const [{ data: subscriptions }, { data: profiles }] = await Promise.all([
+  const [{ data: payments }, { data: profiles }, trialStats] = await Promise.all([
     supabase
-      .from("subscriptions")
-      .select("id, user_id, plan_id, status, created_at, stripe_subscription_id")
+      .from("payments")
+      .select("id, user_id, amount, product_type, status, stripe_session_id, created_at")
       .order("created_at", { ascending: false })
-      .limit(100),
+      .limit(500),
     supabase.from("profiles").select("id, email, full_name").limit(500),
+    getAdminTrialStats(),
   ]);
 
   const profileMap = new Map(
     (profiles ?? []).map((p) => [p.id, { full_name: p.full_name, email: p.email }])
   );
 
-  const transactions: TransactionRow[] = [];
-
-  (subscriptions ?? []).forEach((s) => {
-    const profile = profileMap.get(s.user_id);
-    const planToProduct: Record<string, string> = {
-      basic: "pass_24h",
-      pro: "pass_48h",
-      premium: "abonnement",
-    };
-    transactions.push({
-      id: s.id,
-      user_id: s.user_id,
+  const transactions: TransactionRow[] = (payments ?? []).map((p) => {
+    const profile = profileMap.get(p.user_id);
+    return {
+      id: p.id,
+      user_id: p.user_id,
       user_name: profile?.full_name ?? null,
       user_email: profile?.email ?? "",
-      product_type: planToProduct[s.plan_id ?? ""] ?? "abonnement",
-      amount: s.plan_id === "pro" ? 4999 : s.plan_id === "premium" ? 9999 : 1999,
-      status: s.status === "active" ? "paid" : s.status === "past_due" ? "pending" : "failed",
-      reference: s.stripe_subscription_id ?? null,
-      created_at: s.created_at,
-    });
+      product_type: p.product_type ?? "autre",
+      amount: p.amount ?? 0,
+      status: p.status ?? "pending",
+      reference: p.stripe_session_id ?? null,
+      created_at: p.created_at,
+    };
   });
-
-  transactions.sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
 
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -96,7 +87,7 @@ export default async function AdminPaiementsPage({
 
   return (
     <div className="p-6 md:p-8">
-      <PaiementsClient transactions={paginatedTx} stats={stats} />
+      <PaiementsClient transactions={paginatedTx} stats={stats} trialStats={trialStats} />
       <Pagination
         baseUrl="/admin/paiements"
         currentPage={currentPage}

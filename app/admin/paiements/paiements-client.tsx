@@ -9,6 +9,7 @@ import {
   CreditCard,
   Eye,
   ExternalLink,
+  Gift,
   RotateCcw,
   Search,
   XCircle,
@@ -16,8 +17,10 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ClientPagination } from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
 import { PaymentDetailModal } from "./payment-detail-modal";
+import type { TrialStats } from "@/lib/admin-trial-stats";
 
 type Transaction = {
   id: string;
@@ -41,6 +44,7 @@ type Props = {
     failed: number;
     conversionRate: number;
   };
+  trialStats: TrialStats;
 };
 
 function formatProduct(type: string) {
@@ -79,13 +83,16 @@ function formatDate(d: string) {
   });
 }
 
-export function PaiementsClient({ transactions, stats }: Props) {
+const TRIAL_USERS_PAGE_SIZE = 4;
+
+export function PaiementsClient({ transactions, stats, trialStats }: Props) {
   const [search, setSearch] = useState("");
   const [productFilter, setProductFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [periodFilter, setPeriodFilter] = useState("30");
   const [viewTransaction, setViewTransaction] = useState<Transaction | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [trialUsersPage, setTrialUsersPage] = useState(1);
 
   const filtered = useMemo(() => {
     const periodMs = parseInt(periodFilter, 10) * 24 * 60 * 60 * 1000;
@@ -222,6 +229,89 @@ export function PaiementsClient({ transactions, stats }: Props) {
           </div>
         </CardContent>
       </Card>
+
+      <div className="mb-6 rounded-lg border border-teal-200 bg-teal-50/50 p-4">
+        <h3 className="mb-4 flex items-center gap-2 font-semibold text-teal-800">
+          <Gift className="h-5 w-5" />
+          Pass gratuit
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-slate-500">Utilisateurs en pass gratuit</p>
+              <p className="text-xl font-bold text-black">{trialStats.totalUsersOnTrial}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-slate-500">Organisateurs</p>
+              <p className="text-xl font-bold text-black">{trialStats.organisateursOnTrial}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-slate-500">Propriétaires</p>
+              <p className="text-xl font-bold text-black">{trialStats.proprietairesOnTrial}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-slate-500">Clics restants (total)</p>
+              <p className="text-xl font-bold text-black">{trialStats.totalClicksRemaining}</p>
+            </CardContent>
+          </Card>
+        </div>
+        {trialStats.usersWithClicksLeft.length > 0 && (
+          <div className="mt-4">
+            <p className="mb-2 text-sm font-medium text-slate-600">Détail par utilisateur</p>
+            <div className="overflow-x-auto rounded-md border border-slate-200 bg-white">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-slate-50 text-left text-xs font-medium text-slate-500">
+                    <th className="px-3 py-2">Utilisateur</th>
+                    <th className="px-3 py-2">Type</th>
+                    <th className="px-3 py-2 text-right">Utilisés</th>
+                    <th className="px-3 py-2 text-right">Total</th>
+                    <th className="px-3 py-2 text-right">Restants</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {trialStats.usersWithClicksLeft
+                    .slice(
+                      (trialUsersPage - 1) * TRIAL_USERS_PAGE_SIZE,
+                      (trialUsersPage - 1) * TRIAL_USERS_PAGE_SIZE + TRIAL_USERS_PAGE_SIZE
+                    )
+                    .map((u) => (
+                      <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50">
+                        <td className="px-3 py-2">
+                          <Link
+                            href={`/admin/utilisateurs?userId=${u.id}`}
+                            className="font-medium text-blue-600 hover:underline"
+                          >
+                            {u.full_name || u.email || "—"}
+                          </Link>
+                        </td>
+                        <td className="px-3 py-2">
+                          {u.user_type === "seeker" ? "Organisateur" : u.user_type === "owner" ? "Propriétaire" : u.user_type ?? "—"}
+                        </td>
+                        <td className="px-3 py-2 text-right">{u.used}</td>
+                        <td className="px-3 py-2 text-right">{u.total}</td>
+                        <td className="px-3 py-2 text-right font-medium text-teal-600">{u.remaining}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+            <ClientPagination
+              currentPage={trialUsersPage}
+              totalPages={Math.ceil(trialStats.usersWithClicksLeft.length / TRIAL_USERS_PAGE_SIZE) || 1}
+              totalItems={trialStats.usersWithClicksLeft.length}
+              pageSize={TRIAL_USERS_PAGE_SIZE}
+              onPageChange={setTrialUsersPage}
+            />
+          </div>
+        )}
+      </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card>
