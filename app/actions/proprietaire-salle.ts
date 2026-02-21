@@ -59,6 +59,7 @@ export async function updateSalleOwnerAction(
   const pricePerDay = parseInt(String(formData.get("price_per_day") ?? "0"), 10);
   const description = String(formData.get("description") ?? "").trim();
   const contactPhone = String(formData.get("contact_phone") ?? "").trim() || null;
+  const displayContactPhone = formData.get("display_contact_phone") === "1";
 
   if (!name || !city || !address || capacity <= 0 || pricePerDay <= 0) {
     return { success: false, error: "Champs obligatoires manquants ou invalides" };
@@ -115,6 +116,7 @@ export async function updateSalleOwnerAction(
       price_per_day: pricePerDay,
       description,
       contact_phone: contactPhone,
+      display_contact_phone: displayContactPhone,
       images,
       updated_at: new Date().toISOString(),
     })

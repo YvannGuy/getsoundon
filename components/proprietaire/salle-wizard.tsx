@@ -7,12 +7,14 @@ import {
   Accessibility,
   Armchair,
   Bell,
+  Briefcase,
   Camera,
   CheckCircle,
   ChevronRight,
   Clock,
   Droplets,
   Eye,
+  Flame,
   LayoutGrid,
   Lightbulb,
   Moon,
@@ -42,8 +44,10 @@ const FEATURES = [
   { id: "pmr", label: "Accès PMR", icon: Accessibility },
   { id: "scene", label: "Scène / estrade", icon: LayoutGrid },
   { id: "climatisation", label: "Climatisation", icon: Snowflake },
+  { id: "chauffage", label: "Chauffage", icon: Flame },
   { id: "parking", label: "Parking disponible", icon: ParkingCircle },
   { id: "mobilier", label: "Chaises / mobilier inclus", icon: Armchair },
+  { id: "bureau", label: "Bureau", icon: Briefcase },
   { id: "son", label: "Système son", icon: Volume2 },
   { id: "lumiere", label: "Lumière naturelle", icon: Sun },
 ] as const;
@@ -65,7 +69,7 @@ const ACCEPTED_EVENTS = [
 ] as const;
 
 const INCLUSIONS = [
-  { id: "location", label: "Location de la salle pour la journée" },
+  { id: "location", label: "Location de la salle" },
   { id: "mobilier", label: "Mobilier et équipements" },
   { id: "sono", label: "Système de sonorisation" },
 ] as const;
@@ -79,6 +83,7 @@ type WizardData = {
   capacite: string;
   adresse: string;
   telephone: string;
+  displayContactPhone: boolean;
   lat?: number;
   lng?: number;
   postalCode?: string;
@@ -86,6 +91,7 @@ type WizardData = {
   tarifParJour: string;
   tarifMensuel: string;
   tarifHoraire: string;
+  cautionRequise: boolean;
   inclusions: string[];
   placesParking: string;
   features: string[];
@@ -106,10 +112,12 @@ const initialData: WizardData = {
   capacite: "",
   adresse: "",
   telephone: "",
+  displayContactPhone: true,
   description: "",
   tarifParJour: "",
   tarifMensuel: "",
   tarifHoraire: "",
+  cautionRequise: false,
   inclusions: ["location"],
   placesParking: "",
   features: [],
@@ -233,6 +241,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
     formData.set("capacite", data.capacite);
     formData.set("adresse", data.adresse);
     formData.set("telephone", data.telephone);
+    formData.set("displayContactPhone", data.displayContactPhone ? "1" : "0");
     if (data.postalCode) formData.set("postalCode", data.postalCode);
     if (data.lat != null) formData.set("lat", String(data.lat));
     if (data.lng != null) formData.set("lng", String(data.lng));
@@ -240,6 +249,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
     formData.set("tarifParJour", data.tarifParJour);
     formData.set("tarifMensuel", data.tarifMensuel);
     formData.set("tarifHoraire", data.tarifHoraire);
+    formData.set("cautionRequise", data.cautionRequise ? "1" : "0");
     formData.set("inclusions", JSON.stringify(data.inclusions));
     formData.set("placesParking", data.placesParking);
     formData.set("features", JSON.stringify(data.features));
@@ -606,6 +616,29 @@ function Step1({
             onChange={(e) => updateData({ telephone: e.target.value })}
             className="h-11 border-slate-200"
           />
+          <p className="text-sm font-medium text-slate-600">Souhaitez-vous être contacté par téléphone ?</p>
+          <div className="flex gap-4">
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="radio"
+                name="displayContactPhone"
+                checked={data.displayContactPhone !== false}
+                onChange={() => updateData({ displayContactPhone: true })}
+                className="h-4 w-4 border-slate-300 text-[#213398] focus:ring-[#213398]"
+              />
+              <span className="text-sm text-slate-700">Oui</span>
+            </label>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="radio"
+                name="displayContactPhone"
+                checked={data.displayContactPhone === false}
+                onChange={() => updateData({ displayContactPhone: false })}
+                className="h-4 w-4 border-slate-300 text-[#213398] focus:ring-[#213398]"
+              />
+              <span className="text-sm text-slate-700">Non</span>
+            </label>
+          </div>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-700">Description</label>
@@ -655,6 +688,31 @@ function Step1({
             </div>
           </div>
           <p className="text-xs text-slate-400">Vous pouvez choisir les 3 ou un des 3</p>
+        </div>
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-slate-700">Une caution est-elle demandée ?</p>
+          <div className="flex gap-4">
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="radio"
+                name="cautionRequise"
+                checked={data.cautionRequise === true}
+                onChange={() => updateData({ cautionRequise: true })}
+                className="h-4 w-4 border-slate-300 text-[#213398] focus:ring-[#213398]"
+              />
+              <span className="text-sm text-slate-700">Oui</span>
+            </label>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="radio"
+                name="cautionRequise"
+                checked={data.cautionRequise === false}
+                onChange={() => updateData({ cautionRequise: false })}
+                className="h-4 w-4 border-slate-300 text-[#213398] focus:ring-[#213398]"
+              />
+              <span className="text-sm text-slate-700">Non</span>
+            </label>
+          </div>
         </div>
       </div>
       <Button
@@ -1103,6 +1161,10 @@ function Step5({
               .filter(Boolean)
               .join(" · ") || "—"}
           </p>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-slate-500">Caution demandée</p>
+          <p className="mt-1 font-medium text-black">{data.cautionRequise ? "Oui" : "Non"}</p>
         </div>
         <div>
           <p className="text-xs font-medium text-slate-500">Ce tarif comprend</p>

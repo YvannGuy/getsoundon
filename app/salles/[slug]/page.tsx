@@ -13,6 +13,7 @@ import {
   CookingPot,
   HelpCircle,
   Piano,
+  Shield,
   Tv,
   Volume2,
   Users,
@@ -220,6 +221,12 @@ export default async function SalleDetailPage({
               <section>
                 <h2 className="mb-3 text-lg font-semibold text-black">Conditions d&apos;accueil</h2>
                 <ul className="space-y-3">
+                  {salle.cautionRequise && (
+                    <li className="flex items-start gap-3 text-sm text-slate-700">
+                      <Shield className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                      Caution demandée
+                    </li>
+                  )}
                   {salle.conditions.map((c, i) => {
                     const Icon = iconMap[c.icon] ?? Clock;
                     return (
@@ -316,13 +323,13 @@ export default async function SalleDetailPage({
                     <MessageCircle className="h-4 w-4" />
                     Envoyer un message
                   </Link>
-                  {salle.contactPhone && (
+                  {salle.displayContactPhone !== false && salle.contactPhone && (
                     <a
                       href={`tel:${salle.contactPhone.replace(/\s/g, "")}`}
                       className="flex items-center gap-2 text-[13px] font-medium text-slate-600 hover:text-black"
                     >
                       <Phone className="h-4 w-4" />
-                      Appeler
+                      Contactez le propriétaire
                     </a>
                   )}
                 </div>

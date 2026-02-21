@@ -31,14 +31,16 @@ const FEATURE_TO_SALLE: Record<string, { label: string; sublabel?: string; icon:
   pmr: { label: "Accès PMR", sublabel: "Accessible aux personnes à mobilité réduite", icon: "wheelchair" },
   scene: { label: "Scène / estrade", icon: "list" },
   climatisation: { label: "Climatisation", icon: "check" },
+  chauffage: { label: "Chauffage", icon: "check" },
   parking: { label: "Parking", sublabel: "places disponibles à proximité", icon: "parking" },
   mobilier: { label: "Mobilier", sublabel: "Chaises et tables modulables incluses", icon: "furniture" },
+  bureau: { label: "Bureau", icon: "check" },
   son: { label: "Sonorisation", sublabel: "Système audio professionnel inclus", icon: "speaker" },
   lumiere: { label: "Lumière naturelle", icon: "check" },
 };
 
 const INCLUSION_LABELS: Record<string, string> = {
-  location: "Location de la salle pour la journée",
+  location: "Location de la salle",
   mobilier: "Mobilier et équipements",
   sono: "Système de sonorisation",
 };
