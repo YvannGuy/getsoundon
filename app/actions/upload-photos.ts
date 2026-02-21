@@ -1,8 +1,19 @@
 "use server";
 
+import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
 
 const BUCKET_NAME = "salle-photos";
+const WATERMARK_TEXT = "salledeculte.com";
+
+function createWatermarkSvg(): Buffer {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="280" height="36">
+      <text x="8" y="26" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="rgba(255,255,255,0.7)" stroke="rgba(0,0,0,0.4)" stroke-width="1">${WATERMARK_TEXT}</text>
+    </svg>
+  `;
+  return Buffer.from(svg.trim());
+}
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png"];
 
@@ -43,15 +54,33 @@ export async function uploadSallePhotos(formData: FormData): Promise<UploadPhoto
   const prefix = `${user.id}`;
   const timestamp = Date.now();
 
+  const watermarkSvg = createWatermarkSvg();
+
   for (let i = 0; i < validFiles.length; i++) {
     const file = validFiles[i];
-    const ext = file.name.match(/\.(jpe?g|png)$/i)?.[1] ?? "jpg";
-    const path = `${prefix}/${timestamp}-${i}.${ext}`;
+    const path = `${prefix}/${timestamp}-${i}.jpg`;
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    let buffer = Buffer.from(await file.arrayBuffer());
+
+    try {
+      const watermarked = await sharp(buffer)
+        .composite([
+          {
+            input: watermarkSvg,
+            gravity: "southeast",
+            top: 8,
+            left: 8,
+          },
+        ])
+        .jpeg({ quality: 90 })
+        .toBuffer();
+      buffer = Buffer.from(watermarked);
+    } catch {
+      // Si sharp échoue, on garde l'image originale
+    }
 
     const { error } = await supabase.storage.from(BUCKET_NAME).upload(path, buffer, {
-      contentType: file.type,
+      contentType: "image/jpeg",
       upsert: false,
     });
 

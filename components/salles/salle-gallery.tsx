@@ -11,6 +11,7 @@ export function SalleGallery({
   images: string[];
   name: string;
 }) {
+  const preventSave = useCallback((e: React.MouseEvent) => e.preventDefault(), []);
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
 
@@ -38,7 +39,10 @@ export function SalleGallery({
 
   return (
     <>
-      <div className="mb-8 grid gap-3 md:grid-cols-[1fr_120px]">
+      <div
+        className="mb-8 grid gap-3 md:grid-cols-[1fr_120px] select-none"
+        onContextMenu={preventSave}
+      >
         <button
           type="button"
           onClick={() => {
@@ -51,9 +55,10 @@ export function SalleGallery({
             src={imgs[0]}
             alt={name}
             fill
-            className="object-cover"
+            className="object-cover pointer-events-none"
             priority
             sizes="(max-width: 768px) 100vw, 65vw"
+            draggable={false}
           />
         </button>
         <div className="hidden flex-col gap-3 md:flex">
@@ -67,7 +72,7 @@ export function SalleGallery({
               }}
               className="relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-slate-100 transition-opacity hover:opacity-95"
             >
-              <Image src={img} alt="" fill className="object-cover" sizes="120px" />
+              <Image src={img} alt="" fill className="object-cover pointer-events-none" sizes="120px" draggable={false} />
             </button>
           ))}
         </div>
@@ -75,8 +80,9 @@ export function SalleGallery({
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 select-none"
           onClick={() => setOpen(false)}
+          onContextMenu={preventSave}
         >
           <div
             className="relative max-h-[360px] max-w-[min(480px,calc(100vw-2rem))]"
@@ -87,6 +93,8 @@ export function SalleGallery({
               src={current}
               alt={name}
               className="max-h-[360px] w-auto max-w-full rounded-lg object-contain"
+              draggable={false}
+              onContextMenu={preventSave}
             />
 
             {/* Croix fermer – en overlay sur la photo, coin supérieur droit */}
