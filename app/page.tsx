@@ -11,6 +11,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { CategoryCarousel } from "@/components/home/category-carousel";
 import { HeroSearchBar } from "@/components/home/hero-search-bar";
+import { InstallAppPopup } from "@/components/home/install-app-popup";
 import { PourquoiReserverCarousel } from "@/components/home/pourquoi-reserver-carousel";
 import { SectionReveal } from "@/components/ui/section-reveal";
 import { siteConfig } from "@/config/site";
@@ -111,6 +112,7 @@ export default async function Home() {
   return (
     <main className="bg-[#f3f6fa] text-black">
       <SiteHeader />
+      <InstallAppPopup />
 
       <SectionReveal id="recherche" className="relative min-h-[480px] overflow-hidden md:min-h-[560px]">
         <div className="absolute inset-0">
