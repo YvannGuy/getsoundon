@@ -158,32 +158,33 @@ export function MessagerieClient({ threads, currentUserId, userType, pagination,
       const supabase = createClient();
       const next = new Map<string, string>();
       for (const { demandeId, convId } of toFetch) {
-        const { data } = await supabase
-          .from("messages")
-          .select("content")
-          .eq("conversation_id", convId)
-          .order("sent_at", { ascending: false })
-          .limit(1);
-        if (!data?.length) {
-          const { data: alt } = await supabase
+        const tryFetch = async (orderBy: string) => {
+          const res = await supabase
             .from("messages")
             .select("content")
             .eq("conversation_id", convId)
-            .order("created_at", { ascending: false })
+            .order(orderBy, { ascending: false })
             .limit(1);
-          if (alt?.length) {
-            const preview = (alt[0] as { content: string }).content;
-            next.set(demandeId, preview.length > 80 ? preview.slice(0, 77) + "..." : preview);
-          }
-        } else {
-          const preview = (data[0] as { content: string }).content;
-          next.set(demandeId, preview.length > 80 ? preview.slice(0, 77) + "..." : preview);
+          return res.data?.[0] as { content: string } | undefined;
+        };
+        const row = (await tryFetch("id")) ?? (await tryFetch("sent_at")) ?? (await tryFetch("created_at"));
+        if (row?.content) {
+          const preview = row.content.length > 80 ? row.content.slice(0, 77) + "..." : row.content;
+          next.set(demandeId, preview);
         }
       }
       if (next.size) setLastPreviews((prev) => new Map([...prev, ...next]));
     };
     fetchPreviews();
   }, [threads]);
+
+  useEffect(() => {
+    if (selected && messages.length > 0) {
+      const last = messages[messages.length - 1];
+      const preview = last.content.length > 80 ? last.content.slice(0, 77) + "..." : last.content;
+      setLastPreviews((prev) => new Map(prev).set(selected.demandeId, preview));
+    }
+  }, [selected?.demandeId, messages]);
 
   useEffect(() => {
     if (!selected) {
