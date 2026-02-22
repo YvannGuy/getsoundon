@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useActionState, useEffect, useRef, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useActionState, useEffect, useTransition, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,21 +27,9 @@ const schema = z
 type Schema = z.infer<typeof schema>;
 const initialState: AuthFormState = {};
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button
-      type="submit"
-      className="mt-5 h-11 w-full bg-[#213398] hover:bg-[#1a2980]"
-      disabled={pending}
-    >
-      {pending ? "Changement en cours..." : "Changer le mot de passe"}
-    </Button>
-  );
-}
-
 export default function NouveauMotDePassePage() {
   const [state, formAction] = useActionState(updatePasswordAction, initialState);
+  const [isPending, startTransition] = useTransition();
   const [isReady, setIsReady] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [linkExpired, setLinkExpired] = useState(false);
@@ -82,6 +69,12 @@ export default function NouveauMotDePassePage() {
     resolver: zodResolver(schema),
     defaultValues: { password: "", confirmPassword: "" },
   });
+
+  const onSubmit = (values: Schema) => {
+    const fd = new FormData();
+    fd.append("password", values.password);
+    startTransition(() => formAction(fd));
+  };
 
   if (linkExpired) {
     return (
@@ -160,9 +153,8 @@ export default function NouveauMotDePassePage() {
 
       <div className="relative flex flex-col bg-white p-6 md:p-10">
         <form
-          action={formAction}
           className="mt-8 flex max-w-md flex-col"
-          onSubmit={form.handleSubmit(() => {})}
+          onSubmit={form.handleSubmit(onSubmit)}
         >
           <h3 className="text-xl font-bold text-black">Définir mon mot de passe</h3>
           <div className="mt-5 space-y-2">
@@ -199,7 +191,13 @@ export default function NouveauMotDePassePage() {
             )}
           </div>
           {state.error && <p className="mt-3 text-sm text-red-600">{state.error}</p>}
-          <SubmitButton />
+          <Button
+            type="submit"
+            className="mt-5 h-11 w-full bg-[#213398] hover:bg-[#1a2980]"
+            disabled={isPending}
+          >
+            {isPending ? "Changement en cours..." : "Changer le mot de passe"}
+          </Button>
         </form>
         <p className="mt-6 text-center text-sm text-slate-500">
           <Link href="/auth" className="font-semibold text-black hover:underline">
