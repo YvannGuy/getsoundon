@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { CategoryCarousel } from "@/components/home/category-carousel";
+import { CategoryRotatingBold } from "@/components/home/category-rotating-bold";
 import { HeroSearchBar } from "@/components/home/hero-search-bar";
 import { InstallAppPopup } from "@/components/home/install-app-popup";
 import { PourquoiReserverCarousel } from "@/components/home/pourquoi-reserver-carousel";
@@ -250,13 +251,7 @@ export default async function Home() {
                 {siteConfig.name} pour chaque{" "}
                 <span className="font-bold text-[#213398]">occasion</span>
               </h2>
-              <div className="mt-10 grid grid-cols-2 gap-x-10 gap-y-5 sm:grid-cols-3">
-                {["Cultes", "Conférences", "Baptêmes", "Célébrations", "Retraites", "Concert", "Podcast"].map((label) => (
-                  <span key={label} className="text-lg font-medium text-slate-700">
-                    {label}
-                  </span>
-                ))}
-              </div>
+              <CategoryRotatingBold />
               <Link
                 href="/#recherche"
                 className="mt-10 inline-flex h-11 w-fit shrink-0 items-center justify-center rounded-lg bg-[#213398] px-4 text-base font-semibold text-white transition hover:bg-[#1a2980]"
