@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useFormStatus, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,6 +26,19 @@ const schema = z
 
 type Schema = z.infer<typeof schema>;
 const initialState: AuthFormState = {};
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button
+      type="submit"
+      className="mt-5 h-11 w-full bg-[#213398] hover:bg-[#1a2980]"
+      disabled={pending}
+    >
+      {pending ? "Changement en cours..." : "Changer le mot de passe"}
+    </Button>
+  );
+}
 
 export default function NouveauMotDePassePage() {
   const [state, formAction] = useActionState(updatePasswordAction, initialState);
@@ -185,9 +198,7 @@ export default function NouveauMotDePassePage() {
             )}
           </div>
           {state.error && <p className="mt-3 text-sm text-red-600">{state.error}</p>}
-          <Button type="submit" className="mt-5 h-11 w-full bg-[#213398] hover:bg-[#1a2980]">
-            Changer le mot de passe
-          </Button>
+          <SubmitButton />
         </form>
         <p className="mt-6 text-center text-sm text-slate-500">
           <Link href="/auth" className="font-semibold text-black hover:underline">

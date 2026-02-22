@@ -135,7 +135,7 @@ export async function requestPasswordResetAction(_: AuthFormState, formData: For
   const supabase = await createClient();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl}/auth/mot-de-passe-oublie/nouveau`,
+    redirectTo: `${siteUrl}/auth/callback?next=/auth/mot-de-passe-oublie/nouveau`,
   });
 
   if (error) {
