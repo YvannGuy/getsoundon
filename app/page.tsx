@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle2, Facebook, Headphones, Instagram, Shield, Star, Zap } from "lucide-react";
+import { CheckCircle2, ChevronRight, Facebook, Headphones, Instagram, Shield, Star, Zap } from "lucide-react";
 
 import { getTrialActivated } from "@/app/actions/trial";
 import { buildCanonical } from "@/lib/seo";
@@ -242,26 +242,75 @@ export default async function Home() {
         </div>
       </SectionReveal>
 
-      <SectionReveal id="comment-ca-marche" className="py-12">
+      <SectionReveal className="bg-white py-12">
         <div className="container max-w-[1120px]">
-          <h2 className="text-center text-[50px] font-semibold tracking-[-0.02em] text-black [zoom:0.5]">Comment ça marche</h2>
-          <p className="mt-2 text-center text-[25px] text-slate-500 [zoom:0.5]">Trois étapes simples pour trouver votre salle</p>
-
-          <div className="mx-auto mt-9 max-w-5xl">
-            <div className="relative">
-              <div className="absolute left-10 right-10 top-6 h-px bg-slate-200" />
-              <div className="grid gap-4 md:grid-cols-3">
-                {steps.map((step, idx) => (
-                  <div key={step.title} className="text-center">
-                    <div className="relative z-10 mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#213398] text-[16px] font-semibold text-white shadow-sm">
-                      {idx + 1}
-                    </div>
-                    <p className="mt-4 text-[28px] font-semibold text-black [zoom:0.5]">{step.title}</p>
-                    <p className="mx-auto mt-2 max-w-[210px] text-[22px] leading-[1.45] text-slate-500 [zoom:0.5]">{step.desc}</p>
-                  </div>
+          <div className="grid gap-10 lg:grid-cols-2 lg:items-stretch lg:gap-12">
+            <div className="flex flex-col">
+              <h2 className="text-[32px] font-semibold leading-tight text-black sm:text-[40px]">
+                {siteConfig.name} pour chaque{" "}
+                <span className="font-bold text-[#213398]">occasion</span>
+              </h2>
+              <div className="mt-8 grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-3">
+                {["Cultes", "Conférences", "Baptêmes", "Célébrations", "Retraites", "Concert", "Podcast"].map((label) => (
+                  <span key={label} className="text-base font-medium text-slate-700">
+                    {label}
+                  </span>
                 ))}
               </div>
+              <Link
+                href="/#recherche"
+                className="mt-8 inline-flex h-11 w-fit shrink-0 items-center justify-center rounded-lg bg-[#213398] px-4 text-base font-semibold text-white transition hover:bg-[#1a2980]"
+              >
+                Trouvez une salle
+              </Link>
             </div>
+            <div className="relative min-h-[280px] overflow-hidden rounded-xl sm:min-h-[320px] lg:min-h-0 lg:h-full">
+              <Image
+                src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=85"
+                alt="Salle adaptée aux événements cultuels"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+            </div>
+          </div>
+        </div>
+      </SectionReveal>
+
+      <SectionReveal id="comment-ca-marche" className="py-12">
+        <div className="container max-w-[1120px]">
+          <h2 className="text-center text-[46px] font-semibold tracking-[-0.02em] text-black [zoom:0.5]">
+            Comment ça marche
+          </h2>
+          <p className="mt-2 text-center text-[25px] text-slate-500 [zoom:0.5]">
+            Trois étapes pour réserver en toute simplicité
+          </p>
+          <div className="mx-auto mt-10 flex max-w-5xl flex-col items-center gap-8 sm:flex-row sm:justify-center sm:gap-8">
+            {steps.flatMap((step, idx) => [
+              <div
+                key={step.title}
+                className="w-full max-w-[360px] flex-1 rounded-xl border border-slate-200 bg-white px-6 py-6 shadow-sm transition hover:border-[#213398]/30 hover:shadow-md sm:max-w-none"
+              >
+                <div className="flex items-start gap-5">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#213398]/20 bg-[#213398]/5 text-base font-semibold text-[#213398]">
+                    {idx + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl font-semibold text-black">{step.title}</p>
+                    <p className="mt-3 text-base leading-snug text-slate-500">{step.desc}</p>
+                  </div>
+                </div>
+              </div>,
+              ...(idx < steps.length - 1
+                ? [
+                    <ChevronRight
+                      key={`arrow-${idx}`}
+                      className="h-8 w-8 shrink-0 rotate-90 text-slate-300 sm:rotate-0"
+                      aria-hidden
+                    />,
+                  ]
+                : []),
+            ])}
           </div>
         </div>
       </SectionReveal>
