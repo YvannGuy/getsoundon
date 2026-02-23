@@ -283,6 +283,46 @@ export async function sendNewDemandeNotification(
   return { success: !error, error: error?.message };
 }
 
+/** Email de confirmation après inscription à la liste Coming Soon */
+export async function sendComingSoonConfirmationEmail(to: string) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY non configuré, email non envoyé");
+    return { success: false };
+  }
+  const { error } = await resend.emails.send({
+    from,
+    to,
+    subject: "Merci pour votre inscription — salledeculte.com",
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8">
+<style>
+body{font-family:system-ui,sans-serif;line-height:1.65;color:#334155;max-width:580px;margin:0 auto;padding:28px;font-size:15px;}
+h1{color:#0f172a;font-size:22px;font-weight:600;margin:0 0 24px;}
+a{color:#213398;text-decoration:none;}
+a:hover{text-decoration:underline;}
+.btn{display:inline-block;background:#213398;color:#fff!important;padding:12px 24px;border-radius:8px;margin:20px 0;font-weight:500;}
+p{margin:0 0 12px;}
+.signature{margin-top:32px;color:#64748b;font-size:14px;}
+</style>
+</head>
+<body>
+  <h1>Merci pour votre inscription</h1>
+  <p>Vous serez informé en priorité de l&apos;ouverture de salledeculte.com.</p>
+  <p>En attendant, suivez-nous sur nos réseaux pour rester connecté :</p>
+  <p>
+    <a href="https://www.instagram.com/salledeculte/">Instagram</a> &middot;
+    <a href="https://www.facebook.com/profile.php?id=61588281587238">Facebook</a>
+  </p>
+  <p><a href="${siteUrl}" class="btn">Visiter salledeculte.com</a></p>
+  <p class="signature">À très bientôt,<br>L&apos;équipe salledeculte.com</p>
+</body>
+</html>`,
+  });
+  return { success: !error, error: error?.message };
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")

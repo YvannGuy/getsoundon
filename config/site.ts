@@ -14,6 +14,8 @@ export const siteConfig = {
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   instagram: "https://www.instagram.com/salledeculte/",
   facebook: "https://www.facebook.com/profile.php?id=61588281587238",
+  /** Date de lancement pour la page Coming Soon (format ISO) */
+  launchDate: process.env.NEXT_PUBLIC_LAUNCH_DATE ?? "2026-03-02T00:00:00",
 };
 
 export const pricingPlans: PricingPlan[] = [
