@@ -298,7 +298,7 @@ export default async function SalleDetailPage({
                 </p>
                 <Link href={`/salles/${salle.slug}/disponibilite`}>
                   <Button className="mt-4 h-12 w-full rounded-lg bg-[#213398] font-semibold hover:bg-[#1a2980]">
-                    Vérifier les disponibilités
+                    Organiser une visite
                   </Button>
                 </Link>
                 {salle.displayContactPhone !== false && salle.contactPhone && (

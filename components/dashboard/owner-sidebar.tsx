@@ -10,6 +10,7 @@ import {
   ChevronRight,
   CreditCard,
   FileText,
+  Calendar,
   FolderOpen,
   Home,
   LogOut,
@@ -30,6 +31,7 @@ const navItems = [
   { href: "/proprietaire", label: "Tableau de bord", icon: Home },
   { href: "/proprietaire/annonces", label: "Mes annonces", icon: Building2 },
   { href: "/proprietaire/demandes", label: "Demandes reçues", icon: FolderOpen, badgeKey: "demandes" },
+  { href: "/proprietaire/visites", label: "Visites", icon: Calendar, badgeKey: "visites" },
   { href: "/proprietaire/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },
   { href: "/proprietaire/paiement", label: "Paiement", icon: CreditCard },
   { href: "/proprietaire/contrat", label: "Contrat & facture", icon: FileText },
@@ -41,6 +43,7 @@ function NavContent({
   displayName,
   userEmail,
   demandeCount,
+  visiteCount,
   messageCount,
   collapsed = false,
   onItemClick,
@@ -50,6 +53,7 @@ function NavContent({
   displayName: string;
   userEmail?: string | null;
   demandeCount: number;
+  visiteCount: number;
   messageCount: number;
   collapsed?: boolean;
   onItemClick?: () => void;
@@ -121,6 +125,11 @@ function NavContent({
                   {demandeCount > 99 ? "99+" : demandeCount}
                 </span>
               )}
+              {collapsed && item.badgeKey === "visites" && visiteCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-violet-500 px-1 text-[10px] font-semibold text-white">
+                  {visiteCount > 99 ? "99+" : visiteCount}
+                </span>
+              )}
               {collapsed && item.badgeKey === "messagerie" && messageCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#213398] px-1 text-[10px] font-semibold text-white">
                   {messageCount > 99 ? "99+" : messageCount}
@@ -167,11 +176,13 @@ function NavContent({
 export function OwnerSidebar({
   user,
   demandeCount = 0,
+  visiteCount = 0,
   messageCount = 0,
   canAccessSeeker = false,
 }: {
   user: { email?: string | null; displayName?: string };
   demandeCount?: number;
+  visiteCount?: number;
   messageCount?: number;
   canAccessSeeker?: boolean;
 }) {
@@ -215,6 +226,7 @@ export function OwnerSidebar({
             displayName={displayName}
             userEmail={user.email}
             demandeCount={demandeCount}
+            visiteCount={visiteCount}
             messageCount={messageCount}
             onItemClick={() => setMobileOpen(false)}
             canAccessSeeker={canAccessSeeker}
@@ -254,6 +266,7 @@ export function OwnerSidebar({
           displayName={displayName}
           userEmail={user.email}
           demandeCount={demandeCount}
+          visiteCount={visiteCount}
           messageCount={messageCount}
           collapsed={collapsed}
           canAccessSeeker={canAccessSeeker}

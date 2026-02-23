@@ -23,7 +23,15 @@ export type Salle = {
   pricingInclusions: string[];
   lat?: number;
   lng?: number;
-};
+  /** Pour générer les créneaux de visite (horaires par jour) */
+  horairesParJour?: Record<string, { debut: string; fin: string }>;
+  joursOuverture?: string[];
+  joursVisite?: string[] | null;
+  visiteDates?: string[] | null;
+  visiteHeureDebut?: string | null;
+  visiteHeureFin?: string | null;
+  visiteHorairesParDate?: Record<string, { debut: string; fin: string }> | null;
+}
 
 export type SalleRow = {
   id: string;
@@ -47,6 +55,13 @@ export type SalleRow = {
   pricing_inclusions: string[];
   lat: number | null;
   lng: number | null;
+  horaires_par_jour?: Record<string, { debut: string; fin: string }> | null;
+  jours_ouverture?: string[] | null;
+  jours_visite?: string[] | null;
+  visite_dates?: string[] | null;
+  visite_heure_debut?: string | null;
+  visite_heure_fin?: string | null;
+  visite_horaires_par_date?: Record<string, { debut: string; fin: string }> | null;
   status: string;
   created_at: string;
   updated_at: string;
@@ -98,5 +113,23 @@ export function rowToSalle(row: SalleRow): Salle {
     pricingInclusions: Array.isArray(row.pricing_inclusions) ? row.pricing_inclusions : [],
     lat: row.lat ?? undefined,
     lng: row.lng ?? undefined,
+    horairesParJour: (row.horaires_par_jour as Record<string, { debut: string; fin: string }>) ?? undefined,
+    joursOuverture: Array.isArray(row.jours_ouverture) ? row.jours_ouverture : undefined,
+    joursVisite: Array.isArray(row.jours_visite) ? row.jours_visite : undefined,
+    visiteDates: Array.isArray(row.visite_dates)
+      ? row.visite_dates.map((d) => {
+          if (typeof d === "string") return d;
+          const val = d as unknown;
+          return val instanceof Date ? val.toISOString().slice(0, 10) : String(d).slice(0, 10);
+        })
+      : undefined,
+    visiteHeureDebut: row.visite_heure_debut ?? undefined,
+    visiteHeureFin: row.visite_heure_fin ?? undefined,
+    visiteHorairesParDate:
+      row.visite_horaires_par_date &&
+      typeof row.visite_horaires_par_date === "object" &&
+      !Array.isArray(row.visite_horaires_par_date)
+        ? (row.visite_horaires_par_date as Record<string, { debut: string; fin: string }>)
+        : undefined,
   };
 }

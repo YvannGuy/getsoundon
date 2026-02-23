@@ -10,7 +10,7 @@ import { buildCanonical } from "@/lib/seo";
 import { getSalleBySlug } from "@/lib/salles";
 import { formatSalleTarifs } from "@/lib/types/salle";
 import { siteConfig } from "@/config/site";
-import { FormulaireDisponibilite } from "./formulaire-disponibilite";
+import { FormulaireVisite } from "./formulaire-visite";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +23,8 @@ export async function generateMetadata({
   const salle = await getSalleBySlug(slug);
   if (!salle) return { title: "Salle introuvable" };
   return {
-    title: `Vérifier les disponibilités - ${salle.name}`,
-    description: `Vérifiez les disponibilités et envoyez une demande pour ${salle.name} à ${salle.city}.`,
+    title: `Organiser une visite - ${salle.name}`,
+    description: `Choisissez un créneau pour visiter ${salle.name} à ${salle.city}.`,
     alternates: { canonical: buildCanonical(`/salles/${slug}/disponibilite`) },
   };
 }
@@ -73,9 +73,9 @@ export default async function DisponibilitePage({
             </div>
           </div>
 
-          {/* Colonne droite : formulaire */}
+          {/* Colonne droite : formulaire visite */}
           <div>
-            <FormulaireDisponibilite salle={salle} />
+            <FormulaireVisite slug={slug} />
           </div>
         </div>
       </main>

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
+import { addMonths, subMonths, startOfDay, addDays } from "date-fns";
 import { createSalleFromOnboarding } from "@/app/actions/create-salle";
 import {
   Accessibility,
@@ -10,6 +11,7 @@ import {
   Briefcase,
   Camera,
   CheckCircle,
+  ChevronLeft,
   ChevronRight,
   Clock,
   Droplets,
@@ -33,12 +35,13 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Calendar as CalendarUi } from "@/components/ui/calendar";
 import { VilleAutocomplete } from "@/components/search/ville-autocomplete";
 import { AdresseAutocomplete } from "@/components/search/adresse-autocomplete";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 const FEATURES = [
   { id: "erp", label: "ERP conforme", icon: Shield },
@@ -96,9 +99,13 @@ type WizardData = {
   features: string[];
   horairesParJour: Record<string, HorairesJour>;
   joursOuverture: string[];
+  joursVisite: string[];
+  visiteDates: string[];
+  visiteHorairesParDate: Record<string, HorairesJour>;
   restrictionSonore: string;
   evenementsAcceptes: string[];
   photos: File[];
+  video: File | null;
 };
 
 const JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"] as const;
@@ -120,6 +127,9 @@ const initialData: WizardData = {
   features: [],
   horairesParJour: {},
   joursOuverture: [],
+  joursVisite: [],
+  visiteDates: [],
+  visiteHorairesParDate: {},
   restrictionSonore: "",
   evenementsAcceptes: [],
   photos: [],
@@ -181,7 +191,20 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
       } else {
         newHoraires[jour] = { ...DEFAULT_HORAIRES };
       }
-      return { ...prev, joursOuverture: newJours, horairesParJour: newHoraires };
+      const newJoursVisite = isSelected
+        ? prev.joursVisite.filter((j) => j !== jour)
+        : prev.joursVisite;
+      return { ...prev, joursOuverture: newJours, joursVisite: newJoursVisite, horairesParJour: newHoraires };
+    });
+  };
+
+  const toggleJourVisite = (jour: string) => {
+    setData((prev) => {
+      const isSelected = prev.joursVisite.includes(jour);
+      const newJours = isSelected
+        ? prev.joursVisite.filter((j) => j !== jour)
+        : [...prev.joursVisite, jour];
+      return { ...prev, joursVisite: newJours };
     });
   };
 
@@ -261,6 +284,9 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
     formData.set("features", JSON.stringify(data.features));
     formData.set("horairesParJour", JSON.stringify(data.horairesParJour));
     formData.set("joursOuverture", JSON.stringify(data.joursOuverture));
+    formData.set("joursVisite", JSON.stringify(data.joursVisite));
+    formData.set("visiteDates", JSON.stringify(data.visiteDates));
+    formData.set("visiteHorairesParDate", JSON.stringify(data.visiteHorairesParDate));
     formData.set("restrictionSonore", data.restrictionSonore);
     formData.set("evenementsAcceptes", JSON.stringify(data.evenementsAcceptes));
     data.photos.forEach((file) => formData.append("photos", file));
@@ -488,7 +514,15 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
           />
         )}
         {step === 4 && (
-          <Step4
+          <Step4JoursVisite
+            data={data}
+            updateData={updateData}
+            onNext={() => setStep(5)}
+            onBack={() => setStep(3)}
+          />
+        )}
+        {step === 5 && (
+          <Step5
             data={data}
             onFileChange={handleFileChange}
             onVideoChange={handleVideoChange}
@@ -497,17 +531,17 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
             onDragOver={handleDragOver}
             onRemovePhoto={handleRemovePhoto}
             fileInputRef={fileInputRef}
-            onNext={() => setStep(5)}
-            onBack={() => setStep(3)}
+            onNext={() => setStep(6)}
+            onBack={() => setStep(4)}
             minPhotos={MIN_PHOTOS}
             maxPhotos={MAX_PHOTOS}
           />
         )}
-        {step === 5 && (
-          <Step5
+        {step === 6 && (
+          <Step6
             data={data}
             onSubmit={handleSubmit}
-            onBack={() => setStep(4)}
+            onBack={() => setStep(5)}
             isSubmitting={isSubmitting}
             submitError={submitError}
             minPhotos={MIN_PHOTOS}
@@ -803,7 +837,7 @@ function Step3({
 
       <div className="mt-8 space-y-8">
         <div>
-          <label className="text-sm font-medium text-slate-700">Jours d&apos;ouverture</label>
+          <label className="text-sm font-medium text-slate-700">Jours de location</label>
           <div className="mt-3 flex flex-wrap gap-2">
             {JOURS.map((jour) => (
               <button
@@ -821,14 +855,14 @@ function Step3({
               </button>
             ))}
           </div>
-          <p className="mt-1.5 text-xs text-slate-500">Sélectionnez les jours où la salle est disponible</p>
+          <p className="mt-1.5 text-xs text-slate-500">Sélectionnez les jours de location possibles</p>
         </div>
 
         {data.joursOuverture.length > 0 && (
           <div>
-            <label className="text-sm font-medium text-slate-700">Horaires par jour</label>
+            <label className="text-sm font-medium text-slate-700">Horaires par jour de location</label>
             <p className="mt-1 text-xs text-slate-500">
-              Indiquez les plages horaires pour chaque jour sélectionné
+              Indiquez les plages horaires pour chaque jour de location
             </p>
             <div className="mt-3 space-y-4">
               {data.joursOuverture.map((jour) => {
@@ -963,7 +997,235 @@ function Step3({
   );
 }
 
-function Step4({
+function Step4JoursVisite({
+  data,
+  updateData,
+  onNext,
+  onBack,
+}: {
+  data: WizardData;
+  updateData: (u: Partial<WizardData>) => void;
+  onNext: () => void;
+  onBack: () => void;
+}) {
+  const now = startOfDay(new Date());
+  const minMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const maxMonth = addMonths(minMonth, 3);
+  const [month, setMonth] = useState<Date>(minMonth);
+
+  const selectedDates = useMemo(() => {
+    const seen = new Set<string>();
+    return data.visiteDates
+      .filter((d) => {
+        if (seen.has(d)) return false;
+        seen.add(d);
+        return true;
+      })
+      .map((d) => new Date(d + "T12:00:00"));
+  }, [data.visiteDates]);
+
+  const disabledMatcher = useCallback(
+    (date: Date) => date < now,
+    [now]
+  );
+
+  const allFutureDatesInRange = useMemo(() => {
+    const toYmd = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const out: string[] = [];
+    let d = new Date(minMonth);
+    const end = new Date(maxMonth);
+    end.setMonth(end.getMonth() + 1);
+    while (d < end) {
+      if (d >= now) out.push(toYmd(d));
+      d = addDays(d, 1);
+    }
+    return [...new Set(out)];
+  }, [minMonth, maxMonth, now]);
+
+  const isAllSelected =
+    allFutureDatesInRange.length > 0 &&
+    allFutureDatesInRange.every((d) => data.visiteDates.includes(d));
+
+  const defaultHoraires: HorairesJour = { debut: "14:00", fin: "18:00" };
+
+  const toggleAll = () => {
+    if (isAllSelected) {
+      updateData({ visiteDates: [], visiteHorairesParDate: {} });
+    } else {
+      const dates = [...allFutureDatesInRange].sort();
+      const horaires: Record<string, HorairesJour> = {};
+      for (const d of dates) {
+        horaires[d] = data.visiteHorairesParDate?.[d] ?? defaultHoraires;
+      }
+      updateData({ visiteDates: dates, visiteHorairesParDate: horaires });
+    }
+  };
+
+  return (
+    <>
+      <h2 className="text-2xl font-bold text-black">Jours de visite</h2>
+      <p className="mt-2 text-slate-600">
+        Sélectionnez les dates où les organisateurs peuvent organiser une visite, puis indiquez les horaires
+      </p>
+
+      <div className="mt-8 space-y-6">
+        <div>
+          <label className="text-sm font-medium text-slate-700">Calendrier des visites</label>
+          <p className="mt-1 text-xs text-slate-500">
+            Cliquez sur une date pour activer ou désactiver les visites. Seules les dates passées sont grisées.
+          </p>
+          <div className="mt-3 flex flex-col items-center gap-2">
+            <div className="flex w-full max-w-[280px] items-center justify-between rounded-t-lg border border-b-0 border-slate-200 bg-slate-50/80 px-3 py-2">
+              <button
+                type="button"
+                onClick={() => setMonth((m) => subMonths(m, 1))}
+                disabled={
+                  month.getFullYear() <= minMonth.getFullYear() &&
+                  month.getMonth() <= minMonth.getMonth()
+                }
+                className="flex h-8 w-8 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Mois précédent"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <span className="text-sm font-semibold capitalize text-slate-800">
+                {month.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
+              </span>
+              <button
+                type="button"
+                onClick={() => setMonth((m) => addMonths(m, 1))}
+                disabled={
+                  month.getFullYear() >= maxMonth.getFullYear() &&
+                  month.getMonth() >= maxMonth.getMonth()
+                }
+                className="flex h-8 w-8 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Mois suivant"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+            <CalendarUi
+              mode="multiple"
+              selected={selectedDates}
+              onSelect={(dates) => {
+                const toYmd = (d: Date) =>
+                  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                const strs = [...new Set((dates ?? []).map(toYmd))].sort();
+                const prev = data.visiteHorairesParDate ?? {};
+                const nextHoraires: Record<string, HorairesJour> = {};
+                for (const s of strs) {
+                  nextHoraires[s] = prev[s] ?? { debut: "14:00", fin: "18:00" };
+                }
+                updateData({ visiteDates: strs, visiteHorairesParDate: nextHoraires });
+              }}
+              month={month}
+              onMonthChange={setMonth}
+              disabled={disabledMatcher}
+              startMonth={minMonth}
+              endMonth={maxMonth}
+              hideNavigation
+              className="rounded-b-lg border border-slate-200 p-3"
+              classNames={{
+                month_caption: "hidden",
+                day_button: cn(
+                  "h-9 w-9 rounded-md text-sm font-normal",
+                  "aria-disabled:opacity-40 aria-disabled:cursor-not-allowed",
+                  "hover:bg-violet-100 hover:text-violet-900",
+                  "aria-selected:bg-violet-600 aria-selected:text-white"
+                ),
+                disabled: "text-slate-400",
+                outside: "text-slate-300",
+                today: "bg-slate-100 font-medium",
+              }}
+            />
+            {allFutureDatesInRange.length > 0 && (
+              <button
+                type="button"
+                onClick={toggleAll}
+                className="text-xs text-[#5b4dbf] hover:underline"
+              >
+                {isAllSelected ? "Tout désélectionner" : "Tout sélectionner"}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {data.visiteDates.length > 0 && (
+          <div>
+            <label className="text-sm font-medium text-slate-700">Créneaux par date</label>
+            <p className="mt-1 text-xs text-slate-500">
+              Indiquez les horaires pour chaque date sélectionnée
+            </p>
+            <div className="mt-3 space-y-4">
+              {[...new Set(data.visiteDates)].sort().map((dateStr) => {
+                const h = data.visiteHorairesParDate?.[dateStr] ?? defaultHoraires;
+                const d = new Date(dateStr + "T12:00:00");
+                const label = d.toLocaleDateString("fr-FR", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                });
+                return (
+                  <div
+                    key={dateStr}
+                    className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-slate-50/50 p-4"
+                  >
+                    <span className="w-40 text-sm font-medium capitalize text-slate-700">
+                      {label}
+                    </span>
+                    <Input
+                      type="time"
+                      value={h.debut}
+                      onChange={(e) =>
+                        updateData({
+                          visiteHorairesParDate: {
+                            ...data.visiteHorairesParDate,
+                            [dateStr]: { ...h, debut: e.target.value },
+                          },
+                        })
+                      }
+                      className="h-10 w-32 border-slate-200"
+                    />
+                    <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
+                    <Input
+                      type="time"
+                      value={h.fin}
+                      onChange={(e) =>
+                        updateData({
+                          visiteHorairesParDate: {
+                            ...data.visiteHorairesParDate,
+                            [dateStr]: { ...h, fin: e.target.value },
+                          },
+                        })
+                      }
+                      className="h-10 w-32 border-slate-200"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <Button variant="outline" onClick={onBack} className="h-11 flex-1 border-slate-300">
+          Retour
+        </Button>
+        <Button
+          onClick={onNext}
+          disabled={data.visiteDates.length === 0}
+          className="h-11 flex-1 bg-[#5b4dbf] hover:bg-[#4a3dad] disabled:opacity-50"
+        >
+          Continuer
+        </Button>
+      </div>
+    </>
+  );
+}
+
+function Step5({
   data,
   onFileChange,
   onVideoChange,
@@ -1127,7 +1389,7 @@ function Step4({
   );
 }
 
-function Step5({
+function Step6({
   data,
   onSubmit,
   onBack,
@@ -1201,7 +1463,7 @@ function Step5({
           </div>
         )}
         <div>
-          <p className="text-xs font-medium text-slate-500">Jours et horaires d&apos;ouverture</p>
+          <p className="text-xs font-medium text-slate-500">Jours et horaires de location</p>
           <div className="mt-2 space-y-1">
             {data.joursOuverture.length ? (
               data.joursOuverture.map((jour) => {
@@ -1210,6 +1472,29 @@ function Step5({
                 return (
                   <p key={jour} className="text-sm capitalize text-black">
                     {label}
+                  </p>
+                );
+              })
+            ) : (
+              <p className="text-sm text-black">—</p>
+            )}
+          </div>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-slate-500">Jours de visite</p>
+          <div className="mt-2 space-y-1">
+            {data.visiteDates.length ? (
+              data.visiteDates.map((dateStr) => {
+                const h = data.visiteHorairesParDate?.[dateStr];
+                const d = new Date(dateStr + "T12:00:00");
+                const label = d.toLocaleDateString("fr-FR", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "short",
+                });
+                return (
+                  <p key={dateStr} className="text-sm capitalize text-black">
+                    {label} · {h?.debut ?? "14:00"} – {h?.fin ?? "18:00"}
                   </p>
                 );
               })

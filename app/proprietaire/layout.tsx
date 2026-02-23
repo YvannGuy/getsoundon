@@ -71,6 +71,20 @@ export default async function ProprietaireLayout({
       : { data: [] },
   ]);
 
+  let visiteCount = 0;
+  if (salleIds.length > 0) {
+    try {
+      const { count } = await supabase
+        .from("demandes_visite")
+        .select("id", { count: "exact", head: true })
+        .in("salle_id", salleIds)
+        .eq("status", "pending");
+      visiteCount = count ?? 0;
+    } catch {
+      // Table demandes_visite peut ne pas exister si migration non exécutée
+    }
+  }
+
   let messageCount = 0;
   const demandeIdsForConv = (demandesForMessagerie ?? []).map((d) => d.id);
   if (demandeIdsForConv.length > 0) {
@@ -97,6 +111,7 @@ export default async function ProprietaireLayout({
       <OwnerSidebar
         user={{ ...user, displayName }}
         demandeCount={demandeCount ?? 0}
+        visiteCount={visiteCount ?? 0}
         messageCount={messageCount}
         canAccessSeeker={true}
       />

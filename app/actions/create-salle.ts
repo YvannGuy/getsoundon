@@ -78,6 +78,11 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     String(formData.get("horairesParJour") ?? "{}")
   ) as Record<string, { debut: string; fin: string }>;
   const joursOuverture = JSON.parse(String(formData.get("joursOuverture") ?? "[]")) as string[];
+  const joursVisite = JSON.parse(String(formData.get("joursVisite") ?? "[]")) as string[];
+  const visiteDates = JSON.parse(String(formData.get("visiteDates") ?? "[]")) as string[];
+  const visiteHorairesParDate = JSON.parse(
+    String(formData.get("visiteHorairesParDate") ?? "{}")
+  ) as Record<string, { debut: string; fin: string }>;
   const restrictionSonore = String(formData.get("restrictionSonore") ?? "");
   const evenementsAcceptes = JSON.parse(
     String(formData.get("evenementsAcceptes") ?? "[]")
@@ -235,6 +240,12 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     })(),
     horaires_par_jour: Object.keys(horairesParJour).length > 0 ? horairesParJour : {},
     jours_ouverture: joursOuverture.length > 0 ? joursOuverture : [],
+    jours_visite: joursVisite.length > 0 ? joursVisite : null,
+    visite_dates: visiteDates.length > 0 ? visiteDates : null,
+    visite_horaires_par_date:
+      visiteDates.length > 0 && Object.keys(visiteHorairesParDate).length > 0
+        ? visiteHorairesParDate
+        : null,
     evenements_acceptes: evenementsAcceptes.length > 0 ? evenementsAcceptes : [],
     places_parking: placesParking ? parseInt(placesParking, 10) || null : null,
     status,
