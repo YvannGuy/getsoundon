@@ -1,16 +1,19 @@
 import Link from "next/link";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CreditCard, Crown, Gift, Infinity, Lock, Zap } from "lucide-react";
+import { Banknote, CreditCard, Crown, Gift, Infinity, Lock, Zap } from "lucide-react";
 
 import { activateTrialAction, getTrialActivated } from "@/app/actions/trial";
 import { getPaymentMethods } from "@/app/actions/stripe-portal";
 import { getPlatformSettings } from "@/app/actions/admin-settings";
+import { ConnectLoginButton } from "@/components/paiement/connect-login-button";
+import { ConnectOnboardingButton } from "@/components/paiement/connect-onboarding-button";
 import { PassCheckoutButton } from "@/components/pass-checkout-button";
 import { PortalButton } from "@/components/paiement/portal-button";
 import { TrialActivatedPopup } from "@/components/paiement/trial-activated-popup";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getOwnerBrowseAccess } from "@/lib/pass-utils";
 
@@ -18,6 +21,7 @@ const PRODUCT_LABEL: Record<string, string> = {
   pass_24h: "Pass 24h",
   pass_48h: "Pass 48h",
   abonnement: "Abonnement mensuel",
+  reservation: "Réservation",
   autre: "Autre",
 };
 
@@ -29,6 +33,8 @@ const STATUS_LABEL: Record<string, string> = {
   active: "Actif",
   canceled: "Annulé",
 };
+
+export const dynamic = "force-dynamic";
 
 const STATUS_COLOR: Record<string, string> = {
   paid: "text-emerald-600",
@@ -65,7 +71,7 @@ export default async function ProprietairePaiementPage({
     await activateTrialAction();
   }
 
-  const [settings, { data: payments }, { data: profile }, paymentMethods, browse, trialActivated] =
+  const [settings, { data: payments }, { data: profile }, paymentMethods, browse, trialActivated, { data: receivedReservations }] =
     await Promise.all([
       getPlatformSettings(),
       supabase
@@ -73,10 +79,27 @@ export default async function ProprietairePaiementPage({
         .select("id, product_type, amount, status, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
-      supabase.from("profiles").select("stripe_customer_id").eq("id", user.id).single(),
+      supabase.from("profiles").select("stripe_customer_id, stripe_account_id").eq("id", user.id).single(),
       getPaymentMethods(user.id),
       getOwnerBrowseAccess(user.id),
       getTrialActivated(user.id),
+      (async () => {
+        const adminSupabase = createAdminClient();
+        const { data: paidOffers } = await adminSupabase
+          .from("offers")
+          .select("id")
+          .eq("owner_id", user.id)
+          .eq("status", "paid");
+        const offerIds = (paidOffers ?? []).map((o) => (o as { id: string }).id);
+        if (offerIds.length === 0) return { data: [] };
+        const { data } = await adminSupabase
+          .from("payments")
+          .select("id, product_type, amount, status, created_at")
+          .in("offer_id", offerIds)
+          .eq("product_type", "reservation")
+          .order("created_at", { ascending: false });
+        return { data: data ?? [] };
+      })(),
     ]);
 
   const pass = settings.pass;
@@ -116,6 +139,9 @@ export default async function ProprietairePaiementPage({
   ].filter((p) => p.enabled);
 
   const recentPayments = (payments ?? []).slice(0, 5);
+  const hasConnectAccount = !!(profile as { stripe_account_id?: string | null } | null)?.stripe_account_id;
+  const connectSuccess = params.connect === "success";
+  const connectRefresh = params.connect === "refresh";
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -204,6 +230,76 @@ export default async function ProprietairePaiementPage({
               <Link href="#pass-abonnements" className="ml-auto">
                 <Button className="bg-[#213398] hover:bg-[#1a2980]">Voir les offres</Button>
               </Link>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Recevoir les paiements (Stripe Connect) */}
+      <Card id="recevoir-paiements" className="mt-8 border-0 shadow-sm scroll-mt-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Banknote className="h-5 w-5" />
+            Recevoir les paiements
+          </CardTitle>
+          <CardDescription>
+            {hasConnectAccount
+              ? "Envoyez des offres depuis la messagerie et recevez les paiements des organisateurs."
+              : "Connectez votre compte bancaire pour recevoir les paiements des réservations (commission plateforme 10 %)."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {connectSuccess && (
+            <div className="mb-4 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 p-4">
+              <Banknote className="h-6 w-6 shrink-0 text-emerald-600" />
+              <div>
+                <p className="font-semibold text-emerald-800">Paiements activés !</p>
+                <p className="mt-0.5 text-sm text-emerald-700">
+                  Vous pouvez maintenant envoyer des offres aux organisateurs depuis la messagerie.
+                </p>
+              </div>
+            </div>
+          )}
+          {connectRefresh && (
+            <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 p-4">
+              <p className="text-sm text-amber-800">
+                Le formulaire a expiré ou est incomplet. Cliquez ci-dessous pour continuer l&apos;activation.
+              </p>
+            </div>
+          )}
+          {hasConnectAccount ? (
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-100">
+                  <Banknote className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-black">Paiements activés</p>
+                  <p className="mt-0.5 text-sm text-slate-600">
+                    Gérez vos paiements et vos transferts depuis votre espace Stripe.
+                  </p>
+                </div>
+              </div>
+              <ConnectLoginButton hasStripeAccount={true} className="shrink-0">
+                Ouvrir mon espace Stripe
+              </ConnectLoginButton>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#213398]/10">
+                  <Banknote className="h-6 w-6 text-[#213398]" />
+                </div>
+                <div>
+                  <p className="font-semibold text-black">Activez les paiements</p>
+                  <p className="mt-0.5 text-sm text-slate-600">
+                    Connectez votre identité et votre IBAN pour recevoir les réservations. Stripe sécurise vos données.
+                  </p>
+                </div>
+              </div>
+              <ConnectOnboardingButton className="shrink-0 bg-[#213398] hover:bg-[#1a2980]">
+                Activer les paiements
+              </ConnectOnboardingButton>
             </div>
           )}
         </CardContent>
@@ -323,6 +419,55 @@ export default async function ProprietairePaiementPage({
           )}
         </CardContent>
       </Card>
+
+      {/* Réservations reçues */}
+      {(receivedReservations?.length ?? 0) > 0 && (
+        <Card className="mt-10 border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Banknote className="h-5 w-5" />
+              Réservations reçues
+            </CardTitle>
+            <CardDescription>
+              Paiements des organisateurs pour vos offres acceptées
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="-mx-4 overflow-x-auto sm:mx-0">
+              <table className="w-full min-w-[400px]">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                    <th className="pb-3 pr-3">Date</th>
+                    <th className="pb-3 pr-3">Type</th>
+                    <th className="pb-3 pr-3">Montant</th>
+                    <th className="pb-3">Statut</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {receivedReservations!.map((p) => (
+                    <tr key={p.id}>
+                      <td className="py-3 pr-3 text-sm text-slate-600">
+                        {format(new Date(p.created_at), "d MMM yyyy", { locale: fr })}
+                      </td>
+                      <td className="py-3 pr-3 text-sm text-slate-600">
+                        {PRODUCT_LABEL[p.product_type] ?? p.product_type}
+                      </td>
+                      <td className="py-3 pr-3 text-sm text-slate-600">
+                        {(p.amount / 100).toFixed(2)} €
+                      </td>
+                      <td className="py-3">
+                        <span className={`text-sm font-medium ${STATUS_COLOR[p.status] ?? "text-slate-600"}`}>
+                          • {STATUS_LABEL[p.status] ?? p.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Historique */}
       <Card className="mt-10 border-0 shadow-sm">

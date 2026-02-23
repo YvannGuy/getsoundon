@@ -17,6 +17,7 @@ const PRODUCT_LABEL: Record<string, string> = {
   pass_24h: "Pass 24h",
   pass_48h: "Pass 48h",
   abonnement: "Abonnement mensuel",
+  reservation: "Réservation",
   autre: "Autre",
 };
 
@@ -28,6 +29,8 @@ const STATUS_LABEL: Record<string, string> = {
   failed: "Échoué",
   refunded: "Remboursé",
 };
+
+export const dynamic = "force-dynamic";
 
 const STATUS_COLOR: Record<string, string> = {
   paid: "text-emerald-600",

@@ -26,7 +26,7 @@ export default async function AdminUtilisateursPage({
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, email, full_name, user_type, created_at, suspended", { count: "exact" })
+      .select("id, email, full_name, user_type, created_at, suspended, stripe_account_id", { count: "exact" })
       .order("created_at", { ascending: false })
       .range(from, to),
     supabase.from("salles").select("owner_id"),

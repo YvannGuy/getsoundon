@@ -44,11 +44,14 @@ type ParametresContentProps = {
   };
   /** Texte pour la section suppression (seeker vs owner) */
   deleteDataLabel?: string;
+  /** Affiche un message sur la rétention du compte Stripe Connect */
+  hasStripeConnect?: boolean;
 };
 
 export function ParametresContent({
   profile,
   deleteDataLabel = "annonces, demandes et messages",
+  hasStripeConnect = false,
 }: ParametresContentProps) {
   const [profileState, profileAction] = useActionState(updateProfileAction, initialState);
   const [passwordState, passwordAction] = useActionState(updatePasswordAction, initialState);
@@ -237,6 +240,13 @@ export function ParametresContent({
               irréversible. Toutes vos {deleteDataLabel} seront définitivement
               supprimés.
             </DialogDescription>
+            {hasStripeConnect && (
+              <p className="rounded-md border border-amber-200 bg-amber-50 p-2 text-sm text-amber-800">
+                Votre compte Stripe Connect restera enregistré côté Stripe pour
+                l&apos;historique des paiements et les obligations légales. Vous
+                pouvez demander sa suppression en contactant Stripe directement.
+              </p>
+            )}
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteOpen(false)}>

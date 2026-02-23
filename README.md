@@ -59,6 +59,23 @@ Exécutez `config/supabase-tables-complete.sql` après les scripts ci-dessus.
 
 Puis `config/supabase-demandes-alter.sql` pour les colonnes du formulaire « Vérifier la disponibilité » (frequence, horaires).
 
+## Offres & Stripe Connect Express
+
+Exécutez `config/supabase-offers-connect.sql` dans l'éditeur SQL Supabase pour :
+
+- ajouter `stripe_account_id` à la table `profiles` (compte Connect des propriétaires)
+- créer la table `offers` (offres de réservation owner → seeker)
+- ajouter `offer_id` à la table `payments` (lien paiement ↔ offre)
+
+Puis `config/supabase-offers-alter-event-type.sql` pour ajouter le type d'évènement (ponctuel/mensuel) et la période valable (date_debut, date_fin).
+
+**Contrats & factures** :
+- `config/supabase-contract-templates.sql` : table `contract_templates` (modèle par salle)
+- `config/supabase-offers-contract.sql` : colonne `contract_path` sur `offers`
+- `config/supabase-payments-invoice.sql` : colonne `invoice_path` sur `payments`
+- `npm run supabase:init-contract-storage` : bucket storage `contrats` (contrats + factures PDF)
+- Le propriétaire remplit les infos contrat dans `/proprietaire/contrat`. L'organisateur lit le contrat avant de payer, coche l'acceptation, puis paie. Contrat et facture sont générés après paiement.
+
 Crée les tables :
 
 - **profiles** (colonnes user_type, phone, avatar_url, stripe_customer_id)

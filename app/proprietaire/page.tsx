@@ -3,7 +3,10 @@ import Link from "next/link";
 import { AddSalleButton } from "@/components/proprietaire/add-salle-modal";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, CheckCircle, Clock, Crown, FolderOpen, Gift, Inbox, Lock, Star } from "lucide-react";
+import { AlertTriangle, Banknote, CheckCircle, Clock, Crown, FolderOpen, Gift, Inbox, Lock, Star } from "lucide-react";
+
+import { ConnectLoginButton } from "@/components/paiement/connect-login-button";
+import { ConnectOnboardingButton } from "@/components/paiement/connect-onboarding-button";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,7 +58,7 @@ export default async function ProprietaireDashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: sallesData }, browse, trialActivated] = await Promise.all([
+  const [{ data: sallesData }, browse, trialActivated, { data: profile }] = await Promise.all([
     supabase
       .from("salles")
       .select("id, slug, name, city, images, status")
@@ -63,6 +66,7 @@ export default async function ProprietaireDashboardPage() {
       .order("created_at", { ascending: false }),
     getOwnerBrowseAccess(user.id),
     getTrialActivated(user.id),
+    supabase.from("profiles").select("stripe_account_id").eq("id", user.id).single(),
   ]);
 
   const salles = sallesData ?? [];
@@ -259,6 +263,47 @@ export default async function ProprietaireDashboardPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      {/* Recevoir les paiements / Paiements activés */}
+      <Card className="mt-6 border-0 shadow-sm">
+        <CardContent className="p-5">
+          {(profile as { stripe_account_id?: string | null } | null)?.stripe_account_id ? (
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-100">
+                  <Banknote className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-black">Paiements activés</p>
+                  <p className="mt-0.5 text-sm text-slate-600">
+                    Gérez vos paiements et vos transferts depuis votre espace Stripe.
+                  </p>
+                </div>
+              </div>
+              <ConnectLoginButton hasStripeAccount={true} className="shrink-0">
+                Ouvrir l&apos;espace Stripe
+              </ConnectLoginButton>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#213398]/10">
+                  <Banknote className="h-6 w-6 text-[#213398]" />
+                </div>
+                <div>
+                  <p className="font-semibold text-black">Recevoir les paiements</p>
+                  <p className="mt-0.5 text-sm text-slate-600">
+                    Envoyez des offres aux organisateurs depuis la messagerie et recevez vos paiements directement.
+                  </p>
+                </div>
+              </div>
+              <ConnectOnboardingButton className="shrink-0 bg-[#213398] hover:bg-[#1a2980]">
+                Activer les paiements
+              </ConnectOnboardingButton>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {metrics.map((m) => {

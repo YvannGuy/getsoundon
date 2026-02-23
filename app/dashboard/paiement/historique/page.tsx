@@ -14,6 +14,7 @@ const PRODUCT_LABEL: Record<string, string> = {
   pass_24h: "Pass 24h",
   pass_48h: "Pass 48h",
   abonnement: "Abonnement mensuel",
+  reservation: "Réservation",
   autre: "Autre",
 };
 

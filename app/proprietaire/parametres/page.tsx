@@ -11,7 +11,7 @@ export default async function ParametresPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("first_name, last_name, full_name, email, phone, last_password_change")
+    .select("first_name, last_name, full_name, email, phone, last_password_change, stripe_account_id")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -36,6 +36,7 @@ export default async function ParametresPage() {
           last_password_change: profile?.last_password_change ?? null,
         }}
         deleteDataLabel="annonces, demandes et messages"
+        hasStripeConnect={!!(profile as { stripe_account_id?: string } | null)?.stripe_account_id}
       />
     </div>
   );

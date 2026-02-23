@@ -17,7 +17,7 @@ function formatTime(t: string | null): string {
 export default async function MessageriePage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; demandeId?: string }>;
+  searchParams: Promise<{ page?: string; demandeId?: string; offer?: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -170,6 +170,7 @@ export default async function MessageriePage({
       seekerId: ownerId ?? "",
       seekerName: profile?.full_name ?? "Propriétaire",
       seekerEmail: profile?.email ?? "",
+      salleId: d.salle_id,
       salleName: salle?.name ?? "Salle",
       salleImage,
       salleCity: salleRow?.city ?? "",
@@ -203,6 +204,7 @@ export default async function MessageriePage({
   const params = await searchParams;
   const pageParam = params.page;
   const demandeIdParam = params.demandeId ?? undefined;
+  const offerReturnStatus = typeof params.offer === "string" ? params.offer : null;
   const page = Math.max(1, parseInt(String(pageParam || "1"), 10) || 1);
   const totalPages = Math.ceil(threads.length / PAGE_SIZE) || 1;
   const currentPage = Math.min(page, totalPages);
@@ -223,6 +225,7 @@ export default async function MessageriePage({
         currentUserId={user.id}
         currentUserFullName={(profile as { full_name?: string } | null)?.full_name ?? user.user_metadata?.full_name}
         userType="seeker"
+        offerReturnStatus={offerReturnStatus}
         pagination={
           totalPages > 1
             ? {

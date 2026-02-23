@@ -8,6 +8,7 @@ export async function POST(request: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   if (!signature || !webhookSecret) {
+    console.error("[webhook] Manquant: signature ou STRIPE_WEBHOOK_SECRET");
     return NextResponse.json({ error: "Signature webhook manquante." }, { status: 400 });
   }
 
@@ -16,8 +17,12 @@ export async function POST(request: Request) {
     const stripe = getStripe();
     const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     const result = await handleStripeWebhook(event);
+    if (event.type === "checkout.session.completed") {
+      console.log("[webhook] checkout.session.completed traité", result);
+    }
     return NextResponse.json({ received: true, result });
-  } catch {
+  } catch (err) {
+    console.error("[webhook] Erreur:", err instanceof Error ? err.message : String(err));
     return NextResponse.json({ error: "Webhook invalide." }, { status: 400 });
   }
 }

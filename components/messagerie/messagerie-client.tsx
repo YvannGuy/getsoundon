@@ -6,9 +6,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Archive, Check, ChevronDown, ChevronLeft, Lightbulb, MessageCircle, MoreVertical, Paperclip, Pencil, RotateCcw, Send, Search, Trash2, X } from "lucide-react";
+import { Archive, Banknote, Check, ChevronDown, ChevronLeft, Lightbulb, MessageCircle, MoreVertical, Paperclip, Pencil, RotateCcw, Send, Search, Trash2, X } from "lucide-react";
 
 import { updateDemandeStatusAction } from "@/app/actions/demande-owner";
+import { markExpiredOffersAction } from "@/app/actions/offers";
 import {
   archiveConversation,
   deleteConversation,
@@ -21,6 +22,8 @@ import {
   sendMessageWithAttachments,
   unarchiveConversation,
 } from "@/app/actions/messagerie";
+import { CreateOfferModal } from "@/components/messagerie/create-offer-modal";
+import { OfferCard } from "@/components/messagerie/offer-card";
 import { AddSalleButton } from "@/components/proprietaire/add-salle-modal";
 import { SearchModalButton } from "@/components/search/search-modal";
 import { Button } from "@/components/ui/button";
@@ -36,6 +39,7 @@ export type Thread = {
   seekerId: string;
   seekerName: string;
   seekerEmail: string;
+  salleId?: string;
   salleName: string;
   salleImage?: string;
   salleCity?: string;
@@ -93,6 +97,35 @@ function getInitials(fullName: string): string {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
 
+/** Affiche un temps relatif sans erreur d'hydratation (calcul uniquement côté client après mount). */
+function RelativeTime({ dateStr }: { dateStr: string | null }) {
+  const [display, setDisplay] = useState<string>("");
+
+  useEffect(() => {
+    if (!dateStr) {
+      setDisplay("");
+      return;
+    }
+    const d = new Date(dateStr);
+    const diffMs = Date.now() - d.getTime();
+    if (Number.isNaN(diffMs) || diffMs < 0) {
+      setDisplay("");
+      return;
+    }
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffMins < 60) setDisplay(`Il y a ${diffMins}min`);
+    else if (diffHours < 24) setDisplay(`Il y a ${diffHours}h`);
+    else if (diffDays === 1) setDisplay("Hier");
+    else if (diffDays < 7) setDisplay(`${diffDays} jours`);
+    else if (diffDays < 14) setDisplay("1 sem");
+    else setDisplay(`${Math.floor(diffDays / 7)} sem`);
+  }, [dateStr]);
+
+  return <span>{display}</span>;
+}
+
 type Props = {
   threads: Thread[];
   currentUserId: string;
@@ -101,6 +134,10 @@ type Props = {
   pagination?: PaginationInfo | null;
   /** Quand défini, ouvre automatiquement la conversation correspondante */
   initialDemandeId?: string | null;
+  /** Propriétaire : peut envoyer des offres (Connect activé) */
+  hasConnectAccount?: boolean;
+  /** offer=paid ou offer=cancel au retour de Stripe */
+  offerReturnStatus?: string | null;
 };
 
 const STATUS_TAG: Record<string, { label: string; className: string }> = {
@@ -119,6 +156,21 @@ const TYPE_EVENEMENT_LABEL: Record<string, string> = {
   retraite: "Retraite",
 };
 
+type OfferItem = {
+  id: string;
+  owner_id: string;
+  salle_id?: string;
+  amount_cents: number;
+  expires_at: string;
+  status: "pending" | "paid" | "refused" | "expired";
+  message: string | null;
+  event_type?: string | null;
+  date_debut?: string | null;
+  date_fin?: string | null;
+  created_at: string;
+  contract_path?: string | null;
+};
+
 export function MessagerieClient({
   threads,
   currentUserId,
@@ -126,6 +178,8 @@ export function MessagerieClient({
   userType,
   pagination,
   initialDemandeId,
+  hasConnectAccount = false,
+  offerReturnStatus,
 }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<Thread | null>(null);
@@ -145,6 +199,9 @@ export function MessagerieClient({
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [editContent, setEditContent] = useState("");
   const [editSaving, setEditSaving] = useState(false);
+  const [offers, setOffers] = useState<OfferItem[]>([]);
+  const [createOfferModalOpen, setCreateOfferModalOpen] = useState(false);
+  const [offerBannerDismissed, setOfferBannerDismissed] = useState(false);
   const [threadPreferences, setThreadPreferences] = useState<Map<string, { archivedAt?: string | null; deletedAt?: string | null }>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -227,6 +284,15 @@ export function MessagerieClient({
       attachments: attachmentsByMsg.get(m.id) ?? [],
     }));
     setMessages(withAttachments);
+
+    await markExpiredOffersAction(convId);
+
+    const { data: offersData } = await supabase
+      .from("offers")
+      .select("id, owner_id, salle_id, amount_cents, expires_at, status, message, event_type, date_debut, date_fin, created_at, contract_path")
+      .eq("conversation_id", convId)
+      .order("created_at", { ascending: true });
+    setOffers((offersData ?? []) as OfferItem[]);
   }, []);
 
   useEffect(() => {
@@ -288,6 +354,7 @@ export function MessagerieClient({
     if (!selected) {
       setConversationId(null);
       setMessages([]);
+      setOffers([]);
       setMobileShowChat(false);
       return;
     }
@@ -494,22 +561,38 @@ export function MessagerieClient({
     }
   };
 
-  const formatTime = (dateStr: string | null) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    const diffMs = Date.now() - d.getTime();
-    if (Number.isNaN(diffMs) || diffMs < 0) return "";
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    if (diffMins < 60) return `Il y a ${diffMins}min`;
-    if (diffHours < 24) return `Il y a ${diffHours}h`;
-    if (diffDays === 1) return "Hier";
-    if (diffDays < 7) return `${diffDays} jours`;
-    if (diffDays < 14) return "1 sem";
-    const weeks = Math.floor(diffDays / 7);
-    return Number.isNaN(weeks) ? "" : `${weeks} sem`;
+  const hasPendingOffer = offers.some((o) => o.status === "pending");
+  const canSendOffer =
+    userType === "owner" &&
+    hasConnectAccount &&
+    ["replied", "accepted"].includes(selected?.demandeStatus ?? "") &&
+    !hasPendingOffer &&
+    !!selected?.salleId;
+
+  const handleAcceptAndPay = async (offerId: string) => {
+    try {
+      const res = await fetch("/api/stripe/checkout-offer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ offerId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Erreur");
+      if (data.url) window.location.href = data.url;
+    } catch (e) {
+      alert((e as Error).message ?? "Erreur lors du paiement.");
+    }
   };
+
+  type TimelineItem = { type: "message"; data: Message } | { type: "offer"; data: OfferItem };
+  const timelineItems: TimelineItem[] = [
+    ...messages.map((m) => ({ type: "message" as const, data: m })),
+    ...offers.map((o) => ({ type: "offer" as const, data: o })),
+  ].sort((a, b) => {
+    const aTime = a.type === "message" ? a.data.sent_at : a.data.created_at;
+    const bTime = b.type === "message" ? b.data.sent_at : b.data.created_at;
+    return new Date(aTime).getTime() - new Date(bTime).getTime();
+  });
 
   const otherName = selected?.seekerName ?? "";
   const myInitials = getInitials(currentUserFullName ?? "") || "?";
@@ -644,7 +727,7 @@ export function MessagerieClient({
                         {t.unreadCount > 0 && (
                           <span className="h-2.5 w-2.5 rounded-full bg-[#213398]" aria-hidden />
                         )}
-                        <span className="text-xs text-slate-500">{formatTime(t.lastMessageAt ?? t.createdAt ?? null)}</span>
+                        <span className="text-xs text-slate-500"><RelativeTime dateStr={t.lastMessageAt ?? t.createdAt ?? null} /></span>
                       </div>
                     </div>
                     <p className="mt-0.5 truncate text-sm text-slate-600">
@@ -755,6 +838,62 @@ export function MessagerieClient({
             </div>
           </div>
 
+          {offerReturnStatus === "paid" && !offerBannerDismissed && (
+            <div className="flex items-center justify-between gap-3 border-b border-emerald-200 bg-emerald-50 px-4 py-3">
+              <p className="text-sm font-medium text-emerald-800">Paiement effectué !</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setOfferBannerDismissed(true);
+                  const base = userType === "seeker" ? "/dashboard/messagerie" : "/proprietaire/messagerie";
+                  router.replace(base + (selected ? `?demandeId=${selected.demandeId}` : ""), { scroll: false });
+                }}
+                className="text-emerald-600 hover:text-emerald-800"
+                aria-label="Fermer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+          {offerReturnStatus === "cancel" && !offerBannerDismissed && (
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3">
+              <p className="text-sm text-slate-600">Paiement annulé.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setOfferBannerDismissed(true);
+                  const base = userType === "seeker" ? "/dashboard/messagerie" : "/proprietaire/messagerie";
+                  router.replace(base + (selected ? `?demandeId=${selected.demandeId}` : ""), { scroll: false });
+                }}
+                className="text-slate-500 hover:text-slate-700"
+                aria-label="Fermer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Bouton pour réafficher les détails (si fermés définitivement) */}
+          {userType === "owner" && detailsClosedDefinitively && selected && (
+            <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 md:px-6">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-[#213398] border-[#213398]/40 hover:bg-[#213398]/5"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    localStorage.removeItem("messagerie_details_closed");
+                    localStorage.removeItem("messagerie_details_auto_expanded");
+                  }
+                  setDetailsClosedDefinitively(false);
+                  setDetailsOpen(true);
+                }}
+              >
+                <Paperclip className="mr-2 h-4 w-4" />
+                Afficher les détails de la demande
+              </Button>
+            </div>
+          )}
           {/* Détails de la demande (propriétaire) */}
           {userType === "owner" && !detailsClosedDefinitively && (
             <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-3 md:px-6">
@@ -845,6 +984,19 @@ export function MessagerieClient({
                     </Button>
                   </div>
                 )}
+                {detailsOpen && canSendOffer && (
+                  <div className="mt-4 border-t border-slate-100 pt-3">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-[#213398]/50 text-[#213398] hover:bg-[#213398]/5"
+                      onClick={() => setCreateOfferModalOpen(true)}
+                    >
+                      <Banknote className="mr-2 h-4 w-4" />
+                      Envoyer une offre
+                    </Button>
+                  </div>
+                )}
                 <p className="mt-3 text-xs text-slate-500">
                   Répondez rapidement pour améliorer votre taux de réponse et votre visibilité.
                 </p>
@@ -852,11 +1004,31 @@ export function MessagerieClient({
             </div>
           )}
 
-          {/* Messages */}
+          {/* Messages & Offres */}
           <div className="min-h-0 flex-1 shrink overflow-y-auto overscroll-contain p-4 md:p-6">
             <p className="mb-4 text-xs font-medium text-slate-400">Aujourd&apos;hui</p>
             <div className="space-y-4">
-              {messages.map((m) => {
+              {timelineItems.map((item) => {
+                if (item.type === "offer") {
+                  return (
+                    <div key={`offer-${item.data.id}`} className="flex">
+                      <OfferCard
+                        offer={item.data}
+                        userType={userType}
+                        currentUserId={currentUserId}
+                        onAcceptAndPay={handleAcceptAndPay}
+                        onRefused={() => {
+                          setOffers((prev) =>
+                            prev.map((o) => (o.id === item.data.id ? { ...o, status: "refused" as const } : o))
+                          );
+                          router.refresh();
+                        }}
+                        onNewOffer={() => setCreateOfferModalOpen(true)}
+                      />
+                    </div>
+                  );
+                }
+                const m = item.data;
                 const isMe = m.sender_id === currentUserId;
                 return (
                   <div key={m.id} className={`flex gap-3 ${isMe ? "flex-row-reverse" : ""}`}>
@@ -1046,7 +1218,50 @@ export function MessagerieClient({
                 </Button>
               </div>
             )}
+            {canSendOffer && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs border-[#213398]/50 text-[#213398] hover:bg-[#213398]/5"
+                  onClick={() => setCreateOfferModalOpen(true)}
+                >
+                  <Banknote className="mr-1.5 h-3.5 w-3.5" />
+                  Envoyer une offre
+                </Button>
+              </div>
+            )}
+            {userType === "owner" &&
+              !hasConnectAccount &&
+              ["replied", "accepted"].includes(selected?.demandeStatus ?? "") &&
+              !hasPendingOffer &&
+              !!selected?.salleId && (
+              <div className="mt-2">
+                <Link
+                  href="/proprietaire/paiement#recevoir-paiements"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-100"
+                >
+                  <Banknote className="h-3.5 w-3.5" />
+                  Activez les paiements pour envoyer une offre
+                </Link>
+              </div>
+            )}
           </div>
+
+          {selected && conversationId && selected.salleId && (
+            <CreateOfferModal
+              open={createOfferModalOpen}
+              onOpenChange={setCreateOfferModalOpen}
+              conversationId={conversationId}
+              demandeId={selected.demandeId}
+              salleId={selected.salleId}
+              seekerId={selected.seekerId}
+              onSuccess={() => {
+                loadMessages(conversationId);
+                router.refresh();
+              }}
+            />
+          )}
 
           <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
             <DialogContent showClose={true}>

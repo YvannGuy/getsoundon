@@ -41,6 +41,7 @@ type UserRow = {
   suspended?: boolean;
   salles_count?: number;
   demandes_count?: number;
+  stripe_account_id?: string | null;
 };
 
 type Props = {
@@ -461,26 +462,34 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
                   : "Réactiver le profil ?"}
             </DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-slate-600">
+          <div className="space-y-2 text-sm text-slate-600">
             {confirmAction?.type === "supprimer" && (
               <>
-                L&apos;utilisateur « {confirmAction.user.full_name || confirmAction.user.email} » sera
-                supprimé définitivement. Cette action est irréversible.
+                <p>
+                  L&apos;utilisateur « {confirmAction.user.full_name || confirmAction.user.email} »
+                  sera supprimé définitivement. Cette action est irréversible.
+                </p>
+                {confirmAction.user.stripe_account_id && (
+                  <p className="rounded-md border border-amber-200 bg-amber-50 p-2 text-amber-800">
+                    Son compte Stripe Connect restera enregistré côté Stripe pour
+                    l&apos;historique et les obligations légales.
+                  </p>
+                )}
               </>
             )}
             {confirmAction?.type === "suspendre" && (
-              <>
+              <p>
                 Les annonces de « {confirmAction.user.full_name || confirmAction.user.email} » ne
                 seront plus actives sur le site.
-              </>
+              </p>
             )}
             {confirmAction?.type === "reactiver" && (
-              <>
+              <p>
                 Les annonces de « {confirmAction.user.full_name || confirmAction.user.email} » seront
                 de nouveau visibles sur le site.
-              </>
+              </p>
             )}
-          </p>
+          </div>
           <DialogFooter className="flex justify-end gap-2 pt-4">
             <Button
               variant="outline"

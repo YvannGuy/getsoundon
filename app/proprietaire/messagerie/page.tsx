@@ -27,7 +27,7 @@ export default async function MessageriePage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name")
+    .select("full_name, stripe_account_id")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -180,6 +180,7 @@ export default async function MessageriePage({
       seekerId: d.seeker_id,
       seekerName: profile?.full_name ?? "Organisateur",
       seekerEmail: profile?.email ?? "",
+      salleId: d.salle_id,
       salleName: salle?.name ?? "Salle",
       salleImage,
       salleCity: salleRow?.city ?? "",
@@ -234,6 +235,7 @@ export default async function MessageriePage({
         currentUserId={user.id}
         currentUserFullName={(profile as { full_name?: string } | null)?.full_name ?? user.user_metadata?.full_name}
         userType="owner"
+        hasConnectAccount={!!(profile as { stripe_account_id?: string } | null)?.stripe_account_id}
         pagination={
           totalPages > 1
             ? {

@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CreditCard,
+  FileText,
   FolderOpen,
   Home,
   LogOut,
@@ -30,6 +31,7 @@ const navItems = [
   { href: "/proprietaire/demandes", label: "Demandes reçues", icon: FolderOpen, badgeKey: "demandes" },
   { href: "/proprietaire/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },
   { href: "/proprietaire/paiement", label: "Paiement", icon: CreditCard },
+  { href: "/proprietaire/contrat", label: "Contrat & facture", icon: FileText },
   { href: "/proprietaire/parametres", label: "Paramètres", icon: Settings },
 ];
 

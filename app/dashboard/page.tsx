@@ -62,9 +62,8 @@ export default async function DashboardPage() {
       .select("product_type, status, amount, created_at")
       .eq("user_id", seekerId)
       .in("status", ["paid", "active"])
-      .in("product_type", ["pass_24h", "pass_48h", "abonnement"])
       .order("created_at", { ascending: false })
-      .limit(5),
+      .limit(20),
   ]);
 
   const trialActivated = !!(profile as { trial_activated_at: string | null } | null)?.trial_activated_at;
@@ -386,7 +385,13 @@ export default async function DashboardPage() {
                     >
                       <div>
                         <p className="font-medium text-black">
-                          {p.product_type === "pass_24h" ? "Pass 24h" : p.product_type === "pass_48h" ? "Pass 48h" : "Abonnement"}
+                          {p.product_type === "pass_24h"
+                            ? "Pass 24h"
+                            : p.product_type === "pass_48h"
+                              ? "Pass 48h"
+                              : p.product_type === "reservation"
+                                ? "Réservation"
+                                : "Abonnement"}
                         </p>
                         <p className="text-sm text-slate-500">
                           {format(new Date(p.created_at), "d MMM yyyy", { locale: fr })}
