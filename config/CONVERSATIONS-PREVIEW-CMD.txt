@@ -1,9 +1,0 @@
-Si "Aucun message" s'affiche dans la liste des conversations sans pouvoir voir l'aperçu :
-
-1. Exécutez config/supabase-conversations-columns.sql dans l'éditeur SQL Supabase
-   (Supabase Dashboard → SQL Editor → New query → coller le contenu → Run)
-
-2. Si erreur sur deleted_at : exécutez d'abord config/supabase-messages-edit-delete.sql
-   Si erreur sur sent_at : exécutez d'abord config/supabase-messages-columns.sql
-
-3. Rafraîchissez la page Messagerie

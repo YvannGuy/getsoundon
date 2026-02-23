@@ -21,7 +21,6 @@ import { cn } from "@/lib/utils";
 
 const FREQUENCES = [
   { id: "ponctuel", label: "Ponctuel", desc: "Un seul événement" },
-  { id: "hebdomadaire", label: "Hebdomadaire", desc: "Chaque semaine" },
   { id: "mensuel", label: "Mensuel", desc: "Chaque mois" },
 ] as const;
 
@@ -86,7 +85,6 @@ export function FormulaireDisponibilite({ salle }: { salle: Salle }) {
   };
 
   const isPonctuel = frequence === "ponctuel";
-  const isHebdomadaire = frequence === "hebdomadaire";
   const isMensuel = frequence === "mensuel";
 
   const toggleJourSemaine = (jour: string) => {
@@ -99,7 +97,7 @@ export function FormulaireDisponibilite({ salle }: { salle: Salle }) {
     dateDebut &&
     (isPonctuel
       ? heureDebut && heureFin
-      : (isHebdomadaire || isMensuel) &&
+      : isMensuel &&
           joursSemaine.length > 0 &&
           dateFin &&
           heureDebut &&
@@ -173,7 +171,7 @@ export function FormulaireDisponibilite({ salle }: { salle: Salle }) {
                 onClick={() => {
                   setFrequence(f.id);
                   if (f.id === "ponctuel") setDateFin(undefined);
-                  if (f.id !== "hebdomadaire" && f.id !== "mensuel") setJoursSemaine([]);
+                  if (f.id !== "mensuel") setJoursSemaine([]);
                 }}
                 className={cn(
                   "flex-1 rounded-lg border px-4 py-3 text-left text-sm transition-colors",
@@ -216,84 +214,6 @@ export function FormulaireDisponibilite({ salle }: { salle: Salle }) {
               />
               <p className="mt-1.5 text-xs text-slate-500">
                 Laissez vide pour un événement sur une seule journée.
-              </p>
-            </div>
-          </>
-        )}
-
-        {isHebdomadaire && (
-          <>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Jours souhaités *
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {JOURS_SEMAINE.map(({ id, label }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => toggleJourSemaine(id)}
-                    className={cn(
-                      "rounded-lg border px-3 py-2 text-sm font-medium capitalize transition-colors",
-                      joursSemaine.includes(id)
-                        ? "border-violet-500 bg-violet-600 text-white"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
-                    )}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <p className="mt-1.5 text-xs text-slate-500">
-                Sélectionnez un ou plusieurs jours par semaine
-              </p>
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Horaires *
-              </label>
-              <div className="flex items-center gap-3">
-                <div className="relative flex-1">
-                  <Clock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    type="time"
-                    value={heureDebut}
-                    onChange={(e) => setHeureDebut(e.target.value)}
-                    className="h-11 rounded-lg border-slate-200 pl-10"
-                  />
-                </div>
-                <span className="text-slate-400">→</span>
-                <div className="relative flex-1">
-                  <Clock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    type="time"
-                    value={heureFin}
-                    onChange={(e) => setHeureFin(e.target.value)}
-                    className="h-11 rounded-lg border-slate-200 pl-10"
-                  />
-                </div>
-              </div>
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Période (du ... au ...) *
-              </label>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <DatePicker
-                  value={dateDebut}
-                  onChange={setDateDebut}
-                  placeholder="Date de début"
-                  className="w-full"
-                />
-                <DatePicker
-                  value={dateFin}
-                  onChange={setDateFin}
-                  placeholder="Date de fin"
-                  className="w-full"
-                />
-              </div>
-              <p className="mt-1.5 text-xs text-slate-500">
-                Période pendant laquelle vous souhaitez réserver
               </p>
             </div>
           </>

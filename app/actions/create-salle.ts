@@ -1,12 +1,16 @@
 "use server";
 
 import { getPlatformSettings } from "@/app/actions/admin-settings";
+import { sendNewSallePendingAdminNotification } from "@/lib/email";
 import { mapOnboardingToSalle } from "@/lib/onboarding-to-salle";
 import { createClient } from "@/lib/supabase/server";
 
 const BUCKET_NAME = "salle-photos";
+const VIDEO_BUCKET_NAME = "salle-videos";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png"];
+const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm"];
 
 function slugify(text: string): string {
   return text
@@ -153,6 +157,41 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     imageUrls = ["/img.png"];
   }
 
+  let videoUrl: string | null = null;
+  const videoFile = formData.get("video");
+  if (videoFile instanceof File && videoFile.size > 0) {
+    if (
+      !ALLOWED_VIDEO_TYPES.includes(videoFile.type) ||
+      videoFile.size > MAX_VIDEO_SIZE
+    ) {
+      return {
+        success: false,
+        error: "Vidéo invalide (MP4 ou WebM, max 50 Mo).",
+      };
+    }
+    const prefix = user.id;
+    const timestamp = Date.now();
+    const ext = videoFile.name.match(/\.(mp4|webm)$/i)?.[1] ?? "mp4";
+    const path = `${prefix}/${timestamp}.${ext}`;
+    const buffer = Buffer.from(await videoFile.arrayBuffer());
+
+    const { error: vidError } = await supabase.storage
+      .from(VIDEO_BUCKET_NAME)
+      .upload(path, buffer, {
+        contentType: videoFile.type,
+        upsert: false,
+      });
+
+    if (vidError) {
+      return { success: false, error: `Upload vidéo échoué : ${vidError.message}` };
+    }
+
+    const { data: vidUrlData } = supabase.storage
+      .from(VIDEO_BUCKET_NAME)
+      .getPublicUrl(path);
+    videoUrl = vidUrlData.publicUrl;
+  }
+
   const slug = generateSlug(nom);
   const mapped = mapOnboardingToSalle(onboardingData, slug, imageUrls);
 
@@ -180,6 +219,7 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     price_per_hour: mapped.pricePerHour ?? (parseInt(tarifHoraire, 10) || null),
     description: mapped.description ?? "",
     images: mapped.images ?? imageUrls,
+    video_url: videoUrl,
     features: mapped.features ?? [],
     conditions: mapped.conditions ?? [],
     pricing_inclusions: mapped.pricingInclusions ?? [],
@@ -203,6 +243,24 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
   if (error) {
     console.error("createSalle error:", error);
     return { success: false, error: error.message };
+  }
+
+  // Notification admin si annonce en attente de validation (non bloquant)
+  if (status === "pending") {
+    const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    if (adminEmails.length > 0) {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+      const validationUrl = `${siteUrl}/admin/annonces-a-valider`;
+      sendNewSallePendingAdminNotification(
+        adminEmails,
+        (mapped.name ?? nom) || "Ma salle",
+        mapped.city ?? ville,
+        validationUrl
+      ).catch((e) => console.error("[createSalle] admin notification email:", e));
+    }
   }
 
   return { success: true, slug, status };

@@ -131,7 +131,7 @@ export default async function SalleDetailPage({
       <main className="container max-w-[1120px] py-8">
         <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
           <div>
-            <SalleGallery images={salle.images} name={salle.name} />
+            <SalleGallery images={salle.images} videoUrl={salle.videoUrl} name={salle.name} />
             <SalleActionsBar
               salleId={salle.id}
               salleName={salle.name}

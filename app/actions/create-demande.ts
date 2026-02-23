@@ -25,7 +25,7 @@ export async function createDemande(formData: FormData): Promise<CreateDemandeRe
   const salleId = String(formData.get("salleId") ?? "").trim();
   const dateDebutStr = String(formData.get("dateDebut") ?? "").trim();
   const dateFinStr = String(formData.get("dateFin") ?? "").trim();
-  const frequence = String(formData.get("frequence") ?? "ponctuel") as "ponctuel" | "hebdomadaire" | "mensuel";
+  const frequence = String(formData.get("frequence") ?? "ponctuel") as "ponctuel" | "mensuel";
   const joursSemaine = JSON.parse(String(formData.get("joursSemaine") ?? "[]")) as string[];
   const nbPersonnes = parseInt(String(formData.get("nbPersonnes") ?? "0"), 10);
   const typeEvenement = String(formData.get("typeEvenement") ?? "").trim() || null;
@@ -43,17 +43,6 @@ export async function createDemande(formData: FormData): Promise<CreateDemandeRe
   }
 
   const dateFin = dateFinStr ? new Date(dateFinStr) : null;
-  if (frequence === "hebdomadaire") {
-    if (joursSemaine.length === 0) {
-      return { success: false, error: "Sélectionnez au moins un jour de la semaine." };
-    }
-    if (!heureDebut || !heureFin || heureDebut === "--- --:--" || heureFin === "--- --:--") {
-      return { success: false, error: "Les horaires sont requis pour une location hebdomadaire." };
-    }
-    if (!dateFin || isNaN(dateFin.getTime())) {
-      return { success: false, error: "La date de fin de période est requise." };
-    }
-  }
   if (frequence === "mensuel") {
     if (joursSemaine.length === 0) {
       return { success: false, error: "Sélectionnez au moins un jour (ex. dimanche, mardi, jeudi)." };
@@ -83,8 +72,8 @@ export async function createDemande(formData: FormData): Promise<CreateDemandeRe
     date_debut: dateDebut.toISOString().slice(0, 10),
     date_fin: dateFin && !isNaN(dateFin.getTime()) ? dateFin.toISOString().slice(0, 10) : null,
     nb_personnes: nbPersonnes || null,
-    frequence: ["ponctuel", "hebdomadaire", "mensuel"].includes(frequence) ? frequence : "ponctuel",
-    jours_semaine: (frequence === "hebdomadaire" || frequence === "mensuel") && joursSemaine.length > 0 ? joursSemaine : [],
+    frequence: ["ponctuel", "mensuel"].includes(frequence) ? frequence : "ponctuel",
+    jours_semaine: frequence === "mensuel" && joursSemaine.length > 0 ? joursSemaine : [],
     heure_debut_souhaitee: toTime(heureDebut),
     heure_fin_souhaitee: toTime(heureFin),
     message: message || null,

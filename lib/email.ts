@@ -323,6 +323,47 @@ p{margin:0 0 12px;}
   return { success: !error, error: error?.message };
 }
 
+/** Notifie les admins quand une nouvelle annonce est soumise et doit être validée */
+export async function sendNewSallePendingAdminNotification(
+  adminEmails: string[],
+  salleName: string,
+  salleCity: string,
+  validationUrl: string
+) {
+  if (!process.env.RESEND_API_KEY || adminEmails.length === 0) {
+    return { success: false };
+  }
+  const to = adminEmails;
+  const { error } = await resend.emails.send({
+    from,
+    to,
+    subject: `[salledeculte.com] Nouvelle annonce à valider : ${salleName}`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8">
+<style>
+body{font-family:system-ui,sans-serif;line-height:1.65;color:#334155;max-width:560px;margin:0 auto;padding:24px;font-size:15px;}
+h1{color:#0f172a;font-size:20px;font-weight:600;margin:0 0 20px;}
+a{color:#213398;text-decoration:none;}
+a:hover{text-decoration:underline;}
+.btn{display:inline-block;background:#213398;color:#fff!important;padding:12px 24px;border-radius:8px;margin:16px 0;font-weight:500;}
+p{margin:0 0 12px;}
+.signature{margin-top:24px;color:#64748b;font-size:14px;}
+</style>
+</head>
+<body>
+  <h1>Nouvelle annonce à valider</h1>
+  <p>Une nouvelle annonce a été soumise et nécessite votre validation :</p>
+  <p><strong>${escapeHtml(salleName)}</strong> — ${escapeHtml(salleCity)}</p>
+  <p><a href="${validationUrl}" class="btn">Voir et valider l'annonce</a></p>
+  <p class="signature">L'équipe salledeculte.com</p>
+</body>
+</html>`,
+  });
+  return { success: !error, error: error?.message };
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")

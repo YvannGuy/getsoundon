@@ -6,9 +6,11 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 export function SalleGallery({
   images,
+  videoUrl,
   name,
 }: {
   images: string[];
+  videoUrl?: string | null;
   name: string;
 }) {
   const preventSave = useCallback((e: React.MouseEvent) => e.preventDefault(), []);
@@ -39,6 +41,20 @@ export function SalleGallery({
 
   return (
     <>
+      {videoUrl && (
+        <div className="mb-6 overflow-hidden rounded-xl bg-slate-900">
+          <video
+            src={videoUrl}
+            controls
+            playsInline
+            className="aspect-video w-full object-contain"
+            preload="metadata"
+            poster={imgs[0]}
+          >
+            Votre navigateur ne supporte pas la lecture vidéo.
+          </video>
+        </div>
+      )}
       <div
         className="mb-8 grid gap-3 md:grid-cols-[1fr_120px] select-none"
         onContextMenu={preventSave}

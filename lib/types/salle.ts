@@ -17,6 +17,7 @@ export type Salle = {
   pricePerHour?: number | null;
   description: string;
   images: string[];
+  videoUrl?: string | null;
   features: { label: string; sublabel?: string; icon: string }[];
   conditions: { label: string; icon: string }[];
   pricingInclusions: string[];
@@ -40,6 +41,7 @@ export type SalleRow = {
   price_per_hour?: number | null;
   description: string | null;
   images: string[];
+  video_url?: string | null;
   features: unknown;
   conditions: unknown;
   pricing_inclusions: string[];
@@ -90,6 +92,7 @@ export function rowToSalle(row: SalleRow): Salle {
     pricePerHour: row.price_per_hour ?? null,
     description: row.description ?? "",
     images: Array.isArray(row.images) ? row.images : [],
+    videoUrl: row.video_url ?? null,
     features: Array.isArray(row.features) ? (row.features as Salle["features"]) : [],
     conditions: Array.isArray(row.conditions) ? (row.conditions as Salle["conditions"]) : [],
     pricingInclusions: Array.isArray(row.pricing_inclusions) ? row.pricing_inclusions : [],

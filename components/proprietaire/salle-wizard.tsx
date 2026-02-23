@@ -22,6 +22,7 @@ import {
   Music,
   ParkingCircle,
   Shield,
+  Video,
   Snowflake,
   Sun,
   Users,
@@ -122,6 +123,7 @@ const initialData: WizardData = {
   restrictionSonore: "",
   evenementsAcceptes: [],
   photos: [],
+  video: null,
 };
 
 export type SalleWizardProps = {
@@ -224,6 +226,16 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
       photos: prev.photos.filter((_, i) => i !== index),
     }));
   };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && (file.type === "video/mp4" || file.type === "video/webm") && file.size <= 100 * 1024 * 1024) {
+      setData((prev) => ({ ...prev, video: file }));
+    }
+    e.target.value = "";
+  };
+
+  const handleRemoveVideo = () => setData((prev) => ({ ...prev, video: null }));
 
   const handleDragOver = (e: React.DragEvent) => e.preventDefault();
 
@@ -479,6 +491,8 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
           <Step4
             data={data}
             onFileChange={handleFileChange}
+            onVideoChange={handleVideoChange}
+            onRemoveVideo={handleRemoveVideo}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onRemovePhoto={handleRemovePhoto}
@@ -952,6 +966,8 @@ function Step3({
 function Step4({
   data,
   onFileChange,
+  onVideoChange,
+  onRemoveVideo,
   onDrop,
   onDragOver,
   onRemovePhoto,
@@ -963,6 +979,8 @@ function Step4({
 }: {
   data: WizardData;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onVideoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onRemoveVideo: () => void;
   onDrop: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onRemovePhoto: (index: number) => void;
@@ -972,6 +990,7 @@ function Step4({
   minPhotos: number;
   maxPhotos: number;
 }) {
+  const videoInputRef = useRef<HTMLInputElement | null>(null);
   const canAddMore = data.photos.length < maxPhotos;
   const canContinue = data.photos.length >= minPhotos;
 
@@ -1035,6 +1054,47 @@ function Step4({
           <p className="mt-3 text-xs text-slate-400">Formats acceptés : JPG, PNG</p>
         </div>
       )}
+      <div className="mt-6">
+        <label className="text-sm font-medium text-slate-700">Vidéo de présentation (optionnel)</label>
+        <p className="mt-1 text-xs text-slate-500">MP4 ou WebM, max 50 Mo</p>
+        {data.video ? (
+          <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#5b4dbf]/10">
+              <Video className="h-6 w-6 text-[#5b4dbf]" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-black">{data.video.name}</p>
+              <p className="text-xs text-slate-500">{(data.video.size / 1024 / 1024).toFixed(1)} Mo</p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0 border-slate-300"
+              onClick={onRemoveVideo}
+            >
+              Supprimer
+            </Button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-3 border-slate-300 bg-white"
+            onClick={() => videoInputRef.current?.click()}
+          >
+            <Video className="mr-2 h-4 w-4" />
+            Ajouter une vidéo
+          </Button>
+        )}
+        <input
+          ref={videoInputRef as React.Ref<HTMLInputElement>}
+          type="file"
+          accept="video/mp4,video/webm"
+          className="hidden"
+          onChange={onVideoChange}
+        />
+      </div>
       <div className="mt-6 flex items-center gap-2 rounded-lg bg-[#5b4dbf]/10 p-3 text-sm text-[#5b4dbf]">
         <Lightbulb className="h-4 w-4 shrink-0" />
         Les annonces avec photos reçoivent beaucoup plus de demandes
@@ -1134,6 +1194,12 @@ function Step5({
             {data.features.length ? FEATURES.filter((f) => data.features.includes(f.id)).map((f) => f.label).join(", ") : "—"}
           </p>
         </div>
+        {data.video && (
+          <div>
+            <p className="text-xs font-medium text-slate-500">Vidéo de présentation</p>
+            <p className="mt-1 text-sm text-black">{data.video.name}</p>
+          </div>
+        )}
         <div>
           <p className="text-xs font-medium text-slate-500">Jours et horaires d&apos;ouverture</p>
           <div className="mt-2 space-y-1">
