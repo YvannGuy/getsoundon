@@ -2,8 +2,12 @@
 
 import { getPlatformSettings } from "@/app/actions/admin-settings";
 import { checkCanCreateDemande } from "@/lib/pass-utils";
+import { sendNewDemandeNotification } from "@/lib/email";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export type CreateDemandeResult =
   | { success: true }
@@ -98,6 +102,41 @@ export async function createDemande(formData: FormData): Promise<CreateDemandeRe
   if (error) {
     console.error("createDemande error:", error);
     return { success: false, error: error.message };
+  }
+
+  // Notification email au propriétaire (non bloquant)
+  try {
+    const adminSupabase = createAdminClient();
+    const { data: salle } = await adminSupabase
+      .from("salles")
+      .select("name, owner_id")
+      .eq("id", salleId)
+      .single();
+    if (salle?.owner_id) {
+      const { data: ownerProfile } = await adminSupabase
+        .from("profiles")
+        .select("email")
+        .eq("id", salle.owner_id)
+        .single();
+      const { data: seekerProfile } = await adminSupabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+      const ownerEmail = (ownerProfile as { email?: string } | null)?.email;
+      const seekerName = (seekerProfile as { full_name?: string } | null)?.full_name ?? "Un organisateur";
+      const salleName = (salle as { name?: string }).name ?? "votre salle";
+      if (ownerEmail) {
+        await sendNewDemandeNotification(
+          ownerEmail,
+          seekerName,
+          salleName,
+          `${siteUrl}/proprietaire/demandes`
+        );
+      }
+    }
+  } catch (e) {
+    console.error("createDemande: erreur email propriétaire", e);
   }
 
   return { success: true };

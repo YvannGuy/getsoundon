@@ -85,7 +85,7 @@ export default async function DashboardPage() {
     salleIdsDemandes.length > 0
       ? supabase
           .from("conversations")
-          .select("demande_id, last_message_at, last_message_preview")
+          .select("id, demande_id, last_message_at, last_message_preview")
           .in("demande_id", (demandesList ?? []).map((d) => d.id))
       : { data: [] },
   ]);
@@ -93,6 +93,7 @@ export default async function DashboardPage() {
   const salleMapDemandes = new Map((sallesDemandes.data ?? []).map((s) => [s.id, s]));
   const salleMapFavoris = new Map((sallesFavoris.data ?? []).map((s) => [s.id, s]));
   const convByDemande = new Map((convsData.data ?? []).map((c) => [c.demande_id, c]));
+  const convRows = convsData.data ?? [];
 
   const demandesReplied = totalDemandes > 0
     ? await supabase
@@ -103,8 +104,21 @@ export default async function DashboardPage() {
     : { count: 0 };
   const totalReplied = demandesReplied.count ?? 0;
 
-  const convIds = (convsData.data ?? []).map((c) => c.demande_id);
-  const convsCount = convIds.length;
+  // Conversations actives : exclure les archivées et supprimées
+  let convsCount = convRows.length;
+  if (convRows.length > 0) {
+    const convIdsForPrefs = convRows.map((c) => (c as { id: string }).id);
+    const { data: prefs } = await supabase
+      .from("user_conversation_preferences")
+      .select("conversation_id, archived_at, deleted_at")
+      .eq("user_id", seekerId)
+      .in("conversation_id", convIdsForPrefs);
+    const archivedOrDeleted = new Set(
+      (prefs ?? []).filter((p) => (p as { archived_at?: string | null }).archived_at || (p as { deleted_at?: string | null }).deleted_at)
+        .map((p) => p.conversation_id)
+    );
+    convsCount = convRows.filter((c) => !archivedOrDeleted.has((c as { id: string }).id)).length;
+  }
 
   const freeUsed = totalDemandes;
   const baseTotal = settings?.pass?.demandes_gratuites ?? 2;
