@@ -310,7 +310,19 @@ export default async function SalleDetailPage({
           </div>
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            {canContact ? (
+            {isOwnSalle ? (
+              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="text-lg font-semibold text-black">C&apos;est votre annonce</h3>
+                <p className="mt-2 text-[14px] text-slate-600">
+                  Gérez et modifiez votre annonce depuis votre espace propriétaire.
+                </p>
+                <Link href="/proprietaire/annonces">
+                  <Button className="mt-4 h-12 w-full rounded-lg bg-[#213398] font-semibold hover:bg-[#1a2980]">
+                    Gérer mes annonces
+                  </Button>
+                </Link>
+              </div>
+            ) : canContact ? (
               <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-black">Intéressé par cette salle ?</h3>
                 <p className="mt-2 text-[14px] text-slate-600">

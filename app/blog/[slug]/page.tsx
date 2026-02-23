@@ -96,6 +96,14 @@ export default async function BlogPostPage({ params }: Props) {
             <div className="mt-6">
               <ReactMarkdown components={markdownComponents}>{post.content.trim()}</ReactMarkdown>
             </div>
+            <div className="mt-10 flex justify-center border-t border-slate-200 pt-10">
+              <Link
+                href="/auth?tab=signup&userType=owner"
+                className="inline-flex items-center justify-center rounded-lg bg-[#213398] px-8 py-3 text-[15px] font-semibold text-white transition hover:bg-[#1a2980]"
+              >
+                Déposer votre salle
+              </Link>
+            </div>
           </div>
         </article>
       </main>

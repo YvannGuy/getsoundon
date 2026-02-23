@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle2, ChevronRight, Facebook, Headphones, Instagram, Shield, Star, Zap } from "lucide-react";
+import { ArrowRight, CheckCircle2, ChevronRight, Facebook, Headphones, Instagram, Shield, Star, Zap } from "lucide-react";
 
-import { getTrialActivated } from "@/app/actions/trial";
 import { buildCanonical } from "@/lib/seo";
-import { getEffectiveUserType } from "@/lib/auth-utils";
 import { CookiePreferencesLink } from "@/components/cookies/CookiePreferencesLink";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ActiverEssaiButton } from "@/components/home/activer-essai-button";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,32 +17,9 @@ import { PourquoiReserverCarousel } from "@/components/home/pourquoi-reserver-ca
 import { SectionReveal } from "@/components/ui/section-reveal";
 import { siteConfig } from "@/config/site";
 import { getVilleImage } from "@/config/ville-images";
+import { BLOG_POSTS } from "@/lib/blog-posts";
 import { getFeaturedCities } from "@/lib/salles";
 import { getUserOrNull } from "@/lib/supabase/server";
-
-const plans = [
-  {
-    name: "Pass 24h",
-    price: "4,99€",
-    features: ["Demandes illimitées pendant 24h", "Accès complet aux annonces", "Support prioritaire"],
-    cta: "Choisir ce pass",
-  },
-  {
-    name: "Pass 48h",
-    price: "9,99€",
-    badge: "Plus populaire",
-    features: ["Demandes illimitées pendant 48h", "Accès complet aux annonces", "Support prioritaire", "Historique des demandes"],
-    cta: "Choisir ce pass",
-    highlighted: true,
-  },
-  {
-    name: "Abonnement mensuel",
-    price: "19,99€",
-    period: "/mois",
-    features: ["Demandes illimitées", "Accès complet aux annonces", "Support prioritaire 7j/7", "Gestion multi-événements", "Notifications personnalisées"],
-    cta: "Choisir ce pass",
-  },
-];
 
 const steps = [
   {
@@ -104,16 +78,7 @@ export default async function Home() {
     getFeaturedCities(getVilleImage),
     getUserOrNull(),
   ]);
-  const { user, supabase } = authResult;
-  const getProfile = async (uid: string) => {
-    const { data } = await supabase.from("profiles").select("user_type").eq("id", uid).maybeSingle();
-    return data;
-  };
-  const [trialActivated, userType] = await Promise.all([
-    getTrialActivated(user?.id ?? null),
-    user ? getEffectiveUserType(user, getProfile) : Promise.resolve(null),
-  ]);
-  const paiementTrialUrl = userType === "owner" ? "/proprietaire/paiement?trial=1" : "/dashboard/paiement?trial=1";
+  const { user } = authResult;
 
   return (
     <main className="bg-[#f3f6fa] text-black">
@@ -310,149 +275,98 @@ export default async function Home() {
         </div>
       </SectionReveal>
 
-      <SectionReveal id="tarifs" className="bg-[#f3f6fa] py-12">
+      <SectionReveal id="proprietaire" className="bg-white py-16">
         <div className="container max-w-[1120px]">
-          <h2 className="text-center text-[52px] font-semibold tracking-[-0.02em] text-black [zoom:0.5]">Tarifs transparents</h2>
-          <p className="mt-1 text-center text-[24px] text-slate-500 [zoom:0.5]">Choisissez la formule adaptée à vos besoins</p>
-          <div className="mx-auto mt-8 grid max-w-5xl gap-4 md:grid-cols-4">
-            <Card className="h-full border-slate-200 bg-white">
-              <CardContent className="flex h-full flex-col p-6">
-                <div className="h-6" />
-                <p className="mt-3 min-h-[50px] text-[19px] font-semibold leading-[1.2] text-black">Pass Découverte</p>
-                <p className="mt-1 flex min-h-[44px] items-end text-[42px] font-semibold leading-none text-black">
-                  Gratuit
-                </p>
-                <ul className="mt-5 flex-1 space-y-2.5">
-                  {["2 demandes offertes", "Accès complet aux annonces", "Contact direct avec les propriétaires", "Aucune carte requise"].map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-[13px] leading-[1.35] text-slate-600">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-black" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-8 flex-shrink-0">
-                  <ActiverEssaiButton isLoggedIn={!!user} trialActivated={trialActivated} paiementTrialUrl={paiementTrialUrl} variant="gradient" className="w-full" />
-                </div>
-              </CardContent>
-            </Card>
-            {plans.map((plan) => (
-              <Card
-                key={plan.name}
-                className={
-                  plan.highlighted
-                    ? "h-full border-[#213398] bg-[#213398] text-white shadow-[0_14px_26px_rgba(33,51,152,0.35)]"
-                    : "h-full border-slate-200 bg-white"
-                }
+          <div className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-14">
+            <div>
+              <h2 className="text-[32px] font-bold tracking-tight text-black sm:text-[40px] lg:text-[48px]">
+                Pourquoi lister votre salle chez nous ?
+              </h2>
+              <p className="mt-5 text-[17px] leading-relaxed text-slate-600">
+                Mettez-le en ligne dès aujourd&apos;hui et gérez simplement vos demandes, visites et paiements.
+              </p>
+              <p className="mt-3 text-[17px] leading-relaxed text-slate-600">
+                Une plateforme claire, conçue pour simplifier votre organisation.
+              </p>
+              <Link
+                href="/avantages"
+                className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#213398] px-6 text-[15px] font-semibold text-white transition hover:bg-[#1a2980]"
               >
-                <CardContent className="flex h-full flex-col p-6">
-                  <div className="h-6">
-                    {plan.badge ? (
-                      <span className="inline-flex rounded-full bg-white/20 px-3 py-1 text-[10px] font-semibold text-white">{plan.badge}</span>
-                    ) : null}
+                Voir les avantages
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </div>
+            <div className="relative flex flex-col items-center">
+              <div className="relative w-full max-w-[520px] overflow-hidden rounded-xl shadow-lg">
+                <Image
+                  src="/images/proprietaire-lifestyle.png"
+                  alt="Un propriétaire gère ses annonces depuis chez lui"
+                  width={800}
+                  height={534}
+                  className="h-auto w-full object-cover"
+                />
+              </div>
+              <div id="avantages" className="mt-4 flex flex-wrap justify-center gap-4">
+                <div className="rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-center">
+                  <p className="text-[18px] font-bold tracking-tight text-black">100%</p>
+                  <p className="mt-0.5 text-[12px] font-medium text-slate-600">Gratuit</p>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-center">
+                  <p className="text-[18px] font-bold tracking-tight text-black">5min</p>
+                  <p className="mt-0.5 text-[12px] font-medium text-slate-600">Mise en ligne</p>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-center">
+                  <p className="text-[18px] font-bold tracking-tight text-black">24/7</p>
+                  <p className="mt-0.5 text-[12px] font-medium text-slate-600">Gestion</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SectionReveal>
+
+      <SectionReveal id="blog" className="bg-slate-50 py-12">
+        <div className="container max-w-[1120px]">
+          <h2 className="text-center text-[52px] font-semibold tracking-[-0.02em] text-black [zoom:0.5]">Blog</h2>
+          <p className="mt-1 text-center text-[24px] text-slate-500 [zoom:0.5]">Conseils et guides pour vos événements</p>
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {BLOG_POSTS.slice(0, 3).map((post) => (
+              <Link key={post.slug} href={`/blog/${post.slug}`} className="block h-full">
+                <Card className="flex h-full flex-col overflow-hidden transition hover:border-slate-300 hover:shadow-md">
+                  <div className="relative aspect-[16/10] w-full shrink-0 bg-slate-200">
+                    <Image
+                      src={post.image}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
                   </div>
-                  <p
-                    className={
-                      plan.highlighted
-                        ? "mt-3 min-h-[50px] text-[19px] font-semibold leading-[1.2] text-white"
-                        : "mt-3 min-h-[50px] text-[19px] font-semibold leading-[1.2] text-black"
-                    }
-                  >
-                    {plan.name}
-                  </p>
-                  <p
-                    className={
-                      plan.highlighted
-                        ? "mt-1 flex min-h-[44px] items-end text-[42px] font-semibold leading-none text-white"
-                        : "mt-1 flex min-h-[44px] items-end text-[42px] font-semibold leading-none text-black"
-                    }
-                  >
-                    {plan.price}
-                    {plan.period ? (
-                      <span className={plan.highlighted ? "mb-1 ml-1 text-[14px] font-medium text-white/90" : "mb-1 ml-1 text-[14px] font-medium text-slate-500"}>{plan.period}</span>
-                    ) : null}
-                  </p>
-                  <ul className="mt-5 flex-1 space-y-2.5">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className={plan.highlighted ? "flex items-start gap-2 text-[13px] leading-[1.35] text-white/95" : "flex items-start gap-2 text-[13px] leading-[1.35] text-slate-600"}>
-                        <CheckCircle2 className={plan.highlighted ? "mt-0.5 h-4 w-4 text-white" : "mt-0.5 h-4 w-4 text-black"} />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-8 flex-shrink-0">
-                    <Button
-                      variant={plan.highlighted ? "secondary" : "outline"}
-                      className={
-                        plan.highlighted
-                          ? "h-10 w-full border-0 bg-white text-[14px] font-semibold text-black hover:bg-[#213398]/5"
-                          : "h-10 w-full border-0 bg-slate-100 text-[14px] font-semibold text-slate-600 hover:bg-slate-200"
-                      }
-                  >
-                    {plan.cta}
-                  </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  <CardContent className="flex flex-1 flex-col gap-3 p-5">
+                    <h3 className="text-[17px] font-semibold leading-snug text-black">{post.title}</h3>
+                    <p className="line-clamp-2 flex-1 text-[14px] leading-[1.45] text-slate-600">{post.excerpt}</p>
+                    <span className="mt-auto flex items-center gap-1 text-[13px] font-medium text-[#213398]">
+                      Lire l&apos;article
+                      <ChevronRight className="h-4 w-4" />
+                    </span>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
-        </div>
-      </SectionReveal>
-
-      <SectionReveal className="bg-slate-50 py-12">
-        <div className="container max-w-[1120px]">
-          <h2 className="text-center text-[52px] font-semibold tracking-[-0.02em] text-black [zoom:0.5]">
-            Vous cherchez une salle ou vous en proposez une ?
-          </h2>
-          <div className="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-2 sm:items-stretch">
-            <div className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 hover:shadow-md">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#213398]/10 text-2xl">
-                🏛
-              </div>
-              <h3 className="mt-4 text-xl font-semibold text-black">Trouver un lieu</h3>
-              <p className="mt-2 flex-1 text-[15px] leading-relaxed text-slate-600">
-                Explorez des salles adaptées à votre événement.
-              </p>
-              <Link
-                href="/#recherche"
-                className="mt-5 flex h-10 w-full items-center justify-center rounded-lg bg-[#213398] px-5 text-[14px] font-semibold text-white transition hover:bg-[#1a2980]"
-              >
-                Rechercher une salle
-              </Link>
-            </div>
-            <div className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 hover:shadow-md">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-2xl">
-                🏢
-              </div>
-              <h3 className="mt-4 text-xl font-semibold text-black">Proposer votre salle</h3>
-              <p className="mt-2 flex-1 text-[15px] leading-relaxed text-slate-600">
-                Recevez des demandes ciblées et qualifiées.
-              </p>
-              <Link
-                href="/auth?tab=signup&userType=owner"
-                className="mt-5 flex h-10 w-full items-center justify-center rounded-lg border-0 bg-slate-800 px-5 text-[14px] font-semibold text-white transition hover:bg-slate-900"
-              >
-                Déposer mon lieu
-              </Link>
-            </div>
-          </div>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-[14px] text-slate-500">
-            <span className="inline-flex items-center gap-2">
-              <Shield className="h-4 w-4 shrink-0 text-slate-400" />
-              Paiement sécurisé
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <Star className="h-4 w-4 shrink-0 text-slate-400" />
-              Lieux vérifiés
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <Headphones className="h-4 w-4 shrink-0 text-slate-400" />
-              Support dédié
-            </span>
+          <div className="mt-10 text-center">
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#213398] px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-[#1a2980]"
+            >
+              Voir tous les articles
+              <ChevronRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </SectionReveal>
 
-      <SectionReveal id="faq" className="pb-12">
+      <SectionReveal id="faq" className="pt-12 pb-12">
         <div className="container max-w-[1120px]">
           <h2 className="text-center text-[52px] font-semibold tracking-[-0.02em] text-black [zoom:0.5]">Questions fréquentes</h2>
           <p className="mt-1 text-center text-[24px] text-slate-500 [zoom:0.5]">Tout ce que vous devez savoir</p>
