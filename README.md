@@ -99,6 +99,21 @@ Les salles créées via l'onboarding ont le statut `pending`. Pour les afficher 
 
 Sans ces variables, le site renvoie une erreur 500 (le proxy Supabase ne peut pas s'initialiser).
 
+## Monitoring Sentry (optionnel mais recommandé)
+
+Sentry est configuré côté client, serveur Node.js et Edge.
+
+Variables minimales à ajouter :
+
+- `NEXT_PUBLIC_SENTRY_DSN` – DSN du projet Sentry
+- `SENTRY_ENVIRONMENT` – ex: `development`, `staging`, `production`
+
+Optionnel pour upload automatique des sourcemaps en CI/CD :
+
+- `SENTRY_AUTH_TOKEN`
+- `SENTRY_ORG`
+- `SENTRY_PROJECT`
+
 ## Admin Dashboard
 
 1. Ajoutez `ADMIN_EMAILS` dans `.env.local` : liste d'emails séparés par des virgules (ex: `admin@example.com,autre@example.com`)
