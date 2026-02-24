@@ -11,6 +11,7 @@ type SalleCalendrier = {
   id: string;
   name: string;
   city: string | null;
+  horaires_par_jour: Record<string, { debut: string; fin: string }> | null;
   jours_visite: string[] | null;
   visite_dates: string[] | null;
   visite_heure_debut: string | null;
@@ -55,25 +56,66 @@ function deriveInitialDays(s: SalleCalendrier): string[] {
   return [...unique];
 }
 
+function deriveInitialHorairesParJour(
+  s: SalleCalendrier,
+  jours: string[]
+): Record<string, { debut: string; fin: string }> {
+  const baseDebut = normalizeTime(s.visite_heure_debut, "14:00");
+  const baseFin = normalizeTime(s.visite_heure_fin, "18:00");
+  const result: Record<string, { debut: string; fin: string }> = {};
+
+  for (const jour of jours) {
+    if (s.horaires_par_jour?.[jour]?.debut && s.horaires_par_jour?.[jour]?.fin) {
+      result[jour] = {
+        debut: normalizeTime(s.horaires_par_jour[jour].debut, baseDebut),
+        fin: normalizeTime(s.horaires_par_jour[jour].fin, baseFin),
+      };
+      continue;
+    }
+    const firstDateForDay = s.visite_dates?.find((d) => {
+      const dow = new Date(`${d}T12:00:00`).getDay();
+      const map: Record<number, string> = {
+        0: "dimanche",
+        1: "lundi",
+        2: "mardi",
+        3: "mercredi",
+        4: "jeudi",
+        5: "vendredi",
+        6: "samedi",
+      };
+      return map[dow] === jour;
+    });
+    const perDate = firstDateForDay ? s.visite_horaires_par_date?.[firstDateForDay] : undefined;
+    result[jour] = {
+      debut: normalizeTime(perDate?.debut, baseDebut),
+      fin: normalizeTime(perDate?.fin, baseFin),
+    };
+  }
+
+  return result;
+}
+
 export function CalendrierVisitesManager({ salles }: { salles: SalleCalendrier[] }) {
   const initialState = useMemo(() => {
     return Object.fromEntries(
       salles.map((s) => {
-        const firstDate = s.visite_dates?.[0];
-        const perDate = firstDate ? s.visite_horaires_par_date?.[firstDate] : undefined;
+        const jours = deriveInitialDays(s);
         return [
           s.id,
           {
-            jours: deriveInitialDays(s),
-            heureDebut: normalizeTime(perDate?.debut ?? s.visite_heure_debut, "14:00"),
-            heureFin: normalizeTime(perDate?.fin ?? s.visite_heure_fin, "18:00"),
+            jours,
+            horairesParJour: deriveInitialHorairesParJour(s, jours),
             saving: false,
           },
         ];
       })
     ) as Record<
       string,
-      { jours: string[]; heureDebut: string; heureFin: string; saving: boolean }
+      {
+        jours: string[];
+        horairesParJour: Record<string, { debut: string; fin: string }>;
+        saving: boolean;
+      }
     >;
   }, [salles]);
 
@@ -117,9 +159,15 @@ export function CalendrierVisitesManager({ salles }: { salles: SalleCalendrier[]
                             ...prev,
                             [salle.id]: {
                               ...old,
-                              jours: exists
-                                ? old.jours.filter((x) => x !== j.id)
-                                : [...old.jours, j.id],
+                              jours: exists ? old.jours.filter((x) => x !== j.id) : [...old.jours, j.id],
+                              horairesParJour: exists
+                                ? Object.fromEntries(
+                                    Object.entries(old.horairesParJour).filter(([key]) => key !== j.id)
+                                  )
+                                : {
+                                    ...old.horairesParJour,
+                                    [j.id]: { debut: "14:00", fin: "18:00" },
+                                  },
                             },
                           };
                         });
@@ -132,34 +180,57 @@ export function CalendrierVisitesManager({ salles }: { salles: SalleCalendrier[]
               </div>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Heure début</label>
-                <Input
-                  type="time"
-                  value={current?.heureDebut ?? "14:00"}
-                  onChange={(e) =>
-                    setState((prev) => ({
-                      ...prev,
-                      [salle.id]: { ...prev[salle.id], heureDebut: e.target.value },
-                    }))
-                  }
-                />
+            {current?.jours.length ? (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm font-medium text-slate-700">Créneaux par jour</p>
+                {current.jours.map((jour) => (
+                  <div
+                    key={`${salle.id}-${jour}`}
+                    className="grid items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/60 p-3 sm:grid-cols-[120px,1fr,1fr]"
+                  >
+                    <span className="text-sm font-medium capitalize text-slate-700">{jour}</span>
+                    <Input
+                      type="time"
+                      value={current.horairesParJour[jour]?.debut ?? "14:00"}
+                      onChange={(e) =>
+                        setState((prev) => ({
+                          ...prev,
+                          [salle.id]: {
+                            ...prev[salle.id],
+                            horairesParJour: {
+                              ...prev[salle.id].horairesParJour,
+                              [jour]: {
+                                ...(prev[salle.id].horairesParJour[jour] ?? { fin: "18:00" }),
+                                debut: e.target.value,
+                              },
+                            },
+                          },
+                        }))
+                      }
+                    />
+                    <Input
+                      type="time"
+                      value={current.horairesParJour[jour]?.fin ?? "18:00"}
+                      onChange={(e) =>
+                        setState((prev) => ({
+                          ...prev,
+                          [salle.id]: {
+                            ...prev[salle.id],
+                            horairesParJour: {
+                              ...prev[salle.id].horairesParJour,
+                              [jour]: {
+                                ...(prev[salle.id].horairesParJour[jour] ?? { debut: "14:00" }),
+                                fin: e.target.value,
+                              },
+                            },
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+                ))}
               </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Heure fin</label>
-                <Input
-                  type="time"
-                  value={current?.heureFin ?? "18:00"}
-                  onChange={(e) =>
-                    setState((prev) => ({
-                      ...prev,
-                      [salle.id]: { ...prev[salle.id], heureFin: e.target.value },
-                    }))
-                  }
-                />
-              </div>
-            </div>
+            ) : null}
 
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <Button
@@ -173,8 +244,7 @@ export function CalendrierVisitesManager({ salles }: { salles: SalleCalendrier[]
                   const res = await updateSalleVisitesCalendarAction({
                     salleId: salle.id,
                     joursVisite: current.jours,
-                    heureDebut: current.heureDebut,
-                    heureFin: current.heureFin,
+                    horairesParJour: current.horairesParJour,
                   });
                   setState((prev) => ({
                     ...prev,

@@ -150,13 +150,20 @@ function toYmd(d: Date): string {
 export async function updateSalleVisitesCalendarAction(params: {
   salleId: string;
   joursVisite: string[];
-  heureDebut: string;
-  heureFin: string;
+  horairesParJour: Record<string, { debut: string; fin: string }>;
 }): Promise<{ success: boolean; error?: string }> {
-  const { salleId, joursVisite, heureDebut, heureFin } = params;
+  const { salleId, joursVisite, horairesParJour } = params;
   if (!salleId) return { success: false, error: "Salle manquante" };
-  if (!heureDebut || !heureFin) return { success: false, error: "Horaires requis" };
-  if (heureDebut >= heureFin) return { success: false, error: "L'heure de fin doit être après l'heure de début" };
+
+  for (const jour of joursVisite) {
+    const h = horairesParJour[jour];
+    if (!h?.debut || !h?.fin) {
+      return { success: false, error: `Horaires manquants pour ${jour}` };
+    }
+    if (h.debut >= h.fin) {
+      return { success: false, error: `Heures invalides pour ${jour}` };
+    }
+  }
 
   const supabase = await createClient();
   const {
@@ -177,6 +184,15 @@ export async function updateSalleVisitesCalendarAction(params: {
       .map((j) => JOUR_TO_DOW[j])
       .filter((v): v is number => typeof v === "number")
   );
+  const DOW_TO_JOUR: Record<number, string> = {
+    0: "dimanche",
+    1: "lundi",
+    2: "mardi",
+    3: "mercredi",
+    4: "jeudi",
+    5: "vendredi",
+    6: "samedi",
+  };
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -191,18 +207,27 @@ export async function updateSalleVisitesCalendarAction(params: {
 
   const horairesParDate: Record<string, { debut: string; fin: string }> = {};
   for (const date of generatedDates) {
-    horairesParDate[date] = { debut: heureDebut, fin: heureFin };
+    const dow = new Date(`${date}T12:00:00`).getDay();
+    const jour = DOW_TO_JOUR[dow];
+    const h = horairesParJour[jour];
+    if (h?.debut && h?.fin) {
+      horairesParDate[date] = { debut: h.debut, fin: h.fin };
+    }
   }
+
+  const firstJour = joursVisite[0];
+  const firstHoraires = firstJour ? horairesParJour[firstJour] : null;
 
   const { error } = await supabase
     .from("salles")
     .update({
       jours_visite: joursVisite.length > 0 ? joursVisite : null,
       visite_dates: generatedDates.length > 0 ? generatedDates : null,
-      visite_heure_debut: `${heureDebut}:00`,
-      visite_heure_fin: `${heureFin}:00`,
+      visite_heure_debut: firstHoraires?.debut ? `${firstHoraires.debut}:00` : null,
+      visite_heure_fin: firstHoraires?.fin ? `${firstHoraires.fin}:00` : null,
       visite_horaires_par_date:
         generatedDates.length > 0 ? (horairesParDate as unknown as object) : null,
+      horaires_par_jour: Object.keys(horairesParJour).length > 0 ? horairesParJour : {},
       updated_at: new Date().toISOString(),
     })
     .eq("id", salleId)
@@ -210,7 +235,6 @@ export async function updateSalleVisitesCalendarAction(params: {
 
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/proprietaire/calendrier-visites");
   revalidatePath("/proprietaire/visites");
   revalidatePath("/proprietaire");
   return { success: true };

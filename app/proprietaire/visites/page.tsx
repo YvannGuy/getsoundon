@@ -71,7 +71,7 @@ export default async function VisitesPage({
   const { data: mySalles } = await supabase
     .from("salles")
     .select(
-      "id, name, slug, city, images, jours_visite, visite_dates, visite_heure_debut, visite_heure_fin, visite_horaires_par_date"
+      "id, name, slug, city, images, horaires_par_jour, jours_visite, visite_dates, visite_heure_debut, visite_heure_fin, visite_horaires_par_date"
     )
     .eq("owner_id", user.id);
   const salleIds = (mySalles ?? []).map((s) => s.id);
