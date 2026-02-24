@@ -33,6 +33,7 @@ const navItems = [
   { href: "/proprietaire/visites", label: "Mes visites", icon: Calendar, badgeKey: "visites" },
   { href: "/proprietaire/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },
   { href: "/proprietaire/paiement", label: "Paiement", icon: CreditCard, badgeKey: "paiement" },
+  { href: "/proprietaire/cautions", label: "Cautions", icon: FolderOpen },
   { href: "/proprietaire/contrat", label: "Contrat & facture", icon: FileText, badgeKey: "contrat" },
   { href: "/proprietaire/parametres", label: "Paramètres", icon: Settings },
 ];

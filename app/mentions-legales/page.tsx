@@ -33,13 +33,15 @@ export default function MentionsLegalesPage() {
           <br />
           Capital social : {editeur.capitalSocial}
           <br />
+          SIRET : {editeur.siret}
+          <br />
+          {editeur.rcs}
+          <br />
           {adresseComplete}
-          {editeur.tvaIntracommunautaire && (
-            <>
-              <br />
-              TVA intracommunautaire : {editeur.tvaIntracommunautaire}
-            </>
-          )}
+          <br />
+          {editeur.tvaIntracommunautaire
+            ? `TVA intracommunautaire : ${editeur.tvaIntracommunautaire}`
+            : "TVA : non assujetti"}
           <br />
           <a href={`mailto:${editeur.email}`} className="text-[#213398] hover:underline">
             {editeur.email}
@@ -105,7 +107,7 @@ export default function MentionsLegalesPage() {
       </section>
 
       <p className="mt-12 text-sm text-slate-500">
-        Dernière mise à jour : février 2025.
+        Dernière mise à jour : février 2026.
       </p>
     </LegalPageLayout>
   );

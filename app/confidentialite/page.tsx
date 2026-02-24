@@ -67,7 +67,7 @@ export default function ConfidentialitePage() {
           </li>
           <li>
             <strong className="text-black">Données de paiement</strong> : informations transmises à Stripe pour le
-            traitement des Pass ; nous ne stockons pas les numéros de carte bancaire
+            traitement des réservations ; nous ne stockons pas les numéros de carte bancaire
           </li>
         </ul>
         <p className="mt-3 text-slate-600">
@@ -85,7 +85,7 @@ export default function ConfidentialitePage() {
           <li>Gestion des comptes utilisateurs</li>
           <li>Mise en relation entre organisateurs et propriétaires</li>
           <li>Publication et gestion des annonces de salles</li>
-          <li>Exécution des achats de Pass (24h, 48h, abonnement)</li>
+          <li>Exécution des paiements de réservation et frais de service</li>
           <li>Envoi de communications relatives au service (confirmations, rappels)</li>
           <li>Prévention des fraudes et respect des obligations légales</li>
           <li>Amélioration des services et analyses statistiques agrégées</li>
@@ -100,7 +100,7 @@ export default function ConfidentialitePage() {
         <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
           <li>
             <strong className="text-black">L&apos;exécution du contrat</strong> : gestion du compte, mise en relation,
-            paiement des Pass
+            paiement des réservations
           </li>
           <li>
             <strong className="text-black">Votre consentement</strong> : newsletter, cookies non essentiels
@@ -235,7 +235,7 @@ export default function ConfidentialitePage() {
       </section>
 
       <p className="mt-12 text-sm text-slate-500">
-        Dernière mise à jour : février 2025.
+        Dernière mise à jour : février 2026.
       </p>
     </LegalPageLayout>
   );

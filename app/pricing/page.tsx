@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const metadata: Metadata = {
   title: "Tarifs",
   description:
-    "salledeculte.com propose une consultation gratuite. Explorez les annonces et envoyez vos demandes aux propriétaires sans frais.",
+    "salledeculte.com propose une consultation gratuite. Les frais de service sont appliqués uniquement lors d'une réservation payée.",
   alternates: { canonical: buildCanonical("/pricing") },
 };
 
@@ -19,7 +19,7 @@ export default function PricingPage() {
       <div className="mx-auto max-w-3xl text-center">
         <h1 className="text-4xl font-semibold tracking-tight text-black">Consultation gratuite</h1>
         <p className="mt-4 text-slate-600">
-          Parcourez les annonces librement et envoyez vos demandes aux propriétaires sans frais.
+          Parcourez les annonces librement et échangez avec les propriétaires sans frais.
         </p>
       </div>
 
@@ -38,7 +38,7 @@ export default function PricingPage() {
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-black" />
-                Envoi de demandes gratuit
+                Demandes et messagerie gratuites
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-black" />
@@ -55,7 +55,8 @@ export default function PricingPage() {
       </section>
 
       <p className="mt-8 text-center text-sm text-slate-500">
-        Les tarifs des locations sont fixés directement par les propriétaires.
+        Les tarifs des locations sont fixés par les propriétaires. Des frais de service fixes de 15 € s&apos;ajoutent
+        au moment du paiement d&apos;une réservation.
       </p>
     </main>
   );

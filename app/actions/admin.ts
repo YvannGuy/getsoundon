@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { getStripe } from "@/lib/stripe";
 import type { Salle } from "@/lib/types/salle";
 import { rowToSalle } from "@/lib/types/salle";
+import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function validateSalleAction(formData: FormData) {
@@ -100,5 +102,119 @@ export async function deleteSalleAction(id: string) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/annonces");
+  return { success: true };
+}
+
+export async function resolveDepositClaimAdminAction(params: {
+  offerId: string;
+  decision: "capture" | "release";
+  captureAmountEur?: number;
+}): Promise<{ success: boolean; error?: string }> {
+  const { offerId, decision, captureAmountEur } = params;
+  if (!offerId) return { success: false, error: "Offre manquante" };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecté" };
+
+  const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  const isAdminByEnv =
+    adminEmails.length > 0 && adminEmails.includes(user.email?.toLowerCase() ?? "");
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("user_type")
+    .eq("id", user.id)
+    .maybeSingle();
+  const isAdminByProfile = profile?.user_type === "admin";
+  if (!isAdminByEnv && !isAdminByProfile) return { success: false, error: "Accès refusé" };
+
+  const admin = createAdminClient();
+  const { data: offer } = await admin
+    .from("offers")
+    .select(
+      "id, deposit_payment_intent_id, deposit_hold_status, deposit_amount_cents, deposit_claim_amount_cents"
+    )
+    .eq("id", offerId)
+    .maybeSingle();
+  if (!offer) return { success: false, error: "Offre introuvable" };
+
+  const row = offer as {
+    id: string;
+    deposit_payment_intent_id: string | null;
+    deposit_hold_status: string | null;
+    deposit_amount_cents: number | null;
+    deposit_claim_amount_cents: number | null;
+  };
+  if (!row.deposit_payment_intent_id) {
+    return { success: false, error: "Empreinte caution introuvable" };
+  }
+  if (!["claim_requested", "authorized"].includes(row.deposit_hold_status ?? "")) {
+    return { success: false, error: "Statut de caution non traitable" };
+  }
+
+  const stripe = getStripe();
+
+  if (decision === "capture") {
+    const maxAmount = Math.max(0, row.deposit_amount_cents ?? 0);
+    const defaultAmount = Math.max(0, row.deposit_claim_amount_cents ?? 0);
+    const amountToCapture = Math.round(
+      ((typeof captureAmountEur === "number" && captureAmountEur > 0 ? captureAmountEur : defaultAmount / 100) *
+        100)
+    );
+    if (!Number.isFinite(amountToCapture) || amountToCapture <= 0) {
+      return { success: false, error: "Montant de capture invalide" };
+    }
+    if (amountToCapture > maxAmount) {
+      return { success: false, error: "Montant supérieur à la caution" };
+    }
+
+    try {
+      await stripe.paymentIntents.capture(row.deposit_payment_intent_id, {
+        amount_to_capture: amountToCapture,
+      });
+    } catch (e) {
+      return {
+        success: false,
+        error: e instanceof Error ? e.message : "Erreur Stripe capture caution",
+      };
+    }
+
+    const { error } = await admin
+      .from("offers")
+      .update({
+        deposit_hold_status: "captured",
+        deposit_captured_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", offerId);
+    if (error) return { success: false, error: error.message };
+  } else {
+    try {
+      await stripe.paymentIntents.cancel(row.deposit_payment_intent_id);
+    } catch (e) {
+      return {
+        success: false,
+        error: e instanceof Error ? e.message : "Erreur Stripe libération caution",
+      };
+    }
+
+    const { error } = await admin
+      .from("offers")
+      .update({
+        deposit_hold_status: "released",
+        deposit_released_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", offerId);
+    if (error) return { success: false, error: error.message };
+  }
+
+  revalidatePath("/admin/paiements");
+  revalidatePath("/proprietaire/paiement");
   return { success: true };
 }

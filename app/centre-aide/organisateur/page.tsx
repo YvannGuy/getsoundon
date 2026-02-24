@@ -19,11 +19,11 @@ const FAQ_ORGANISATEUR = [
   },
   {
     q: "La consultation des annonces est-elle payante ?",
-    a: "Non, la consultation des annonces est gratuite. Pour envoyer des demandes aux propriétaires, vous aurez besoin d'un pass (24h, 48h ou abonnement) selon vos besoins.",
+    a: "Non, la consultation des annonces est gratuite. Vous pouvez envoyer vos demandes sans pass ; les frais interviennent au paiement de la réservation.",
   },
   {
-    q: "Comment fonctionne le pass et les demandes ?",
-    a: "Une fois votre pass activé, vous pouvez envoyer des demandes illimitées pendant sa durée. Chaque demande est transmise au propriétaire, qui vous répond directement via la messagerie.",
+    q: "Comment fonctionnent les demandes ?",
+    a: "Vous envoyez vos demandes directement aux propriétaires. En cas d'accord, vous recevez une offre et le paiement se fait en ligne de manière sécurisée.",
   },
   {
     q: "Puis-je visiter la salle avant de réserver ?",
@@ -62,12 +62,12 @@ const FAQ_ORGANISATEUR = [
     a: `${siteConfig.name} se concentre sur l'Île-de-France pour offrir un service localisé et de qualité. Toutes les communes de la région sont couvertes.`,
   },
   {
-    q: "J'ai un essai gratuit, comment l'activer ?",
-    a: "Si vous avez droit à l'essai, un bouton « Activer l'essai » apparaît sur la page d'accueil. Cliquez dessus et suivez les étapes pour activer vos demandes offertes.",
+    q: "Y a-t-il un essai gratuit ?",
+    a: "La consultation, les demandes et la messagerie sont déjà gratuites. Seules les réservations confirmées sont payantes.",
   },
   {
-    q: "Comment payer mon pass ?",
-    a: "Le paiement se fait par carte bancaire de manière sécurisée (Stripe) depuis la page Paiement de votre tableau de bord, après avoir choisi votre formule.",
+    q: "Comment payer ma réservation ?",
+    a: "Le paiement se fait par carte bancaire de manière sécurisée (Stripe) après acceptation de l'offre envoyée par le propriétaire.",
   },
   {
     q: "Comment contacter le support ?",

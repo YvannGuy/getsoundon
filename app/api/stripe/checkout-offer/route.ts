@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import type Stripe from "stripe";
 
-import { getPlatformSettings } from "@/app/actions/admin-settings";
 import { siteConfig } from "@/config/site";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -30,7 +29,7 @@ export async function POST(request: Request) {
 
     const { data: offer, error: offerError } = await adminSupabase
       .from("offers")
-      .select("id, demande_id, owner_id, seeker_id, salle_id, amount_cents, expires_at, status, event_type")
+      .select("id, demande_id, owner_id, seeker_id, salle_id, amount_cents, deposit_amount_cents, service_fee_cents, expires_at, status, event_type")
       .eq("id", offerId)
       .single();
 
@@ -42,6 +41,8 @@ export async function POST(request: Request) {
       seeker_id: string;
       owner_id: string;
       amount_cents: number;
+      deposit_amount_cents?: number | null;
+      service_fee_cents?: number | null;
       expires_at: string;
       status: string;
       demande_id: string;
@@ -112,12 +113,10 @@ export async function POST(request: Request) {
       .single();
 
     const amountCents = offerRow.amount_cents;
-    const settings = await getPlatformSettings();
-    const { percent, ponctuel, mensuel } = settings.commission;
-    const applyFee =
-      (offerRow.event_type === "ponctuel" && ponctuel) ||
-      (offerRow.event_type === "mensuel" && mensuel);
-    const applicationFeeCents = applyFee ? Math.round(amountCents * (percent / 100)) : 0;
+    const depositAmountCents = Math.max(0, offerRow.deposit_amount_cents ?? 0);
+    const serviceFeeCents = Math.max(0, offerRow.service_fee_cents ?? 1500);
+    const applicationFeeCents = serviceFeeCents;
+    const checkoutTotalCents = amountCents + serviceFeeCents;
 
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       mode: "payment",
@@ -137,9 +136,20 @@ export async function POST(request: Request) {
             currency: "eur",
             product_data: {
               name: `Réservation - ${salleName}`,
-              description: "Paiement de l'offre acceptée",
+              description: "Montant de location",
             },
             unit_amount: amountCents,
+          },
+          quantity: 1,
+        },
+        {
+          price_data: {
+            currency: "eur",
+            product_data: {
+              name: "Frais de service",
+              description: "Frais fixes de plateforme",
+            },
+            unit_amount: serviceFeeCents,
           },
           quantity: 1,
         },
@@ -150,6 +160,10 @@ export async function POST(request: Request) {
         offer_id: offerId,
         user_id: user.id,
         product_type: "reservation",
+        amount_cents: String(amountCents),
+        deposit_amount_cents: String(depositAmountCents),
+        service_fee_cents: String(serviceFeeCents),
+        checkout_total_cents: String(checkoutTotalCents),
       },
       ...((seekerProfile as { stripe_customer_id?: string } | null)?.stripe_customer_id
         ? { customer: (seekerProfile as { stripe_customer_id: string }).stripe_customer_id }

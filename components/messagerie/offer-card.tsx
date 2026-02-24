@@ -21,6 +21,11 @@ import type { OfferStatus } from "@/lib/types/offer";
 type Offer = {
   id: string;
   amount_cents: number;
+  deposit_amount_cents?: number;
+  service_fee_cents?: number;
+  deposit_refunded_cents?: number;
+  deposit_status?: "none" | "held" | "partially_refunded" | "refunded";
+  deposit_hold_status?: string;
   expires_at: string;
   status: OfferStatus;
   message: string | null;
@@ -106,6 +111,9 @@ export function OfferCard({
   };
 
   const amountEur = (offer.amount_cents / 100).toFixed(2);
+  const depositCents = offer.deposit_amount_cents ?? 0;
+  const serviceFeeCents = offer.service_fee_cents ?? 1500;
+  const totalToPayEur = ((offer.amount_cents + serviceFeeCents) / 100).toFixed(2);
   const expiresFormatted = format(new Date(offer.expires_at), "d MMM yyyy", { locale: fr });
   const hasDateRange = offer.date_debut && offer.date_fin;
   const dateRangeFormatted =
@@ -136,6 +144,38 @@ export function OfferCard({
           <p className="font-medium text-black">
             Montant : <span className="tabular-nums">{amountEur} €</span>
           </p>
+          {depositCents > 0 && (
+            <p className="text-slate-600">
+              Caution (empreinte) : <span className="tabular-nums">{(depositCents / 100).toFixed(2)} €</span>
+            </p>
+          )}
+          <p className="text-slate-600">
+            Frais de service : <span className="tabular-nums">{(serviceFeeCents / 100).toFixed(2)} €</span>
+          </p>
+          <p className="font-medium text-black">
+            Total à payer : <span className="tabular-nums">{totalToPayEur} €</span>
+          </p>
+          {depositCents > 0 && (
+            <p className="text-xs text-slate-500">
+              La caution est une empreinte bancaire (non débitée immédiatement).
+            </p>
+          )}
+          {offer.status === "paid" && depositCents > 0 && (
+            <p className="text-xs text-slate-500">
+              Statut caution :{" "}
+              {offer.deposit_hold_status === "authorized"
+                ? "Empreinte active"
+                : offer.deposit_hold_status === "claim_requested"
+                  ? "Demande de retenue en revue"
+                  : offer.deposit_hold_status === "released"
+                    ? "Empreinte libérée"
+                    : offer.deposit_hold_status === "captured"
+                      ? "Caution capturée"
+                      : offer.deposit_hold_status === "failed"
+                        ? "Empreinte échouée"
+                        : "—"}
+            </p>
+          )}
           <p className="text-slate-600">Offre valable jusqu&apos;au {expiresFormatted}</p>
           {offer.message && (
             <p className="mt-2 rounded-lg bg-slate-50 p-2 text-slate-700">{offer.message}</p>

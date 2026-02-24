@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { getStripe } from "@/lib/stripe";
 
 /** Marque les offres expirées (status pending + expires_at < now) pour une conversation */
 export async function markExpiredOffersAction(conversationId: string): Promise<void> {
@@ -24,6 +25,7 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
   const salleId = formData.get("salleId") as string | null;
   const seekerId = formData.get("seekerId") as string | null;
   const amountStr = formData.get("amount") as string | null;
+  const depositAmountStr = formData.get("depositAmount") as string | null;
   const eventType = (formData.get("eventType") as string | null) || "ponctuel";
   const dateDebut = formData.get("dateDebut") as string | null;
   const dateFin = formData.get("dateFin") as string | null;
@@ -41,6 +43,10 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
   const amountCents = Math.round(parseFloat(amountStr) * 100);
   if (amountCents <= 0 || !Number.isFinite(amountCents)) {
     return { success: false, error: "Montant invalide." };
+  }
+  const depositAmountCents = Math.round(parseFloat((depositAmountStr || "0").replace(",", ".")) * 100);
+  if (!Number.isFinite(depositAmountCents) || depositAmountCents < 0) {
+    return { success: false, error: "Caution invalide." };
   }
 
   const expiresDate = new Date(expiresAt);
@@ -90,6 +96,10 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
       seeker_id: seekerId,
       salle_id: salleId,
       amount_cents: amountCents,
+      deposit_amount_cents: depositAmountCents,
+      service_fee_cents: 1500,
+      deposit_refunded_cents: 0,
+      deposit_status: "none",
       expires_at: expiresAt,
       status: "pending",
       message,
@@ -106,6 +116,123 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
   }
 
   return { success: true, offerId: (offer as { id: string }).id };
+}
+
+export async function requestOfferDepositClaimAction(
+  offerId: string,
+  amountEur: number,
+  reason: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecté" };
+
+  const admin = createAdminClient();
+  const { data: offer } = await admin
+    .from("offers")
+    .select(
+      "id, owner_id, status, deposit_amount_cents, deposit_hold_status"
+    )
+    .eq("id", offerId)
+    .maybeSingle();
+  if (!offer) return { success: false, error: "Offre introuvable" };
+
+  const offerRow = offer as {
+    id: string;
+    owner_id: string;
+    status: string;
+    deposit_amount_cents: number | null;
+    deposit_hold_status: string | null;
+  };
+  if (offerRow.owner_id !== user.id) return { success: false, error: "Accès refusé" };
+  if (offerRow.status !== "paid") return { success: false, error: "Offre non payée" };
+
+  const depositTotal = Math.max(0, offerRow.deposit_amount_cents ?? 0);
+  if (depositTotal <= 0) {
+    return { success: false, error: "Aucune caution sur cette offre" };
+  }
+  if (offerRow.deposit_hold_status !== "authorized") {
+    return { success: false, error: "Empreinte non active" };
+  }
+  const requestedAmountCents = Math.round(amountEur * 100);
+  if (!Number.isFinite(requestedAmountCents) || requestedAmountCents <= 0) {
+    return { success: false, error: "Montant invalide" };
+  }
+  if (requestedAmountCents > depositTotal) {
+    return { success: false, error: "Montant supérieur à la caution" };
+  }
+  if (!reason.trim()) {
+    return { success: false, error: "Motif requis" };
+  }
+
+  const { error } = await admin
+    .from("offers")
+    .update({
+      deposit_hold_status: "claim_requested",
+      deposit_claim_amount_cents: requestedAmountCents,
+      deposit_claim_reason: reason.trim(),
+      deposit_claim_requested_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", offerId);
+  if (error) return { success: false, error: error.message };
+
+  return { success: true };
+}
+
+export async function releaseOfferDepositAction(
+  offerId: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecté" };
+
+  const admin = createAdminClient();
+  const { data: offer } = await admin
+    .from("offers")
+    .select("id, owner_id, status, deposit_payment_intent_id, deposit_hold_status")
+    .eq("id", offerId)
+    .maybeSingle();
+  if (!offer) return { success: false, error: "Offre introuvable" };
+
+  const row = offer as {
+    owner_id: string;
+    status: string;
+    deposit_payment_intent_id: string | null;
+    deposit_hold_status: string | null;
+  };
+  if (row.owner_id !== user.id) return { success: false, error: "Accès refusé" };
+  if (row.status !== "paid") return { success: false, error: "Offre non payée" };
+  if (!row.deposit_payment_intent_id) return { success: false, error: "Empreinte introuvable" };
+  if (!["authorized", "claim_requested"].includes(row.deposit_hold_status ?? "")) {
+    return { success: false, error: "Empreinte déjà traitée" };
+  }
+
+  try {
+    const stripe = getStripe();
+    await stripe.paymentIntents.cancel(row.deposit_payment_intent_id);
+  } catch (e) {
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : "Erreur libération caution",
+    };
+  }
+
+  const { error } = await admin
+    .from("offers")
+    .update({
+      deposit_hold_status: "released",
+      deposit_released_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", offerId);
+  if (error) return { success: false, error: error.message };
+
+  return { success: true };
 }
 
 export async function refuseOfferAction(offerId: string): Promise<{ success: boolean; error?: string }> {

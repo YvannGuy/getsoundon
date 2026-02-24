@@ -94,7 +94,7 @@ export default async function ProprietairePaiementPage({
           <CardDescription>
             {hasConnectAccount
               ? "Envoyez des offres depuis la messagerie et recevez les paiements des locataires."
-              : "Connectez votre compte bancaire pour recevoir les paiements des réservations (commission plateforme 10 %)."}
+              : "Connectez votre compte bancaire pour recevoir les paiements des réservations (frais de service fixes: 15 €)."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -247,6 +247,7 @@ export default async function ProprietairePaiementPage({
           )}
         </CardContent>
       </Card>
+
     </div>
   );
 }

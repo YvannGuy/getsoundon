@@ -6,6 +6,8 @@ export const legalConfig = {
   /** Éditeur du site */
   editeur: {
     nom: "Salledeculte",
+    siret: "799 596 176 00021",
+    rcs: "RCS Paris 799 596 176",
     capitalSocial: "1 000 €",
     siegeSocial: {
       adresse: "78 avenue des Champs-Élysées",
@@ -13,12 +15,12 @@ export const legalConfig = {
       ville: "Paris",
       pays: "France",
     },
-    tvaIntracommunautaire: "", // ex: "FR XX XXXX XXXXX" si assujetti à la TVA
+    tvaIntracommunautaire: "", // Non assujetti TVA
     email: "contact@salledeculte.com",
   },
 
   /** Directeur de la publication (obligatoire LCEN) */
-  directeurPublication: "À compléter",
+  directeurPublication: "Guyonnet Yvann",
 
   /** Hébergeur (obligatoire LCEN) */
   hebergeur: {
@@ -29,4 +31,10 @@ export const legalConfig = {
 
   /** Données personnelles - DPO si désigné */
   dpoEmail: "contact@salledeculte.com",
+
+  /** Médiation consommation (obligatoire avant mise en ligne B2C) */
+  mediation: {
+    nom: "À compléter avant mise en ligne",
+    url: "À compléter avant mise en ligne",
+  },
 };

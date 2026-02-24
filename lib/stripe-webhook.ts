@@ -2,6 +2,7 @@ import Stripe from "stripe";
 
 import { generateContractPdf } from "@/lib/contract-pdf";
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
+import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function handleStripeWebhook(event: Stripe.Event) {
@@ -20,6 +21,12 @@ export async function handleStripeWebhook(event: Stripe.Event) {
         const offerId = metadata.offer_id;
         const amount = session.amount_total ?? 0;
         const amountEur = ((amount ?? 0) / 100).toFixed(2);
+        const stripe = getStripe();
+        const paymentIntentId =
+          typeof session.payment_intent === "string"
+            ? session.payment_intent
+            : session.payment_intent?.id ?? null;
+        const depositAmountCents = Number(metadata?.deposit_amount_cents ?? "0");
 
         // Mise à jour atomique : un seul webhook "gagne" (idempotence)
         const { data: updatedOffer, error: updateError } = await supabase
@@ -27,6 +34,9 @@ export async function handleStripeWebhook(event: Stripe.Event) {
           .update({
             status: "paid",
             stripe_session_id: session.id,
+            stripe_payment_intent_id: paymentIntentId,
+            deposit_status: depositAmountCents > 0 ? "held" : "none",
+            deposit_hold_status: "none",
             updated_at: new Date().toISOString(),
           })
           .eq("id", offerId)
@@ -37,6 +47,65 @@ export async function handleStripeWebhook(event: Stripe.Event) {
         if (updateError || !updatedOffer) {
           console.warn("[webhook] Offre déjà traitée ou introuvable:", offerId, updateError?.message ?? "0 rows");
         } else {
+          // Créer une empreinte bancaire séparée pour la caution (non débitée immédiatement)
+          if (depositAmountCents > 0 && paymentIntentId) {
+            try {
+              const paidPi = await stripe.paymentIntents.retrieve(paymentIntentId);
+              const customerId =
+                typeof paidPi.customer === "string" ? paidPi.customer : paidPi.customer?.id ?? null;
+              const paymentMethodId =
+                typeof paidPi.payment_method === "string"
+                  ? paidPi.payment_method
+                  : paidPi.payment_method?.id ?? null;
+
+              if (customerId && paymentMethodId) {
+                const depositPi = await stripe.paymentIntents.create({
+                  amount: depositAmountCents,
+                  currency: session.currency ?? "eur",
+                  customer: customerId,
+                  payment_method: paymentMethodId,
+                  capture_method: "manual",
+                  confirm: true,
+                  off_session: true,
+                  description: `Empreinte caution offre ${offerId}`,
+                  metadata: {
+                    type: "deposit_hold",
+                    offer_id: offerId,
+                    seeker_id: metadata.user_id,
+                    owner_id: metadata.owner_id ?? "",
+                  },
+                });
+
+                await supabase
+                  .from("offers")
+                  .update({
+                    deposit_payment_intent_id: depositPi.id,
+                    deposit_hold_status:
+                      depositPi.status === "requires_capture" ? "authorized" : "failed",
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq("id", offerId);
+              } else {
+                await supabase
+                  .from("offers")
+                  .update({
+                    deposit_hold_status: "failed",
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq("id", offerId);
+              }
+            } catch (e) {
+              console.error("[webhook] Erreur création empreinte caution:", e);
+              await supabase
+                .from("offers")
+                .update({
+                  deposit_hold_status: "failed",
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("id", offerId);
+            }
+          }
+
           const convId = (updatedOffer as { conversation_id: string }).conversation_id;
 
           const { data: insertedPayment, error: payError } = await supabase

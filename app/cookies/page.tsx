@@ -95,7 +95,7 @@ export default function CookiesPage() {
 
         <h3 className="mt-8 text-lg font-semibold text-black">Cookies tiers (paiements)</h3>
         <p className="mt-2 text-slate-600">
-          Lors de l&apos;achat d&apos;un Pass, vous êtes redirigé vers Stripe pour le paiement. Stripe peut déposer des
+          Lors du paiement d&apos;une réservation, vous êtes redirigé vers Stripe pour le paiement. Stripe peut déposer des
           cookies sur son propre domaine pour gérer la sécurité et la prévention des fraudes. Ces cookies sont régis
           par la politique de confidentialité de Stripe (
           <a
@@ -220,7 +220,7 @@ export default function CookiesPage() {
       </section>
 
       <p className="mt-12 text-sm text-slate-500">
-        Dernière mise à jour : février 2025.
+        Dernière mise à jour : février 2026.
       </p>
     </LegalPageLayout>
   );

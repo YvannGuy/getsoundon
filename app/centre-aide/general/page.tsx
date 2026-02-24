@@ -23,7 +23,7 @@ const FAQ_GENERAL = [
   },
   {
     q: "La consultation des annonces est-elle payante ?",
-    a: "Non, consulter les annonces est gratuit. Seul l'envoi de demandes aux propriétaires nécessite un pass (24h, 48h ou abonnement).",
+    a: "Non, consulter les annonces est gratuit. Les frais sont appliqués uniquement lorsqu'une réservation est payée.",
   },
   {
     q: "Pourquoi l'Île-de-France uniquement ?",

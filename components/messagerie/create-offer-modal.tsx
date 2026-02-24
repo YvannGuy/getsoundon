@@ -35,6 +35,7 @@ export function CreateOfferModal({
   onSuccess,
 }: CreateOfferModalProps) {
   const [amount, setAmount] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
   const [eventType, setEventType] = useState<"ponctuel" | "mensuel">("ponctuel");
   const [dateDebut, setDateDebut] = useState(today());
   const [dateFin, setDateFin] = useState(today());
@@ -49,6 +50,11 @@ export function CreateOfferModal({
     const amt = parseFloat(amount.replace(",", "."));
     if (!amt || amt <= 0) {
       setError("Montant invalide.");
+      return;
+    }
+    const deposit = depositAmount.trim() ? parseFloat(depositAmount.replace(",", ".")) : 0;
+    if (!Number.isFinite(deposit) || deposit < 0) {
+      setError("Montant de caution invalide.");
       return;
     }
     const debut = new Date(dateDebut);
@@ -69,6 +75,7 @@ export function CreateOfferModal({
     formData.set("salleId", salleId);
     formData.set("seekerId", seekerId);
     formData.set("amount", String(amt));
+    formData.set("depositAmount", String(deposit));
     formData.set("eventType", eventType);
     formData.set("dateDebut", dateDebut);
     formData.set("dateFin", dateFin);
@@ -82,6 +89,7 @@ export function CreateOfferModal({
       onSuccess();
       onOpenChange(false);
       setAmount("");
+      setDepositAmount("");
       setEventType("ponctuel");
       setDateDebut(today());
       setDateFin(today());
@@ -158,6 +166,23 @@ export function CreateOfferModal({
               className="mt-1.5"
             />
             <p className="mt-1 text-xs text-slate-500">Prix proposé pour cette réservation</p>
+          </div>
+          <div>
+            <label htmlFor="offer-deposit" className="text-sm font-medium text-black">
+              Caution (€) (optionnel)
+            </label>
+            <Input
+              id="offer-deposit"
+              type="text"
+              inputMode="decimal"
+              placeholder="0"
+              value={depositAmount}
+              onChange={(e) => setDepositAmount(e.target.value)}
+              className="mt-1.5"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Frais de service fixes pour le locataire : 15 €.
+            </p>
           </div>
           <div>
             <label htmlFor="offer-expires" className="text-sm font-medium text-black">Offre valable jusqu&apos;au</label>

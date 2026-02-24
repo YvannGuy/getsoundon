@@ -74,6 +74,11 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
+                <Link href="/cgv" className="hover:text-white">
+                  CGV
+                </Link>
+              </li>
+              <li>
                 <Link href="/confidentialite" className="hover:text-white">
                   Confidentialité
                 </Link>

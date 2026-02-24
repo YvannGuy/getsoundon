@@ -1437,6 +1437,27 @@ function Step6({
           </div>
         </div>
       </div>
+      <p className="mt-4 text-sm text-slate-600">
+        En soumettant votre annonce vous acceptez nos{" "}
+        <Link
+          href="/cgu"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-[#213398] hover:underline"
+        >
+          conditions générales d&apos;utilisation
+        </Link>
+        {" "}et nos{" "}
+        <Link
+          href="/cgv"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-[#213398] hover:underline"
+        >
+          conditions générales de vente
+        </Link>
+        .
+      </p>
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <Button
           variant="outline"
