@@ -23,6 +23,7 @@ import { UnlockAccessBloc } from "@/components/salles/unlock-access-bloc";
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { LocationAvailabilityCalendar } from "@/components/salles/location-availability-calendar";
 import { SalleActionsBar } from "@/components/salles/salle-actions-bar";
 import { SalleGallery } from "@/components/salles/salle-gallery";
 import { SalleMap } from "@/components/salles/salle-map";
@@ -31,6 +32,7 @@ import { getSalleRecentViewerCount, recordSalleView } from "@/app/actions/salle-
 import { getSalleRatingStats } from "@/app/actions/salle-ratings";
 import { getEffectiveUserType } from "@/lib/auth-utils";
 import { hasAccessToContact } from "@/lib/pass-utils";
+import { getBlockedLocationDatesForSalle } from "@/lib/location-disponibilite";
 import { createClient } from "@/lib/supabase/server";
 import { buildCanonical, defaultMetadata } from "@/lib/seo";
 import { getSalleBySlug, getSallesByCity } from "@/lib/salles";
@@ -111,11 +113,12 @@ export default async function SalleDetailPage({
     return data;
   };
   const userType = user ? await getEffectiveUserType(user, getProfile) : null;
-  const [favori, ratingStats, recentViewerCount, canContact] = await Promise.all([
+  const [favori, ratingStats, recentViewerCount, canContact, blockedLocationDates] = await Promise.all([
     isFavori(user?.id ?? null, salle.id),
     getSalleRatingStats(salle.id),
     getSalleRecentViewerCount(salle.id),
     hasAccessToContact(user?.id ?? null),
+    getBlockedLocationDatesForSalle(salle.id),
   ]);
   const isOwnSalle = salle.ownerId === user?.id;
 
@@ -340,6 +343,12 @@ export default async function SalleDetailPage({
                 </div>
               </div>
             )}
+            <div className="mt-6">
+              <LocationAvailabilityCalendar
+                blockedDates={blockedLocationDates}
+                joursOuverture={salle.joursOuverture}
+              />
+            </div>
             <div className="mt-6 flex gap-4 rounded-xl border border-amber-200 bg-amber-50/80 p-6">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-400">
                 <HelpCircle className="h-5 w-5 text-white" />

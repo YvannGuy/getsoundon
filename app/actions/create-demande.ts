@@ -1,11 +1,21 @@
 "use server";
 
 import { sendNewDemandeNotification } from "@/lib/email";
+import { getBlockedLocationDatesForSalle } from "@/lib/location-disponibilite";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const JOUR_TO_DOW: Record<string, number> = {
+  dimanche: 0,
+  lundi: 1,
+  mardi: 2,
+  mercredi: 3,
+  jeudi: 4,
+  vendredi: 5,
+  samedi: 6,
+};
 
 export type CreateDemandeResult =
   | { success: true }
@@ -56,6 +66,40 @@ export async function createDemande(formData: FormData): Promise<CreateDemandeRe
   }
   if (dateFin && dateDebut && dateFin < dateDebut) {
     return { success: false, error: "La date de fin doit être après la date de début." };
+  }
+
+  const blockedDates = new Set(await getBlockedLocationDatesForSalle(salleId));
+  if (blockedDates.size > 0) {
+    const toYmd = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    };
+
+    if (frequence === "ponctuel") {
+      const end = dateFin && !isNaN(dateFin.getTime()) ? dateFin : dateDebut;
+      const cursor = new Date(dateDebut);
+      while (cursor <= end) {
+        if (blockedDates.has(toYmd(cursor))) {
+          return { success: false, error: "Une ou plusieurs dates demandées sont indisponibles." };
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    } else if (frequence === "mensuel" && dateFin) {
+      const selectedDows = new Set(
+        joursSemaine
+          .map((j) => JOUR_TO_DOW[j])
+          .filter((v): v is number => typeof v === "number")
+      );
+      const cursor = new Date(dateDebut);
+      while (cursor <= dateFin) {
+        if (selectedDows.has(cursor.getDay()) && blockedDates.has(toYmd(cursor))) {
+          return { success: false, error: "Des dates de votre période sont déjà indisponibles." };
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
   }
 
   const toTime = (s: string) => {

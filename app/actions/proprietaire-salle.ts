@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import type { Salle } from "@/lib/types/salle";
 import { rowToSalle } from "@/lib/types/salle";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const BUCKET_NAME = "salle-photos";
@@ -237,5 +238,119 @@ export async function updateSalleVisitesCalendarAction(params: {
 
   revalidatePath("/proprietaire/visites");
   revalidatePath("/proprietaire");
+  return { success: true };
+}
+
+function isValidIsoDate(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+export async function getSalleLocationBlockedDatesAction(salleId: string): Promise<{
+  success: boolean;
+  dates?: string[];
+  error?: string;
+}> {
+  if (!salleId) return { success: false, error: "Salle manquante" };
+
+  const supabase = await createClient();
+  const admin = createAdminClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecté" };
+
+  const { data: salle } = await supabase
+    .from("salles")
+    .select("id")
+    .eq("id", salleId)
+    .eq("owner_id", user.id)
+    .maybeSingle();
+  if (!salle) return { success: false, error: "Salle introuvable" };
+
+  const { data, error } = await admin
+    .from("salle_location_exclusions")
+    .select("date_exclusion")
+    .eq("salle_id", salleId)
+    .order("date_exclusion", { ascending: true });
+
+  if (error) return { success: false, error: error.message };
+
+  const dates = [...new Set((data ?? []).map((r) => String((r as { date_exclusion: string }).date_exclusion).slice(0, 10)))];
+  return { success: true, dates };
+}
+
+export async function addSalleLocationBlockedDateAction(params: {
+  salleId: string;
+  date: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const { salleId, date } = params;
+  if (!salleId) return { success: false, error: "Salle manquante" };
+  if (!isValidIsoDate(date)) return { success: false, error: "Date invalide" };
+
+  const supabase = await createClient();
+  const admin = createAdminClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecté" };
+
+  const { data: salle } = await supabase
+    .from("salles")
+    .select("id, slug")
+    .eq("id", salleId)
+    .eq("owner_id", user.id)
+    .maybeSingle();
+  if (!salle) return { success: false, error: "Salle introuvable" };
+
+  const { error } = await admin.from("salle_location_exclusions").upsert(
+    {
+      salle_id: salleId,
+      date_exclusion: date,
+      source: "owner_manual",
+      created_by: user.id,
+    },
+    { onConflict: "salle_id,date_exclusion" }
+  );
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/proprietaire/visites");
+  const slug = (salle as { slug?: string | null }).slug;
+  if (slug) revalidatePath(`/salles/${slug}`);
+  return { success: true };
+}
+
+export async function removeSalleLocationBlockedDateAction(params: {
+  salleId: string;
+  date: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const { salleId, date } = params;
+  if (!salleId) return { success: false, error: "Salle manquante" };
+  if (!isValidIsoDate(date)) return { success: false, error: "Date invalide" };
+
+  const supabase = await createClient();
+  const admin = createAdminClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecté" };
+
+  const { data: salle } = await supabase
+    .from("salles")
+    .select("id, slug")
+    .eq("id", salleId)
+    .eq("owner_id", user.id)
+    .maybeSingle();
+  if (!salle) return { success: false, error: "Salle introuvable" };
+
+  const { error } = await admin
+    .from("salle_location_exclusions")
+    .delete()
+    .eq("salle_id", salleId)
+    .eq("date_exclusion", date);
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/proprietaire/visites");
+  const slug = (salle as { slug?: string | null }).slug;
+  if (slug) revalidatePath(`/salles/${slug}`);
   return { success: true };
 }

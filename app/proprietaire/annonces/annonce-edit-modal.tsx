@@ -18,7 +18,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Salle } from "@/lib/types/salle";
-import { updateSalleOwnerAction } from "@/app/actions/proprietaire-salle";
+import {
+  addSalleLocationBlockedDateAction,
+  getSalleLocationBlockedDatesAction,
+  removeSalleLocationBlockedDateAction,
+  updateSalleOwnerAction,
+} from "@/app/actions/proprietaire-salle";
 
 const schema = z.object({
   name: z.string().min(2, "Nom trop court"),
@@ -47,6 +52,10 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
   const [images, setImages] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [newFilePreviews, setNewFilePreviews] = useState<string[]>([]);
+  const [blockedDates, setBlockedDates] = useState<string[]>([]);
+  const [blockedDateInput, setBlockedDateInput] = useState("");
+  const [blocking, setBlocking] = useState(false);
+  const [unblockingDate, setUnblockingDate] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema) as Resolver<FormValues>,
@@ -77,6 +86,12 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
       setNewFiles([]);
       setNewFilePreviews([]);
       setError(null);
+      setBlockedDateInput("");
+      setBlocking(false);
+      setUnblockingDate(null);
+      getSalleLocationBlockedDatesAction(salle.id).then((res) => {
+        if (res.success) setBlockedDates(res.dates ?? []);
+      });
     }
   }, [salle?.id, open, form, salle]);
 
@@ -295,6 +310,73 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
                 <span className="text-sm">Non</span>
               </label>
             </div>
+          </div>
+
+          <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+            <label className="text-sm font-medium text-slate-700">Calendrier de location</label>
+            <p className="text-xs text-slate-500">
+              Bloquez ici les dates non disponibles (réservation hors plateforme, indisponibilité, etc.).
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                type="date"
+                value={blockedDateInput}
+                onChange={(e) => setBlockedDateInput(e.target.value)}
+                className="w-full sm:w-auto"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                disabled={blocking || !blockedDateInput}
+                onClick={async () => {
+                  if (!salle) return;
+                  setBlocking(true);
+                  const date = blockedDateInput;
+                  const res = await addSalleLocationBlockedDateAction({ salleId: salle.id, date });
+                  setBlocking(false);
+                  if (!res.success) {
+                    setError(res.error ?? "Impossible de bloquer la date");
+                    return;
+                  }
+                  setBlockedDateInput("");
+                  setBlockedDates((prev) =>
+                    [...new Set([...prev, date])].sort((a, b) => a.localeCompare(b))
+                  );
+                }}
+              >
+                {blocking ? "Blocage..." : "Bloquer la date"}
+              </Button>
+            </div>
+            {blockedDates.length > 0 ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {blockedDates.map((date) => (
+                  <button
+                    key={`blocked-${date}`}
+                    type="button"
+                    disabled={unblockingDate === date}
+                    className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                    onClick={async () => {
+                      if (!salle) return;
+                      setUnblockingDate(date);
+                      const res = await removeSalleLocationBlockedDateAction({
+                        salleId: salle.id,
+                        date,
+                      });
+                      setUnblockingDate(null);
+                      if (!res.success) {
+                        setError(res.error ?? "Impossible de débloquer la date");
+                        return;
+                      }
+                      setBlockedDates((prev) => prev.filter((d) => d !== date));
+                    }}
+                  >
+                    {unblockingDate === date ? "Déblocage..." : `${date} ×`}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500">Aucune date bloquée.</p>
+            )}
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">
