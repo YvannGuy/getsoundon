@@ -72,7 +72,7 @@ function AuthPageContent() {
             <ArrowLeft className="h-4 w-4" />
             Retour à l&apos;accueil
           </Link>
-          <h2 className="mt-6 flex flex-wrap items-center gap-0 text-2xl font-bold text-black">
+          <h2 className="mt-6 flex items-center gap-0 whitespace-nowrap text-xl font-bold text-black sm:text-2xl">
             <span>Bienvenue sur</span>
             <Link
               href="/"
@@ -83,7 +83,7 @@ function AuthPageContent() {
                 alt=""
                 width={60}
                 height={60}
-                className="h-[60px] w-[60px] shrink-0 object-contain -mr-3"
+                className="h-[44px] w-[44px] shrink-0 object-contain -mr-2 sm:h-[60px] sm:w-[60px] sm:-mr-3"
               />
               {siteConfig.name}
             </Link>
