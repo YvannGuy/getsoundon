@@ -35,11 +35,15 @@ const nextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
-  silent: true,
-  webpack: {
-    treeshake: {
-      removeDebugLogging: true,
-    },
-  },
-});
+const useSentry = process.env.NODE_ENV === "production" && process.env.NEXT_PUBLIC_SENTRY_DSN;
+
+export default useSentry
+  ? withSentryConfig(nextConfig, {
+      silent: true,
+      webpack: {
+        treeshake: {
+          removeDebugLogging: true,
+        },
+      },
+    })
+  : nextConfig;
