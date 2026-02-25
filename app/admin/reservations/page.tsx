@@ -253,7 +253,7 @@ export default async function AdminReservationsPage({
                     <Link href={`/admin/etats-des-lieux?offerId=${offer.id}`} className="rounded border px-3 py-1.5 text-sm">
                       Voir EDL
                     </Link>
-                    <Link href={`/admin/paiements?offerId=${offer.id}`} className="rounded border px-3 py-1.5 text-sm">
+                    <Link href={`/admin/cautions?offerId=${offer.id}`} className="rounded border px-3 py-1.5 text-sm">
                       Refund / caution
                     </Link>
                     <Link href={`/admin/etats-des-lieux?offerId=${offer.id}&caseType=dispute`} className="rounded bg-amber-600 px-3 py-1.5 text-sm text-white">

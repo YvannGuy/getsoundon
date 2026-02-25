@@ -17,17 +17,6 @@ type TransactionRow = {
   created_at: string;
 };
 
-type DepositClaimRow = {
-  id: string;
-  salle_name: string;
-  owner_name: string;
-  seeker_name: string;
-  deposit_amount_cents: number;
-  claim_amount_cents: number;
-  claim_reason: string | null;
-  claim_requested_at: string | null;
-};
-
 export default async function AdminPaiementsPage({
   searchParams,
 }: {
@@ -37,21 +26,13 @@ export default async function AdminPaiementsPage({
   const page = Math.max(1, parseInt(String(pageParam || "1"), 10) || 1);
   const supabase = createAdminClient();
 
-  const [{ data: payments }, { data: profiles }, { data: depositClaims }] = await Promise.all([
+  const [{ data: payments }, { data: profiles }] = await Promise.all([
     supabase
       .from("payments")
       .select("id, user_id, offer_id, amount, product_type, status, stripe_session_id, created_at")
       .order("created_at", { ascending: false })
       .limit(500),
     supabase.from("profiles").select("id, email, full_name").limit(500),
-    supabase
-      .from("offers")
-      .select(
-        "id, salle_id, owner_id, seeker_id, deposit_amount_cents, deposit_claim_amount_cents, deposit_claim_reason, deposit_claim_requested_at, deposit_hold_status"
-      )
-      .eq("deposit_hold_status", "claim_requested")
-      .order("deposit_claim_requested_at", { ascending: false })
-      .limit(200),
   ]);
 
   const profileMap = new Map(
@@ -73,46 +54,6 @@ export default async function AdminPaiementsPage({
       created_at: p.created_at,
     };
   });
-
-  const offerRows = (depositClaims ?? []) as {
-    id: string;
-    salle_id: string;
-    owner_id: string;
-    seeker_id: string;
-    deposit_amount_cents: number;
-    deposit_claim_amount_cents: number;
-    deposit_claim_reason: string | null;
-    deposit_claim_requested_at: string | null;
-  }[];
-  const offerSalleIds = [...new Set(offerRows.map((o) => o.salle_id))];
-  const offerProfileIds = [
-    ...new Set(offerRows.flatMap((o) => [o.owner_id, o.seeker_id])),
-  ];
-
-  const [{ data: sallesForClaims }, { data: profilesForClaims }] = await Promise.all([
-    offerSalleIds.length > 0
-      ? supabase.from("salles").select("id, name").in("id", offerSalleIds)
-      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
-    offerProfileIds.length > 0
-      ? supabase.from("profiles").select("id, full_name, email").in("id", offerProfileIds)
-      : Promise.resolve({ data: [] as { id: string; full_name: string | null; email: string | null }[] }),
-  ]);
-
-  const salleClaimMap = new Map((sallesForClaims ?? []).map((s) => [s.id, s.name]));
-  const profileClaimMap = new Map(
-    (profilesForClaims ?? []).map((p) => [p.id, p.full_name || p.email || "—"])
-  );
-
-  const claimsRows: DepositClaimRow[] = offerRows.map((o) => ({
-    id: o.id,
-    salle_name: salleClaimMap.get(o.salle_id) ?? "Salle",
-    owner_name: profileClaimMap.get(o.owner_id) ?? "Propriétaire",
-    seeker_name: profileClaimMap.get(o.seeker_id) ?? "Locataire",
-    deposit_amount_cents: o.deposit_amount_cents ?? 0,
-    claim_amount_cents: o.deposit_claim_amount_cents ?? 0,
-    claim_reason: o.deposit_claim_reason,
-    claim_requested_at: o.deposit_claim_requested_at,
-  }));
 
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -147,7 +88,7 @@ export default async function AdminPaiementsPage({
 
   return (
     <div className="p-6 md:p-8">
-      <PaiementsClient transactions={paginatedTx} stats={stats} depositClaims={claimsRows} />
+      <PaiementsClient transactions={paginatedTx} stats={stats} />
       <Pagination
         baseUrl="/admin/paiements"
         currentPage={currentPage}

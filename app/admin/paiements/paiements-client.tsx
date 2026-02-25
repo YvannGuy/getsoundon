@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   Check,
@@ -18,7 +17,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { resolveDepositClaimAdminAction } from "@/app/actions/admin";
 import { PaymentDetailModal } from "./payment-detail-modal";
 
 type Transaction = {
@@ -44,16 +42,6 @@ type Props = {
     failed: number;
     conversionRate: number;
   };
-  depositClaims: {
-    id: string;
-    salle_name: string;
-    owner_name: string;
-    seeker_name: string;
-    deposit_amount_cents: number;
-    claim_amount_cents: number;
-    claim_reason: string | null;
-    claim_requested_at: string | null;
-  }[];
 };
 
 function formatProduct(type: string) {
@@ -96,18 +84,13 @@ function formatDate(d: string) {
   });
 }
 
-export function PaiementsClient({ transactions, stats, depositClaims }: Props) {
-  const router = useRouter();
+export function PaiementsClient({ transactions, stats }: Props) {
   const [search, setSearch] = useState("");
   const [productFilter, setProductFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [periodFilter, setPeriodFilter] = useState("30");
   const [viewTransaction, setViewTransaction] = useState<Transaction | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [claimAmountById, setClaimAmountById] = useState<Record<string, string>>(
-    Object.fromEntries(depositClaims.map((c) => [c.id, (c.claim_amount_cents / 100).toFixed(2)]))
-  );
-  const [claimLoadingId, setClaimLoadingId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const periodMs = parseInt(periodFilter, 10) * 24 * 60 * 60 * 1000;
@@ -196,110 +179,6 @@ export function PaiementsClient({ transactions, stats, depositClaims }: Props) {
             Voir détails →
           </Button>
         </div>
-      )}
-
-      {depositClaims.length > 0 && (
-        <Card className="mb-6 border-amber-200 bg-amber-50/40">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base text-amber-900">Litiges caution à arbitrer</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px]">
-                <thead>
-                  <tr className="border-b border-amber-200 text-left text-xs font-medium uppercase text-amber-800">
-                    <th className="px-2 py-2">Date</th>
-                    <th className="px-2 py-2">Salle</th>
-                    <th className="px-2 py-2">Propriétaire</th>
-                    <th className="px-2 py-2">Locataire</th>
-                    <th className="px-2 py-2">Caution</th>
-                    <th className="px-2 py-2">Montant demandé</th>
-                    <th className="px-2 py-2">Motif</th>
-                    <th className="px-2 py-2">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {depositClaims.map((c) => (
-                    <tr key={c.id} className="border-b border-amber-100">
-                      <td className="px-2 py-2 text-xs text-slate-700">
-                        {c.claim_requested_at ? formatDate(c.claim_requested_at) : "—"}
-                      </td>
-                      <td className="px-2 py-2 text-sm text-slate-700">{c.salle_name}</td>
-                      <td className="px-2 py-2 text-xs text-slate-700">{c.owner_name}</td>
-                      <td className="px-2 py-2 text-xs text-slate-700">{c.seeker_name}</td>
-                      <td className="px-2 py-2 text-xs text-slate-700">
-                        {(c.deposit_amount_cents / 100).toFixed(2)} €
-                      </td>
-                      <td className="px-2 py-2">
-                        <Input
-                          value={claimAmountById[c.id] ?? ""}
-                          onChange={(e) =>
-                            setClaimAmountById((prev) => ({ ...prev, [c.id]: e.target.value }))
-                          }
-                          className="h-8 w-24 text-xs"
-                        />
-                      </td>
-                      <td className="px-2 py-2 text-xs text-slate-700">
-                        {c.claim_reason ?? "—"}
-                      </td>
-                      <td className="px-2 py-2">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={claimLoadingId === c.id}
-                            onClick={async () => {
-                              const amount = Number((claimAmountById[c.id] ?? "0").replace(",", "."));
-                              if (!Number.isFinite(amount) || amount <= 0) {
-                                alert("Montant invalide");
-                                return;
-                              }
-                              setClaimLoadingId(c.id);
-                              const res = await resolveDepositClaimAdminAction({
-                                offerId: c.id,
-                                decision: "capture",
-                                captureAmountEur: amount,
-                              });
-                              setClaimLoadingId(null);
-                              if (!res.success) {
-                                alert(res.error ?? "Erreur capture caution");
-                                return;
-                              }
-                              router.refresh();
-                            }}
-                          >
-                            Valider retenue
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-red-200 text-red-700 hover:bg-red-50"
-                            disabled={claimLoadingId === c.id}
-                            onClick={async () => {
-                              setClaimLoadingId(c.id);
-                              const res = await resolveDepositClaimAdminAction({
-                                offerId: c.id,
-                                decision: "release",
-                              });
-                              setClaimLoadingId(null);
-                              if (!res.success) {
-                                alert(res.error ?? "Erreur libération caution");
-                                return;
-                              }
-                              router.refresh();
-                            }}
-                          >
-                            Refuser retenue
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
       )}
 
       <Card className="mb-6">

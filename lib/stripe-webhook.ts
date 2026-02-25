@@ -29,7 +29,12 @@ export async function handleStripeWebhook(event: Stripe.Event) {
             : session.payment_intent?.id ?? null;
         const depositAmountCents = Number(metadata?.deposit_amount_cents ?? "0");
         const paymentMode = metadata?.payment_mode === "split" ? "split" : "full";
-        const paymentStage = metadata?.payment_stage === "deposit" ? "deposit" : "full";
+        const paymentStage =
+          metadata?.payment_stage === "deposit"
+            ? "deposit"
+            : metadata?.payment_stage === "balance"
+              ? "balance"
+              : "full";
         const paidNowCents = Number(metadata?.amount_cents ?? String(amount ?? 0));
         const now = new Date().toISOString();
         const nextPlanStatus = paymentMode === "split" ? "balance_scheduled" : "fully_paid";
@@ -41,7 +46,10 @@ export async function handleStripeWebhook(event: Stripe.Event) {
             status: "paid",
             stripe_session_id: session.id,
             stripe_payment_intent_id: paymentIntentId,
-            deposit_status: depositAmountCents > 0 ? "held" : "none",
+            deposit_status:
+              depositAmountCents > 0 && (paymentMode === "full" || paymentStage === "balance")
+                ? "held"
+                : "none",
             deposit_hold_status: "none",
             payment_plan_status: nextPlanStatus,
             upfront_paid_at: now,
@@ -58,18 +66,40 @@ export async function handleStripeWebhook(event: Stripe.Event) {
         if (updateError || !updatedOffer) {
           console.warn("[webhook] Offre déjà traitée ou introuvable:", offerId, updateError?.message ?? "0 rows");
         } else {
-          // Créer une empreinte bancaire séparée pour la caution (non débitée immédiatement)
-          if (depositAmountCents > 0 && paymentIntentId) {
+          console.log("[webhook] Début traitement caution:", {
+            offerId,
+            depositAmountCents,
+            hasPaymentIntentId: !!paymentIntentId,
+          });
+
+          // Caution:
+          // - paiement direct (full): créer immédiatement l'empreinte
+          // - paiement avec acompte (split): créer seulement au paiement du solde (stage=balance)
+          const shouldCreateDepositHold =
+            depositAmountCents > 0 &&
+            !!paymentIntentId &&
+            (paymentMode === "full" || paymentStage === "balance");
+
+          if (shouldCreateDepositHold) {
             try {
               const paidPi = await stripe.paymentIntents.retrieve(paymentIntentId);
-              const customerId =
+              const customerIdFromPi =
                 typeof paidPi.customer === "string" ? paidPi.customer : paidPi.customer?.id ?? null;
+              const customerIdFromSession =
+                typeof session.customer === "string" ? session.customer : session.customer?.id ?? null;
+              const customerId = customerIdFromPi ?? customerIdFromSession;
               const paymentMethodId =
                 typeof paidPi.payment_method === "string"
                   ? paidPi.payment_method
                   : paidPi.payment_method?.id ?? null;
 
-              if (customerId && paymentMethodId) {
+              if (paymentMethodId && customerId) {
+                try {
+                  await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
+                } catch {
+                  // Ignore "already attached" and continue.
+                }
+
                 const depositPi = await stripe.paymentIntents.create({
                   amount: depositAmountCents,
                   currency: session.currency ?? "eur",
@@ -96,7 +126,18 @@ export async function handleStripeWebhook(event: Stripe.Event) {
                     updated_at: new Date().toISOString(),
                   })
                   .eq("id", offerId);
+
+                console.log("[webhook] Empreinte caution créée:", {
+                  offerId,
+                  depositPaymentIntentId: depositPi.id,
+                  depositStatus: depositPi.status,
+                });
               } else {
+                console.warn("[webhook] Empreinte caution impossible: customer/payment_method manquant", {
+                  offerId,
+                  hasCustomerId: !!customerId,
+                  hasPaymentMethodId: !!paymentMethodId,
+                });
                 await supabase
                   .from("offers")
                   .update({
@@ -115,6 +156,16 @@ export async function handleStripeWebhook(event: Stripe.Event) {
                 })
                 .eq("id", offerId);
             }
+          } else {
+            console.log("[webhook] Caution non initialisée (aucun hold créé):", {
+              offerId,
+              reason:
+                depositAmountCents <= 0
+                  ? "deposit_amount_cents <= 0"
+                  : !paymentIntentId
+                    ? "payment_intent manquant"
+                    : "acompte payé: caution différée au solde",
+            });
           }
 
           const convId = (updatedOffer as { conversation_id: string }).conversation_id;

@@ -15,6 +15,7 @@ import {
   Home,
   Menu,
   Settings,
+  Shield,
   Users,
   X,
 } from "lucide-react";
@@ -41,6 +42,7 @@ const navItems = (
   { href: "/admin/reservations", label: "Réservations", icon: FileText },
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
   { href: "/admin/paiements", label: "Paiements", icon: CreditCard },
+  { href: "/admin/cautions", label: "Cautions", icon: Shield },
   { href: "/admin/etats-des-lieux", label: "États des lieux", icon: Camera },
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ];

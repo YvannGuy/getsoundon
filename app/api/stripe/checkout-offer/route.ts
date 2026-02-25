@@ -158,6 +158,9 @@ export async function POST(request: Request) {
       ? `${siteConfig.url}/dashboard/messagerie?demandeId=${demandeParam}&offer=cancel`
       : `${siteConfig.url}/dashboard/messagerie?offer=cancel`;
 
+    const existingStripeCustomerId =
+      (seekerProfile as { stripe_customer_id?: string } | null)?.stripe_customer_id ?? null;
+
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       mode: "payment",
       payment_intent_data: {
@@ -216,9 +219,12 @@ export async function POST(request: Request) {
         service_fee_cents: String(serviceFeeCents),
         checkout_total_cents: String(checkoutTotalCents),
       },
-      ...((seekerProfile as { stripe_customer_id?: string } | null)?.stripe_customer_id
-        ? { customer: (seekerProfile as { stripe_customer_id: string }).stripe_customer_id }
-        : { customer_email: user.email ?? undefined }),
+      ...(existingStripeCustomerId
+        ? { customer: existingStripeCustomerId }
+        : {
+            customer_email: user.email ?? undefined,
+            customer_creation: "always" as const,
+          }),
     };
 
     const session = await stripe.checkout.sessions.create(sessionConfig);

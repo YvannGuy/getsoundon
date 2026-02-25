@@ -19,7 +19,7 @@ async function processBalances() {
   const { data: offers } = await admin
     .from("offers")
     .select(
-      "id, owner_id, seeker_id, payment_mode, payment_plan_status, balance_amount_cents, balance_due_at, balance_retry_count, stripe_payment_intent_id"
+      "id, owner_id, seeker_id, payment_mode, payment_plan_status, balance_amount_cents, balance_due_at, balance_retry_count, stripe_payment_intent_id, deposit_amount_cents, deposit_payment_intent_id, deposit_hold_status"
     )
     .eq("status", "paid")
     .eq("payment_mode", "split")
@@ -39,6 +39,9 @@ async function processBalances() {
     balance_due_at: string | null;
     balance_retry_count: number | null;
     stripe_payment_intent_id: string | null;
+    deposit_amount_cents: number | null;
+    deposit_payment_intent_id: string | null;
+    deposit_hold_status: string | null;
   }[];
 
   const stripe = getStripe();
@@ -104,12 +107,72 @@ async function processBalances() {
         },
       });
 
+      let nextDepositPaymentIntentId = offer.deposit_payment_intent_id;
+      let nextDepositHoldStatus = offer.deposit_hold_status ?? "none";
+      const depositAmountCents = Math.max(0, offer.deposit_amount_cents ?? 0);
+      const hasExistingDepositHold = !!offer.deposit_payment_intent_id;
+      const shouldCreateDepositHold = depositAmountCents > 0 && !hasExistingDepositHold;
+
+      if (shouldCreateDepositHold) {
+        if (!customerId || !paymentMethodId) {
+          nextDepositHoldStatus = "failed";
+          console.warn("[balance] Caution non initialisée au solde: customer/payment_method manquant", {
+            offerId: offer.id,
+            hasCustomerId: !!customerId,
+            hasPaymentMethodId: !!paymentMethodId,
+          });
+        } else {
+          try {
+            try {
+              await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
+            } catch {
+              // Ignore already attached errors and proceed.
+            }
+
+            const depositPi = await stripe.paymentIntents.create({
+              amount: depositAmountCents,
+              currency: "eur",
+              customer: customerId,
+              payment_method: paymentMethodId,
+              capture_method: "manual",
+              confirm: true,
+              off_session: true,
+              description: `Empreinte caution offre ${offer.id} (au paiement du solde)`,
+              metadata: {
+                type: "deposit_hold",
+                offer_id: offer.id,
+                seeker_id: offer.seeker_id,
+                owner_id: offer.owner_id,
+                payment_stage: "balance",
+                payment_mode: "split",
+              },
+            });
+
+            nextDepositPaymentIntentId = depositPi.id;
+            nextDepositHoldStatus =
+              depositPi.status === "requires_capture" ? "authorized" : "failed";
+
+            console.log("[balance] Empreinte caution créée au solde:", {
+              offerId: offer.id,
+              depositPaymentIntentId: depositPi.id,
+              depositStatus: depositPi.status,
+            });
+          } catch (depositError) {
+            nextDepositHoldStatus = "failed";
+            console.error("[balance] Erreur création empreinte caution au solde:", depositError);
+          }
+        }
+      }
+
       await admin
         .from("offers")
         .update({
           payment_plan_status: "fully_paid",
           balance_payment_intent_id: balancePi.id,
           balance_paid_at: new Date().toISOString(),
+          deposit_status: depositAmountCents > 0 ? "held" : "none",
+          deposit_payment_intent_id: nextDepositPaymentIntentId,
+          deposit_hold_status: nextDepositHoldStatus,
           balance_last_error: null,
           updated_at: new Date().toISOString(),
         })
