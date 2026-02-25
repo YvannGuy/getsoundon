@@ -58,7 +58,7 @@ export default async function AdminAnnoncesPage({
   };
 
   return (
-    <div className="p-6 md:p-8">
+    <div className="p-4 pb-24 md:p-8 md:pb-8">
       <AnnoncesClient salles={sallesWithCounts} stats={stats} highlightSalleId={salleId} />
     </div>
   );

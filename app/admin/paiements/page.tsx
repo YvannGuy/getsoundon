@@ -79,6 +79,8 @@ export default async function AdminPaiementsPage({
     abonnements,
     failed: failed7.length,
     conversionRate,
+    totalPaid,
+    totalAttempts,
   };
 
   const totalPages = Math.ceil(transactions.length / PAGE_SIZE) || 1;
@@ -87,7 +89,7 @@ export default async function AdminPaiementsPage({
   const paginatedTx = transactions.slice(from, from + PAGE_SIZE);
 
   return (
-    <div className="p-6 pb-24 md:p-8 md:pb-8">
+    <div className="p-4 pb-24 md:p-8 md:pb-8">
       <PaiementsClient transactions={paginatedTx} stats={stats} />
       <Pagination
         baseUrl="/admin/paiements"

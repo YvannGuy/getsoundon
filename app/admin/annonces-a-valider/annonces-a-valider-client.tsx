@@ -278,11 +278,11 @@ export function AnnoncesAValiderClient({ salles, highlightSalleId }: Props) {
   ) : null;
 
   return (
-    <div className="flex gap-0">
+    <div className="flex min-w-0 gap-0">
       <div className="min-w-0 flex-1">
-        <div className="mb-6">
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-black">
-            <Clock className="h-7 w-7 text-amber-500" />
+        <div className="mb-6 space-y-1">
+          <h1 className="flex items-center gap-2 text-xl font-bold text-black md:text-2xl">
+            <Clock className="h-6 w-6 text-amber-500 md:h-7 md:w-7" />
             Annonces à valider
           </h1>
           <p className="mt-1 text-slate-600">Examinez et validez les nouvelles annonces</p>

@@ -74,7 +74,7 @@ export default async function AdminUtilisateursPage({
   };
 
   return (
-    <div className="p-6 md:p-8">
+    <div className="p-4 pb-24 md:p-8 md:pb-8">
       <UtilisateursClient users={profilesList} stats={stats} highlightUserId={userId} />
       <Pagination
         baseUrl="/admin/utilisateurs"

@@ -4,6 +4,33 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe";
 
+async function getPlatformFeeCents(params: {
+  adminSupabase: ReturnType<typeof createAdminClient>;
+  eventType: "ponctuel" | "mensuel";
+}): Promise<number> {
+  const { adminSupabase, eventType } = params;
+  const defaultCommission = { fixed_fee_cents: 1500, ponctuel: true, mensuel: false };
+
+  const { data } = await (adminSupabase as any)
+    .from("platform_settings")
+    .select("value")
+    .eq("key", "commission")
+    .maybeSingle();
+
+  const raw = (data as { value?: Record<string, unknown> } | null)?.value ?? {};
+  const fixedFeeValue = Number(raw.fixed_fee_cents);
+  const fixedFeeCents = Number.isFinite(fixedFeeValue)
+    ? Math.max(0, Math.round(fixedFeeValue))
+    : defaultCommission.fixed_fee_cents;
+  const enabledPonctuel =
+    typeof raw.ponctuel === "boolean" ? raw.ponctuel : defaultCommission.ponctuel;
+  const enabledMensuel =
+    typeof raw.mensuel === "boolean" ? raw.mensuel : defaultCommission.mensuel;
+  const isEnabled = eventType === "mensuel" ? enabledMensuel : enabledPonctuel;
+  if (!isEnabled) return 0;
+  return fixedFeeCents;
+}
+
 /** Marque les offres expirées (status pending + expires_at < now) pour une conversation */
 export async function markExpiredOffersAction(conversationId: string): Promise<void> {
   const adminSupabase = createAdminClient();
@@ -80,6 +107,10 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
   }
 
   const adminSupabase = createAdminClient();
+  const serviceFeeCents = await getPlatformFeeCents({
+    adminSupabase,
+    eventType: validEventType,
+  });
 
   const { data: conv } = await adminSupabase
     .from("conversations")
@@ -128,7 +159,7 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
       balance_due_at: balanceDueAt,
       payment_plan_status: "pending_deposit",
       deposit_amount_cents: depositAmountCents,
-      service_fee_cents: 1500,
+      service_fee_cents: serviceFeeCents,
       deposit_refunded_cents: 0,
       deposit_status: "none",
       expires_at: expiresAt,

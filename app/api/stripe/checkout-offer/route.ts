@@ -7,6 +7,33 @@ import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+async function getPlatformFeeCents(params: {
+  adminSupabase: ReturnType<typeof createAdminClient>;
+  eventType: "ponctuel" | "mensuel";
+}): Promise<number> {
+  const { adminSupabase, eventType } = params;
+  const defaultCommission = { fixed_fee_cents: 1500, ponctuel: true, mensuel: false };
+
+  const { data } = await (adminSupabase as any)
+    .from("platform_settings")
+    .select("value")
+    .eq("key", "commission")
+    .maybeSingle();
+
+  const raw = (data as { value?: Record<string, unknown> } | null)?.value ?? {};
+  const fixedFeeValue = Number(raw.fixed_fee_cents);
+  const fixedFeeCents = Number.isFinite(fixedFeeValue)
+    ? Math.max(0, Math.round(fixedFeeValue))
+    : defaultCommission.fixed_fee_cents;
+  const enabledPonctuel =
+    typeof raw.ponctuel === "boolean" ? raw.ponctuel : defaultCommission.ponctuel;
+  const enabledMensuel =
+    typeof raw.mensuel === "boolean" ? raw.mensuel : defaultCommission.mensuel;
+  const isEnabled = eventType === "mensuel" ? enabledMensuel : enabledPonctuel;
+  if (!isEnabled) return 0;
+  return fixedFeeCents;
+}
+
 const checkoutOfferSchema = z.object({
   offerId: z.string().uuid(),
 });
@@ -135,7 +162,16 @@ export async function POST(request: Request) {
       );
     }
     const depositAmountCents = Math.max(0, offerRow.deposit_amount_cents ?? 0);
-    const serviceFeeCents = Math.max(0, offerRow.service_fee_cents ?? 1500);
+    const serviceFeeCents = await getPlatformFeeCents({
+      adminSupabase,
+      eventType: offerRow.event_type === "mensuel" ? "mensuel" : "ponctuel",
+    });
+    if (offerRow.service_fee_cents !== serviceFeeCents) {
+      await adminSupabase
+        .from("offers")
+        .update({ service_fee_cents: serviceFeeCents, updated_at: new Date().toISOString() })
+        .eq("id", offerId);
+    }
     const applicationFeeCents = serviceFeeCents;
     const checkoutTotalCents = chargeNowCents + serviceFeeCents;
     let demandeParam = offerRow.demande_id;
@@ -161,10 +197,40 @@ export async function POST(request: Request) {
     const existingStripeCustomerId =
       (seekerProfile as { stripe_customer_id?: string } | null)?.stripe_customer_id ?? null;
 
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+      {
+        price_data: {
+          currency: "eur",
+          product_data: {
+            name: `Réservation - ${salleName}`,
+            description:
+              paymentMode === "split"
+                ? "Acompte de réservation"
+                : "Montant de location",
+          },
+          unit_amount: chargeNowCents,
+        },
+        quantity: 1,
+      },
+    ];
+    if (serviceFeeCents > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "eur",
+          product_data: {
+            name: "Frais plateforme",
+            description: "Frais calculés selon les paramètres admin",
+          },
+          unit_amount: serviceFeeCents,
+        },
+        quantity: 1,
+      });
+    }
+
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       mode: "payment",
       payment_intent_data: {
-        application_fee_amount: applicationFeeCents,
+        ...(applicationFeeCents > 0 ? { application_fee_amount: applicationFeeCents } : {}),
         transfer_data: { destination: stripeAccountId },
         setup_future_usage: "off_session",
         metadata: {
@@ -175,33 +241,7 @@ export async function POST(request: Request) {
           payment_mode: paymentMode,
         },
       },
-      line_items: [
-        {
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name: `Réservation - ${salleName}`,
-              description:
-                paymentMode === "split"
-                  ? "Acompte de réservation"
-                  : "Montant de location",
-            },
-            unit_amount: chargeNowCents,
-          },
-          quantity: 1,
-        },
-        {
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name: "Frais de service",
-              description: "Frais fixes de plateforme",
-            },
-            unit_amount: serviceFeeCents,
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: lineItems,
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: {

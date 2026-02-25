@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Shield } from "lucide-react";
 
 import { resolveDepositClaimAdminAction } from "@/app/actions/admin";
+import { AdminPageHeaderClient } from "@/components/admin/page-header-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -54,16 +55,12 @@ export function CautionsClient({ pendingClaims, resolvedClaims, focusOfferId = n
   }, [resolvedClaims, focusOfferId]);
 
   return (
-    <div className="p-6 md:p-8">
-      <div className="mb-6">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-black">
-          <Shield className="h-7 w-7 text-slate-600" />
-          Cautions
-        </h1>
-        <p className="mt-1 text-slate-600">
-          Suivi des cautions en arbitrage et historique des décisions.
-        </p>
-      </div>
+    <div className="p-4 pb-24 md:p-8 md:pb-8">
+      <AdminPageHeaderClient
+        title="Cautions"
+        subtitle="Suivi des cautions en arbitrage et historique des décisions."
+        icon={Shield}
+      />
 
       <Card id="cautions-admin" className="mb-6 border-amber-200 bg-amber-50/40 scroll-mt-24">
         <CardHeader className="pb-2">

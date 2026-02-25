@@ -23,6 +23,9 @@ import {
 } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { AdminFilterBar } from "@/components/admin/filter-bar";
+import { AdminKpiCard } from "@/components/admin/kpi-card";
+import { AdminPageHeaderClient } from "@/components/admin/page-header-client";
 import { ClientPagination } from "@/components/ui/pagination";
 import {
   Dialog,
@@ -206,18 +209,14 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
   const shortId = (id: string) => `#${id.slice(0, 5)}`;
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-black">
-          <Building2 className="h-7 w-7 text-slate-600" />
-          Annonces
-        </h1>
-        <p className="mt-1 text-slate-600">Gérez et surveillez les annonces de la plateforme</p>
-      </div>
+    <div className="min-w-0">
+      <AdminPageHeaderClient
+        title="Annonces"
+        subtitle="Gérez et surveillez les annonces de la plateforme"
+        icon={Building2}
+      />
 
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-3">
+      <AdminFilterBar>
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
@@ -262,44 +261,30 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
               <option value="rejected">Désactivée</option>
             </select>
             <Button className="bg-blue-600 hover:bg-blue-700">Filtrer</Button>
-          </div>
-        </CardContent>
-      </Card>
+      </AdminFilterBar>
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100">
-              <Check className="h-6 w-6 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-black">{stats.active}</p>
-              <p className="text-sm text-slate-600">Annonces actives</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100">
-              <Clock className="h-6 w-6 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-black">{stats.pending}</p>
-              <p className="text-sm text-slate-600">En validation</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100">
-              <Pause className="h-6 w-6 text-slate-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-black">{stats.rejected}</p>
-              <p className="text-sm text-slate-600">Désactivées</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <AdminKpiCard
+          title="Annonces actives"
+          value={stats.active}
+          icon={Check}
+          iconWrapClassName="bg-emerald-100"
+          iconClassName="text-emerald-600"
+        />
+        <AdminKpiCard
+          title="En validation"
+          value={stats.pending}
+          icon={Clock}
+          iconWrapClassName="bg-amber-100"
+          iconClassName="text-amber-600"
+        />
+        <AdminKpiCard
+          title="Désactivées"
+          value={stats.rejected}
+          icon={Pause}
+          iconWrapClassName="bg-slate-100"
+          iconClassName="text-slate-600"
+        />
       </div>
 
       <Card>

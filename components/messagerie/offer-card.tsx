@@ -198,7 +198,7 @@ export function OfferCard({
             </p>
           )}
           <p className="text-slate-600">
-            Frais de service : <span className="tabular-nums">{(serviceFeeCents / 100).toFixed(2)} €</span>
+            Frais plateforme : <span className="tabular-nums">{(serviceFeeCents / 100).toFixed(2)} €</span>
           </p>
           <p className="font-medium text-black">
             {paymentMode === "split" ? "Total à payer maintenant" : "Total à payer"} :{" "}

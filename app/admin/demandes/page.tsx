@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Calendar, Clock } from "lucide-react";
 
+import { AdminPageHeader } from "@/components/admin/page-header";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -123,11 +124,11 @@ export default async function AdminDemandesPage({
   ];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-black">Demandes de visites</h1>
-        <p className="mt-1 text-slate-500">Toutes les demandes de visites envoyées par les locataires</p>
-      </div>
+    <div className="p-4 pb-24 sm:p-6 lg:p-8 lg:pb-8">
+      <AdminPageHeader
+        title="Demandes de visites"
+        subtitle="Toutes les demandes de visites envoyées par les locataires"
+      />
 
       <div className="mb-6 -mx-4 overflow-x-auto border-b border-slate-200 px-4 pb-4 sm:mx-0 sm:px-0">
         <div className="flex min-w-max gap-2">

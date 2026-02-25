@@ -19,7 +19,7 @@ const DEFAULT_SETTINGS = {
     mode_publication: "manual" as "manual" | "auto",
   },
   commission: {
-    percent: 10,
+    fixed_fee_cents: 1500,
     ponctuel: true,
     mensuel: false,
   },
@@ -66,9 +66,9 @@ export async function savePlatformSettingsAction(formData: FormData) {
     mode_publication: (formData.get("validation_mode") as "manual" | "auto") || "manual",
   };
 
-  const percentRaw = parseFloat(String(formData.get("commission_percent") ?? "10"));
+  const fixedFeeRaw = parseFloat(String(formData.get("commission_fixed_fee_eur") ?? "15"));
   const commission = {
-    percent: Math.max(0, Math.min(100, Number.isFinite(percentRaw) ? percentRaw : 10)),
+    fixed_fee_cents: Math.max(0, Math.round((Number.isFinite(fixedFeeRaw) ? fixedFeeRaw : 15) * 100)),
     ponctuel: formData.get("commission_ponctuel") === "on",
     mensuel: formData.get("commission_mensuel") === "on",
   };

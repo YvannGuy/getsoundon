@@ -14,6 +14,9 @@ import {
   XCircle,
 } from "lucide-react";
 
+import { AdminFilterBar } from "@/components/admin/filter-bar";
+import { AdminKpiCard } from "@/components/admin/kpi-card";
+import { AdminPageHeaderClient } from "@/components/admin/page-header-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,6 +44,8 @@ type Props = {
     abonnements: number;
     failed: number;
     conversionRate: number;
+    totalPaid: number;
+    totalAttempts: number;
   };
 };
 
@@ -147,19 +152,15 @@ export function PaiementsClient({ transactions, stats }: Props) {
 
   return (
     <div className="min-w-0 overflow-x-hidden">
-      <div className="mb-6">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-black">
-          <CreditCard className="h-7 w-7 text-slate-600" />
-          Paiements
-        </h1>
-        <p className="mt-1 text-slate-600">
-          Suivez et analysez les transactions de la plateforme
-        </p>
-      </div>
+      <AdminPageHeaderClient
+        title="Paiements"
+        subtitle="Suivez et analysez les transactions de la plateforme"
+        icon={CreditCard}
+      />
 
       {stats.failed > 0 && (
-        <div className="mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-          <div className="flex items-center gap-2 text-red-800">
+        <div className="mb-6 flex flex-col items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2 text-red-800">
             <AlertCircle className="h-5 w-5" />
             <span className="font-medium">Paiements échoués (7j)</span>
             <span className="text-red-700">
@@ -181,9 +182,7 @@ export function PaiementsClient({ transactions, stats }: Props) {
         </div>
       )}
 
-      <Card className="mb-6 min-w-0">
-        <CardContent className="p-4">
-          <div className="flex min-w-0 flex-wrap items-center gap-3">
+      <AdminFilterBar>
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
@@ -224,55 +223,23 @@ export function PaiementsClient({ transactions, stats }: Props) {
               <option value="90">90 jours</option>
             </select>
             <Button className="bg-blue-600 hover:bg-blue-700">Filtrer</Button>
-          </div>
-        </CardContent>
-      </Card>
+      </AdminFilterBar>
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs font-medium text-slate-500">Revenu (30j)</p>
-            <p className="text-xl font-bold text-black">
-              €{(stats.revenue30 / 100).toLocaleString("fr-FR")}
-            </p>
-            <p className="text-xs text-emerald-600">+12%</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs font-medium text-slate-500">Pass 24h</p>
-            <p className="text-xl font-bold text-black">{stats.pass24h}</p>
-            <p className="text-xs text-blue-600">+8%</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs font-medium text-slate-500">Pass 48h</p>
-            <p className="text-xl font-bold text-black">{stats.pass48h}</p>
-            <p className="text-xs text-violet-600">+15%</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs font-medium text-slate-500">Abonnements</p>
-            <p className="text-xl font-bold text-black">{stats.abonnements}</p>
-            <p className="text-xs text-amber-600">+5%</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs font-medium text-slate-500">Échoués</p>
-            <p className="text-xl font-bold text-black">{stats.failed}</p>
-            <p className="text-xs text-red-600">-3%</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs font-medium text-slate-500">Taux conversion</p>
-            <p className="text-xl font-bold text-black">{stats.conversionRate.toFixed(1)}%</p>
-            <p className="text-xs text-emerald-600">+2%</p>
-          </CardContent>
-        </Card>
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <AdminKpiCard
+          title="Revenu (30j)"
+          value={`€${(stats.revenue30 / 100).toLocaleString("fr-FR")}`}
+          subtitle="Paiements validés"
+        />
+        <AdminKpiCard title="Pass 24h" value={stats.pass24h} subtitle="Sur 30 jours" />
+        <AdminKpiCard title="Pass 48h" value={stats.pass48h} subtitle="Sur 30 jours" />
+        <AdminKpiCard title="Abonnements" value={stats.abonnements} subtitle="Sur 30 jours" />
+        <AdminKpiCard title="Échoués" value={stats.failed} subtitle="Fenêtre 7 jours" />
+        <AdminKpiCard
+          title="Taux conversion"
+          value={`${stats.conversionRate.toFixed(1)}%`}
+          subtitle={`${stats.totalPaid} / ${stats.totalAttempts} tentatives`}
+        />
       </div>
 
       <div className="mb-6 grid gap-6 lg:grid-cols-2">

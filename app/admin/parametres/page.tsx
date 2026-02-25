@@ -45,7 +45,7 @@ export default async function AdminParametresPage() {
   }));
 
   return (
-    <div className="p-6 md:p-8">
+    <div className="p-4 pb-24 md:p-8 md:pb-8">
       <ParametresClient
         settings={settings}
         admins={admins}

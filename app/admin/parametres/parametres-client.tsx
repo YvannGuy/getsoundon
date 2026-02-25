@@ -21,6 +21,7 @@ import {
   savePlatformSettingsAction,
   type PlatformSettings,
 } from "@/app/actions/admin-settings";
+import { AdminPageHeaderClient } from "@/components/admin/page-header-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -111,7 +112,7 @@ export function ParametresClient({
     fd.append("pass_abonnement_enabled", formState.pass.abonnement_enabled ? "on" : "");
     fd.append("validation_manuelle", formState.validation.validation_manuelle ? "on" : "");
     fd.append("validation_mode", formState.validation.mode_publication);
-    fd.append("commission_percent", String(formState.commission.percent));
+    fd.append("commission_fixed_fee_eur", String((formState.commission.fixed_fee_cents ?? 1500) / 100));
     fd.append("commission_ponctuel", formState.commission.ponctuel ? "on" : "");
     fd.append("commission_mensuel", formState.commission.mensuel ? "on" : "");
 
@@ -143,12 +144,11 @@ export function ParametresClient({
 
   return (
     <div className="max-w-3xl space-y-6">
-      <div className="mb-8">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-black">
-          <Settings className="h-7 w-7 text-slate-600" />
-          Paramètres
-        </h1>
-      </div>
+      <AdminPageHeaderClient
+        title="Paramètres"
+        subtitle="Configuration globale de la plateforme et gestion des accès admin."
+        icon={Settings}
+      />
 
       <form className="space-y-6">
         <Card>
@@ -218,27 +218,30 @@ export function ParametresClient({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Percent className="h-4 w-4 text-slate-500" />
-              Commission réservations
+              Frais plateforme
             </CardTitle>
             <p className="text-sm text-slate-500">
-              Commission plateforme sur les paiements Connect (ponctuel / mensuel)
+              Frais appliqués aux paiements Stripe Connect (ponctuel / mensuel)
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-700">Taux de commission (%)</label>
+              <label className="text-sm font-medium text-slate-700">Montant fixe frais plateforme (€)</label>
               <Input
                 type="number"
                 min={0}
-                max={100}
+                max={500}
                 step={0.5}
-                value={formState.commission.percent}
+                value={String((formState.commission.fixed_fee_cents ?? 1500) / 100)}
                 onChange={(e) =>
                   setFormState((s) => ({
                     ...s,
                     commission: {
                       ...s.commission,
-                      percent: Math.max(0, Math.min(100, parseFloat(e.target.value || "0") || 0)),
+                      fixed_fee_cents: Math.max(
+                        0,
+                        Math.round((parseFloat(e.target.value || "0") || 0) * 100)
+                      ),
                     },
                   }))
                 }
@@ -270,6 +273,17 @@ export function ParametresClient({
                   }
                 />
               </div>
+            </div>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+              Ponctuel:{" "}
+              <span className="font-medium text-slate-800">
+                {formState.commission.ponctuel ? "Activé" : "Désactivé"}
+              </span>
+              {" · "}
+              Mensuel:{" "}
+              <span className="font-medium text-slate-800">
+                {formState.commission.mensuel ? "Activé" : "Désactivé"}
+              </span>
             </div>
           </CardContent>
         </Card>

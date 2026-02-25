@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { Flag } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/page-header";
 import { SignalementsClient } from "./signalements-client";
 import { Pagination } from "@/components/ui/pagination";
 
@@ -80,18 +80,15 @@ export default async function SignalementsPage({
   const currentPage = Math.min(page, totalPages);
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-black">
-          <Flag className="h-7 w-7 text-rose-500" />
-          Signalements
-        </h1>
-        <p className="mt-1 text-slate-600">
-          {pendingCount > 0
+    <div className="p-4 pb-24 md:p-8 md:pb-8">
+      <AdminPageHeader
+        title="Signalements"
+        subtitle={
+          pendingCount > 0
             ? `${pendingCount} signalement${pendingCount > 1 ? "s" : ""} en attente`
-            : "Aucun signalement en attente"}
-        </p>
-      </div>
+            : "Aucun signalement en attente"
+        }
+      />
       <SignalementsClient
         reports={reports}
         reasonLabels={REASON_LABELS}
