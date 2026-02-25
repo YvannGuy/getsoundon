@@ -33,8 +33,8 @@ export const dynamic = "force-dynamic";
 
 function filterPillClass(active: boolean) {
   return active
-    ? "rounded-full bg-blue-600 px-3 py-1 text-xs font-medium text-white"
-    : "rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200";
+    ? "inline-flex h-11 items-center rounded-full bg-blue-600 px-4 text-sm font-medium text-white"
+    : "inline-flex h-11 items-center rounded-full bg-slate-100 px-4 text-sm font-medium text-slate-700 hover:bg-slate-200";
 }
 
 export default async function OwnerReservationsPage({
@@ -170,31 +170,33 @@ export default async function OwnerReservationsPage({
         </Card>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Link href="/proprietaire/reservations" className={filterPillClass(currentFilter === "all")}>
+      <div className="sticky top-0 z-10 mt-4 -mx-4 border-y border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <Link href="/proprietaire/reservations" className={filterPillClass(currentFilter === "all")}>
           Toutes ({counts.all})
-        </Link>
-        <Link href="/proprietaire/reservations?statut=a_traiter" className={filterPillClass(currentFilter === "a_traiter")}>
+          </Link>
+          <Link href="/proprietaire/reservations?statut=a_traiter" className={filterPillClass(currentFilter === "a_traiter")}>
           À traiter ({counts.a_traiter})
-        </Link>
-        <Link
-          href="/proprietaire/reservations?statut=edl_incomplet"
-          className={filterPillClass(currentFilter === "edl_incomplet")}
-        >
+          </Link>
+          <Link
+            href="/proprietaire/reservations?statut=edl_incomplet"
+            className={filterPillClass(currentFilter === "edl_incomplet")}
+          >
           EDL incomplet ({counts.edl_incomplet})
-        </Link>
-        <Link
-          href="/proprietaire/reservations?statut=litige_ouvert"
-          className={filterPillClass(currentFilter === "litige_ouvert")}
-        >
+          </Link>
+          <Link
+            href="/proprietaire/reservations?statut=litige_ouvert"
+            className={filterPillClass(currentFilter === "litige_ouvert")}
+          >
           Litige ouvert ({counts.litige_ouvert})
-        </Link>
-        <Link href="/proprietaire/reservations?statut=terminees" className={filterPillClass(currentFilter === "terminees")}>
+          </Link>
+          <Link href="/proprietaire/reservations?statut=terminees" className={filterPillClass(currentFilter === "terminees")}>
           Terminées ({counts.terminees})
-        </Link>
+          </Link>
+        </div>
       </div>
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-6 space-y-4 pb-24 md:pb-0">
         {filteredRows.length === 0 ? (
           <Card>
             <CardContent className="py-10 text-center text-sm text-slate-500">
@@ -254,6 +256,22 @@ export default async function OwnerReservationsPage({
             );
           })
         )}
+      </div>
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 p-3 backdrop-blur md:hidden">
+        <div className="grid grid-cols-2 gap-2">
+          <Link
+            href="/proprietaire/etats-des-lieux"
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-300 text-sm font-medium text-slate-700"
+          >
+            Voir EDL
+          </Link>
+          <Link
+            href="/proprietaire/cautions"
+            className="inline-flex h-11 items-center justify-center rounded-lg bg-[#213398] text-sm font-medium text-white"
+          >
+            Gérer caution
+          </Link>
+        </div>
       </div>
     </div>
   );
