@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { Salle } from "@/lib/types/salle";
+import { formatSalleTarifs } from "@/lib/types/salle";
 
 type Props = {
   salle: Salle | null;
@@ -62,7 +63,7 @@ export function AnnoncePreviewModal({ salle, open, onOpenChange }: Props) {
           <section>
             <h3 className="mb-2 text-sm font-semibold text-black">Tarification</h3>
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <p className="text-lg font-bold text-black">{salle.pricePerDay} € / jour</p>
+              <p className="text-lg font-bold text-black">{formatSalleTarifs(salle)}</p>
             </div>
           </section>
           <div className="flex justify-end gap-2 pt-2">

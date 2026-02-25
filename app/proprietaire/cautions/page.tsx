@@ -17,6 +17,16 @@ const DEPOSIT_STATUS_LABEL: Record<string, string> = {
   expired: "Empreinte expirée",
 };
 
+const DEPOSIT_STATUS_BADGE: Record<string, string> = {
+  none: "bg-slate-100 text-slate-600",
+  authorized: "bg-emerald-100 text-emerald-700",
+  claim_requested: "bg-amber-100 text-amber-700",
+  released: "bg-slate-100 text-slate-600",
+  captured: "bg-red-100 text-red-700",
+  failed: "bg-red-100 text-red-700",
+  expired: "bg-slate-100 text-slate-600",
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function ProprietaireCautionsPage() {
@@ -79,8 +89,55 @@ export default async function ProprietaireCautionsPage() {
               Aucune caution à gérer pour le moment.
             </p>
           ) : (
-            <div className="-mx-4 overflow-x-auto sm:mx-0">
-              <table className="w-full min-w-[620px]">
+            <>
+              <div className="space-y-3 md:hidden">
+                {(paidOffersWithDeposit ?? []).map((o) => {
+                  const row = o as {
+                    id: string;
+                    created_at: string;
+                    seeker_id: string;
+                    salle_id: string;
+                    deposit_amount_cents: number;
+                    deposit_hold_status: string;
+                  };
+                  return (
+                    <article key={row.id} className="rounded-xl border border-slate-200 p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-black">
+                            {salleMap.get(row.salle_id) ?? "Salle"}
+                          </p>
+                          <p className="truncate text-sm text-slate-600">
+                            {seekerMap.get(row.seeker_id) ?? "Locataire"}
+                          </p>
+                        </div>
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                            DEPOSIT_STATUS_BADGE[row.deposit_hold_status] ?? "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {DEPOSIT_STATUS_LABEL[row.deposit_hold_status] ?? row.deposit_hold_status}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-sm">
+                        <span className="text-slate-500">
+                          {format(new Date(row.created_at), "d MMM yyyy", { locale: fr })}
+                        </span>
+                        <span className="font-semibold text-black">{(row.deposit_amount_cents / 100).toFixed(2)} €</span>
+                      </div>
+                      <div className="mt-3">
+                        <DepositHoldActions
+                          offerId={row.id}
+                          holdStatus={row.deposit_hold_status}
+                          depositAmountCents={row.deposit_amount_cents}
+                        />
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="hidden -mx-4 overflow-x-auto sm:mx-0 md:block">
+                <table className="w-full min-w-[620px]">
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                     <th className="pb-3 pr-3">Date</th>
@@ -130,7 +187,8 @@ export default async function ProprietaireCautionsPage() {
                   })}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

@@ -171,40 +171,42 @@ export default async function DemandesPage({
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-black">Mes visites</h1>
-        <p className="mt-1 text-slate-500">Suivez l&apos;état de vos visites</p>
+        <h1 className="text-2xl font-bold text-black">Mes demandes et visites</h1>
+        <p className="mt-1 text-slate-500">Suivez l&apos;état de vos demandes de location et de vos visites.</p>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-200 pb-4">
-        {tabs.map((tab) => {
-          const isActive =
-            (tab.key === "all" && statusFilter === "all") ||
-            (tab.key !== "all" && statusFilter === tab.key);
-          const href =
-            tab.key === "all"
-              ? "/dashboard/demandes?page=1"
-              : `/dashboard/demandes?page=1&status=${tab.key}`;
-          return (
-            <Link
-              key={tab.key}
-              href={href}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                isActive
-                  ? "bg-[#213398] text-white"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-black"
-              }`}
-            >
-              {tab.label}
-              <span
-                className={`inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs ${
-                  isActive ? "bg-white/20" : "bg-slate-200 text-slate-600"
+      <div className="mb-6 -mx-4 overflow-x-auto border-b border-slate-200 px-4 pb-4 sm:mx-0 sm:px-0">
+        <div className="flex min-w-max gap-2">
+          {tabs.map((tab) => {
+            const isActive =
+              (tab.key === "all" && statusFilter === "all") ||
+              (tab.key !== "all" && statusFilter === tab.key);
+            const href =
+              tab.key === "all"
+                ? "/dashboard/demandes?page=1"
+                : `/dashboard/demandes?page=1&status=${tab.key}`;
+            return (
+              <Link
+                key={tab.key}
+                href={href}
+                className={`flex h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-[#213398] text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-black"
                 }`}
               >
-                {tab.count}
-              </span>
-            </Link>
-          );
-        })}
+                {tab.label}
+                <span
+                  className={`inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs ${
+                    isActive ? "bg-white/20" : "bg-slate-200 text-slate-600"
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       {list.length === 0 ? (
@@ -222,7 +224,74 @@ export default async function DemandesPage({
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="space-y-3 md:hidden">
+            {list.map((d) => {
+              const salle = d.salle;
+              const img =
+                salle?.images && Array.isArray(salle.images) && salle.images[0]
+                  ? String(salle.images[0])
+                  : "/img.png";
+              const isVisite = d.kind === "visite";
+              const hDebut = isVisite
+                ? formatTime((d as { heure_debut: string }).heure_debut ?? null)
+                : formatTime((d as { heure_debut_souhaitee?: string }).heure_debut_souhaitee ?? null);
+              const hFin = isVisite
+                ? formatTime((d as { heure_fin: string }).heure_fin ?? null)
+                : formatTime((d as { heure_fin_souhaitee?: string }).heure_fin_souhaitee ?? null);
+              const horaires = hDebut && hFin ? `${hDebut}-${hFin}` : hDebut || "";
+              const dateRaw = isVisite
+                ? (d as { date_visite: string }).date_visite
+                : (d as { date_debut?: string }).date_debut;
+              const dateStr = dateRaw
+                ? format(new Date(dateRaw + (isVisite ? "T12:00:00" : "")), "d MMMM yyyy", {
+                    locale: fr,
+                  })
+                : "—";
+              const dateDisplay = horaires ? `${dateStr}, ${horaires}` : dateStr;
+
+              return (
+                <article key={`${d.kind}-${d.id}`} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                      <Image src={img} alt="" fill className="object-cover" sizes="56px" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={isVisite ? `/dashboard/demandes/visite/${d.id}` : `/dashboard/demandes/${d.id}`}
+                        className="block truncate text-base font-semibold text-black hover:underline"
+                      >
+                        {salle?.name ?? "—"}
+                      </Link>
+                      <p className="mt-0.5 text-sm text-slate-600">
+                        {isVisite ? ((d as { type_evenement?: string | null }).type_evenement ?? "Visite") : ((d as { type_evenement?: string }).type_evenement ?? "—")}
+                      </p>
+                      <p className="mt-0.5 text-sm text-slate-500">{salle?.city ?? "—"}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <p className="text-sm text-slate-600">{dateDisplay}</p>
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+                        STATUT_BADGE[d.status] ?? "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {STATUT_LABEL[d.status] ?? d.status}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {isVisite && d.status === "reschedule_proposed" ? (
+                      <ReprogrammationVisiteActions demandeVisiteId={d.id} compact />
+                    ) : isVisite ? (
+                      <ContactVisiteSeekerButton demandeVisiteId={d.id} status={d.status} />
+                    ) : (
+                      <ContactProprietaireDemandeButton demandeId={d.id} />
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm md:block">
             <table className="w-full min-w-[700px]">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium uppercase tracking-wider text-slate-500">

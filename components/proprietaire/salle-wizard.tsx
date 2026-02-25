@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, type RefObject } from "react";
 import { addMonths, subMonths, startOfDay, addDays } from "date-fns";
 import { createSalleFromOnboarding } from "@/app/actions/create-salle";
 import {
@@ -41,6 +41,7 @@ import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 const TOTAL_STEPS = 6;
+const ONBOARDING_DRAFT_KEY = "owner_salle_onboarding_draft_v1";
 
 const FEATURES = [
   { id: "erp", label: "ERP conforme", icon: Shield },
@@ -133,6 +134,72 @@ const initialData: WizardData = {
   photos: [],
 };
 
+function parsePositiveNumber(value: string): number | null {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n;
+}
+
+function isValidTimeRange(debut?: string, fin?: string): boolean {
+  if (!debut || !fin) return false;
+  return debut < fin;
+}
+
+function getWizardValidationError(data: WizardData, minPhotos: number): { step: number; message: string } | null {
+  if (!data.nom.trim() || !data.ville.trim() || !data.adresse.trim() || !data.description.trim()) {
+    return { step: 1, message: "Complétez les informations essentielles (nom, ville, adresse et description)." };
+  }
+  if (!parsePositiveNumber(data.capacite)) {
+    return { step: 1, message: "La capacité d'accueil doit être un nombre supérieur à 0." };
+  }
+  const hasTarif =
+    !!parsePositiveNumber(data.tarifParJour) ||
+    !!parsePositiveNumber(data.tarifMensuel) ||
+    !!parsePositiveNumber(data.tarifHoraire);
+  if (!hasTarif) {
+    return { step: 1, message: "Renseignez au moins un tarif valide (jour, heure ou mois)." };
+  }
+
+  if (!data.features.length) {
+    return { step: 2, message: "Sélectionnez au moins une caractéristique pour votre salle." };
+  }
+  if (data.features.includes("parking") && !parsePositiveNumber(data.placesParking)) {
+    return { step: 2, message: "Indiquez un nombre de places de parking supérieur à 0." };
+  }
+
+  if (!data.joursOuverture.length) {
+    return { step: 3, message: "Choisissez au moins un jour de location." };
+  }
+  for (const jour of data.joursOuverture) {
+    const h = data.horairesParJour[jour];
+    if (!h || !isValidTimeRange(h.debut, h.fin)) {
+      return { step: 3, message: `Vérifiez les horaires de location pour ${jour} (heure de début < heure de fin).` };
+    }
+  }
+  if (!data.restrictionSonore) {
+    return { step: 3, message: "Sélectionnez une option de restriction sonore." };
+  }
+  if (!data.evenementsAcceptes.length) {
+    return { step: 3, message: "Sélectionnez au moins un type d'événement accepté." };
+  }
+
+  if (!data.visiteDates.length) {
+    return { step: 4, message: "Ajoutez au moins une date de visite." };
+  }
+  for (const date of data.visiteDates) {
+    const h = data.visiteHorairesParDate[date];
+    if (!h || !isValidTimeRange(h.debut, h.fin)) {
+      return { step: 4, message: "Vérifiez les créneaux de visite (heure de début < heure de fin)." };
+    }
+  }
+
+  if (data.photos.length < minPhotos) {
+    return { step: 5, message: `Ajoutez au moins ${minPhotos} photos avant de soumettre votre annonce.` };
+  }
+
+  return null;
+}
+
 export type SalleWizardProps = {
   embedded?: boolean;
   onSuccess?: (slug: string | null, status: "approved" | "pending") => void;
@@ -147,12 +214,88 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
   const [createdStatus, setCreatedStatus] = useState<"approved" | "pending">("pending");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const submitErrorRef = useRef<HTMLDivElement | null>(null);
+  const hasLoadedDraftRef = useRef(false);
 
   const MIN_PHOTOS = 5;
   const MAX_PHOTOS = 10;
 
   const progress = (step / TOTAL_STEPS) * 100;
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ONBOARDING_DRAFT_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as {
+          step?: number;
+          data?: Partial<WizardData>;
+        };
+        if (parsed.data) {
+          setData({
+            ...initialData,
+            ...parsed.data,
+            photos: [],
+          });
+        }
+        if (parsed.step && parsed.step >= 1 && parsed.step <= TOTAL_STEPS) {
+          setStep(parsed.step);
+        }
+        setDraftRestored(true);
+      }
+    } catch {
+      // Ignore invalid draft
+    } finally {
+      hasLoadedDraftRef.current = true;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedDraftRef.current) return;
+    try {
+      const { photos: _photos, ...serializableData } = data;
+      localStorage.setItem(
+        ONBOARDING_DRAFT_KEY,
+        JSON.stringify({
+          step,
+          data: serializableData,
+        })
+      );
+      setLastSavedAt(new Date());
+    } catch {
+      // Ignore localStorage write failures
+    }
+  }, [step, data]);
+
+  useEffect(() => {
+    if (!submitError) return;
+    submitErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [submitError]);
+
+  useEffect(() => {
+    const hasProgress = JSON.stringify({
+      ...data,
+      photos: [],
+    }) !== JSON.stringify({
+      ...initialData,
+      photos: [],
+    });
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!hasProgress || submitted) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [data, submitted]);
+
+  const clearDraft = useCallback(() => {
+    localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+    setDraftRestored(false);
+    setLastSavedAt(null);
+  }, []);
 
   const updateData = useCallback((updates: Partial<WizardData>) => {
     setData((prev) => ({ ...prev, ...updates }));
@@ -251,42 +394,52 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
 
   const handleSubmit = async () => {
     setSubmitError(null);
+    const validationError = getWizardValidationError(data, MIN_PHOTOS);
+    if (validationError) {
+      setStep(validationError.step);
+      setSubmitError(validationError.message);
+      return;
+    }
     setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.set("nom", data.nom);
+      formData.set("ville", data.ville);
+      formData.set("capacite", data.capacite);
+      formData.set("adresse", data.adresse);
+      if (data.postalCode) formData.set("postalCode", data.postalCode);
+      if (data.lat != null) formData.set("lat", String(data.lat));
+      if (data.lng != null) formData.set("lng", String(data.lng));
+      formData.set("description", data.description);
+      formData.set("tarifParJour", data.tarifParJour);
+      formData.set("tarifMensuel", data.tarifMensuel);
+      formData.set("tarifHoraire", data.tarifHoraire);
+      formData.set("cautionRequise", data.cautionRequise ? "1" : "0");
+      formData.set("inclusions", JSON.stringify(data.inclusions));
+      formData.set("placesParking", data.placesParking);
+      formData.set("features", JSON.stringify(data.features));
+      formData.set("horairesParJour", JSON.stringify(data.horairesParJour));
+      formData.set("joursOuverture", JSON.stringify(data.joursOuverture));
+      formData.set("joursVisite", JSON.stringify(data.joursVisite));
+      formData.set("visiteDates", JSON.stringify(data.visiteDates));
+      formData.set("visiteHorairesParDate", JSON.stringify(data.visiteHorairesParDate));
+      formData.set("restrictionSonore", data.restrictionSonore);
+      formData.set("evenementsAcceptes", JSON.stringify(data.evenementsAcceptes));
+      data.photos.forEach((file) => formData.append("photos", file));
 
-    const formData = new FormData();
-    formData.set("nom", data.nom);
-    formData.set("ville", data.ville);
-    formData.set("capacite", data.capacite);
-    formData.set("adresse", data.adresse);
-    if (data.postalCode) formData.set("postalCode", data.postalCode);
-    if (data.lat != null) formData.set("lat", String(data.lat));
-    if (data.lng != null) formData.set("lng", String(data.lng));
-    formData.set("description", data.description);
-    formData.set("tarifParJour", data.tarifParJour);
-    formData.set("tarifMensuel", data.tarifMensuel);
-    formData.set("tarifHoraire", data.tarifHoraire);
-    formData.set("cautionRequise", data.cautionRequise ? "1" : "0");
-    formData.set("inclusions", JSON.stringify(data.inclusions));
-    formData.set("placesParking", data.placesParking);
-    formData.set("features", JSON.stringify(data.features));
-    formData.set("horairesParJour", JSON.stringify(data.horairesParJour));
-    formData.set("joursOuverture", JSON.stringify(data.joursOuverture));
-    formData.set("joursVisite", JSON.stringify(data.joursVisite));
-    formData.set("visiteDates", JSON.stringify(data.visiteDates));
-    formData.set("visiteHorairesParDate", JSON.stringify(data.visiteHorairesParDate));
-    formData.set("restrictionSonore", data.restrictionSonore);
-    formData.set("evenementsAcceptes", JSON.stringify(data.evenementsAcceptes));
-    data.photos.forEach((file) => formData.append("photos", file));
+      const result = await createSalleFromOnboarding(formData);
 
-    const result = await createSalleFromOnboarding(formData);
-
-    if (result.success) {
-      setCreatedSlug(result.slug ?? null);
-      setCreatedStatus(result.status ?? "pending");
-      setSubmitted(true);
-      onSuccess?.(result.slug ?? null, result.status ?? "pending");
-    } else {
-      setSubmitError(result.error);
+      if (result.success) {
+        localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+        setCreatedSlug(result.slug ?? null);
+        setCreatedStatus(result.status ?? "pending");
+        setSubmitted(true);
+        onSuccess?.(result.slug ?? null, result.status ?? "pending");
+      } else {
+        setSubmitError(result.error ?? "Impossible de soumettre votre annonce pour le moment.");
+      }
+    } catch {
+      setSubmitError("Une erreur réseau est survenue. Vérifiez votre connexion et réessayez.");
     }
     setIsSubmitting(false);
   };
@@ -466,6 +619,22 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
             </div>
             <span className="text-sm font-medium text-slate-600">{Math.round(progress)}%</span>
           </div>
+          {(draftRestored || lastSavedAt) && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+              <p aria-live="polite">
+                {draftRestored
+                  ? "Brouillon restauré automatiquement."
+                  : `Brouillon sauvegardé à ${lastSavedAt?.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`}
+              </p>
+              <button
+                type="button"
+                onClick={clearDraft}
+                className="text-[#213398] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#213398]/40"
+              >
+                Réinitialiser le brouillon
+              </button>
+            </div>
+          )}
         </div>
 
         {step === 1 && (
@@ -529,6 +698,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
             onBack={() => setStep(5)}
             isSubmitting={isSubmitting}
             submitError={submitError}
+            submitErrorRef={submitErrorRef}
             minPhotos={MIN_PHOTOS}
           />
         )}
@@ -580,6 +750,16 @@ function Step1({
     data.adresse.trim() !== "" &&
     data.description.trim() !== "" &&
     hasAtLeastOneTarif;
+  const capacityValid = parsePositiveNumber(data.capacite) != null;
+  const stepHint = !data.nom.trim() || !data.ville.trim() || !data.adresse.trim()
+    ? "Renseignez le nom, la ville et l'adresse."
+    : !capacityValid
+      ? "La capacité doit être un nombre supérieur à 0."
+      : !hasAtLeastOneTarif
+        ? "Ajoutez au moins un tarif valide."
+        : !data.description.trim()
+          ? "Ajoutez une description de la salle."
+          : null;
 
   return (
     <>
@@ -715,6 +895,7 @@ function Step1({
       >
         Continuer
       </Button>
+      {stepHint && <p className="mt-2 text-sm text-amber-700">{stepHint}</p>}
     </>
   );
 }
@@ -732,6 +913,15 @@ function Step2({
   onNext: () => void;
   onBack: () => void;
 }) {
+  const canContinue =
+    data.features.length >= 1 &&
+    (!data.features.includes("parking") || !!parsePositiveNumber(data.placesParking));
+  const stepHint =
+    data.features.length < 1
+      ? "Sélectionnez au moins une caractéristique."
+      : data.features.includes("parking") && !parsePositiveNumber(data.placesParking)
+        ? "Indiquez un nombre de places de parking supérieur à 0."
+        : null;
   return (
     <>
       <h2 className="text-2xl font-bold text-black">Caractéristiques principales</h2>
@@ -743,7 +933,7 @@ function Step2({
             type="button"
             onClick={() => toggleFeature(id)}
             className={cn(
-              "flex items-center gap-4 rounded-lg border p-4 text-left transition-colors",
+              "flex items-center gap-4 rounded-lg border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5b4dbf]/40",
               data.features.includes(id)
                 ? "border-[#5b4dbf] bg-[#5b4dbf]/5"
                 : "border-slate-200 bg-white hover:border-slate-300"
@@ -783,15 +973,13 @@ function Step2({
         </Button>
         <Button
           onClick={onNext}
-          disabled={!(
-            data.features.length >= 1 &&
-            (!data.features.includes("parking") || data.placesParking.trim() !== "")
-          )}
+          disabled={!canContinue}
           className="h-11 flex-1 bg-[#5b4dbf] hover:bg-[#4a3dad] disabled:opacity-50"
         >
           Continuer
         </Button>
       </div>
+      {stepHint && <p className="mt-2 text-sm text-amber-700">{stepHint}</p>}
     </>
   );
 }
@@ -815,6 +1003,18 @@ function Step3({
   onNext: () => void;
   onBack: () => void;
 }) {
+  const canContinue =
+    data.joursOuverture.length >= 1 &&
+    data.restrictionSonore !== "" &&
+    data.evenementsAcceptes.length >= 1;
+  const stepHint =
+    data.joursOuverture.length < 1
+      ? "Sélectionnez au moins un jour de location."
+      : data.restrictionSonore === ""
+        ? "Choisissez une option de restriction sonore."
+        : data.evenementsAcceptes.length < 1
+          ? "Sélectionnez au moins un événement accepté."
+          : null;
   return (
     <>
       <h2 className="text-2xl font-bold text-black">Conditions d&apos;accueil</h2>
@@ -830,7 +1030,7 @@ function Step3({
                 type="button"
                 onClick={() => toggleJour(jour)}
                 className={cn(
-                  "rounded-lg border px-3 py-2 text-sm capitalize transition-colors",
+                  "rounded-lg border px-3 py-2 text-sm capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5b4dbf]/40",
                   data.joursOuverture.includes(jour)
                     ? "border-[#5b4dbf] bg-[#5b4dbf]/10 text-[#5b4dbf]"
                     : "border-slate-200 bg-white hover:border-slate-300"
@@ -887,7 +1087,7 @@ function Step3({
                 type="button"
                 onClick={() => updateData({ restrictionSonore: id })}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg border p-4 text-left transition-colors",
+                  "flex items-center gap-3 rounded-lg border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5b4dbf]/40",
                   data.restrictionSonore === id
                     ? "border-[#5b4dbf] bg-[#5b4dbf]/10"
                     : "border-slate-200 bg-white hover:border-slate-300"
@@ -913,7 +1113,7 @@ function Step3({
                 type="button"
                 onClick={() => toggleEvent(id)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg border p-4 text-left transition-colors",
+                  "flex items-center gap-3 rounded-lg border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5b4dbf]/40",
                   data.evenementsAcceptes.includes(id)
                     ? "border-[#5b4dbf] bg-[#5b4dbf]/10"
                     : "border-slate-200 bg-white hover:border-slate-300"
@@ -946,7 +1146,7 @@ function Step3({
                 type="button"
                 onClick={() => toggleInclusion(id)}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-lg border p-3 text-left text-sm transition-colors",
+                  "flex w-full items-center gap-3 rounded-lg border p-3 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5b4dbf]/40",
                   data.inclusions.includes(id)
                     ? "border-[#5b4dbf] bg-[#5b4dbf]/10"
                     : "border-slate-200 bg-white hover:border-slate-300"
@@ -968,16 +1168,13 @@ function Step3({
         </Button>
         <Button
           onClick={onNext}
-          disabled={!(
-            data.joursOuverture.length >= 1 &&
-            data.restrictionSonore !== "" &&
-            data.evenementsAcceptes.length >= 1
-          )}
+          disabled={!canContinue}
           className="h-11 flex-1 bg-[#5b4dbf] hover:bg-[#4a3dad] disabled:opacity-50"
         >
           Continuer
         </Button>
       </div>
+      {stepHint && <p className="mt-2 text-sm text-amber-700">{stepHint}</p>}
     </>
   );
 }
@@ -1033,6 +1230,7 @@ function Step4JoursVisite({
     allFutureDatesInRange.every((d) => data.visiteDates.includes(d));
 
   const defaultHoraires: HorairesJour = { debut: "14:00", fin: "18:00" };
+  const canContinue = data.visiteDates.length > 0;
 
   const toggleAll = () => {
     if (isAllSelected) {
@@ -1069,7 +1267,7 @@ function Step4JoursVisite({
                   month.getFullYear() <= minMonth.getFullYear() &&
                   month.getMonth() <= minMonth.getMonth()
                 }
-                className="flex h-8 w-8 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex h-9 w-9 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5b4dbf]/40 disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Mois précédent"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -1084,7 +1282,7 @@ function Step4JoursVisite({
                   month.getFullYear() >= maxMonth.getFullYear() &&
                   month.getMonth() >= maxMonth.getMonth()
                 }
-                className="flex h-8 w-8 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex h-9 w-9 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5b4dbf]/40 disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Mois suivant"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -1128,7 +1326,7 @@ function Step4JoursVisite({
               <button
                 type="button"
                 onClick={toggleAll}
-                className="text-xs text-[#5b4dbf] hover:underline"
+                className="text-xs text-[#5b4dbf] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5b4dbf]/40"
               >
                 {isAllSelected ? "Tout désélectionner" : "Tout sélectionner"}
               </button>
@@ -1200,12 +1398,13 @@ function Step4JoursVisite({
         </Button>
         <Button
           onClick={onNext}
-          disabled={data.visiteDates.length === 0}
+          disabled={!canContinue}
           className="h-11 flex-1 bg-[#5b4dbf] hover:bg-[#4a3dad] disabled:opacity-50"
         >
           Continuer
         </Button>
       </div>
+      {!canContinue && <p className="mt-2 text-sm text-amber-700">Ajoutez au moins une date de visite.</p>}
     </>
   );
 }
@@ -1257,7 +1456,7 @@ function Step5({
               <button
                 type="button"
                 onClick={() => onRemovePhoto(i)}
-                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500/90 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
+                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-red-500/90 text-white opacity-100 transition-opacity hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:opacity-0 sm:group-hover:opacity-100"
                 aria-label="Supprimer"
               >
                 <X className="h-4 w-4" />
@@ -1334,6 +1533,7 @@ function Step6({
   onBack,
   isSubmitting,
   submitError,
+  submitErrorRef,
   minPhotos,
 }: {
   data: WizardData;
@@ -1341,6 +1541,7 @@ function Step6({
   onBack: () => void;
   isSubmitting?: boolean;
   submitError?: string | null;
+  submitErrorRef?: RefObject<HTMLDivElement | null>;
   minPhotos: number;
 }) {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -1350,7 +1551,11 @@ function Step6({
       <h2 className="text-2xl font-bold text-black">Récapitulatif</h2>
       <p className="mt-2 text-slate-600">Vérifiez les informations avant de soumettre</p>
       {submitError && (
-        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div
+          ref={submitErrorRef}
+          role="alert"
+          className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
           {submitError}
         </div>
       )}

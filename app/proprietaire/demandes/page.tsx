@@ -180,7 +180,7 @@ export default async function DemandesPage({
       </div>
 
       <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100">
             <Zap className="h-6 w-6 text-amber-600" />
           </div>
@@ -193,42 +193,44 @@ export default async function DemandesPage({
             </p>
             <p className="text-xs text-slate-500">Dernières 30 jours</p>
           </div>
-          <p className="ml-auto max-w-[200px] text-right text-sm text-slate-500">
+          <p className="max-w-[260px] text-sm text-slate-500 sm:ml-auto sm:text-right">
             Votre réactivité impressionne vos clients
           </p>
         </div>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-200 pb-4">
-        {tabs.map((tab) => {
-          const isActive =
-            (tab.key === "all" && statusFilter === "all") ||
-            (tab.key !== "all" && statusFilter === tab.key);
-          const href =
-            tab.key === "all"
-              ? "/proprietaire/demandes?page=1"
-              : `/proprietaire/demandes?page=1&status=${tab.key}`;
-          return (
-            <Link
-              key={tab.key}
-              href={href}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                isActive
-                  ? "bg-[#213398] text-white"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-black"
-              }`}
-            >
-              {tab.label}
-              <span
-                className={`inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs ${
-                  isActive ? "bg-white/20" : "bg-slate-200 text-slate-600"
+      <div className="mb-6 -mx-4 overflow-x-auto border-b border-slate-200 px-4 pb-4 sm:mx-0 sm:px-0">
+        <div className="flex min-w-max gap-2">
+          {tabs.map((tab) => {
+            const isActive =
+              (tab.key === "all" && statusFilter === "all") ||
+              (tab.key !== "all" && statusFilter === tab.key);
+            const href =
+              tab.key === "all"
+                ? "/proprietaire/demandes?page=1"
+                : `/proprietaire/demandes?page=1&status=${tab.key}`;
+            return (
+              <Link
+                key={tab.key}
+                href={href}
+                className={`flex h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-[#213398] text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-black"
                 }`}
               >
-                {tab.count}
-              </span>
-            </Link>
-          );
-        })}
+                {tab.label}
+                <span
+                  className={`inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs ${
+                    isActive ? "bg-white/20" : "bg-slate-200 text-slate-600"
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       {list.length === 0 ? (
@@ -241,7 +243,55 @@ export default async function DemandesPage({
         </div>
       ) : (
         <>
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="space-y-3 md:hidden">
+          {list.map((d) => {
+            const profile = d.seeker;
+            const salle = d.salle;
+            const hDebut = formatTime(d.heure_debut_souhaitee ?? null);
+            const hFin = formatTime(d.heure_fin_souhaitee ?? null);
+            const horaires = hDebut && hFin ? `${hDebut}-${hFin}` : hDebut || "";
+            const dateStr = d.date_debut
+              ? format(new Date(d.date_debut), "d MMMM yyyy", { locale: fr })
+              : "—";
+            const typeEvenement = TYPE_EVENEMENT_LABEL[d.type_evenement ?? ""] ?? d.type_evenement ?? "—";
+
+            return (
+              <article key={d.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-base font-semibold text-black">{profile?.full_name ?? "—"}</p>
+                    <p className="truncate text-sm text-slate-500">{profile?.email ?? "—"}</p>
+                  </div>
+                  <span
+                    className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
+                      STATUT_BADGE[d.status] ?? "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {STATUT_LABEL[d.status] ?? d.status}
+                  </span>
+                </div>
+                <div className="mt-3 space-y-1 text-sm text-slate-600">
+                  <p>{typeEvenement}</p>
+                  <p>{dateStr}{horaires ? `, ${horaires}` : ""}</p>
+                  <p className="inline-flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-slate-400" />
+                    {d.nb_personnes ?? "—"} participants
+                  </p>
+                  <p className="font-medium text-slate-700">{salle?.name ?? d.salle_id ?? "—"}</p>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link href={`/proprietaire/demandes/${d.id}`}>
+                    <Button variant="outline" size="sm" className="h-9">
+                      Voir
+                    </Button>
+                  </Link>
+                  <ContactLocataireDemandeButton demandeId={d.id} />
+                </div>
+              </article>
+            );
+          })}
+        </div>
+        <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm md:block">
           <table className="w-full min-w-[900px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium uppercase tracking-wider text-slate-500">

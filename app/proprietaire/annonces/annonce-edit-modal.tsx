@@ -148,8 +148,8 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto" showClose>
-        <DialogHeader>
+      <DialogContent className="mx-4 max-h-[90vh] w-[calc(100%-2rem)] max-w-lg overflow-y-auto sm:mx-auto" showClose>
+        <DialogHeader className="pr-8">
           <DialogTitle>Modifier l&apos;annonce</DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -234,7 +234,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
               <p className="text-xs text-red-600">{form.formState.errors.city.message}</p>
             )}
           </div>
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <label className="text-sm font-medium text-slate-700">Adresse</label>
             <Input
               {...form.register("address")}
@@ -245,8 +245,8 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
               <p className="text-xs text-red-600">{form.formState.errors.address.message}</p>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="min-w-0 space-y-2">
               <label className="text-sm font-medium text-slate-700">Capacité</label>
               <Input
                 type="number"
@@ -258,7 +258,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
                 <p className="text-xs text-red-600">{form.formState.errors.capacity.message}</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <label className="text-sm font-medium text-slate-700">Prix / jour (€)</label>
               <Input
                 type="number"

@@ -98,8 +98,8 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg" showClose>
-        <DialogHeader>
+      <DialogContent className="mx-4 max-h-[90vh] w-[calc(100%-2rem)] max-w-lg overflow-y-auto sm:mx-auto" showClose>
+        <DialogHeader className="pr-8">
           <DialogTitle>Modifier l&apos;annonce</DialogTitle>
         </DialogHeader>
         <form
@@ -132,7 +132,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
               </p>
             )}
           </div>
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <label className="text-sm font-medium text-slate-700">Adresse</label>
             <Input
               {...form.register("address")}
@@ -145,8 +145,8 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
               </p>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="min-w-0 space-y-2">
               <label className="text-sm font-medium text-slate-700">
                 Capacité
               </label>
@@ -162,7 +162,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
                 </p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <label className="text-sm font-medium text-slate-700">
                 Prix / jour (€)
               </label>

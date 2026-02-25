@@ -146,7 +146,7 @@ export function PaiementsClient({ transactions, stats }: Props) {
   const pieTotal = pieData.reduce((s, p) => s + p.count, 0);
 
   return (
-    <div>
+    <div className="min-w-0 overflow-x-hidden">
       <div className="mb-6">
         <h1 className="flex items-center gap-2 text-2xl font-bold text-black">
           <CreditCard className="h-7 w-7 text-slate-600" />
@@ -181,9 +181,9 @@ export function PaiementsClient({ transactions, stats }: Props) {
         </div>
       )}
 
-      <Card className="mb-6">
+      <Card className="mb-6 min-w-0">
         <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
@@ -323,12 +323,69 @@ export function PaiementsClient({ transactions, stats }: Props) {
         </Card>
       </div>
 
-      <Card>
+      <Card className="min-w-0">
         <CardContent className="p-0">
           <div className="border-b border-slate-200 px-4 py-3">
             <h3 className="font-semibold text-black">Transactions récentes</h3>
           </div>
-          <div className="overflow-x-auto">
+          <div className="space-y-3 p-4 pb-24 md:hidden md:pb-4">
+            {filtered.slice(0, 20).map((t) => {
+              const statusInfo = formatStatus(t.status);
+              const StatusIcon = statusInfo.icon;
+              return (
+                <article key={t.id} className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-4">
+                  <div className="flex min-w-0 items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-black">{t.user_name || "—"}</p>
+                      <p className="truncate text-xs text-slate-500">{t.user_email}</p>
+                    </div>
+                    <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${statusInfo.className}`}>
+                      <StatusIcon className="h-3.5 w-3.5" />
+                      {statusInfo.label}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
+                    <span
+                      className={`shrink-0 inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        t.product_type === "pass_24h"
+                          ? "bg-blue-100 text-blue-700"
+                          : t.product_type === "pass_48h"
+                            ? "bg-violet-100 text-violet-700"
+                            : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {formatProduct(t.product_type)}
+                    </span>
+                    <p className="shrink-0 text-sm font-semibold text-black">{(t.amount / 100).toFixed(2)} €</p>
+                  </div>
+                  <p className="mt-1 min-w-0 truncate text-xs text-slate-500" title={t.reference ?? undefined}>
+                    {formatDate(t.created_at)} • {t.reference || "—"}
+                  </p>
+                  <div className="mt-3 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewTransaction(t);
+                        setModalOpen(true);
+                      }}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-blue-600"
+                      title="Voir détails"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <Link
+                      href={`/admin/utilisateurs?userId=${t.user_id}`}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                      title="Voir le profil utilisateur"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[700px]">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium uppercase text-slate-500">
@@ -405,14 +462,14 @@ export function PaiementsClient({ transactions, stats }: Props) {
                               setViewTransaction(t);
                               setModalOpen(true);
                             }}
-                            className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600"
+                            className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-blue-600"
                             title="Voir détails"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <Link
                             href={`/admin/utilisateurs?userId=${t.user_id}`}
-                            className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                            className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                             title="Voir le profil utilisateur"
                           >
                             <ExternalLink className="h-4 w-4" />

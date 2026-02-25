@@ -102,7 +102,7 @@ export function rowToSalle(row: SalleRow): Salle {
     displayContactPhone: row.display_contact_phone ?? true,
     cautionRequise: row.caution_requise ?? false,
     capacity: row.capacity,
-    pricePerDay: row.price_per_day,
+    pricePerDay: typeof row.price_per_day === "number" ? row.price_per_day : 0,
     pricePerMonth: row.price_per_month ?? null,
     pricePerHour: row.price_per_hour ?? null,
     description: row.description ?? "",

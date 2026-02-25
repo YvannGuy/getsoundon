@@ -36,6 +36,15 @@ const STATUS_COLOR: Record<string, string> = {
   canceled: "text-slate-500",
 };
 
+const STATUS_BADGE: Record<string, string> = {
+  paid: "bg-emerald-100 text-emerald-700",
+  pending: "bg-amber-100 text-amber-700",
+  failed: "bg-red-100 text-red-700",
+  refunded: "bg-slate-100 text-slate-600",
+  active: "bg-emerald-100 text-emerald-700",
+  canceled: "bg-slate-100 text-slate-600",
+};
+
 export default async function ProprietairePaiementPage({
   searchParams,
 }: {
@@ -167,7 +176,29 @@ export default async function ProprietairePaiementPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="-mx-4 overflow-x-auto sm:mx-0">
+            <div className="space-y-3 md:hidden">
+              {receivedReservations!.map((p) => (
+                <article key={p.id} className="rounded-xl border border-slate-200 p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium text-black">
+                      {PRODUCT_LABEL[p.product_type] ?? p.product_type}
+                    </p>
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                        STATUS_BADGE[p.status] ?? "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {STATUS_LABEL[p.status] ?? p.status}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-lg font-semibold text-black">{(p.amount / 100).toFixed(2)} €</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {format(new Date(p.created_at), "d MMM yyyy", { locale: fr })}
+                  </p>
+                </article>
+              ))}
+            </div>
+            <div className="hidden -mx-4 overflow-x-auto sm:mx-0 md:block">
               <table className="w-full min-w-[400px]">
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
@@ -212,8 +243,31 @@ export default async function ProprietairePaiementPage({
           {recentPayments.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-500">Aucune transaction</p>
           ) : (
-            <div className="-mx-4 overflow-x-auto sm:mx-0">
-              <table className="w-full min-w-[400px]">
+            <>
+              <div className="space-y-3 md:hidden">
+                {recentPayments.map((p) => (
+                  <article key={p.id} className="rounded-xl border border-slate-200 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-medium text-black">
+                        {PRODUCT_LABEL[p.product_type] ?? p.product_type}
+                      </p>
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                          STATUS_BADGE[p.status] ?? "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        {STATUS_LABEL[p.status] ?? p.status}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-lg font-semibold text-black">{(p.amount / 100).toFixed(2)} €</p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {format(new Date(p.created_at), "d MMM yyyy", { locale: fr })}
+                    </p>
+                  </article>
+                ))}
+              </div>
+              <div className="hidden -mx-4 overflow-x-auto sm:mx-0 md:block">
+                <table className="w-full min-w-[400px]">
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                     <th className="pb-3 pr-3">Date</th>
@@ -243,7 +297,8 @@ export default async function ProprietairePaiementPage({
                   ))}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

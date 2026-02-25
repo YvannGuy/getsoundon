@@ -32,7 +32,7 @@ import { Button } from "@/components/ui/button";
 const navItems = [
   { href: "/proprietaire", label: "Tableau de bord", icon: Home },
   { href: "/proprietaire/annonces", label: "Mes annonces", icon: Building2 },
-  { href: "/proprietaire/visites", label: "Mes visites", icon: Calendar, badgeKey: "visites" },
+  { href: "/proprietaire/visites", label: "Demandes de visites", icon: Calendar, badgeKey: "visites" },
   { href: "/proprietaire/reservations", label: "Réservations", icon: FileText, badgeKey: "paiement" },
   { href: "/proprietaire/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },
   { href: "/proprietaire/paiement", label: "Paiement", icon: CreditCard, badgeKey: "paiement" },
@@ -120,7 +120,7 @@ function NavContent({
                     <span
                       className={cn(
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                        isActive ? "bg-white/20 text-white" : "bg-violet-100 text-violet-700"
+                        isActive ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700"
                       )}
                     >
                       {visiteCount > 99 ? "99+" : visiteCount}
@@ -130,7 +130,7 @@ function NavContent({
                     <span
                       className={cn(
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                        isActive ? "bg-white/20 text-white" : "bg-[#213398]/20 text-[#1a2980]"
+                        isActive ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700"
                       )}
                     >
                       {messageCount}
@@ -164,12 +164,12 @@ function NavContent({
                 </span>
               )}
               {collapsed && item.badgeKey === "visites" && visiteCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-violet-500 px-1 text-[10px] font-semibold text-white">
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-semibold text-white">
                   {visiteCount > 99 ? "99+" : visiteCount}
                 </span>
               )}
               {collapsed && item.badgeKey === "messagerie" && messageCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#213398] px-1 text-[10px] font-semibold text-white">
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-semibold text-white">
                   {messageCount > 99 ? "99+" : messageCount}
                 </span>
               )}

@@ -167,7 +167,7 @@ export default async function VisitesPage({
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-black">Mes visites</h1>
+        <h1 className="text-2xl font-bold text-black">Demandes de visites</h1>
         <p className="mt-1 text-slate-500">Gérez vos demandes et votre calendrier de visites</p>
       </div>
 

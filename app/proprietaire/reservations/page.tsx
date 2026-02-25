@@ -182,7 +182,7 @@ export default async function OwnerReservationsPage({
             href="/proprietaire/reservations?statut=edl_incomplet"
             className={filterPillClass(currentFilter === "edl_incomplet")}
           >
-          EDL incomplet ({counts.edl_incomplet})
+          Etat des lieux incomplet ({counts.edl_incomplet})
           </Link>
           <Link
             href="/proprietaire/reservations?statut=litige_ouvert"

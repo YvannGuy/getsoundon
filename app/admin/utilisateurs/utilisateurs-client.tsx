@@ -374,7 +374,75 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
               )}
             </div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="space-y-3 p-4 md:hidden">
+            {filtered.map((u) => (
+              <article key={u.id} className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(u.id)}
+                    onChange={() => toggleOne(u.id)}
+                    className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600"
+                  />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-medium text-slate-600">
+                    {(u.full_name || u.email || "?")[0].toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-black">{u.full_name || "—"}</p>
+                    <p className="truncate text-sm text-slate-600">{u.email}</p>
+                    <p className="text-xs text-slate-500">ID: {shortId(u.id)}</p>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {getTypeBadge(u.user_type, u.salles_count)}
+                  {getStatusBadge(u.suspended)}
+                </div>
+                <div className="mt-2 text-xs text-slate-500">
+                  Inscrit le {formatDate(u.created_at)} ({formatInscription(u.created_at)})
+                </div>
+                <div className="mt-3 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setViewUser(u);
+                      setViewOpen(true);
+                    }}
+                    className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-blue-600"
+                    title="Voir"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setConfirmAction({
+                        type: u.suspended ? "reactiver" : "suspendre",
+                        user: u,
+                      })
+                    }
+                    className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                    title={u.suspended ? "Réactiver" : "Suspendre le profil"}
+                  >
+                    {u.suspended ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setConfirmAction({
+                        type: "supprimer",
+                        user: u,
+                      })
+                    }
+                    className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-red-100 hover:text-red-600"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[800px]">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium uppercase text-slate-500">
@@ -439,7 +507,7 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
                             setViewUser(u);
                             setViewOpen(true);
                           }}
-                          className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600"
+                          className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-blue-600"
                           title="Voir"
                         >
                           <Eye className="h-4 w-4" />
@@ -452,7 +520,7 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
                               user: u,
                             })
                           }
-                          className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                          className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                           title={
                             u.suspended ? "Réactiver" : "Suspendre le profil"
                           }
@@ -471,7 +539,7 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
                               user: u,
                             })
                           }
-                          className="rounded p-1.5 text-slate-500 hover:bg-red-100 hover:text-red-600"
+                          className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-red-100 hover:text-red-600"
                           title="Supprimer"
                         >
                           <Trash2 className="h-4 w-4" />

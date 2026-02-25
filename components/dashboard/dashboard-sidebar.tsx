@@ -17,8 +17,8 @@ import { Button } from "@/components/ui/button";
 const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: Home },
   { href: "/dashboard/rechercher", label: "Rechercher une salle", icon: Search, opensSearchModal: true },
-  { href: "/dashboard/demandes", label: "Mes visites", icon: FileText, badgeKey: "demandes" },
-  { href: "/dashboard/reservations", label: "Réservations", icon: FileText, badgeKey: "paiement" },
+  { href: "/dashboard/demandes", label: "Mes demandes", icon: FileText, badgeKey: "demandes" },
+  { href: "/dashboard/reservations", label: "Réservations", icon: FileText },
   { href: "/dashboard/paiement", label: "Paiement", icon: CreditCard, badgeKey: "paiement" },
   { href: "/dashboard/etats-des-lieux", label: "États des lieux", icon: Camera },
   { href: "/dashboard/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },
@@ -113,7 +113,13 @@ function NavContent({
                     <span
                       className={cn(
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                        isActive ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700"
+                        isActive
+                          ? "bg-white/20 text-white"
+                          : item.badgeKey === "messagerie"
+                            ? "bg-blue-100 text-blue-700"
+                            : item.badgeKey === "paiement"
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-emerald-100 text-emerald-700"
                       )}
                     >
                       {badgeVal}
@@ -122,7 +128,16 @@ function NavContent({
                 </>
               )}
               {collapsed && badgeVal != null && badgeVal > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-semibold text-white">
+                <span
+                  className={cn(
+                    "absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white",
+                    item.badgeKey === "messagerie"
+                      ? "bg-blue-600"
+                      : item.badgeKey === "paiement"
+                        ? "bg-amber-500"
+                        : "bg-emerald-500"
+                  )}
+                >
                   {badgeVal > 99 ? "99+" : badgeVal}
                 </span>
               )}

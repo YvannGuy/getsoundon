@@ -94,6 +94,13 @@ type PaginationInfo = {
   pageSize: number;
 };
 
+const FILTER_TAB_LABELS: Record<FilterTab, string> = {
+  all: "Tous",
+  unread: "Non lus",
+  pending: "En attente",
+  archived: "Archivés",
+};
+
 function getInitials(fullName: string): string {
   const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
@@ -664,7 +671,6 @@ export function MessagerieClient({
   const myInitials = getInitials(currentUserFullName ?? "") || "?";
   const otherInitials = getInitials(otherName) || "?";
   const statusTag = STATUS_TAG[selected?.demandeStatus ?? "sent"] ?? STATUS_TAG.sent;
-  const demandeLink = userType === "seeker" ? "/dashboard/demandes" : "/proprietaire/demandes";
 
   const listPanel = (
     <div className="flex min-h-0 w-full flex-1 flex-col border-r-0 border-slate-200 bg-white md:w-[380px] md:border-r-2 md:border-slate-300 md:shrink-0">
@@ -681,24 +687,31 @@ export function MessagerieClient({
             className="h-11 rounded-xl border-slate-200 bg-slate-50 pl-10 focus-visible:bg-white"
           />
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {(["all", "unread", "pending", "archived"] as const).map((key) => (
+        <div className="mt-3 -mx-4 overflow-x-auto px-4">
+          <div className="flex min-w-max gap-2 pb-1">
+            {(["all", "unread", "pending", "archived"] as const).map((key) => (
             <button
               key={key}
               type="button"
               onClick={() => setFilterTab(key)}
-              className={`rounded-full px-4 py-2 text-[13px] font-medium transition ${
+              className={`h-11 rounded-full px-4 text-[13px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#213398]/40 ${
                 filterTab === key
                   ? "bg-[#213398] text-white"
                   : "bg-white text-slate-600 hover:bg-slate-50"
               }`}
             >
-              {key === "all" ? "Tous" : key === "unread" ? "Non lus" : key === "pending" ? "En attente" : "Archivés"}
+              {FILTER_TAB_LABELS[key]}
             </button>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
+        {selectedHiddenByFilters && selectedVisibleThread && (
+          <div className="border-b border-sky-100 bg-sky-50 px-4 py-2 text-xs text-sky-700">
+            Conversation sélectionnée affichée malgré le filtre actif.
+          </div>
+        )}
         {threadsForList.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#213398]/10">
@@ -781,7 +794,7 @@ export function MessagerieClient({
                     setSelected(t);
                     setMobileShowChat(true);
                   }}
-                  className="flex min-w-0 flex-1 items-start gap-4 text-left"
+                  className="flex min-w-0 flex-1 items-start gap-4 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#213398]/40"
                 >
                   <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-200">
                     <Image src={t.salleImage ?? "/img.png"} alt="" fill className="object-cover" sizes="56px" />
@@ -789,9 +802,11 @@ export function MessagerieClient({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <p className="truncate font-semibold text-black">{t.salleName}</p>
-                      <div className="flex shrink-0 items-center gap-1.5">
+                      <div className="flex shrink-0 items-center gap-2">
                         {t.unreadCount > 0 && (
-                          <span className="h-2.5 w-2.5 rounded-full bg-[#213398]" aria-hidden />
+                          <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#213398] px-1.5 text-[11px] font-semibold text-white">
+                            {t.unreadCount > 99 ? "99+" : t.unreadCount}
+                          </span>
                         )}
                         <span className="text-xs text-slate-500"><RelativeTime dateStr={t.lastMessageAt ?? t.createdAt ?? null} /></span>
                       </div>
@@ -799,6 +814,11 @@ export function MessagerieClient({
                     <p className="mt-0.5 truncate text-sm text-slate-600">
                       {t.seekerName} • {t.contactRole ?? (userType === "seeker" ? "Propriétaire" : "Organisateur")}
                     </p>
+                    <div className="mt-1">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_TAG[t.demandeStatus ?? "sent"]?.className ?? STATUS_TAG.sent.className}`}>
+                        {STATUS_TAG[t.demandeStatus ?? "sent"]?.label ?? STATUS_TAG.sent.label}
+                      </span>
+                    </div>
                     <p className="mt-1 line-clamp-1 text-sm text-slate-500">
                       {(lastPreviews.get(t.demandeId) ?? t.lastMessagePreview ?? t.message) || "Aucun message"}
                     </p>
@@ -809,7 +829,7 @@ export function MessagerieClient({
                       <button
                         type="button"
                         onClick={(e) => e.stopPropagation()}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-200 hover:text-slate-700"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-200 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#213398]/40"
                         aria-label="Options de la conversation"
                       >
                         <MoreVertical className="h-5 w-5" />
@@ -893,6 +913,9 @@ export function MessagerieClient({
                   .join(" • ")}
               </p>
             </div>
+            <span className={`hidden rounded-full px-2 py-1 text-xs font-medium sm:inline-flex ${statusTag.className}`}>
+              {statusTag.label}
+            </span>
             <div className="flex shrink-0 items-center gap-2">
               {selected.salleSlug && (
                 <Link href={`/salles/${selected.salleSlug}`}>
@@ -1190,7 +1213,7 @@ export function MessagerieClient({
           </div>
 
           {/* Zone de saisie */}
-          <div className="shrink-0 border-t border-slate-200 bg-white p-4">
+          <div className="shrink-0 border-t border-slate-200 bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -1229,12 +1252,13 @@ export function MessagerieClient({
                   ))}
                 </div>
               )}
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="shrink-0 rounded p-2 text-slate-500 hover:bg-slate-100"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#213398]/40"
                   title="Ajouter une pièce jointe"
+                  aria-label="Ajouter une pièce jointe"
                 >
                   <Paperclip className="h-5 w-5" />
                 </button>
@@ -1247,18 +1271,19 @@ export function MessagerieClient({
                 <Button
                   type="submit"
                   disabled={sending || (!input.trim() && selectedFiles.length === 0)}
-                  className="shrink-0 bg-[#213398] hover:bg-[#1a2980]"
+                  className="h-11 shrink-0 bg-[#213398] hover:bg-[#1a2980]"
+                  aria-label="Envoyer le message"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
             </form>
             {userType === "owner" && !["replied", "accepted", "rejected"].includes(selected.demandeStatus ?? "") && (
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap gap-2 md:hidden">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs"
+                  className="h-9 text-xs"
                   disabled={!!statusUpdating}
                   onClick={() => handleStatusUpdate("accepted")}
                 >
@@ -1267,7 +1292,7 @@ export function MessagerieClient({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs"
+                  className="h-9 text-xs"
                   disabled={!!statusUpdating}
                   onClick={() => handleStatusUpdate("rejected")}
                 >
@@ -1276,7 +1301,7 @@ export function MessagerieClient({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs"
+                  className="h-9 text-xs"
                   disabled={!!statusUpdating}
                   onClick={() => handleStatusUpdate("replied")}
                 >
@@ -1285,11 +1310,11 @@ export function MessagerieClient({
               </div>
             )}
             {canSendOffer && (
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap gap-2 md:hidden">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs border-[#213398]/50 text-[#213398] hover:bg-[#213398]/5"
+                  className="h-9 text-xs border-[#213398]/50 text-[#213398] hover:bg-[#213398]/5"
                   onClick={() => setCreateOfferModalOpen(true)}
                 >
                   <Banknote className="mr-1.5 h-3.5 w-3.5" />
@@ -1408,19 +1433,21 @@ export function MessagerieClient({
               className="h-11 rounded-xl border-slate-200 bg-slate-50 pl-10 focus-visible:bg-white"
             />
           </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {(["all", "unread", "pending", "archived"] as const).map((key) => (
+          <div className="mt-3 -mx-4 overflow-x-auto px-4">
+            <div className="flex min-w-max gap-2 pb-1">
+              {(["all", "unread", "pending", "archived"] as const).map((key) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => setFilterTab(key)}
-                className={`rounded-full px-4 py-2 text-[13px] font-medium transition ${
+                className={`h-11 rounded-full px-4 text-[13px] font-medium transition ${
                   filterTab === key ? "bg-[#213398] text-white" : "bg-white text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                {key === "all" ? "Tous" : key === "unread" ? "Non lus" : key === "pending" ? "En attente" : "Archivés"}
+                {FILTER_TAB_LABELS[key]}
               </button>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
         <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto p-8">

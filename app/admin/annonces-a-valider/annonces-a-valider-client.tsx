@@ -345,7 +345,84 @@ export function AnnoncesAValiderClient({ salles, highlightSalleId }: Props) {
           </form>
         </div>
 
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+        <div className="space-y-3 md:hidden">
+          {filtered.map((s) => {
+            const img = Array.isArray(s.images) && s.images[0] ? s.images[0] : "/img.png";
+            const { day, time } = formatDateShort(s.created_at);
+            return (
+              <article
+                key={s.id}
+                className={`rounded-xl border bg-white p-4 shadow-sm ${selectedId === s.id ? "border-blue-200" : "border-slate-200"}`}
+              >
+                <button type="button" onClick={() => setSelectedId(s.id)} className="w-full text-left">
+                  <div className="flex items-start gap-3">
+                    <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded bg-slate-100">
+                      <Image src={img} alt="" fill className="object-cover" sizes="80px" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-black">{s.name}</p>
+                      <p className="text-xs text-slate-500">{s.capacity} places</p>
+                      <p className="mt-1 text-sm text-slate-600">{s.city}</p>
+                      <p className="truncate text-xs text-slate-500">{s.owner?.full_name || s.owner?.email || "—"}</p>
+                    </div>
+                  </div>
+                </button>
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="text-xs text-slate-500">
+                    <p>{day}</p>
+                    <p>{time}</p>
+                  </div>
+                  <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
+                    En attente
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedId(s.id)}
+                    className="flex h-10 w-10 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-blue-600"
+                    title="Voir"
+                    aria-label="Voir la prévisualisation"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const fd = new FormData();
+                      fd.append("salleId", s.id);
+                      fd.append("status", "approved");
+                      startTransition(() => validateSalleAction(fd).then(() => router.refresh()));
+                    }}
+                    className="flex h-10 w-10 items-center justify-center rounded text-slate-500 hover:bg-emerald-100 hover:text-emerald-600"
+                    title="Valider"
+                    aria-label="Valider l'annonce"
+                    disabled={isPending}
+                  >
+                    <Check className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const fd = new FormData();
+                      fd.append("salleId", s.id);
+                      fd.append("status", "rejected");
+                      startTransition(() => validateSalleAction(fd).then(() => router.refresh()));
+                    }}
+                    className="flex h-10 w-10 items-center justify-center rounded text-slate-500 hover:bg-red-100 hover:text-red-600"
+                    title="Refuser"
+                    aria-label="Refuser l'annonce"
+                    disabled={isPending}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        <div className="hidden overflow-x-auto rounded-lg border border-slate-200 bg-white md:block">
           <table className="w-full min-w-[800px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium uppercase text-slate-500">
@@ -420,7 +497,7 @@ export function AnnoncesAValiderClient({ salles, highlightSalleId }: Props) {
                         <button
                           type="button"
                           onClick={() => setSelectedId(s.id)}
-                          className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600"
+                    className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-blue-600"
                           title="Voir"
                         >
                           <Eye className="h-4 w-4" />
@@ -435,7 +512,7 @@ export function AnnoncesAValiderClient({ salles, highlightSalleId }: Props) {
                               validateSalleAction(fd).then(() => router.refresh())
                             );
                           }}
-                          className="rounded p-1.5 text-slate-500 hover:bg-emerald-100 hover:text-emerald-600"
+                    className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-emerald-100 hover:text-emerald-600"
                           title="Valider"
                           disabled={isPending}
                         >
@@ -451,7 +528,7 @@ export function AnnoncesAValiderClient({ salles, highlightSalleId }: Props) {
                               validateSalleAction(fd).then(() => router.refresh())
                             );
                           }}
-                          className="rounded p-1.5 text-slate-500 hover:bg-red-100 hover:text-red-600"
+                    className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-red-100 hover:text-red-600"
                           title="Refuser"
                           disabled={isPending}
                         >

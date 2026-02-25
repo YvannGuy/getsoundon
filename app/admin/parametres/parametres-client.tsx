@@ -344,7 +344,35 @@ export function ParametresClient({
             </div>
           </CardHeader>
           <CardContent>
-            <table className="w-full">
+            <div className="space-y-3 md:hidden">
+              {admins.map((a) => (
+                <article key={a.id} className="rounded-xl border border-slate-200 p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-black">{a.full_name || "—"}</p>
+                      <p className="truncate text-sm text-slate-600">{a.email}</p>
+                      <p className="mt-1 text-xs text-slate-500">{a.role}</p>
+                    </div>
+                    {a.isOwner ? (
+                      <span className="text-xs text-slate-500">Propriétaire</span>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+                        onClick={() => setConfirmRemoveAdmin(a)}
+                        title="Retirer les droits admin"
+                      >
+                        <UserMinus className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full">
               <thead>
                 <tr className="border-b text-left text-xs font-medium uppercase text-slate-500">
                   <th className="py-2">Admin</th>
@@ -386,6 +414,7 @@ export function ParametresClient({
                 ))}
               </tbody>
             </table>
+            </div>
           </CardContent>
         </Card>
 

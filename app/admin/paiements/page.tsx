@@ -87,7 +87,7 @@ export default async function AdminPaiementsPage({
   const paginatedTx = transactions.slice(from, from + PAGE_SIZE);
 
   return (
-    <div className="p-6 md:p-8">
+    <div className="p-6 pb-24 md:p-8 md:pb-8">
       <PaiementsClient transactions={paginatedTx} stats={stats} />
       <Pagination
         baseUrl="/admin/paiements"

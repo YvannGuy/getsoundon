@@ -35,9 +35,9 @@ const navItems = (
   reportsCount: number
 ) => [
   { href: "/admin", label: "Dashboard", icon: Home },
-  { href: "/admin/annonces-a-valider", label: "Annonces à valider", icon: Bell, badge: pendingCount },
+  { href: "/admin/annonces-a-valider", label: "Annonces à valider", icon: Bell, badge: pendingCount, badgeTone: "warning" as const },
   { href: "/admin/annonces", label: "Annonces", icon: Building2 },
-  { href: "/admin/signalements", label: "Signalements", icon: Flag, badge: reportsCount },
+  { href: "/admin/signalements", label: "Signalements", icon: Flag, badge: reportsCount, badgeTone: "danger" as const },
   { href: "/admin/demandes", label: "Demandes de visites", icon: FileText },
   { href: "/admin/reservations", label: "Réservations", icon: FileText },
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
@@ -107,7 +107,11 @@ export function AdminSidebar({ pendingCount, reportsCount = 0, userEmail }: Admi
                     <span
                       className={cn(
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                        isActive ? "bg-white/20 text-white" : "bg-amber-500 text-white"
+                        isActive
+                          ? "bg-white/20 text-white"
+                          : item.badgeTone === "danger"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-amber-100 text-amber-700"
                       )}
                     >
                       {badge}
@@ -116,7 +120,12 @@ export function AdminSidebar({ pendingCount, reportsCount = 0, userEmail }: Admi
                 </>
               )}
               {collapsed && badge != null && badge > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white">
+                <span
+                  className={cn(
+                    "absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white",
+                    item.badgeTone === "danger" ? "bg-red-500" : "bg-amber-500"
+                  )}
+                >
                   {badge > 99 ? "99+" : badge}
                 </span>
               )}
@@ -220,7 +229,11 @@ export function AdminSidebar({ pendingCount, reportsCount = 0, userEmail }: Admi
                   <span
                     className={cn(
                       "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                      isActive ? "bg-white/20 text-white" : "bg-amber-500 text-white"
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : item.badgeTone === "danger"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-amber-100 text-amber-700"
                     )}
                   >
                     {badge}

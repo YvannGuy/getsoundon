@@ -319,7 +319,84 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
               Nouvelle annonce
             </Button>
           </div>
-          <div className="overflow-x-auto">
+          <div className="space-y-3 p-4 md:hidden">
+            {paginatedFiltered.map((s) => {
+              const img = Array.isArray(s.images) && s.images[0] ? s.images[0] : "/img.png";
+              return (
+                <article key={s.id} className="rounded-xl border border-slate-200 bg-white p-4">
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(s.id)}
+                      onChange={() => toggleOne(s.id)}
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600"
+                    />
+                    <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded bg-slate-100">
+                      <Image src={img} alt="" fill className="object-cover" sizes="80px" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-black">{s.name}</p>
+                      <p className="text-xs text-slate-500">{shortId(s.id)}</p>
+                      <p className="mt-1 text-sm text-slate-600">{formatCity(s.city, s.address)}</p>
+                      <p className="truncate text-xs text-slate-500">{s.owner?.full_name || "—"}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {getStatusBadge(s.status)}
+                    <span className="text-xs text-slate-500">{s.capacity} places</span>
+                    <span className="text-xs text-slate-500">€{s.price_per_day} /jour</span>
+                    <span className="text-xs text-slate-500">{s.views_count.toLocaleString("fr-FR")} vues</span>
+                    <span className="text-xs text-slate-500">{s.demandes_count} demandes</span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleVoir(s)}
+                      className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-blue-600"
+                      title="Prévisualiser"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleModifier(s)}
+                      className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                      title="Modifier"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setConfirmAction({
+                          type: s.status === "rejected" ? "reactiver" : "desactiver",
+                          salle: s,
+                        })
+                      }
+                      className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                      title={s.status === "rejected" ? "Réactiver" : "Désactiver"}
+                    >
+                      {s.status === "rejected" ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setConfirmAction({
+                          type: "supprimer",
+                          salle: s,
+                        })
+                      }
+                      className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-red-100 hover:text-red-600"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[900px]">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium uppercase text-slate-500">
@@ -393,7 +470,7 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
                           <button
                             type="button"
                             onClick={() => handleVoir(s)}
-                            className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600"
+                            className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-blue-600"
                             title="Prévisualiser"
                           >
                             <Eye className="h-4 w-4" />
@@ -401,7 +478,7 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
                           <button
                             type="button"
                             onClick={() => handleModifier(s)}
-                            className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                            className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                             title="Modifier"
                           >
                             <Pencil className="h-4 w-4" />
@@ -415,7 +492,7 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
                                 salle: s,
                               })
                             }
-                            className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                            className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                             title={
                               s.status === "rejected"
                                 ? "Réactiver"
@@ -436,7 +513,7 @@ export function AnnoncesClient({ salles, stats, highlightSalleId }: Props) {
                                 salle: s,
                               })
                             }
-                            className="rounded p-1.5 text-slate-500 hover:bg-red-100 hover:text-red-600"
+                            className="flex h-9 w-9 items-center justify-center rounded text-slate-500 hover:bg-red-100 hover:text-red-600"
                             title="Supprimer"
                           >
                             <Trash2 className="h-4 w-4" />

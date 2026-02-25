@@ -181,7 +181,7 @@ export default async function DashboardReservationsPage({
             href="/dashboard/reservations?statut=edl_incomplet"
             className={filterPillClass(currentFilter === "edl_incomplet")}
           >
-          EDL incomplet ({counts.edl_incomplet})
+          Etat des lieux incomplet ({counts.edl_incomplet})
           </Link>
           <Link
             href="/dashboard/reservations?statut=litige_ouvert"
