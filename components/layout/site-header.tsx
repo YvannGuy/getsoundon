@@ -37,8 +37,8 @@ export async function SiteHeader() {
           <Link href="/blog" className="hover:text-black">
             Blog
           </Link>
-          <Link href="/pricing" className="hover:text-black">
-            Tarifs
+          <Link href="/avantages" className="hover:text-black">
+            Nos avantages
           </Link>
           <Link href="/auth?tab=signup&userType=owner" className="hover:text-black">
             Ajoutez ma salle
