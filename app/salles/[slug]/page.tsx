@@ -127,16 +127,82 @@ export default async function SalleDetailPage({
   const nearbySalles = await getSallesByCity(salle.city, slug);
   const tarifParts = getSalleTarifParts(salle);
   const priceFrom = getSallePriceFrom(salle);
+  const canonical = buildCanonical(`/salles/${slug}`);
+  const minTarif = tarifParts.length > 0 ? Math.min(...tarifParts.map((t) => t.value)) : null;
   const decisionRapideSortedTarifs = [...tarifParts].sort((a, b) => b.value - a.value);
   const decisionRapideTopTarif = decisionRapideSortedTarifs[0] ?? null;
   const decisionRapideTarifs = decisionRapideSortedTarifs
     .slice(1)
     .map((p) => `${p.value} € ${p.label}`)
     .join(" · ");
+  const salleStructuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Accueil",
+            item: siteConfig.url,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Rechercher",
+            item: `${siteConfig.url}/rechercher`,
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: salle.name,
+            item: canonical,
+          },
+        ],
+      },
+      {
+        "@type": "Place",
+        name: salle.name,
+        description: salle.description,
+        url: canonical,
+        image: salle.images.slice(0, 5),
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: salle.city,
+          addressCountry: "FR",
+        },
+        ...(minTarif
+          ? {
+              offers: {
+                "@type": "Offer",
+                priceCurrency: "EUR",
+                price: minTarif,
+                availability: "https://schema.org/InStock",
+                url: canonical,
+              },
+            }
+          : {}),
+        ...(ratingStats.count > 0
+          ? {
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: ratingStats.avg,
+                reviewCount: ratingStats.count,
+              },
+            }
+          : {}),
+      },
+    ],
+  };
 
   return (
     <div className="min-h-screen bg-white">
       <SiteHeader />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(salleStructuredData) }}
+      />
 
       <main className="container max-w-[1120px] py-8 pb-28 lg:pb-8">
         <div className="grid gap-8 lg:grid-cols-[1fr_340px]">

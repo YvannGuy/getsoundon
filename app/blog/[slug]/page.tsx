@@ -70,10 +70,62 @@ export default async function BlogPostPage({ params }: Props) {
   const post = getBlogPost(slug);
 
   if (!post) notFound();
+  const canonical = buildCanonical(`/blog/${slug}`);
+  const blogStructuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Accueil",
+            item: siteConfig.url,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Blog",
+            item: `${siteConfig.url}/blog`,
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: post.title,
+            item: canonical,
+          },
+        ],
+      },
+      {
+        "@type": "BlogPosting",
+        mainEntityOfPage: canonical,
+        headline: post.title,
+        description: post.excerpt,
+        image: [post.image],
+        author: {
+          "@type": "Organization",
+          name: siteConfig.name,
+        },
+        publisher: {
+          "@type": "Organization",
+          name: siteConfig.name,
+          logo: {
+            "@type": "ImageObject",
+            url: `${siteConfig.url}/logosdcbl.png`,
+          },
+        },
+      },
+    ],
+  };
 
   return (
     <div className="min-h-screen bg-white">
       <SiteHeader />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogStructuredData) }}
+      />
       <main className="container max-w-[720px] py-8 sm:py-12">
         <Link href="/blog" className="mb-8 inline-flex items-center gap-1 text-[14px] font-medium text-slate-500 hover:text-black hover:underline">
           ← Retour au blog

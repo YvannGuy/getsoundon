@@ -3,6 +3,7 @@ import { Manrope } from "next/font/google";
 
 import { Analytics } from "@/components/Analytics";
 import { CookieProvider } from "@/components/cookies/CookieProvider";
+import { siteConfig } from "@/config/site";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { defaultMetadata } from "@/lib/seo";
 import "./globals.css";
@@ -21,6 +22,34 @@ export const viewport: Viewport = {
   themeColor: "#213398",
 };
 
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${siteConfig.url}#organization`,
+      name: siteConfig.name,
+      url: siteConfig.url,
+      logo: `${siteConfig.url}/logosdcbl.png`,
+      sameAs: [siteConfig.instagram, siteConfig.facebook],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteConfig.url}#website`,
+      name: siteConfig.name,
+      url: siteConfig.url,
+      publisher: {
+        "@id": `${siteConfig.url}#organization`,
+      },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${siteConfig.url}/rechercher?ville={search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,6 +58,10 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <body className={`${manrope.variable} font-sans antialiased`} suppressHydrationWarning>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
         <CookieProvider>
           {children}
           <ScrollToTop />

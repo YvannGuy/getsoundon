@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { redirect } from "next/navigation";
+import Home from "@/app/accueil/page";
 
 import { buildCanonical } from "@/lib/seo";
 import { siteConfig } from "@/config/site";
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   if (process.env.NEXT_PUBLIC_SHOW_FULL_HOMEPAGE === "true") {
-    redirect("/accueil");
+    return <Home />;
   }
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#213398]">
