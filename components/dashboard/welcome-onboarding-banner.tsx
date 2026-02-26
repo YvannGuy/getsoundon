@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 type WelcomeOnboardingBannerProps = {
   userId: string;
   dashboard: "seeker" | "owner";
+  firstName?: string | null;
   videoUrl?: string;
   tourUrl?: string;
 };
@@ -15,6 +16,7 @@ type WelcomeOnboardingBannerProps = {
 export function WelcomeOnboardingBanner({
   userId,
   dashboard,
+  firstName,
   videoUrl,
   tourUrl = "/centre-aide",
 }: WelcomeOnboardingBannerProps) {
@@ -43,7 +45,10 @@ export function WelcomeOnboardingBanner({
   return (
     <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <h2 className="text-2xl font-bold text-[#0f1f52]">
-        Bienvenue sur <span className="text-[#213398]">salledeculte.com</span>!
+        {firstName?.trim()
+          ? `Bienvenue, ${firstName.trim()} sur `
+          : "Bienvenue sur "}
+        <span className="text-[#213398]">salledeculte.com</span>!
       </h2>
       <div className="my-4 border-t border-slate-200" />
       <p className="text-sm text-slate-500">

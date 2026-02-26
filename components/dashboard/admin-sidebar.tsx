@@ -25,34 +25,89 @@ import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 type AdminSidebarProps = {
-  pendingCount: number;
-  reportsCount?: number;
+  badgeCounts: {
+    pendingAnnonces: number;
+    signalements: number;
+    demandesVisite: number;
+    reservations: number;
+    utilisateurs: number;
+    paiements: number;
+    cautions: number;
+    etatsDesLieux: number;
+  };
   userEmail?: string | null;
 };
 
 const navItems = (
-  pendingCount: number,
-  reportsCount: number
+  counts: AdminSidebarProps["badgeCounts"]
 ) => [
   { href: "/admin", label: "Dashboard", icon: Home },
-  { href: "/admin/annonces-a-valider", label: "Annonces à valider", icon: Bell, badge: pendingCount, badgeTone: "warning" as const },
+  {
+    href: "/admin/annonces-a-valider",
+    label: "Annonces à valider",
+    icon: Bell,
+    badge: counts.pendingAnnonces,
+    badgeTone: "warning" as const,
+  },
   { href: "/admin/annonces", label: "Annonces", icon: Building2 },
-  { href: "/admin/signalements", label: "Signalements", icon: Flag, badge: reportsCount, badgeTone: "danger" as const },
-  { href: "/admin/demandes", label: "Demandes de visites", icon: FileText },
-  { href: "/admin/reservations", label: "Réservations", icon: FileText },
-  { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
-  { href: "/admin/paiements", label: "Paiements", icon: CreditCard },
-  { href: "/admin/cautions", label: "Cautions", icon: Shield },
-  { href: "/admin/etats-des-lieux", label: "États des lieux", icon: Camera },
+  {
+    href: "/admin/signalements",
+    label: "Signalements",
+    icon: Flag,
+    badge: counts.signalements,
+    badgeTone: "danger" as const,
+  },
+  {
+    href: "/admin/demandes",
+    label: "Demandes de visites",
+    icon: FileText,
+    badge: counts.demandesVisite,
+    badgeTone: "warning" as const,
+  },
+  {
+    href: "/admin/reservations",
+    label: "Réservations",
+    icon: FileText,
+    badge: counts.reservations,
+    badgeTone: "warning" as const,
+  },
+  {
+    href: "/admin/utilisateurs",
+    label: "Utilisateurs",
+    icon: Users,
+    badge: counts.utilisateurs,
+    badgeTone: "info" as const,
+  },
+  {
+    href: "/admin/paiements",
+    label: "Paiements",
+    icon: CreditCard,
+    badge: counts.paiements,
+    badgeTone: "info" as const,
+  },
+  {
+    href: "/admin/cautions",
+    label: "Cautions",
+    icon: Shield,
+    badge: counts.cautions,
+    badgeTone: "danger" as const,
+  },
+  {
+    href: "/admin/etats-des-lieux",
+    label: "États des lieux",
+    icon: Camera,
+    badge: counts.etatsDesLieux,
+    badgeTone: "warning" as const,
+  },
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ];
 
-export function AdminSidebar({ pendingCount, reportsCount = 0, userEmail }: AdminSidebarProps) {
+export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const initial = (userEmail ?? "A")[0].toUpperCase();
-  const items = navItems(pendingCount, reportsCount);
+  const items = navItems(badgeCounts);
 
   const sidebarContent = (
     <>
@@ -111,6 +166,8 @@ export function AdminSidebar({ pendingCount, reportsCount = 0, userEmail }: Admi
                           ? "bg-white/20 text-white"
                           : item.badgeTone === "danger"
                             ? "bg-red-100 text-red-700"
+                            : item.badgeTone === "info"
+                              ? "bg-blue-100 text-blue-700"
                             : "bg-amber-100 text-amber-700"
                       )}
                     >
@@ -123,7 +180,11 @@ export function AdminSidebar({ pendingCount, reportsCount = 0, userEmail }: Admi
                 <span
                   className={cn(
                     "absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white",
-                    item.badgeTone === "danger" ? "bg-red-500" : "bg-amber-500"
+                    item.badgeTone === "danger"
+                      ? "bg-red-500"
+                      : item.badgeTone === "info"
+                        ? "bg-blue-500"
+                        : "bg-amber-500"
                   )}
                 >
                   {badge > 99 ? "99+" : badge}
@@ -233,6 +294,8 @@ export function AdminSidebar({ pendingCount, reportsCount = 0, userEmail }: Admi
                         ? "bg-white/20 text-white"
                         : item.badgeTone === "danger"
                           ? "bg-red-100 text-red-700"
+                          : item.badgeTone === "info"
+                            ? "bg-blue-100 text-blue-700"
                           : "bg-amber-100 text-amber-700"
                     )}
                   >

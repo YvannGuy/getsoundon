@@ -40,89 +40,136 @@ export default async function AdminLayout({
     redirect("/auth/admin");
   }
 
-  let pendingCount = 0;
-  let reportsCount = 0;
-  const notifications: { id: string; type: "user" | "annonce" | "paiement"; label: string; href: string; date: string }[] = [];
+  const badgeCounts = {
+    pendingAnnonces: 0,
+    signalements: 0,
+    demandesVisite: 0,
+    reservations: 0,
+    utilisateurs: 0,
+    paiements: 0,
+    cautions: 0,
+    etatsDesLieux: 0,
+  };
 
   try {
     const admin = createAdminClient();
-    const [{ count }, { data: recentProfiles }, { data: recentSalles }, { data: recentPayments }] =
-      await Promise.all([
-        admin.from("salles").select("*", { count: "exact", head: true }).eq("status", "pending"),
-        admin
-          .from("profiles")
-          .select("id, full_name, email, created_at")
-          .order("created_at", { ascending: false })
-          .limit(5),
-        admin
-          .from("salles")
-          .select("id, name, slug, status, created_at")
-          .order("created_at", { ascending: false })
-          .limit(5),
-        admin
-          .from("payments")
-          .select("id, amount, product_type, created_at")
-          .in("status", ["paid", "active"])
-          .order("created_at", { ascending: false })
-          .limit(5),
-      ]);
+    const sevenDaysAgoIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    pendingCount = count ?? 0;
+    const [
+      { count: pendingAnnoncesCount },
+      { count: demandesPendingCount },
+      { count: newUsersCount },
+      { count: newPaymentsCount },
+      { count: cautionsCount },
+      { data: paidOffers },
+    ] = await Promise.all([
+      admin.from("salles").select("*", { count: "exact", head: true }).eq("status", "pending"),
+      admin
+        .from("demandes_visite")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["pending", "reschedule_proposed"]),
+      admin
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", sevenDaysAgoIso),
+      admin
+        .from("payments")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["paid", "active"])
+        .gte("created_at", sevenDaysAgoIso),
+      admin
+        .from("offers")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "paid")
+        .eq("deposit_hold_status", "claim_requested"),
+      admin
+        .from("offers")
+        .select("id, deposit_hold_status")
+        .eq("status", "paid")
+        .order("created_at", { ascending: false })
+        .limit(300),
+    ]);
+
+    badgeCounts.pendingAnnonces = pendingAnnoncesCount ?? 0;
+    badgeCounts.demandesVisite = demandesPendingCount ?? 0;
+    badgeCounts.utilisateurs = newUsersCount ?? 0;
+    badgeCounts.paiements = newPaymentsCount ?? 0;
+    badgeCounts.cautions = cautionsCount ?? 0;
 
     try {
-      const { count: rc } = await admin.from("salles_reports").select("*", { count: "exact", head: true }).eq("status", "pending");
-      reportsCount = rc ?? 0;
+      const { count } = await admin
+        .from("salles_reports")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
+      badgeCounts.signalements = count ?? 0;
     } catch {
       // Table salles_reports peut ne pas exister
     }
 
-    (recentProfiles ?? []).forEach((p) => {
-      notifications.push({
-        id: `user-${p.id}`,
-        type: "user",
-        label: `Nouvel utilisateur : ${p.full_name || p.email || "—"}`,
-        href: `/admin/utilisateurs?userId=${p.id}`,
-        date: p.created_at ?? "",
-      });
-    });
-    (recentSalles ?? []).forEach((s) => {
-      notifications.push({
-        id: `annonce-${s.id}`,
-        type: "annonce",
-        label: `Nouvelle annonce : ${s.name ?? "—"}`,
-        href: s.status === "pending"
-          ? `/admin/annonces-a-valider?salleId=${s.id}`
-          : `/admin/annonces?salleId=${s.id}`,
-        date: s.created_at ?? "",
-      });
-    });
-    (recentPayments ?? []).forEach((p) => {
-      const productLabels: Record<string, string> = {
-        pass_24h: "Pass 24h",
-        pass_48h: "Pass 48h",
-        abonnement: "Abonnement",
-        autre: "Autre",
-      };
-      notifications.push({
-        id: `paiement-${p.id}`,
-        type: "paiement",
-        label: `Nouveau paiement : ${(p.amount ?? 0) / 100}€ - ${productLabels[p.product_type ?? ""] ?? p.product_type}`,
-        href: `/admin/paiements?paymentId=${p.id}`,
-        date: p.created_at ?? "",
-      });
-    });
+    const paidOfferRows = (paidOffers ?? []) as { id: string; deposit_hold_status: string | null }[];
+    const paidOfferIds = paidOfferRows.map((o) => o.id);
 
-    notifications.sort((a, b) => (b.date < a.date ? -1 : 1));
-    notifications.splice(15);
+    if (paidOfferIds.length > 0) {
+      try {
+        const [{ data: edlRows }, { data: caseRows }] = await Promise.all([
+          admin.from("etat_des_lieux").select("offer_id, role, phase").in("offer_id", paidOfferIds),
+          admin.from("refund_cases").select("offer_id, case_type, status").in("offer_id", paidOfferIds),
+        ]);
+
+        const edlSet = new Set(
+          (edlRows ?? []).map(
+            (r) =>
+              `${(r as { offer_id: string; role: "owner" | "seeker"; phase: "before" | "after" }).offer_id}:${
+                (r as { offer_id: string; role: "owner" | "seeker"; phase: "before" | "after" }).role
+              }:${(r as { offer_id: string; role: "owner" | "seeker"; phase: "before" | "after" }).phase}`
+          )
+        );
+        const openDisputeOffers = new Set(
+          (caseRows ?? [])
+            .filter(
+              (c) =>
+                (c as { case_type: "refund_full" | "refund_partial" | "dispute"; status: "open" | "resolved" | "rejected" })
+                  .case_type === "dispute" &&
+                (c as { case_type: "refund_full" | "refund_partial" | "dispute"; status: "open" | "resolved" | "rejected" })
+                  .status === "open"
+            )
+            .map((c) => (c as { offer_id: string | null }).offer_id)
+        );
+
+        badgeCounts.reservations = paidOfferRows.filter((offer) => {
+          const offerId = offer.id;
+          const ownerBefore = edlSet.has(`${offerId}:owner:before`);
+          const ownerAfter = edlSet.has(`${offerId}:owner:after`);
+          const seekerBefore = edlSet.has(`${offerId}:seeker:before`);
+          const seekerAfter = edlSet.has(`${offerId}:seeker:after`);
+          const edlIncomplete = !ownerBefore || !ownerAfter || !seekerBefore || !seekerAfter;
+          const litigeOuvert = openDisputeOffers.has(offerId);
+          const cautionAArbitrer = offer.deposit_hold_status === "claim_requested";
+          return edlIncomplete || litigeOuvert || cautionAArbitrer;
+        }).length;
+
+        badgeCounts.etatsDesLieux = paidOfferRows.filter((offer) => {
+          const offerId = offer.id;
+          const ownerBefore = edlSet.has(`${offerId}:owner:before`);
+          const ownerAfter = edlSet.has(`${offerId}:owner:after`);
+          const seekerBefore = edlSet.has(`${offerId}:seeker:before`);
+          const seekerAfter = edlSet.has(`${offerId}:seeker:after`);
+          return !ownerBefore || !ownerAfter || !seekerBefore || !seekerAfter;
+        }).length;
+      } catch {
+        // Tables EDL/refund_cases peuvent ne pas exister
+      }
+    }
+
   } catch {
     // Ignore if admin client fails (e.g. missing SUPABASE_SERVICE_ROLE_KEY)
   }
 
   return (
     <div className="flex min-h-screen bg-slate-100">
-      <AdminSidebar pendingCount={pendingCount} reportsCount={reportsCount} userEmail={user.email} />
+      <AdminSidebar badgeCounts={badgeCounts} userEmail={user.email} />
       <div className="flex flex-1 flex-col overflow-auto">
-        <AdminHeader pendingCount={pendingCount} notifications={notifications} />
+        <AdminHeader />
         <main className="flex-1 pl-14 lg:pl-0">{children}</main>
       </div>
     </div>

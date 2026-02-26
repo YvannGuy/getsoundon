@@ -57,7 +57,7 @@ export default async function ProprietaireDashboardPage() {
       .select("id, slug, name, city, images, status")
       .eq("owner_id", user.id)
       .order("created_at", { ascending: false }),
-    supabase.from("profiles").select("stripe_account_id").eq("id", user.id).single(),
+    supabase.from("profiles").select("stripe_account_id, first_name, full_name").eq("id", user.id).single(),
     (async () => {
       const adminSupabase = createAdminClient();
       const { data: paidOffers } = await adminSupabase
@@ -167,6 +167,13 @@ export default async function ProprietaireDashboardPage() {
       <WelcomeOnboardingBanner
         userId={user.id}
         dashboard="owner"
+        firstName={
+          (profile as { first_name?: string | null } | null)?.first_name ??
+          ((profile as { full_name?: string | null } | null)?.full_name
+            ?.trim()
+            .split(/\s+/)
+            .filter(Boolean)[0] ?? null)
+        }
         videoUrl={
           process.env.NEXT_PUBLIC_ONBOARDING_VIDEO_URL?.trim() ||
           "https://www.youtube.com/watch?v=ysz5S6PUM-U"

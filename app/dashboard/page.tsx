@@ -49,6 +49,17 @@ export default async function DashboardPage() {
 
   const seekerId = user.id;
   const since30Iso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: seekerProfile } = await supabase
+    .from("profiles")
+    .select("first_name, full_name")
+    .eq("id", seekerId)
+    .maybeSingle();
+  const seekerFirstName =
+    (seekerProfile as { first_name?: string | null } | null)?.first_name ??
+    ((seekerProfile as { full_name?: string | null } | null)?.full_name
+      ?.trim()
+      .split(/\s+/)
+      .filter(Boolean)[0] ?? null);
 
   let demandesVisiteList: { id: string; salle_id: string; date_visite: string; heure_debut: string; heure_fin: string; status: string; created_at: string }[] = [];
   let visitesEnvoyees30 = 0;
@@ -210,6 +221,7 @@ export default async function DashboardPage() {
       <WelcomeOnboardingBanner
         userId={user.id}
         dashboard="seeker"
+        firstName={seekerFirstName}
         videoUrl={
           process.env.NEXT_PUBLIC_ONBOARDING_VIDEO_URL?.trim() ||
           "https://www.youtube.com/watch?v=ysz5S6PUM-U"
