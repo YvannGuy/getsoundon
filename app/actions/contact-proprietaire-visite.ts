@@ -9,6 +9,13 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://salledeculte.com";
 /** Crée ou ouvre la conversation pour une demande de visite, puis redirige vers la messagerie */
 export async function contactProprietaireVisiteAction(demandeVisiteId: string) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { success: false, error: "Non connecté" };
+  }
+
   const res = await getOrCreateConversationForVisite(demandeVisiteId);
   if (res.error || !res.conversationId) {
     return { success: false, error: res.error ?? "Impossible de créer la conversation" };
@@ -35,6 +42,20 @@ export async function contactProprietaireVisiteAction(demandeVisiteId: string) {
     : "l'horaire prévu";
 
   const compose = `Bonjour, je reviens vers vous concernant la visite du ${dateLabel} à ${heureLabel}.`;
+
+  const { data: alreadySent } = await supabase
+    .from("messages")
+    .select("id")
+    .eq("conversation_id", res.conversationId)
+    .eq("sender_id", user.id)
+    .eq("content", compose)
+    .is("deleted_at", null)
+    .limit(1);
+
+  if (alreadySent && alreadySent.length > 0) {
+    redirect(`${siteUrl}/dashboard/messagerie?conversationId=${res.conversationId}`);
+  }
+
   redirect(
     `${siteUrl}/dashboard/messagerie?conversationId=${res.conversationId}&compose=${encodeURIComponent(compose)}`
   );

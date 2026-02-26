@@ -57,13 +57,13 @@ export default async function MessageriePage({
     salleIds.length > 0
       ? supabase
           .from("demandes_visite")
-          .select("id, seeker_id, salle_id, date_visite, heure_debut, heure_fin, status, message, created_at")
+          .select("id, seeker_id, salle_id, date_visite, heure_debut, heure_fin, type_evenement, status, message, created_at")
           .in("salle_id", salleIds)
           .order("created_at", { ascending: false })
       : { data: [] },
   ]);
   const demandes = (demandesRes.data ?? []) as { id: string; seeker_id: string; salle_id: string; date_debut?: string; type_evenement?: string; status?: string; nb_personnes?: number; message?: string; heure_debut_souhaitee?: string; heure_fin_souhaitee?: string; created_at?: string }[];
-  const demandesVisite = (demandesVisiteRes.data ?? []) as { id: string; seeker_id: string; salle_id: string; date_visite?: string; heure_debut?: string; heure_fin?: string; status?: string; message?: string; created_at?: string }[];
+  const demandesVisite = (demandesVisiteRes.data ?? []) as { id: string; seeker_id: string; salle_id: string; date_visite?: string; heure_debut?: string; heure_fin?: string; type_evenement?: string | null; status?: string; message?: string; created_at?: string }[];
 
   const demandeIds = demandes.map((d) => d.id);
   const demandeVisiteIds = demandesVisite.map((d) => d.id);
@@ -276,7 +276,7 @@ export default async function MessageriePage({
       salleCapacity: salleRow?.capacity ?? null,
       salleSlug: salleRow?.slug ?? "",
       hasContract: contractBySalle.get(dv.salle_id) ?? false,
-      typeEvenement: null,
+      typeEvenement: dv.type_evenement ?? null,
       dateDebut: dateStr,
       dateDebutHeure: horaires || undefined,
       demandeStatus: dv.status ?? "pending",

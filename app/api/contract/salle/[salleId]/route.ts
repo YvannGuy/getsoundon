@@ -71,12 +71,24 @@ export async function DELETE(
     const isOwner = await verifyOwner(salleId, user.id);
     if (!isOwner) return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
 
-    const path = `${PATH_PREFIX}/${salleId}/modele.pdf`;
-    const { error } = await createAdminClient().storage.from("contrats").remove([path]);
+    const admin = createAdminClient();
+    const folder = `${PATH_PREFIX}/${salleId}`;
+    const { data: files, error: listError } = await admin.storage
+      .from("contrats")
+      .list(folder, { limit: 100 });
 
-    if (error) {
-      console.error("Contract delete error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (listError) {
+      console.error("Contract list error:", listError);
+      return NextResponse.json({ error: listError.message }, { status: 500 });
+    }
+
+    const pathsToDelete = (files ?? []).map((file) => `${folder}/${file.name}`);
+    if (pathsToDelete.length > 0) {
+      const { error: removeError } = await admin.storage.from("contrats").remove(pathsToDelete);
+      if (removeError) {
+        console.error("Contract delete error:", removeError);
+        return NextResponse.json({ error: removeError.message }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ success: true });

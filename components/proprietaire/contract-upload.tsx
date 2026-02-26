@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, Trash2, Upload } from "lucide-react";
 
@@ -21,10 +21,15 @@ type Props = {
 export function ContractUpload({ salleId, salleName, hasContract }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [hasContractState, setHasContractState] = useState(hasContract);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setHasContractState(hasContract);
+  }, [hasContract]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -45,6 +50,7 @@ export function ContractUpload({ salleId, salleName, hasContract }: Props) {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erreur");
+      setHasContractState(true);
       router.refresh();
     } catch (e) {
       setError((e as Error).message);
@@ -63,6 +69,7 @@ export function ContractUpload({ salleId, salleName, hasContract }: Props) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erreur");
       setPreviewOpen(false);
+      setHasContractState(false);
       router.refresh();
     } catch (e) {
       setError((e as Error).message);
@@ -73,7 +80,7 @@ export function ContractUpload({ salleId, salleName, hasContract }: Props) {
 
   return (
     <div className="space-y-4">
-      {hasContract && (
+      {hasContractState && (
         <div className="flex flex-wrap items-center gap-3 rounded-lg bg-emerald-50 py-3 px-4">
           <p className="flex-1 text-sm text-emerald-700">
             ✓ Contrat enregistré — visible par le locataire avant paiement
@@ -121,7 +128,7 @@ export function ContractUpload({ salleId, salleName, hasContract }: Props) {
           <Upload className="h-4 w-4" />
           {uploading
             ? "Téléversement..."
-            : hasContract
+            : hasContractState
               ? "Remplacer le contrat"
               : "Télécharger votre contrat (PDF)"}
         </Button>

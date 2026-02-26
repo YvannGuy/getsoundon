@@ -15,8 +15,9 @@ async function salleHasContract(salleId: string): Promise<boolean> {
   const admin = createAdminClient();
   const { data, error } = await admin.storage
     .from("contrats")
-    .download(`salles/${salleId}/modele.pdf`);
-  return !error && !!data;
+    .list(`salles/${salleId}`, { search: "modele.pdf", limit: 1 });
+  if (error) return false;
+  return !!(data ?? []).find((item) => item.name === "modele.pdf");
 }
 
 export default async function ProprietaireContratPage({

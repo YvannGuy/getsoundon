@@ -634,13 +634,15 @@ export function MessagerieClient({
   };
 
   const hasPendingOffer = offers.some((o) => o.status === "pending");
-  const canSendOffer =
+  const ownerOfferBase =
     userType === "owner" &&
-    hasConnectAccount &&
-    ["replied", "accepted"].includes(selected?.demandeStatus ?? "") &&
     !hasPendingOffer &&
-    !!selected?.salleId &&
-    !!selected?.hasContract;
+    !!selected?.salleId;
+  const showEnablePaymentsCta = ownerOfferBase && !hasConnectAccount;
+  const showUploadContractCta =
+    ownerOfferBase && hasConnectAccount && !selected?.hasContract;
+  const canSendOffer =
+    ownerOfferBase && hasConnectAccount && !!selected?.hasContract;
 
   const handleAcceptAndPay = async (offerId: string) => {
     try {
@@ -671,6 +673,8 @@ export function MessagerieClient({
   const myInitials = getInitials(currentUserFullName ?? "") || "?";
   const otherInitials = getInitials(otherName) || "?";
   const statusTag = STATUS_TAG[selected?.demandeStatus ?? "sent"] ?? STATUS_TAG.sent;
+  const offerCtaClassName =
+    "h-9 border-[#213398]/50 text-[#213398] hover:bg-[#213398]/5";
 
   const listPanel = (
     <div className="flex min-h-0 w-full flex-1 flex-col border-r-0 border-slate-200 bg-white md:w-[380px] md:border-r-2 md:border-slate-300 md:shrink-0">
@@ -1073,12 +1077,34 @@ export function MessagerieClient({
                     </Button>
                   </div>
                 )}
+                {detailsOpen && showEnablePaymentsCta && (
+                  <div className="mt-4 border-t border-slate-100 pt-3">
+                    <Link
+                      href="/proprietaire/paiement#recevoir-paiements"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-100"
+                    >
+                      <Banknote className="h-3.5 w-3.5" />
+                      Activez les paiements pour envoyer une offre
+                    </Link>
+                  </div>
+                )}
+                {detailsOpen && showUploadContractCta && (
+                  <div className="mt-4 border-t border-slate-100 pt-3">
+                    <Link
+                      href="/proprietaire/contrat"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-100"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      Téléchargez votre contrat et envoyez une offre
+                    </Link>
+                  </div>
+                )}
                 {detailsOpen && canSendOffer && (
                   <div className="mt-4 border-t border-slate-100 pt-3">
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-[#213398]/50 text-[#213398] hover:bg-[#213398]/5"
+                      className={offerCtaClassName}
                       onClick={() => setCreateOfferModalOpen(true)}
                     >
                       <Banknote className="mr-2 h-4 w-4" />
@@ -1309,24 +1335,7 @@ export function MessagerieClient({
                 </Button>
               </div>
             )}
-            {canSendOffer && (
-              <div className="mt-2 flex flex-wrap gap-2 md:hidden">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-9 text-xs border-[#213398]/50 text-[#213398] hover:bg-[#213398]/5"
-                  onClick={() => setCreateOfferModalOpen(true)}
-                >
-                  <Banknote className="mr-1.5 h-3.5 w-3.5" />
-                  Envoyer une offre
-                </Button>
-              </div>
-            )}
-            {userType === "owner" &&
-              !hasConnectAccount &&
-              ["replied", "accepted"].includes(selected?.demandeStatus ?? "") &&
-              !hasPendingOffer &&
-              !!selected?.salleId && (
+            {showEnablePaymentsCta && (
               <div className="mt-2">
                 <Link
                   href="/proprietaire/paiement#recevoir-paiements"
@@ -1337,20 +1346,28 @@ export function MessagerieClient({
                 </Link>
               </div>
             )}
-            {userType === "owner" &&
-              hasConnectAccount &&
-              !selected?.hasContract &&
-              ["replied", "accepted"].includes(selected?.demandeStatus ?? "") &&
-              !hasPendingOffer &&
-              !!selected?.salleId && (
+            {showUploadContractCta && (
               <div className="mt-2">
                 <Link
                   href="/proprietaire/contrat"
                   className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-100"
                 >
                   <FileText className="h-3.5 w-3.5" />
-                  Téléchargez votre contrat pour envoyer une offre
+                  Téléchargez votre contrat et envoyez une offre
                 </Link>
+              </div>
+            )}
+            {canSendOffer && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={offerCtaClassName}
+                  onClick={() => setCreateOfferModalOpen(true)}
+                >
+                  <Banknote className="mr-2 h-4 w-4" />
+                  Envoyer une offre
+                </Button>
               </div>
             )}
           </div>
