@@ -7,6 +7,7 @@ import { CheckCircle2, FileText, Heart, Inbox, MessageCircle } from "lucide-reac
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SearchModalButton } from "@/components/search/search-modal";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const STATUT_LABEL: Record<string, string> = {
@@ -39,34 +40,54 @@ function formatTime(t: string | null): string {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
+  const admin = createAdminClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
 
   const seekerId = user.id;
+  const since30Iso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
   let demandesVisiteList: { id: string; salle_id: string; date_visite: string; heure_debut: string; heure_fin: string; status: string; created_at: string }[] = [];
+  let visitesEnvoyees30 = 0;
+  let visitesRepondues30 = 0;
+  let visitesAcceptees30 = 0;
   try {
-    const res = await supabase
-      .from("demandes_visite")
-      .select("id, salle_id, date_visite, heure_debut, heure_fin, status, created_at")
-      .eq("seeker_id", seekerId)
-      .order("created_at", { ascending: false })
-      .limit(5);
+    const [res, res30] = await Promise.all([
+      supabase
+        .from("demandes_visite")
+        .select("id, salle_id, date_visite, heure_debut, heure_fin, status, created_at")
+        .eq("seeker_id", seekerId)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      supabase
+        .from("demandes_visite")
+        .select("id, status")
+        .eq("seeker_id", seekerId)
+        .gte("created_at", since30Iso),
+    ]);
     demandesVisiteList = res.data ?? [];
+    const visits30 = (res30.data ?? []) as { id: string; status: string }[];
+    visitesEnvoyees30 = visits30.length;
+    visitesRepondues30 = visits30.filter((v) =>
+      ["accepted", "refused", "reschedule_proposed"].includes(v.status)
+    ).length;
+    visitesAcceptees30 = visits30.filter((v) => v.status === "accepted").length;
   } catch {
     // Table peut ne pas exister
   }
+  const tauxReponseVisites30 =
+    visitesEnvoyees30 > 0 ? Math.round((visitesRepondues30 / visitesEnvoyees30) * 100) : 0;
+  const { count: reservationsConfirmees30Count } = await admin
+    .from("offers")
+    .select("id", { count: "exact", head: true })
+    .eq("seeker_id", seekerId)
+    .eq("status", "paid")
+    .gte("created_at", since30Iso);
+  const reservationsConfirmees30 = reservationsConfirmees30Count ?? 0;
 
-  const [
-    { count: demandesCount },
-    { count: favorisCount },
-    { data: demandesList },
-    { data: favorisList },
-  ] = await Promise.all([
-    supabase.from("demandes").select("id", { count: "exact", head: true }).eq("seeker_id", seekerId),
-    supabase.from("favoris").select("id", { count: "exact", head: true }).eq("user_id", seekerId),
+  const [{ data: demandesList }, { data: favorisList }] = await Promise.all([
     supabase
       .from("demandes")
       .select("id, salle_id, date_debut, type_evenement, status, created_at")
@@ -78,9 +99,6 @@ export default async function DashboardPage() {
       .select("salle_id")
       .eq("user_id", seekerId),
   ]);
-
-  const totalDemandes = demandesCount ?? 0;
-  const totalFavoris = favorisCount ?? 0;
 
   const salleIdsDemandes = [...new Set((demandesList ?? []).map((d) => d.salle_id).filter(Boolean))];
   const salleIdsVisites = [...new Set(demandesVisiteList.map((d) => d.salle_id).filter(Boolean))];
@@ -108,39 +126,13 @@ export default async function DashboardPage() {
   const salleMapVisites = new Map((sallesVisites.data ?? []).map((s) => [s.id, s]));
   const salleMapFavoris = new Map((sallesFavoris.data ?? []).map((s) => [s.id, s]));
   const convByDemande = new Map((convsData.data ?? []).map((c) => [c.demande_id, c]));
-  const convRows = convsData.data ?? [];
-
-  const demandesReplied = totalDemandes > 0
-    ? await supabase
-        .from("demandes")
-        .select("id", { count: "exact", head: true })
-        .eq("seeker_id", seekerId)
-        .in("status", ["replied", "accepted"])
-    : { count: 0 };
-  const totalReplied = demandesReplied.count ?? 0;
-
-  // Conversations actives : exclure les archivées et supprimées
-  let convsCount = convRows.length;
-  if (convRows.length > 0) {
-    const convIdsForPrefs = convRows.map((c) => (c as { id: string }).id);
-    const { data: prefs } = await supabase
-      .from("user_conversation_preferences")
-      .select("conversation_id, archived_at, deleted_at")
-      .eq("user_id", seekerId)
-      .in("conversation_id", convIdsForPrefs);
-    const archivedOrDeleted = new Set(
-      (prefs ?? []).filter((p) => (p as { archived_at?: string | null }).archived_at || (p as { deleted_at?: string | null }).deleted_at)
-        .map((p) => p.conversation_id)
-    );
-    convsCount = convRows.filter((c) => !archivedOrDeleted.has((c as { id: string }).id)).length;
-  }
 
   const now = new Date();
   const overviewCards = [
-    { label: "Demandes envoyées", value: String(totalDemandes), icon: FileText, color: "text-black", bgColor: "bg-[#213398]/10" },
-    { label: "Conversations actives", value: String(convsCount), icon: MessageCircle, color: "text-emerald-600", bgColor: "bg-emerald-100" },
-    { label: "Salles favorites", value: String(totalFavoris), icon: Heart, color: "text-amber-500", bgColor: "bg-amber-100" },
-    { label: "Réponses reçues", value: String(totalReplied), icon: CheckCircle2, color: "text-black", bgColor: "bg-[#213398]/10" },
+    { label: "Demandes de visite envoyées (30j)", value: String(visitesEnvoyees30), icon: FileText, color: "text-black", bgColor: "bg-[#213398]/10" },
+    { label: "Demandes avec réponse (30j)", value: `${tauxReponseVisites30}%`, icon: MessageCircle, color: "text-emerald-600", bgColor: "bg-emerald-100" },
+    { label: "Visites acceptées (30j)", value: String(visitesAcceptees30), icon: CheckCircle2, color: "text-sky-600", bgColor: "bg-sky-100" },
+    { label: "Réservations confirmées (30j)", value: String(reservationsConfirmees30), icon: Heart, color: "text-amber-500", bgColor: "bg-amber-100" },
   ];
 
   const recentVisitRequests = demandesVisiteList.map((d) => {

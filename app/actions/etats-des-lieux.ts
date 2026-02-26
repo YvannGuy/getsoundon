@@ -13,6 +13,18 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 type ActorRole = "owner" | "seeker";
 type EDLPhase = "before" | "after";
 
+function parseYmdToDate(ymd: string | null): Date | null {
+  if (!ymd) return null;
+  const d = new Date(`${ymd}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
 function normalizeExt(file: File): string {
   if (file.type === "image/png") return "png";
   if (file.type === "image/webp") return "webp";
@@ -39,7 +51,7 @@ async function getActorRoleForOffer(userId: string, offerId: string) {
   const admin = createAdminClient();
   const { data: offer } = await admin
     .from("offers")
-    .select("id, status, owner_id, seeker_id")
+    .select("id, status, owner_id, seeker_id, date_debut, date_fin")
     .eq("id", offerId)
     .maybeSingle();
 
@@ -50,14 +62,20 @@ async function getActorRoleForOffer(userId: string, offerId: string) {
     status: string;
     owner_id: string;
     seeker_id: string;
+    date_debut: string | null;
+    date_fin: string | null;
   };
 
   if (row.status !== "paid") {
     return { error: "L'état des lieux est disponible uniquement après paiement." as string };
   }
 
-  if (row.owner_id === userId) return { role: "owner" as ActorRole };
-  if (row.seeker_id === userId) return { role: "seeker" as ActorRole };
+  if (row.owner_id === userId) {
+    return { role: "owner" as ActorRole, dateDebut: row.date_debut, dateFin: row.date_fin };
+  }
+  if (row.seeker_id === userId) {
+    return { role: "seeker" as ActorRole, dateDebut: row.date_debut, dateFin: row.date_fin };
+  }
 
   return { error: "Accès refusé." as string };
 }
@@ -113,10 +131,48 @@ export async function submitEtatDesLieuxAction(
 
   const actor = await getActorRoleForOffer(user.id, offerId);
   if ("error" in actor) return { success: false, error: actor.error };
+  const nowDate = new Date();
+  const eventStart = parseYmdToDate(actor.dateDebut ?? null);
+  const eventEnd = parseYmdToDate(actor.dateFin ?? actor.dateDebut ?? null);
+
+  if (phase === "before" && eventStart) {
+    const lockUntil = eventStart;
+    const lockAfter = addDays(eventStart, 1);
+    if (nowDate < lockUntil) {
+      return {
+        success: false,
+        error: `L'état des lieux d'entrée est disponible à partir du ${actor.dateDebut}.`,
+      };
+    }
+    if (nowDate > lockAfter) {
+      return {
+        success: false,
+        error: "La fenêtre de dépôt pour l'état des lieux d'entrée est expirée (24h après le début).",
+      };
+    }
+  }
+
+  if (phase === "after" && eventEnd) {
+    const lockUntil = eventEnd;
+    const lockAfter = addDays(eventEnd, 1);
+    const endYmd = actor.dateFin ?? actor.dateDebut;
+    if (nowDate < lockUntil) {
+      return {
+        success: false,
+        error: `L'état des lieux de sortie est disponible à partir du ${endYmd}.`,
+      };
+    }
+    if (nowDate > lockAfter) {
+      return {
+        success: false,
+        error: "La fenêtre de dépôt pour l'état des lieux de sortie est expirée (24h après la fin).",
+      };
+    }
+  }
 
   const role = actor.role;
   const admin = createAdminClient();
-  const now = new Date().toISOString();
+  const nowIso = new Date().toISOString();
 
   const { data: edlRow, error: upsertError } = await admin
     .from("etat_des_lieux")
@@ -126,8 +182,8 @@ export async function submitEtatDesLieuxAction(
         role,
         phase,
         notes,
-        submitted_at: now,
-        updated_at: now,
+        submitted_at: nowIso,
+        updated_at: nowIso,
       },
       { onConflict: "offer_id,role,phase" }
     )

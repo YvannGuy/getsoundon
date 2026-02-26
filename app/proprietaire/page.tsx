@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AddSalleButton } from "@/components/proprietaire/add-salle-modal";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Banknote, CheckCircle, Clock, Inbox, Star } from "lucide-react";
+import { Banknote, CheckCircle, Inbox, Star } from "lucide-react";
 
 import { ConnectLoginButton } from "@/components/paiement/connect-login-button";
 import { ConnectOnboardingButton } from "@/components/paiement/connect-onboarding-button";
@@ -48,6 +48,7 @@ export default async function ProprietaireDashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
+  const since30Iso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
   const [{ data: sallesData }, { data: profile }, { data: recentPayments }] = await Promise.all([
     supabase
@@ -80,17 +81,26 @@ export default async function ProprietaireDashboardPage() {
   const salleIds = salles.map((s) => s.id);
 
   let demandesVisiteData: { id: string; seeker_id: string; salle_id: string; date_visite: string; heure_debut: string; heure_fin: string; status: string; created_at: string }[] = [];
+  let demandesVisite30Data: { id: string; status: string }[] = [];
   try {
-    const res =
+    const [res, res30] =
       salleIds.length > 0
-        ? await supabase
-            .from("demandes_visite")
-            .select("id, seeker_id, salle_id, date_visite, heure_debut, heure_fin, status, created_at")
-            .in("salle_id", salleIds)
-            .order("created_at", { ascending: false })
-            .limit(10)
-        : { data: [] };
+        ? await Promise.all([
+            supabase
+              .from("demandes_visite")
+              .select("id, seeker_id, salle_id, date_visite, heure_debut, heure_fin, status, created_at")
+              .in("salle_id", salleIds)
+              .order("created_at", { ascending: false })
+              .limit(10),
+            supabase
+              .from("demandes_visite")
+              .select("id, status")
+              .in("salle_id", salleIds)
+              .gte("created_at", since30Iso),
+          ])
+        : [{ data: [] }, { data: [] }];
     demandesVisiteData = res.data ?? [];
+    demandesVisite30Data = (res30.data ?? []) as { id: string; status: string }[];
   } catch {
     // Table peut ne pas exister
   }
@@ -110,20 +120,40 @@ export default async function ProprietaireDashboardPage() {
     salle: salleMap.get(d.salle_id),
   }));
 
-  const annoncesActives = salles.filter((s) => s.status === "approved").length;
-  const enValidation = salles.filter((s) => s.status === "pending").length;
-  const visitesRepondues = demandesVisiteData.filter(
-    (d) => d.status === "accepted" || d.status === "refused"
+  const { data: paidOffersForRevenue } = await adminSupabase
+    .from("offers")
+    .select("id")
+    .eq("owner_id", user.id)
+    .eq("status", "paid");
+  const paidOfferIdsForRevenue = (paidOffersForRevenue ?? []).map((o) => (o as { id: string }).id);
+  const { data: payments30 } =
+    paidOfferIdsForRevenue.length > 0
+      ? await adminSupabase
+          .from("payments")
+          .select("amount, status")
+          .in("offer_id", paidOfferIdsForRevenue)
+          .eq("product_type", "reservation")
+          .in("status", ["paid", "active"])
+          .gte("created_at", since30Iso)
+      : { data: [] };
+  const revenuEncaisse30 = (payments30 ?? []).reduce(
+    (sum, p) => sum + Number((p as { amount?: number }).amount ?? 0),
+    0
+  );
+
+  const demandesRecues30 = demandesVisite30Data.length;
+  const visitesRepondues30 = demandesVisite30Data.filter((d) =>
+    ["accepted", "refused", "reschedule_proposed"].includes(d.status)
   ).length;
-  const tauxReponse =
-    demandesVisiteData.length > 0
-      ? Math.round((visitesRepondues / demandesVisiteData.length) * 100)
-      : 0;
+  const visitesAcceptees30 = demandesVisite30Data.filter((d) => d.status === "accepted").length;
+  const tauxReponse30 =
+    demandesRecues30 > 0 ? Math.round((visitesRepondues30 / demandesRecues30) * 100) : 0;
 
   const metrics = [
-    { label: "Annonces actives", value: String(annoncesActives), icon: CheckCircle, color: "text-emerald-600", bgColor: "bg-emerald-100" },
-    { label: "En validation", value: String(enValidation), icon: Clock, color: "text-amber-600", bgColor: "bg-amber-100" },
-    { label: "Taux de réponse", value: `${tauxReponse}%`, icon: Star, color: "text-sky-500", bgColor: "bg-[#213398]/10" },
+    { label: "Demandes reçues (30j)", value: String(demandesRecues30), icon: Inbox, color: "text-black", bgColor: "bg-[#213398]/10" },
+    { label: "Taux de réponse (30j)", value: `${tauxReponse30}%`, icon: Star, color: "text-sky-500", bgColor: "bg-sky-100" },
+    { label: "Visites acceptées (30j)", value: String(visitesAcceptees30), icon: CheckCircle, color: "text-emerald-600", bgColor: "bg-emerald-100" },
+    { label: "Revenu encaissé (30j)", value: `${(revenuEncaisse30 / 100).toFixed(0)} €`, icon: Banknote, color: "text-amber-700", bgColor: "bg-amber-100" },
   ];
 
   return (

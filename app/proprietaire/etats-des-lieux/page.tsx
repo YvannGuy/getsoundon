@@ -43,6 +43,24 @@ const CASE_LABEL: Record<string, string> = {
   dispute: "Litige",
 };
 
+function formatYmdToFr(ymd: string | null): string {
+  if (!ymd) return "la date de l'événement";
+  const d = new Date(`${ymd}T12:00:00`);
+  return d.toLocaleDateString("fr-FR");
+}
+
+function parseYmdToDate(ymd: string | null): Date | null {
+  if (!ymd) return null;
+  const d = new Date(`${ymd}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
 export const dynamic = "force-dynamic";
 
 export default async function OwnerEtatsDesLieuxPage() {
@@ -198,6 +216,8 @@ export default async function OwnerEtatsDesLieuxPage() {
             const ownerBefore = offerEdl.find((r) => r.role === "owner" && r.phase === "before");
             const ownerAfter = offerEdl.find((r) => r.role === "owner" && r.phase === "after");
             const doneCount = [ownerBefore, ownerAfter].filter(Boolean).length;
+            const eventStartYmd = offer.date_debut ?? null;
+            const eventEndYmd = offer.date_fin ?? offer.date_debut ?? null;
             return (
               <details
                 key={offer.id}
@@ -224,6 +244,18 @@ export default async function OwnerEtatsDesLieuxPage() {
                   {(["before", "after"] as const).map((phase) => {
                     const ownerEdl = offerEdl.find((r) => r.role === "owner" && r.phase === phase);
                     const seekerEdl = offerEdl.find((r) => r.role === "seeker" && r.phase === phase);
+                    const now = new Date();
+                    const phaseDateYmd = phase === "before" ? eventStartYmd : eventEndYmd;
+                    const phaseDate = parseYmdToDate(phaseDateYmd);
+                    const phaseDeadline = phaseDate ? addDays(phaseDate, 1) : null;
+                    const isLockedBefore = !!phaseDate && now < phaseDate;
+                    const isLockedAfter = !!phaseDeadline && now > phaseDeadline;
+                    const isUploadOpen = !isLockedBefore && !isLockedAfter;
+                    const lockText = isLockedBefore
+                      ? `Disponible à partir du ${formatYmdToFr(phaseDateYmd)}`
+                      : isLockedAfter
+                        ? `Fenêtre expirée (24h après ${formatYmdToFr(phaseDateYmd)})`
+                        : "";
                     return (
                       <div key={phase} className="rounded-lg border border-slate-200 p-3 md:p-4">
                         <div className="flex items-center justify-between gap-2">
@@ -232,38 +264,52 @@ export default async function OwnerEtatsDesLieuxPage() {
                         </div>
 
                         <div className="mt-3 grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
-                          <form
-                            action={async (formData) => {
-                              "use server";
-                              await submitEtatDesLieuxAction(formData);
-                            }}
-                            className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3"
-                          >
-                            <input type="hidden" name="offerId" value={offer.id} />
-                            <input type="hidden" name="phase" value={phase} />
-                            <p className="text-xs font-medium text-slate-700">Votre dépôt</p>
-                            <textarea
-                              name="notes"
-                              rows={3}
-                              required
-                              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                              placeholder="État observé, points à signaler..."
-                            />
-                            <input
-                              type="file"
-                              name="photos"
-                              accept="image/*"
-                              multiple
-                              required
-                              className="block w-full text-sm"
-                            />
-                            <button
-                              type="submit"
-                              className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                          {isUploadOpen ? (
+                            <form
+                              action={async (formData) => {
+                                "use server";
+                                await submitEtatDesLieuxAction(formData);
+                              }}
+                              className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3"
                             >
-                              Envoyer {phase === "before" ? "l'entrée" : "la sortie"}
-                            </button>
-                          </form>
+                              <input type="hidden" name="offerId" value={offer.id} />
+                              <input type="hidden" name="phase" value={phase} />
+                              <p className="text-xs font-medium text-slate-700">Votre dépôt</p>
+                              <textarea
+                                name="notes"
+                                rows={3}
+                                required
+                                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                                placeholder="État observé, points à signaler..."
+                              />
+                              <input
+                                type="file"
+                                name="photos"
+                                accept="image/*"
+                                multiple
+                                required
+                                className="block w-full text-sm"
+                              />
+                              <button
+                                type="submit"
+                                className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                              >
+                                Envoyer {phase === "before" ? "l'entrée" : "la sortie"}
+                              </button>
+                            </form>
+                          ) : (
+                            <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/60 p-3 opacity-70">
+                              <p className="text-xs font-medium text-slate-700">Votre dépôt</p>
+                              <p className="text-xs text-slate-500">{lockText}</p>
+                              <button
+                                type="button"
+                                disabled
+                                className="w-full cursor-not-allowed rounded-md bg-slate-300 px-4 py-2 text-sm font-medium text-slate-600"
+                              >
+                                Upload verrouillé
+                              </button>
+                            </div>
+                          )}
 
                           <div className="grid gap-3 md:grid-cols-2">
                             {[ownerEdl, seekerEdl].map((entry, idx) => (

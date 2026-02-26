@@ -19,29 +19,6 @@ export async function recordSalleView(salleId: string, viewerId: string | null):
   }
 }
 
-/** Nombre de salles (d'autres propriétaires) consultées par cet owner (pour l'essai demandes gratuites) */
-export async function getOwnerOtherSallesViewCount(ownerId: string): Promise<number> {
-  try {
-    const supabase = createAdminClient();
-    const { data: views } = await supabase
-      .from("salle_views")
-      .select("salle_id")
-      .eq("viewer_id", ownerId);
-
-    if (!views?.length) return 0;
-
-    const salleIds = [...new Set((views as { salle_id: string }[]).map((v) => v.salle_id))];
-    const { data: salles } = await supabase
-      .from("salles")
-      .select("owner_id")
-      .in("id", salleIds);
-
-    return (salles ?? []).filter((s) => (s as { owner_id: string }).owner_id !== ownerId).length;
-  } catch {
-    return 0;
-  }
-}
-
 /** Nombre d'organisateurs distincts ayant consulté la salle dans les N derniers jours */
 export async function getSalleRecentViewerCount(salleId: string): Promise<number> {
   try {
