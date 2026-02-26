@@ -58,7 +58,8 @@ export default async function ProprietaireLayout({
     .maybeSingle();
 
   const displayName = profile?.full_name ?? user.user_metadata?.full_name ?? "Utilisateur";
-  const { visiteCount, messageCount, paymentCount, contractCount } = await getOwnerBadgeCounts(supabase, user.id);
+  const { visiteCount, reservationCount, messageCount, paymentCount, edlCount, cautionCount, contractCount } =
+    await getOwnerBadgeCounts(supabase, user.id);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-slate-50 lg:flex-row">
@@ -66,8 +67,11 @@ export default async function ProprietaireLayout({
         user={{ ...user, displayName }}
         demandeCount={0}
         visiteCount={visiteCount ?? 0}
+        reservationCount={reservationCount ?? 0}
         messageCount={messageCount}
         paymentCount={paymentCount}
+        edlCount={edlCount ?? 0}
+        cautionCount={cautionCount ?? 0}
         contractCount={contractCount}
         canAccessSeeker={true}
       />

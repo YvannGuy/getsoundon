@@ -61,15 +61,20 @@ export default async function DashboardLayout({
 
   const displayName = (profile as { full_name?: string | null } | null)?.full_name ?? user.user_metadata?.full_name ?? "Utilisateur";
 
-  const { demandeCount, messageCount, paymentCount } = await getSeekerBadgeCounts(supabase, user.id);
+  const { demandeCount, reservationCount, messageCount, paymentCount, edlCount } = await getSeekerBadgeCounts(
+    supabase,
+    user.id
+  );
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-slate-50 lg:flex-row">
       <DashboardSidebar
         user={{ ...user, displayName }}
         demandeCount={demandeCount ?? 0}
+        reservationCount={reservationCount ?? 0}
         messageCount={messageCount}
         paymentCount={paymentCount}
+        edlCount={edlCount ?? 0}
         canAccessOwner={canAccessOwner}
       />
       <main className="flex-1 overflow-auto">{children}</main>

@@ -33,12 +33,12 @@ const navItems = [
   { href: "/proprietaire", label: "Tableau de bord", icon: Home },
   { href: "/proprietaire/annonces", label: "Mes annonces", icon: Building2 },
   { href: "/proprietaire/visites", label: "Demandes de visites", icon: Calendar, badgeKey: "visites" },
-  { href: "/proprietaire/reservations", label: "Réservations", icon: FileText, badgeKey: "paiement" },
+  { href: "/proprietaire/reservations", label: "Réservations", icon: FileText, badgeKey: "reservations" },
   { href: "/proprietaire/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },
   { href: "/proprietaire/paiement", label: "Paiement", icon: CreditCard, badgeKey: "paiement" },
-  { href: "/proprietaire/etats-des-lieux", label: "États des lieux", icon: Camera },
-  { href: "/proprietaire/cautions", label: "Cautions", icon: FolderOpen },
-  { href: "/proprietaire/contrat", label: "Contrat & facture", icon: FileText, badgeKey: "contrat" },
+  { href: "/proprietaire/etats-des-lieux", label: "États des lieux", icon: Camera, badgeKey: "etats" },
+  { href: "/proprietaire/cautions", label: "Cautions", icon: FolderOpen, badgeKey: "cautions" },
+  { href: "/proprietaire/contrat", label: "Contrat & facture", icon: FileText },
   { href: "/proprietaire/parametres", label: "Paramètres", icon: Settings },
 ];
 
@@ -48,8 +48,11 @@ function NavContent({
   userEmail,
   demandeCount,
   visiteCount,
+  reservationCount,
   messageCount,
   paymentCount,
+  edlCount,
+  cautionCount,
   contractCount,
   collapsed = false,
   onItemClick,
@@ -60,8 +63,11 @@ function NavContent({
   userEmail?: string | null;
   demandeCount: number;
   visiteCount: number;
+  reservationCount: number;
   messageCount: number;
   paymentCount: number;
+  edlCount: number;
+  cautionCount: number;
   contractCount: number;
   collapsed?: boolean;
   onItemClick?: () => void;
@@ -126,6 +132,16 @@ function NavContent({
                       {visiteCount > 99 ? "99+" : visiteCount}
                     </span>
                   )}
+                  {item.badgeKey === "reservations" && reservationCount > 0 && (
+                    <span
+                      className={cn(
+                        "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
+                        isActive ? "bg-white/20 text-white" : "bg-violet-100 text-violet-700"
+                      )}
+                    >
+                      {reservationCount > 99 ? "99+" : reservationCount}
+                    </span>
+                  )}
                   {item.badgeKey === "messagerie" && messageCount > 0 && (
                     <span
                       className={cn(
@@ -144,6 +160,26 @@ function NavContent({
                       )}
                     >
                       {paymentCount > 99 ? "99+" : paymentCount}
+                    </span>
+                  )}
+                  {item.badgeKey === "etats" && edlCount > 0 && (
+                    <span
+                      className={cn(
+                        "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
+                        isActive ? "bg-white/20 text-white" : "bg-indigo-100 text-indigo-700"
+                      )}
+                    >
+                      {edlCount > 99 ? "99+" : edlCount}
+                    </span>
+                  )}
+                  {item.badgeKey === "cautions" && cautionCount > 0 && (
+                    <span
+                      className={cn(
+                        "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
+                        isActive ? "bg-white/20 text-white" : "bg-rose-100 text-rose-700"
+                      )}
+                    >
+                      {cautionCount > 99 ? "99+" : cautionCount}
                     </span>
                   )}
                   {item.badgeKey === "contrat" && contractCount > 0 && (
@@ -176,6 +212,21 @@ function NavContent({
               {collapsed && item.badgeKey === "paiement" && paymentCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white">
                   {paymentCount > 99 ? "99+" : paymentCount}
+                </span>
+              )}
+              {collapsed && item.badgeKey === "reservations" && reservationCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-violet-500 px-1 text-[10px] font-semibold text-white">
+                  {reservationCount > 99 ? "99+" : reservationCount}
+                </span>
+              )}
+              {collapsed && item.badgeKey === "etats" && edlCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-indigo-500 px-1 text-[10px] font-semibold text-white">
+                  {edlCount > 99 ? "99+" : edlCount}
+                </span>
+              )}
+              {collapsed && item.badgeKey === "cautions" && cautionCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white">
+                  {cautionCount > 99 ? "99+" : cautionCount}
                 </span>
               )}
               {collapsed && item.badgeKey === "contrat" && contractCount > 0 && (
@@ -225,16 +276,22 @@ export function OwnerSidebar({
   user,
   demandeCount = 0,
   visiteCount = 0,
+  reservationCount = 0,
   messageCount = 0,
   paymentCount = 0,
+  edlCount = 0,
+  cautionCount = 0,
   contractCount = 0,
   canAccessSeeker = false,
 }: {
   user: { email?: string | null; displayName?: string };
   demandeCount?: number;
   visiteCount?: number;
+  reservationCount?: number;
   messageCount?: number;
   paymentCount?: number;
+  edlCount?: number;
+  cautionCount?: number;
   contractCount?: number;
   canAccessSeeker?: boolean;
 }) {
@@ -285,8 +342,11 @@ export function OwnerSidebar({
             userEmail={user.email}
             demandeCount={demandeCount}
             visiteCount={visiteCount}
+            reservationCount={reservationCount}
             messageCount={messageCount}
             paymentCount={paymentCount}
+            edlCount={edlCount}
+            cautionCount={cautionCount}
             contractCount={contractCount}
             onItemClick={() => setMobileOpen(false)}
             canAccessSeeker={canAccessSeeker}
@@ -328,8 +388,11 @@ export function OwnerSidebar({
           userEmail={user.email}
           demandeCount={demandeCount}
           visiteCount={visiteCount}
+          reservationCount={reservationCount}
           messageCount={messageCount}
           paymentCount={paymentCount}
+          edlCount={edlCount}
+          cautionCount={cautionCount}
           contractCount={contractCount}
           collapsed={collapsed}
           canAccessSeeker={canAccessSeeker}

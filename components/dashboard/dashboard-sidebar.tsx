@@ -18,9 +18,9 @@ const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: Home },
   { href: "/dashboard/rechercher", label: "Rechercher une salle", icon: Search, opensSearchModal: true },
   { href: "/dashboard/demandes", label: "Mes demandes", icon: FileText, badgeKey: "demandes" },
-  { href: "/dashboard/reservations", label: "Réservations", icon: FileText },
+  { href: "/dashboard/reservations", label: "Réservations", icon: FileText, badgeKey: "reservations" },
   { href: "/dashboard/paiement", label: "Paiement", icon: CreditCard, badgeKey: "paiement" },
-  { href: "/dashboard/etats-des-lieux", label: "États des lieux", icon: Camera },
+  { href: "/dashboard/etats-des-lieux", label: "États des lieux", icon: Camera, badgeKey: "etats" },
   { href: "/dashboard/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },
   { href: "/dashboard/favoris", label: "Favoris", icon: Heart },
   { href: "/dashboard/parametres", label: "Paramètres", icon: Settings },
@@ -31,8 +31,10 @@ function NavContent({
   displayName,
   userEmail,
   demandeCount,
+  reservationCount,
   messageCount,
   paymentCount,
+  edlCount,
   collapsed = false,
   onItemClick,
   searchModalOpen,
@@ -43,8 +45,10 @@ function NavContent({
   displayName: string;
   userEmail?: string | null;
   demandeCount: number;
+  reservationCount: number;
   messageCount: number;
   paymentCount: number;
+  edlCount: number;
   collapsed?: boolean;
   onItemClick?: () => void;
   searchModalOpen?: boolean;
@@ -90,10 +94,14 @@ function NavContent({
           const badgeVal =
             item.badgeKey === "demandes"
               ? demandeCount
+              : item.badgeKey === "reservations"
+                ? reservationCount
               : item.badgeKey === "messagerie"
                 ? messageCount
                 : item.badgeKey === "paiement"
                   ? paymentCount
+                  : item.badgeKey === "etats"
+                    ? edlCount
                   : null;
           const opensSearchModal = (item as { opensSearchModal?: boolean }).opensSearchModal;
           const navClassName = cn(
@@ -119,6 +127,8 @@ function NavContent({
                             ? "bg-blue-100 text-blue-700"
                             : item.badgeKey === "paiement"
                               ? "bg-amber-100 text-amber-700"
+                              : item.badgeKey === "etats"
+                                ? "bg-violet-100 text-violet-700"
                               : "bg-emerald-100 text-emerald-700"
                       )}
                     >
@@ -135,6 +145,8 @@ function NavContent({
                       ? "bg-blue-600"
                       : item.badgeKey === "paiement"
                         ? "bg-amber-500"
+                        : item.badgeKey === "etats"
+                          ? "bg-violet-500"
                         : "bg-emerald-500"
                   )}
                 >
@@ -201,14 +213,18 @@ function NavContent({
 export function DashboardSidebar({
   user,
   demandeCount = 0,
+  reservationCount = 0,
   messageCount = 0,
   paymentCount = 0,
+  edlCount = 0,
   canAccessOwner = false,
 }: {
   user: { email?: string | null; displayName?: string };
   demandeCount?: number;
+  reservationCount?: number;
   messageCount?: number;
   paymentCount?: number;
+  edlCount?: number;
   canAccessOwner?: boolean;
 }) {
   const pathname = usePathname();
@@ -258,8 +274,10 @@ export function DashboardSidebar({
             displayName={displayName}
             userEmail={user.email}
             demandeCount={demandeCount}
+            reservationCount={reservationCount}
             messageCount={messageCount}
             paymentCount={paymentCount}
+            edlCount={edlCount}
             onItemClick={() => setMobileOpen(false)}
             searchModalOpen={searchModalOpen}
             setSearchModalOpen={(open) => {
@@ -306,8 +324,10 @@ export function DashboardSidebar({
           displayName={displayName}
           userEmail={user.email}
           demandeCount={demandeCount}
+          reservationCount={reservationCount}
           messageCount={messageCount}
           paymentCount={paymentCount}
+          edlCount={edlCount}
           collapsed={collapsed}
           searchModalOpen={searchModalOpen}
           setSearchModalOpen={setSearchModalOpen}
