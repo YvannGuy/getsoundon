@@ -4,7 +4,7 @@ import { type ReactNode, useEffect, useMemo, useState, useTransition } from "rea
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, FileWarning, Lock, PlayCircle } from "lucide-react";
 
-import { openUserDisputeCaseAction, submitEtatDesLieuxAction } from "@/app/actions/etats-des-lieux";
+import { submitEtatDesLieuxAction } from "@/app/actions/etats-des-lieux";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,6 +24,8 @@ type Props = {
   afterOpen: boolean;
   beforeLockText: string;
   afterLockText: string;
+  allowDispute?: boolean;
+  disputeHref?: string;
   leadingAction?: ReactNode;
 };
 
@@ -38,11 +40,12 @@ export function EdlMiniWizard({
   afterOpen,
   beforeLockText,
   afterLockText,
+  allowDispute = true,
+  disputeHref,
   leadingAction,
 }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [disputeOpen, setDisputeOpen] = useState(false);
   const [step, setStep] = useState<WizardStep>(1);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -50,11 +53,9 @@ export function EdlMiniWizard({
 
   const [beforeNotes, setBeforeNotes] = useState("");
   const [afterNotes, setAfterNotes] = useState("");
-  const [disputeReason, setDisputeReason] = useState("");
 
   const [beforeFiles, setBeforeFiles] = useState<File[]>([]);
   const [afterFiles, setAfterFiles] = useState<File[]>([]);
-  const [disputeFiles, setDisputeFiles] = useState<File[]>([]);
 
   const [beforeDoneLocal, setBeforeDoneLocal] = useState(beforeDone);
   const [afterDoneLocal, setAfterDoneLocal] = useState(afterDone);
@@ -124,41 +125,6 @@ export function EdlMiniWizard({
     });
   };
 
-  const submitDispute = () => {
-    if (!bothDone) {
-      setError("Complétez d'abord les phases entrée et sortie.");
-      return;
-    }
-    if (!disputeReason.trim()) {
-      setError("Ajoutez un motif de litige.");
-      return;
-    }
-    if (disputeFiles.length === 0) {
-      setError("Ajoutez au moins une photo de preuve.");
-      return;
-    }
-
-    resetFeedback();
-    startTransition(async () => {
-      const formData = new FormData();
-      formData.append("offerId", offerId);
-      formData.append("reason", disputeReason.trim());
-      for (const file of disputeFiles) formData.append("photos", file);
-
-      const res = await openUserDisputeCaseAction(formData);
-      if (!res.success) {
-        setError(res.error ?? "Impossible d'ouvrir le litige.");
-        return;
-      }
-
-      setSuccess("Litige envoyé avec preuves.");
-      setDisputeFiles([]);
-      setDisputeReason("");
-      setDisputeOpen(false);
-      router.refresh();
-    });
-  };
-
   return (
     <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -180,17 +146,19 @@ export function EdlMiniWizard({
             <PlayCircle className="mr-2 h-4 w-4" />
             Commencer l&apos;état des lieux
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="w-full border-amber-300 text-xs text-amber-800 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:text-sm"
-            disabled={!bothDone || pending}
-            onClick={() => openWizard(4)}
-          >
-            <FileWarning className="mr-2 h-4 w-4" />
-            Ouvrir un litige
-          </Button>
+          {allowDispute && disputeHref && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="w-full border-amber-300 text-xs text-amber-800 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:text-sm"
+              disabled={!bothDone || pending}
+              onClick={() => router.push(disputeHref)}
+            >
+              <FileWarning className="mr-2 h-4 w-4" />
+              Ouvrir un litige
+            </Button>
+          )}
         </div>
       </div>
       {!canStartNow && (
@@ -293,26 +261,33 @@ export function EdlMiniWizard({
 
             {step === 4 && (
               <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-black">Étape 4 - Validation / Litige</h3>
-                <p className="text-sm text-slate-700">
-                  Le litige reste verrouillé tant que les phases entrée et sortie ne sont pas finalisées.
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="border-amber-300 text-amber-800 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={!bothDone || pending}
-                  onClick={() => {
-                    resetFeedback();
-                    setDisputeOpen(true);
-                  }}
-                >
-                  <FileWarning className="mr-2 h-4 w-4" />
-                  Ouvrir un litige
-                </Button>
-                {!bothDone && (
-                  <p className="text-xs text-slate-600">
-                    Terminez d&apos;abord les phases entrée et sortie pour activer ce bouton.
+                <h3 className="text-sm font-semibold text-black">
+                  {allowDispute ? "Étape 4 - Validation / Litige" : "Étape 4 - Validation finale"}
+                </h3>
+                {allowDispute && disputeHref ? (
+                  <>
+                    <p className="text-sm text-slate-700">
+                      Une fois les deux phases validées, ouvrez le litige depuis la section dédiée.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-amber-300 text-amber-800 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={!bothDone || pending}
+                      onClick={() => router.push(disputeHref)}
+                    >
+                      <FileWarning className="mr-2 h-4 w-4" />
+                      Ouvrir un litige
+                    </Button>
+                    {!bothDone && (
+                      <p className="text-xs text-slate-600">
+                        Terminez d&apos;abord les phases entrée et sortie pour activer ce bouton.
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-slate-700">
+                    Vos dépôts entrée/sortie sont enregistrés. Cette étape termine le parcours guidé.
                   </p>
                 )}
               </div>
@@ -358,39 +333,6 @@ export function EdlMiniWizard({
                   </Button>
                 )}
               </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={disputeOpen} onOpenChange={setDisputeOpen}>
-        <DialogContent showClose className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Ouvrir un litige</DialogTitle>
-            <DialogDescription>
-              Décrivez le problème et ajoutez au moins une preuve photo.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            <textarea
-              rows={4}
-              value={disputeReason}
-              onChange={(e) => setDisputeReason(e.target.value)}
-              className="w-full rounded-md border border-amber-300 px-3 py-2 text-sm"
-              placeholder="Exemple: casse constatée après événement, zone concernée, impact."
-            />
-            <Input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => setDisputeFiles(Array.from(e.target.files ?? []))}
-            />
-            <p className="text-xs text-slate-500">{disputeFiles.length} photo(s) de preuve sélectionnée(s)</p>
-            <div className="flex justify-end">
-              <Button type="button" disabled={pending} onClick={submitDispute}>
-                Envoyer le litige
-              </Button>
             </div>
           </div>
         </DialogContent>

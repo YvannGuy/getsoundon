@@ -328,6 +328,7 @@ export default async function SeekerEtatsDesLieuxPage() {
                     afterOpen={afterOpen}
                     beforeLockText={beforeLockText}
                     afterLockText={afterLockText}
+                    allowDispute={false}
                     leadingAction={<EdlPhotoViewer actorLabel="Locataire" phases={phaseViewData} />}
                   />
 

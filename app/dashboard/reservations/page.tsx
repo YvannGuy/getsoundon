@@ -241,9 +241,6 @@ export default async function DashboardReservationsPage({
                     <Link href="/dashboard/etats-des-lieux" className="rounded border px-3 py-1.5 text-sm">
                       États des lieux
                     </Link>
-                    <Link href="/dashboard/etats-des-lieux" className="rounded bg-amber-600 px-3 py-1.5 text-sm text-white">
-                      Ouvrir litige
-                    </Link>
                   </div>
                 </CardContent>
               </Card>

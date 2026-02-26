@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { AdminEvidenceViewer } from "@/components/etats-des-lieux/admin-evidence-viewer";
-import { AdminLitigeDecisionActions } from "@/components/etats-des-lieux/admin-litige-decision-actions";
 import { Card, CardContent } from "@/components/ui/card";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -11,11 +10,6 @@ type OfferRow = {
   owner_id: string;
   seeker_id: string;
   amount_cents: number;
-  deposit_amount_cents: number | null;
-  deposit_hold_status: string | null;
-  deposit_claim_amount_cents: number | null;
-  deposit_claim_reason: string | null;
-  deposit_claim_requested_at: string | null;
   created_at: string;
 };
 
@@ -30,17 +24,12 @@ type CaseRow = {
   created_at: string;
 };
 
-type LegacyClaimRow = {
-  offer_id: string;
-  amount_cents: number;
-  reason: string | null;
-  requested_at: string | null;
-};
-
 type EvidenceRow = {
   id: string;
   case_id: string;
   storage_path: string;
+  uploaded_by: string | null;
+  description: string | null;
 };
 
 const CASE_LABEL: Record<string, string> = {
@@ -79,34 +68,18 @@ export default async function AdminLitigesPage({
 
   const disputeRows = (disputes ?? []) as CaseRow[];
   const offerIds = [...new Set(disputeRows.map((d) => d.offer_id).filter(Boolean) as string[])];
-  const { data: legacyClaims } = await admin
-    .from("offers")
-    .select("id, deposit_claim_amount_cents, deposit_claim_reason, deposit_claim_requested_at")
-    .eq("deposit_hold_status", "claim_requested")
-    .not("deposit_claim_requested_at", "is", null)
-    .order("deposit_claim_requested_at", { ascending: false })
-    .limit(300);
-  const legacyRows = (legacyClaims ?? []).map((row) => ({
-    offer_id: (row as { id: string }).id,
-    amount_cents: (row as { deposit_claim_amount_cents?: number | null }).deposit_claim_amount_cents ?? 0,
-    reason: (row as { deposit_claim_reason?: string | null }).deposit_claim_reason ?? null,
-    requested_at:
-      (row as { deposit_claim_requested_at?: string | null }).deposit_claim_requested_at ?? null,
-  })) as LegacyClaimRow[];
-  const allOfferIds = [...new Set([...offerIds, ...legacyRows.map((r) => r.offer_id)])];
 
-  const [{ data: offers }, { data: evidences }] =
-    await Promise.all([
-      allOfferIds.length > 0
+  const [{ data: offers }, { data: evidences }] = await Promise.all([
+      offerIds.length > 0
         ? admin
             .from("offers")
-            .select("id, salle_id, owner_id, seeker_id, amount_cents, deposit_amount_cents, deposit_hold_status, deposit_claim_amount_cents, deposit_claim_reason, deposit_claim_requested_at, created_at")
-            .in("id", allOfferIds)
+            .select("id, salle_id, owner_id, seeker_id, amount_cents, created_at")
+            .in("id", offerIds)
         : Promise.resolve({ data: [] as OfferRow[] }),
       disputeRows.length > 0
         ? admin
             .from("refund_case_evidences")
-            .select("id, case_id, storage_path")
+            .select("id, case_id, storage_path, uploaded_by, description")
             .in("case_id", disputeRows.map((d) => d.id))
         : Promise.resolve({ data: [] as EvidenceRow[] }),
     ]);
@@ -115,7 +88,7 @@ export default async function AdminLitigesPage({
   const evidenceRows = (evidences ?? []) as EvidenceRow[];
 
   const salleIds = [...new Set(offerRows.map((o) => o.salle_id))];
-  const profileIds = [...new Set(offerRows.map((o) => o.owner_id))];
+  const profileIds = [...new Set(offerRows.flatMap((o) => [o.owner_id, o.seeker_id]))];
   const [{ data: salles }, { data: profiles }] = await Promise.all([
     salleIds.length > 0
       ? admin.from("salles").select("id, name").in("id", salleIds)
@@ -148,23 +121,6 @@ export default async function AdminLitigesPage({
     list.push(dispute);
     groupedByOffer.set(dispute.offer_id, list);
   }
-  for (const legacy of legacyRows) {
-    const existing = groupedByOffer.get(legacy.offer_id) ?? [];
-    if (existing.length > 0) continue;
-    groupedByOffer.set(legacy.offer_id, [
-      {
-        id: `legacy-${legacy.offer_id}`,
-        offer_id: legacy.offer_id,
-        case_type: "dispute",
-        status: "open",
-        side: "owner",
-        reason: legacy.reason,
-        amount_cents: legacy.amount_cents,
-        created_at: legacy.requested_at ?? new Date().toISOString(),
-      },
-    ]);
-  }
-
   const offerDisputeRows = [...groupedByOffer.entries()]
     .map(([offerId, cases]) => ({
       offerId,
@@ -301,28 +257,32 @@ export default async function AdminLitigesPage({
                     <div className="mt-3 grid gap-3 md:grid-cols-2">
                       {row.cases.map((c) => (
                         <div key={c.id} className="rounded border border-amber-200 bg-white p-3 text-sm text-slate-700">
-                          <p className="font-semibold">
-                            {CASE_LABEL[c.case_type] ?? c.case_type} - {c.status}
-                            {c.amount_cents > 0 && <> - {(c.amount_cents / 100).toFixed(2)} €</>}
-                          </p>
-                          <p className="text-xs text-slate-500">Partie: {c.side}</p>
-                          {c.reason && <p className="mt-1 text-xs">{c.reason}</p>}
-                          <AdminLitigeDecisionActions
-                            offerId={offer.id}
-                            holdStatus={offer.deposit_hold_status}
-                            maxDepositAmountCents={Math.max(0, offer.deposit_amount_cents ?? 0)}
-                            disabled={c.status !== "open"}
-                          />
-                          <div className="mt-2">
-                            <AdminEvidenceViewer
-                              label="Voir preuves"
-                              photos={(evidencesByCase.get(c.id) ?? [])
-                                .map((evidence) => ({
-                                  id: evidence.id,
-                                  url: fileUrlMap.get(evidence.id) ?? "",
-                                }))
-                                .filter((photo) => !!photo.url)}
-                            />
+                          <p className="font-semibold">{CASE_LABEL[c.case_type] ?? c.case_type} - {c.status}</p>
+                          {c.reason && <p className="mt-2 text-xs">Motif propriétaire: {c.reason}</p>}
+                          {(() => {
+                            const rows = evidencesByCase.get(c.id) ?? [];
+                            const ownerPhotos = rows
+                              .filter((e) => e.uploaded_by === offer.owner_id)
+                              .map((e) => ({ id: e.id, url: fileUrlMap.get(e.id) ?? "" }))
+                              .filter((photo) => !!photo.url);
+                            const seekerPhotos = rows
+                              .filter((e) => e.uploaded_by === offer.seeker_id)
+                              .map((e) => ({ id: e.id, url: fileUrlMap.get(e.id) ?? "" }))
+                              .filter((photo) => !!photo.url);
+                            const seekerReason =
+                              rows.find((e) => e.uploaded_by === offer.seeker_id && e.description)?.description ?? null;
+                            return (
+                              <div className="mt-2 space-y-2">
+                                {seekerReason && <p className="text-xs">Contestation seeker: {seekerReason}</p>}
+                                <div className="flex flex-wrap gap-2">
+                                  <AdminEvidenceViewer label="Voir preuves propriétaire" photos={ownerPhotos} />
+                                  <AdminEvidenceViewer label="Voir preuves seeker" photos={seekerPhotos} />
+                                </div>
+                              </div>
+                            );
+                          })()}
+                          <div className="mt-2 text-xs text-slate-500">
+                            Propriétaire: {profileMap.get(offer.owner_id) ?? "—"} • Seeker: {profileMap.get(offer.seeker_id) ?? "—"}
                           </div>
                         </div>
                       ))}

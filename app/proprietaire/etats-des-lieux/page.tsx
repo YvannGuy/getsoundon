@@ -325,6 +325,7 @@ export default async function OwnerEtatsDesLieuxPage() {
                     afterOpen={afterOpen}
                     beforeLockText={beforeLockText}
                     afterLockText={afterLockText}
+                    disputeHref={`/proprietaire/litiges?offerId=${offer.id}`}
                     leadingAction={<EdlPhotoViewer actorLabel="Propriétaire" phases={phaseViewData} />}
                   />
 

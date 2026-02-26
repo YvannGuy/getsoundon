@@ -248,7 +248,7 @@ export default async function OwnerReservationsPage({
                       États des lieux
                     </Link>
                     <Link href="/proprietaire/cautions" className="rounded bg-amber-600 px-3 py-1.5 text-sm text-white">
-                      Gérer caution
+                      Voir caution
                     </Link>
                   </div>
                 </CardContent>
@@ -269,7 +269,7 @@ export default async function OwnerReservationsPage({
             href="/proprietaire/cautions"
             className="inline-flex h-11 items-center justify-center rounded-lg bg-[#213398] text-sm font-medium text-white"
           >
-            Gérer caution
+            Voir caution
           </Link>
         </div>
       </div>

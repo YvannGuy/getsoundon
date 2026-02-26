@@ -278,13 +278,47 @@ export async function openUserDisputeCaseAction(
 
   const actor = await getActorRoleForOffer(user.id, offerId);
   if ("error" in actor) return { success: false, error: actor.error };
+  if (actor.role !== "owner") {
+    return { success: false, error: "Seul le propriétaire peut ouvrir un litige." };
+  }
 
   const files = readPhotos(formData);
   const photoValidationError = validatePhotos(files);
   if (photoValidationError) return { success: false, error: photoValidationError };
 
   const admin = createAdminClient();
-  const role = actor.role;
+  const role: ActorRole = "owner";
+
+  const { data: offer } = await admin
+    .from("offers")
+    .select("id, deposit_amount_cents, deposit_hold_status")
+    .eq("id", offerId)
+    .maybeSingle();
+  if (!offer) return { success: false, error: "Offre introuvable." };
+
+  const offerRow = offer as {
+    id: string;
+    deposit_amount_cents: number | null;
+    deposit_hold_status: string | null;
+  };
+  const maxDepositAmount = Math.max(0, offerRow.deposit_amount_cents ?? 0);
+  if (maxDepositAmount <= 0) {
+    return { success: false, error: "Aucune caution active sur cette réservation." };
+  }
+  if (["captured", "released"].includes(offerRow.deposit_hold_status ?? "")) {
+    return { success: false, error: "Cette caution a déjà été traitée." };
+  }
+
+  const { data: existingOpenCase } = await admin
+    .from("refund_cases")
+    .select("id")
+    .eq("offer_id", offerId)
+    .eq("case_type", "dispute")
+    .eq("status", "open")
+    .maybeSingle();
+  if (existingOpenCase) {
+    return { success: false, error: "Un litige est déjà ouvert pour cette réservation." };
+  }
 
   const { data: actorEdlRows } = await admin
     .from("etat_des_lieux")
@@ -336,6 +370,20 @@ export async function openUserDisputeCaseAction(
     return { success: false, error: insertCaseError?.message ?? "Impossible d'ouvrir le litige." };
   }
 
+  const { error: updateOfferError } = await admin
+    .from("offers")
+    .update({
+      deposit_hold_status: "claim_requested",
+      deposit_claim_amount_cents: maxDepositAmount,
+      deposit_claim_reason: reason,
+      deposit_claim_requested_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", offerId);
+  if (updateOfferError) {
+    return { success: false, error: updateOfferError.message };
+  }
+
   const caseId = (createdCase as { id: string }).id;
   const evidenceRows: { case_id: string; storage_path: string; description: string; uploaded_by: string }[] = [];
   const stamp = Date.now();
@@ -373,9 +421,109 @@ export async function openUserDisputeCaseAction(
   if (evidenceError) return { success: false, error: evidenceError.message };
 
   revalidatePath("/dashboard/etats-des-lieux");
+  revalidatePath("/dashboard/litiges");
   revalidatePath("/proprietaire/etats-des-lieux");
+  revalidatePath("/proprietaire/litiges");
   revalidatePath("/admin/etats-des-lieux");
+  revalidatePath("/admin/litiges");
+  revalidatePath("/admin/cautions");
+  revalidatePath("/proprietaire/cautions");
   revalidatePath("/admin/paiements");
+
+  return { success: true };
+}
+
+export async function submitSeekerDisputeResponseAction(
+  formData: FormData
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecté." };
+
+  const offerId = String(formData.get("offerId") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!offerId) return { success: false, error: "Offre manquante." };
+  if (!reason) return { success: false, error: "Ajoutez votre contestation." };
+
+  const actor = await getActorRoleForOffer(user.id, offerId);
+  if ("error" in actor) return { success: false, error: actor.error };
+  if (actor.role !== "seeker") {
+    return { success: false, error: "Seul le locataire peut contester ce litige." };
+  }
+
+  const files = readPhotos(formData);
+  const photoValidationError = validatePhotos(files);
+  if (photoValidationError) return { success: false, error: photoValidationError };
+
+  const admin = createAdminClient();
+  const { data: openCase } = await admin
+    .from("refund_cases")
+    .select("id, side, status")
+    .eq("offer_id", offerId)
+    .eq("case_type", "dispute")
+    .eq("status", "open")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!openCase) return { success: false, error: "Aucun litige ouvert à contester." };
+
+  const openCaseRow = openCase as {
+    id: string;
+    side: "owner" | "seeker" | "none";
+    status: "open" | "resolved" | "rejected";
+  };
+  if (openCaseRow.side !== "owner") {
+    return { success: false, error: "Ce litige n'est pas ouvrable à contestation locataire." };
+  }
+
+  const caseId = openCaseRow.id;
+  const evidenceRows: { case_id: string; storage_path: string; description: string; uploaded_by: string }[] = [];
+  const stamp = Date.now();
+
+  for (let i = 0; i < files.length; i += 1) {
+    const file = files[i];
+    const ext = normalizeExt(file);
+    const storagePath = `${offerId}/disputes/${caseId}/seeker-${stamp}-${i}.${ext}`;
+
+    const { error: uploadError } = await admin.storage.from(EDL_BUCKET).upload(
+      storagePath,
+      Buffer.from(await file.arrayBuffer()),
+      {
+        contentType: file.type || "image/jpeg",
+        upsert: false,
+      }
+    );
+
+    if (uploadError) {
+      return {
+        success: false,
+        error: `Erreur upload preuve ${i + 1}: ${uploadError.message}`,
+      };
+    }
+
+    evidenceRows.push({
+      case_id: caseId,
+      storage_path: storagePath,
+      description: reason,
+      uploaded_by: user.id,
+    });
+  }
+
+  const { error: evidenceError } = await admin.from("refund_case_evidences").insert(evidenceRows);
+  if (evidenceError) return { success: false, error: evidenceError.message };
+
+  await admin
+    .from("refund_cases")
+    .update({
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", caseId);
+
+  revalidatePath("/dashboard/litiges");
+  revalidatePath("/admin/litiges");
+  revalidatePath("/admin/cautions");
 
   return { success: true };
 }

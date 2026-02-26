@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Bell,
   Building2,
@@ -48,6 +48,7 @@ const navItems = (
     href: "/admin/annonces-a-valider",
     label: "Annonces à valider",
     icon: Bell,
+    badgeKey: "pendingAnnonces",
     badge: counts.pendingAnnonces,
     badgeTone: "warning" as const,
   },
@@ -56,6 +57,7 @@ const navItems = (
     href: "/admin/signalements",
     label: "Signalements",
     icon: Flag,
+    badgeKey: "signalements",
     badge: counts.signalements,
     badgeTone: "danger" as const,
   },
@@ -63,6 +65,7 @@ const navItems = (
     href: "/admin/demandes",
     label: "Demandes de visites",
     icon: FileText,
+    badgeKey: "demandesVisite",
     badge: counts.demandesVisite,
     badgeTone: "warning" as const,
   },
@@ -70,6 +73,7 @@ const navItems = (
     href: "/admin/reservations",
     label: "Réservations",
     icon: FileText,
+    badgeKey: "reservations",
     badge: counts.reservations,
     badgeTone: "warning" as const,
   },
@@ -77,6 +81,7 @@ const navItems = (
     href: "/admin/utilisateurs",
     label: "Utilisateurs",
     icon: Users,
+    badgeKey: "utilisateurs",
     badge: counts.utilisateurs,
     badgeTone: "info" as const,
   },
@@ -84,6 +89,7 @@ const navItems = (
     href: "/admin/paiements",
     label: "Paiements",
     icon: CreditCard,
+    badgeKey: "paiements",
     badge: counts.paiements,
     badgeTone: "info" as const,
   },
@@ -91,6 +97,7 @@ const navItems = (
     href: "/admin/cautions",
     label: "Cautions",
     icon: Shield,
+    badgeKey: "cautions",
     badge: counts.cautions,
     badgeTone: "danger" as const,
   },
@@ -98,6 +105,7 @@ const navItems = (
     href: "/admin/etats-des-lieux",
     label: "États des lieux",
     icon: Camera,
+    badgeKey: "etatsDesLieux",
     badge: counts.etatsDesLieux,
     badgeTone: "warning" as const,
   },
@@ -105,18 +113,73 @@ const navItems = (
     href: "/admin/litiges",
     label: "Litiges",
     icon: Scale,
+    badgeKey: "litiges",
     badge: counts.litiges,
     badgeTone: "danger" as const,
   },
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ];
 
+const ADMIN_BADGE_STORAGE_KEY = "admin_nav_seen_badges_v1";
+
 export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [seenByKey, setSeenByKey] = useState<Record<string, number>>({});
   const initial = (userEmail ?? "A")[0].toUpperCase();
   const items = navItems(badgeCounts);
+
+  const rawByKey: Record<string, number> = {
+    pendingAnnonces: badgeCounts.pendingAnnonces,
+    signalements: badgeCounts.signalements,
+    demandesVisite: badgeCounts.demandesVisite,
+    reservations: badgeCounts.reservations,
+    utilisateurs: badgeCounts.utilisateurs,
+    paiements: badgeCounts.paiements,
+    cautions: badgeCounts.cautions,
+    etatsDesLieux: badgeCounts.etatsDesLieux,
+    litiges: badgeCounts.litiges,
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(ADMIN_BADGE_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Record<string, number>;
+      setSeenByKey(parsed);
+    } catch {
+      // Ignore malformed local storage payload
+    }
+  }, []);
+
+  const markSeen = (badgeKey: string, rawValue: number) => {
+    if (typeof window === "undefined" || rawValue <= 0) return;
+    setSeenByKey((prev) => {
+      if ((prev[badgeKey] ?? 0) >= rawValue) {
+        return prev;
+      }
+      const next = { ...prev, [badgeKey]: rawValue };
+      window.localStorage.setItem(ADMIN_BADGE_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const unreadFor = (badgeKey: string | undefined, rawValue: number | undefined) => {
+    if (!badgeKey || !rawValue) return 0;
+    const seen = seenByKey[badgeKey] ?? 0;
+    return Math.max(rawValue - seen, 0);
+  };
+
+  const displayBadge = (item: { badgeKey?: string; badge?: number }) =>
+    unreadFor(item.badgeKey, item.badge);
+
+  useEffect(() => {
+    const activeItem = items.find((item) => item.href === pathname && item.badgeKey);
+    if (!activeItem?.badgeKey) return;
+    markSeen(activeItem.badgeKey, rawByKey[activeItem.badgeKey] ?? 0);
+  }, [items, pathname, badgeCounts.pendingAnnonces, badgeCounts.signalements, badgeCounts.demandesVisite, badgeCounts.reservations, badgeCounts.utilisateurs, badgeCounts.paiements, badgeCounts.cautions, badgeCounts.etatsDesLieux, badgeCounts.litiges]);
 
   const sidebarContent = (
     <>
@@ -149,12 +212,15 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
         {items.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
-          const badge = item.badge ?? null;
+          const badge = displayBadge(item);
           return (
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => setMobileOpen(false)}
+              onClick={() => {
+                if (item.badgeKey) markSeen(item.badgeKey, rawByKey[item.badgeKey] ?? 0);
+                setMobileOpen(false);
+              }}
               className={cn(
                 "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 collapsed ? "justify-center px-2" : "",
@@ -167,7 +233,7 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
               {!collapsed && (
                 <>
                   <span className="flex-1 truncate">{item.label}</span>
-                  {badge != null && badge > 0 && (
+                  {badge > 0 && (
                     <span
                       className={cn(
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
@@ -180,12 +246,12 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
                             : "bg-amber-100 text-amber-700"
                       )}
                     >
-                      {badge}
+                      {badge > 99 ? "99+" : badge}
                     </span>
                   )}
                 </>
               )}
-              {collapsed && badge != null && badge > 0 && (
+              {collapsed && badge > 0 && (
                 <span
                   className={cn(
                     "absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white",
@@ -280,12 +346,15 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
           {items.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
-            const badge = item.badge ?? null;
+            const badge = displayBadge(item);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => setMobileOpen(false)}
+                onClick={() => {
+                  if (item.badgeKey) markSeen(item.badgeKey, rawByKey[item.badgeKey] ?? 0);
+                  setMobileOpen(false);
+                }}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
@@ -295,7 +364,7 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
               >
                 <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-white" : "text-slate-600")} />
                 <span className="flex-1">{item.label}</span>
-                {badge != null && badge > 0 && (
+                {badge > 0 && (
                   <span
                     className={cn(
                       "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
@@ -308,7 +377,7 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
                           : "bg-amber-100 text-amber-700"
                     )}
                   >
-                    {badge}
+                    {badge > 99 ? "99+" : badge}
                   </span>
                 )}
               </Link>

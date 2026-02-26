@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Building2, Camera, ChevronLeft, ChevronRight, CreditCard, FileText, Heart, Home, LogOut, Menu, MessageCircle, Search, Settings, User } from "lucide-react";
+import { ArrowLeft, Building2, Camera, ChevronLeft, ChevronRight, CreditCard, FileText, Heart, Home, LogOut, Menu, MessageCircle, Scale, Search, Settings, User } from "lucide-react";
 
 import { signOutAction } from "@/app/actions/auth";
 import { siteConfig } from "@/config/site";
@@ -21,10 +21,13 @@ const navItems = [
   { href: "/dashboard/reservations", label: "Réservations", icon: FileText, badgeKey: "reservations" },
   { href: "/dashboard/paiement", label: "Paiement", icon: CreditCard, badgeKey: "paiement" },
   { href: "/dashboard/etats-des-lieux", label: "États des lieux", icon: Camera, badgeKey: "etats" },
+  { href: "/dashboard/litiges", label: "Litiges", icon: Scale },
   { href: "/dashboard/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },
   { href: "/dashboard/favoris", label: "Favoris", icon: Heart },
   { href: "/dashboard/parametres", label: "Paramètres", icon: Settings },
 ];
+
+const SEEKER_BADGE_STORAGE_KEY = "seeker_nav_seen_badges_v1";
 
 function NavContent({
   pathname,
@@ -57,6 +60,50 @@ function NavContent({
   canAccessOwner?: boolean;
   tourLock?: boolean;
 }) {
+  const [seenByKey, setSeenByKey] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(SEEKER_BADGE_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Record<string, number>;
+      setSeenByKey(parsed);
+    } catch {
+      // Ignore malformed local storage payload
+    }
+  }, []);
+
+  const markSeen = (badgeKey: string, rawValue: number) => {
+    if (typeof window === "undefined" || rawValue <= 0) return;
+    setSeenByKey((prev) => {
+      const next = { ...prev, [badgeKey]: rawValue };
+      window.localStorage.setItem(SEEKER_BADGE_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const rawByKey: Record<string, number> = {
+    demandes: demandeCount,
+    reservations: reservationCount,
+    messagerie: messageCount,
+    paiement: paymentCount,
+    etats: edlCount,
+  };
+
+  const unreadFor = (badgeKey: string | undefined): number => {
+    if (!badgeKey) return 0;
+    const raw = rawByKey[badgeKey] ?? 0;
+    const seen = seenByKey[badgeKey] ?? 0;
+    return Math.max(raw - seen, 0);
+  };
+
+  useEffect(() => {
+    const activeItem = navItems.find((item) => item.href === pathname && item.badgeKey);
+    if (!activeItem?.badgeKey) return;
+    markSeen(activeItem.badgeKey, rawByKey[activeItem.badgeKey] ?? 0);
+  }, [pathname, demandeCount, reservationCount, messageCount, paymentCount, edlCount]);
+
   return (
     <>
       <nav
@@ -98,18 +145,7 @@ function NavContent({
         {navItems.map((item) => {
           const isActive = pathname === item.href && !(item as { opensSearchModal?: boolean }).opensSearchModal;
           const Icon = item.icon;
-          const badgeVal =
-            item.badgeKey === "demandes"
-              ? demandeCount
-              : item.badgeKey === "reservations"
-                ? reservationCount
-              : item.badgeKey === "messagerie"
-                ? messageCount
-                : item.badgeKey === "paiement"
-                  ? paymentCount
-                  : item.badgeKey === "etats"
-                    ? edlCount
-                  : null;
+          const badgeVal = item.badgeKey ? unreadFor(item.badgeKey) : null;
           const opensSearchModal = (item as { opensSearchModal?: boolean }).opensSearchModal;
           const navClassName = cn(
             "relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors",
@@ -168,7 +204,10 @@ function NavContent({
                 key={item.href}
                 type="button"
                 data-tour-nav={item.href}
-                onClick={() => setSearchModalOpen(true)}
+                onClick={() => {
+                  if (item.badgeKey) markSeen(item.badgeKey, rawByKey[item.badgeKey] ?? 0);
+                  setSearchModalOpen(true);
+                }}
                 className={navClassName}
                 title={collapsed ? item.label : undefined}
               >
@@ -181,7 +220,10 @@ function NavContent({
               key={item.href}
               href={item.href}
               data-tour-nav={item.href}
-              onClick={onItemClick}
+              onClick={() => {
+                if (item.badgeKey) markSeen(item.badgeKey, rawByKey[item.badgeKey] ?? 0);
+                onItemClick?.();
+              }}
               className={navClassName}
               title={collapsed ? item.label : undefined}
             >

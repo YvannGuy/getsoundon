@@ -27,7 +27,7 @@ export default async function AdminCautionsPage({
     .select(
       "id, salle_id, owner_id, seeker_id, deposit_amount_cents, deposit_claim_amount_cents, deposit_claim_reason, deposit_claim_requested_at, deposit_hold_status, updated_at"
     )
-    .in("deposit_hold_status", ["captured", "released"])
+    .in("deposit_hold_status", ["claim_requested", "captured", "released"])
     .order("deposit_claim_requested_at", { ascending: false })
     .limit(500);
 
@@ -74,10 +74,12 @@ export default async function AdminCautionsPage({
     resolved_at: o.updated_at,
   }));
 
+  const pendingClaims = claimsRows.filter((row) => row.hold_status === "claim_requested");
   const resolvedClaims = claimsRows.filter((row) => ["captured", "released"].includes(row.hold_status));
 
   return (
     <CautionsClient
+      pendingClaims={pendingClaims}
       resolvedClaims={resolvedClaims}
       focusOfferId={offerId ?? null}
     />

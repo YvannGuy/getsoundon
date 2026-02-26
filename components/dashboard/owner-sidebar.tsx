@@ -19,6 +19,7 @@ import {
   Menu,
   MessageCircle,
   Settings,
+  Scale,
   User,
 } from "lucide-react";
 
@@ -37,10 +38,13 @@ const navItems = [
   { href: "/proprietaire/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },
   { href: "/proprietaire/paiement", label: "Paiement", icon: CreditCard, badgeKey: "paiement" },
   { href: "/proprietaire/etats-des-lieux", label: "États des lieux", icon: Camera, badgeKey: "etats" },
+  { href: "/proprietaire/litiges", label: "Litiges", icon: Scale },
   { href: "/proprietaire/cautions", label: "Cautions", icon: FolderOpen, badgeKey: "cautions" },
   { href: "/proprietaire/contrat", label: "Contrat & facture", icon: FileText },
   { href: "/proprietaire/parametres", label: "Paramètres", icon: Settings },
 ];
+
+const OWNER_BADGE_STORAGE_KEY = "owner_nav_seen_badges_v1";
 
 function NavContent({
   pathname,
@@ -75,6 +79,67 @@ function NavContent({
   canAccessSeeker?: boolean;
   tourLock?: boolean;
 }) {
+  const [seenByKey, setSeenByKey] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(OWNER_BADGE_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Record<string, number>;
+      setSeenByKey(parsed);
+    } catch {
+      // Ignore malformed local storage payload
+    }
+  }, []);
+
+  const markSeen = (badgeKey: string, rawValue: number) => {
+    if (typeof window === "undefined" || rawValue <= 0) return;
+    setSeenByKey((prev) => {
+      const next = { ...prev, [badgeKey]: rawValue };
+      window.localStorage.setItem(OWNER_BADGE_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const unreadFor = (badgeKey: string, rawValue: number) => {
+    const seen = seenByKey[badgeKey] ?? 0;
+    return Math.max(rawValue - seen, 0);
+  };
+
+  const unreadDemandeCount = unreadFor("demandes", demandeCount);
+  const unreadVisiteCount = unreadFor("visites", visiteCount);
+  const unreadReservationCount = unreadFor("reservations", reservationCount);
+  const unreadMessageCount = unreadFor("messagerie", messageCount);
+  const unreadPaymentCount = unreadFor("paiement", paymentCount);
+  const unreadEdlCount = unreadFor("etats", edlCount);
+  const unreadCautionCount = unreadFor("cautions", cautionCount);
+  const unreadContractCount = unreadFor("contrat", contractCount);
+
+  useEffect(() => {
+    const activeItem = navItems.find((item) => item.href === pathname && item.badgeKey);
+    if (!activeItem?.badgeKey) return;
+    const rawValue =
+      activeItem.badgeKey === "demandes"
+        ? demandeCount
+        : activeItem.badgeKey === "visites"
+          ? visiteCount
+          : activeItem.badgeKey === "reservations"
+            ? reservationCount
+            : activeItem.badgeKey === "messagerie"
+              ? messageCount
+              : activeItem.badgeKey === "paiement"
+                ? paymentCount
+                : activeItem.badgeKey === "etats"
+                  ? edlCount
+                  : activeItem.badgeKey === "cautions"
+                    ? cautionCount
+                    : activeItem.badgeKey === "contrat"
+                      ? contractCount
+                      : 0;
+    markSeen(activeItem.badgeKey, rawValue);
+  }, [pathname, demandeCount, visiteCount, reservationCount, messageCount, paymentCount, edlCount, cautionCount, contractCount]);
+
   return (
     <>
       <nav
@@ -106,7 +171,30 @@ function NavContent({
               key={item.href}
               href={item.href}
               data-tour-nav={item.href}
-              onClick={onItemClick}
+              onClick={() => {
+                if (item.badgeKey) {
+                  const rawValue =
+                    item.badgeKey === "demandes"
+                      ? demandeCount
+                      : item.badgeKey === "visites"
+                        ? visiteCount
+                        : item.badgeKey === "reservations"
+                          ? reservationCount
+                          : item.badgeKey === "messagerie"
+                            ? messageCount
+                            : item.badgeKey === "paiement"
+                              ? paymentCount
+                              : item.badgeKey === "etats"
+                                ? edlCount
+                                : item.badgeKey === "cautions"
+                                  ? cautionCount
+                                  : item.badgeKey === "contrat"
+                                    ? contractCount
+                                    : 0;
+                  markSeen(item.badgeKey, rawValue);
+                }
+                onItemClick?.();
+              }}
               className={cn(
                 "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 collapsed ? "justify-center px-2" : "",
@@ -120,126 +208,126 @@ function NavContent({
               {!collapsed && (
                 <>
                   <span className="flex-1 truncate">{item.label}</span>
-                  {item.badgeKey === "demandes" && demandeCount > 0 && (
+                  {item.badgeKey === "demandes" && unreadDemandeCount > 0 && (
                     <span
                       className={cn(
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
                         isActive ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700"
                       )}
                     >
-                      {demandeCount}
+                      {unreadDemandeCount > 99 ? "99+" : unreadDemandeCount}
                     </span>
                   )}
-                  {item.badgeKey === "visites" && visiteCount > 0 && (
+                  {item.badgeKey === "visites" && unreadVisiteCount > 0 && (
                     <span
                       className={cn(
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
                         isActive ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700"
                       )}
                     >
-                      {visiteCount > 99 ? "99+" : visiteCount}
+                      {unreadVisiteCount > 99 ? "99+" : unreadVisiteCount}
                     </span>
                   )}
-                  {item.badgeKey === "reservations" && reservationCount > 0 && (
+                  {item.badgeKey === "reservations" && unreadReservationCount > 0 && (
                     <span
                       className={cn(
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
                         isActive ? "bg-white/20 text-white" : "bg-violet-100 text-violet-700"
                       )}
                     >
-                      {reservationCount > 99 ? "99+" : reservationCount}
+                      {unreadReservationCount > 99 ? "99+" : unreadReservationCount}
                     </span>
                   )}
-                  {item.badgeKey === "messagerie" && messageCount > 0 && (
+                  {item.badgeKey === "messagerie" && unreadMessageCount > 0 && (
                     <span
                       className={cn(
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
                         isActive ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700"
                       )}
                     >
-                      {messageCount}
+                      {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
                     </span>
                   )}
-                  {item.badgeKey === "paiement" && paymentCount > 0 && (
+                  {item.badgeKey === "paiement" && unreadPaymentCount > 0 && (
                     <span
                       className={cn(
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
                         isActive ? "bg-white/20 text-white" : "bg-amber-100 text-amber-700"
                       )}
                     >
-                      {paymentCount > 99 ? "99+" : paymentCount}
+                      {unreadPaymentCount > 99 ? "99+" : unreadPaymentCount}
                     </span>
                   )}
-                  {item.badgeKey === "etats" && edlCount > 0 && (
+                  {item.badgeKey === "etats" && unreadEdlCount > 0 && (
                     <span
                       className={cn(
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
                         isActive ? "bg-white/20 text-white" : "bg-indigo-100 text-indigo-700"
                       )}
                     >
-                      {edlCount > 99 ? "99+" : edlCount}
+                      {unreadEdlCount > 99 ? "99+" : unreadEdlCount}
                     </span>
                   )}
-                  {item.badgeKey === "cautions" && cautionCount > 0 && (
+                  {item.badgeKey === "cautions" && unreadCautionCount > 0 && (
                     <span
                       className={cn(
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
                         isActive ? "bg-white/20 text-white" : "bg-rose-100 text-rose-700"
                       )}
                     >
-                      {cautionCount > 99 ? "99+" : cautionCount}
+                      {unreadCautionCount > 99 ? "99+" : unreadCautionCount}
                     </span>
                   )}
-                  {item.badgeKey === "contrat" && contractCount > 0 && (
+                  {item.badgeKey === "contrat" && unreadContractCount > 0 && (
                     <span
                       className={cn(
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
                         isActive ? "bg-white/20 text-white" : "bg-orange-100 text-orange-700"
                       )}
                     >
-                      {contractCount > 99 ? "99+" : contractCount}
+                      {unreadContractCount > 99 ? "99+" : unreadContractCount}
                     </span>
                   )}
                 </>
               )}
-              {collapsed && item.badgeKey === "demandes" && demandeCount > 0 && (
+              {collapsed && item.badgeKey === "demandes" && unreadDemandeCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-semibold text-white">
-                  {demandeCount > 99 ? "99+" : demandeCount}
+                  {unreadDemandeCount > 99 ? "99+" : unreadDemandeCount}
                 </span>
               )}
-              {collapsed && item.badgeKey === "visites" && visiteCount > 0 && (
+              {collapsed && item.badgeKey === "visites" && unreadVisiteCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-semibold text-white">
-                  {visiteCount > 99 ? "99+" : visiteCount}
+                  {unreadVisiteCount > 99 ? "99+" : unreadVisiteCount}
                 </span>
               )}
-              {collapsed && item.badgeKey === "messagerie" && messageCount > 0 && (
+              {collapsed && item.badgeKey === "messagerie" && unreadMessageCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-semibold text-white">
-                  {messageCount > 99 ? "99+" : messageCount}
+                  {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
                 </span>
               )}
-              {collapsed && item.badgeKey === "paiement" && paymentCount > 0 && (
+              {collapsed && item.badgeKey === "paiement" && unreadPaymentCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white">
-                  {paymentCount > 99 ? "99+" : paymentCount}
+                  {unreadPaymentCount > 99 ? "99+" : unreadPaymentCount}
                 </span>
               )}
-              {collapsed && item.badgeKey === "reservations" && reservationCount > 0 && (
+              {collapsed && item.badgeKey === "reservations" && unreadReservationCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-violet-500 px-1 text-[10px] font-semibold text-white">
-                  {reservationCount > 99 ? "99+" : reservationCount}
+                  {unreadReservationCount > 99 ? "99+" : unreadReservationCount}
                 </span>
               )}
-              {collapsed && item.badgeKey === "etats" && edlCount > 0 && (
+              {collapsed && item.badgeKey === "etats" && unreadEdlCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-indigo-500 px-1 text-[10px] font-semibold text-white">
-                  {edlCount > 99 ? "99+" : edlCount}
+                  {unreadEdlCount > 99 ? "99+" : unreadEdlCount}
                 </span>
               )}
-              {collapsed && item.badgeKey === "cautions" && cautionCount > 0 && (
+              {collapsed && item.badgeKey === "cautions" && unreadCautionCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white">
-                  {cautionCount > 99 ? "99+" : cautionCount}
+                  {unreadCautionCount > 99 ? "99+" : unreadCautionCount}
                 </span>
               )}
-              {collapsed && item.badgeKey === "contrat" && contractCount > 0 && (
+              {collapsed && item.badgeKey === "contrat" && unreadContractCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-semibold text-white">
-                  {contractCount > 99 ? "99+" : contractCount}
+                  {unreadContractCount > 99 ? "99+" : unreadContractCount}
                 </span>
               )}
             </Link>
