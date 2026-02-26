@@ -39,18 +39,20 @@ type Props = {
   transactions: Transaction[];
   stats: {
     revenue30: number;
-    pass24h: number;
-    pass48h: number;
-    abonnements: number;
-    failed: number;
-    conversionRate: number;
-    totalPaid: number;
-    totalAttempts: number;
+    reservationPaid30: number;
+    reservationPending30: number;
+    refunded30: number;
+    failed7: number;
+    successRate30: number;
+    successCount30: number;
+    attempts30: number;
   };
 };
 
 function formatProduct(type: string) {
   switch (type) {
+    case "reservation":
+      return "Réservation";
     case "pass_24h":
       return "Pass 24h";
     case "pass_48h":
@@ -59,6 +61,21 @@ function formatProduct(type: string) {
       return "Abonnement";
     default:
       return type;
+  }
+}
+
+function getProductBadgeClass(type: string) {
+  switch (type) {
+    case "reservation":
+      return "bg-emerald-100 text-emerald-700";
+    case "pass_24h":
+      return "bg-blue-100 text-blue-700";
+    case "pass_48h":
+      return "bg-violet-100 text-violet-700";
+    case "abonnement":
+      return "bg-amber-100 text-amber-700";
+    default:
+      return "bg-slate-100 text-slate-700";
   }
 }
 
@@ -133,22 +150,35 @@ export function PaiementsClient({ transactions, stats }: Props) {
   const maxRevenue = Math.max(...revenueData, 1);
   const pieData = [
     {
-      label: "Pass 24h",
-      count: filtered.filter((t) => t.product_type === "pass_24h" && (t.status === "paid" || t.status === "active")).length,
-      color: "bg-blue-500",
+      label: "Payés",
+      count: filtered.filter((t) => t.status === "paid" || t.status === "active").length,
+      color: "bg-emerald-500",
+      gradient: "#10b981",
     },
     {
-      label: "Pass 48h",
-      count: filtered.filter((t) => t.product_type === "pass_48h" && (t.status === "paid" || t.status === "active")).length,
-      color: "bg-violet-500",
-    },
-    {
-      label: "Abonnement",
-      count: filtered.filter((t) => t.product_type === "abonnement" && (t.status === "paid" || t.status === "active")).length,
+      label: "En attente",
+      count: filtered.filter((t) => t.status === "pending").length,
       color: "bg-amber-500",
+      gradient: "#f59e0b",
+    },
+    {
+      label: "Remboursés",
+      count: filtered.filter((t) => t.status === "refunded").length,
+      color: "bg-slate-500",
+      gradient: "#64748b",
+    },
+    {
+      label: "Échoués",
+      count: filtered.filter((t) => t.status === "failed").length,
+      color: "bg-red-500",
+      gradient: "#ef4444",
     },
   ];
   const pieTotal = pieData.reduce((s, p) => s + p.count, 0);
+  const productOptions = useMemo(() => {
+    const unique = [...new Set(transactions.map((t) => t.product_type).filter(Boolean))];
+    return unique.sort((a, b) => a.localeCompare(b));
+  }, [transactions]);
 
   return (
     <div className="min-w-0 overflow-x-hidden">
@@ -158,13 +188,13 @@ export function PaiementsClient({ transactions, stats }: Props) {
         icon={CreditCard}
       />
 
-      {stats.failed > 0 && (
+      {stats.failed7 > 0 && (
         <div className="mb-6 flex flex-col items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2 text-red-800">
             <AlertCircle className="h-5 w-5" />
             <span className="font-medium">Paiements échoués (7j)</span>
             <span className="text-red-700">
-              {stats.failed} transaction{stats.failed > 1 ? "s" : ""} ont échoué cette
+              {stats.failed7} transaction{stats.failed7 > 1 ? "s" : ""} ont échoué cette
               semaine
             </span>
           </div>
@@ -198,9 +228,11 @@ export function PaiementsClient({ transactions, stats }: Props) {
               className="h-10 rounded-md border border-slate-200 bg-white px-4 text-sm text-slate-700"
             >
               <option value="all">Tous les produits</option>
-              <option value="pass_24h">Pass 24h</option>
-              <option value="pass_48h">Pass 48h</option>
-              <option value="abonnement">Abonnement</option>
+              {productOptions.map((productType) => (
+                <option key={productType} value={productType}>
+                  {formatProduct(productType)}
+                </option>
+              ))}
             </select>
             <select
               value={statusFilter}
@@ -229,16 +261,16 @@ export function PaiementsClient({ transactions, stats }: Props) {
         <AdminKpiCard
           title="Revenu (30j)"
           value={`€${(stats.revenue30 / 100).toLocaleString("fr-FR")}`}
-          subtitle="Paiements validés"
+          subtitle="Réservations payées/actives"
         />
-        <AdminKpiCard title="Pass 24h" value={stats.pass24h} subtitle="Sur 30 jours" />
-        <AdminKpiCard title="Pass 48h" value={stats.pass48h} subtitle="Sur 30 jours" />
-        <AdminKpiCard title="Abonnements" value={stats.abonnements} subtitle="Sur 30 jours" />
-        <AdminKpiCard title="Échoués" value={stats.failed} subtitle="Fenêtre 7 jours" />
+        <AdminKpiCard title="Réservations payées" value={stats.reservationPaid30} subtitle="Sur 30 jours" />
+        <AdminKpiCard title="En attente" value={stats.reservationPending30} subtitle="Sur 30 jours" />
+        <AdminKpiCard title="Remboursés" value={stats.refunded30} subtitle="Sur 30 jours" />
+        <AdminKpiCard title="Échoués" value={stats.failed7} subtitle="Fenêtre 7 jours" />
         <AdminKpiCard
-          title="Taux conversion"
-          value={`${stats.conversionRate.toFixed(1)}%`}
-          subtitle={`${stats.totalPaid} / ${stats.totalAttempts} tentatives`}
+          title="Taux succès (30j)"
+          value={`${stats.successRate30.toFixed(1)}%`}
+          subtitle={`${stats.successCount30} / ${stats.attempts30} tentatives`}
         />
       </div>
 
@@ -262,7 +294,7 @@ export function PaiementsClient({ transactions, stats }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Répartition des ventes</CardTitle>
+            <CardTitle className="text-base">Répartition des statuts</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-6">
@@ -270,9 +302,10 @@ export function PaiementsClient({ transactions, stats }: Props) {
                 className="h-24 w-24 flex-shrink-0 rounded-full"
                 style={{
                   background: `conic-gradient(
-                    #3b82f6 0deg ${pieTotal > 0 ? (pieData[0].count / pieTotal) * 360 : 0}deg,
-                    #8b5cf6 ${pieTotal > 0 ? (pieData[0].count / pieTotal) * 360 : 0}deg ${pieTotal > 0 ? ((pieData[0].count + pieData[1].count) / pieTotal) * 360 : 0}deg,
-                    #f59e0b ${pieTotal > 0 ? ((pieData[0].count + pieData[1].count) / pieTotal) * 360 : 0}deg 360deg
+                    ${pieData[0].gradient} 0deg ${pieTotal > 0 ? (pieData[0].count / pieTotal) * 360 : 0}deg,
+                    ${pieData[1].gradient} ${pieTotal > 0 ? (pieData[0].count / pieTotal) * 360 : 0}deg ${pieTotal > 0 ? ((pieData[0].count + pieData[1].count) / pieTotal) * 360 : 0}deg,
+                    ${pieData[2].gradient} ${pieTotal > 0 ? ((pieData[0].count + pieData[1].count) / pieTotal) * 360 : 0}deg ${pieTotal > 0 ? ((pieData[0].count + pieData[1].count + pieData[2].count) / pieTotal) * 360 : 0}deg,
+                    ${pieData[3].gradient} ${pieTotal > 0 ? ((pieData[0].count + pieData[1].count + pieData[2].count) / pieTotal) * 360 : 0}deg 360deg
                   )`,
                 }}
               />
@@ -313,13 +346,9 @@ export function PaiementsClient({ transactions, stats }: Props) {
                   </div>
                   <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
                     <span
-                      className={`shrink-0 inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        t.product_type === "pass_24h"
-                          ? "bg-blue-100 text-blue-700"
-                          : t.product_type === "pass_48h"
-                            ? "bg-violet-100 text-violet-700"
-                            : "bg-amber-100 text-amber-700"
-                      }`}
+                      className={`shrink-0 inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getProductBadgeClass(
+                        t.product_type
+                      )}`}
                     >
                       {formatProduct(t.product_type)}
                     </span>
@@ -389,13 +418,9 @@ export function PaiementsClient({ transactions, stats }: Props) {
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            t.product_type === "pass_24h"
-                              ? "bg-blue-100 text-blue-700"
-                              : t.product_type === "pass_48h"
-                                ? "bg-violet-100 text-violet-700"
-                                : "bg-amber-100 text-amber-700"
-                          }`}
+                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getProductBadgeClass(
+                            t.product_type
+                          )}`}
                         >
                           {formatProduct(t.product_type)}
                         </span>

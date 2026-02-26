@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Building2, Search } from "lucide-react";
 
 const COOKIE_NAME = "dashboard_view";
@@ -11,13 +10,12 @@ function setCookie(view: "seeker" | "owner") {
 }
 
 export function SwitchToOwnerView({ collapsed }: { collapsed?: boolean }) {
-  const router = useRouter();
   return (
     <button
       type="button"
       onClick={() => {
         setCookie("owner");
-        router.push("/proprietaire");
+        window.location.assign("/proprietaire");
       }}
       className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-black"
       title={collapsed ? "Voir en tant que Propriétaire" : undefined}
@@ -29,13 +27,12 @@ export function SwitchToOwnerView({ collapsed }: { collapsed?: boolean }) {
 }
 
 export function SwitchToSeekerView({ collapsed }: { collapsed?: boolean }) {
-  const router = useRouter();
   return (
     <button
       type="button"
       onClick={() => {
         setCookie("seeker");
-        router.push("/dashboard");
+        window.location.assign("/dashboard");
       }}
       className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-black"
       title={collapsed ? "Voir en tant que locataire" : undefined}

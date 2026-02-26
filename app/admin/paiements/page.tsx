@@ -17,6 +17,17 @@ type TransactionRow = {
   created_at: string;
 };
 
+type PaymentStats = {
+  revenue30: number;
+  reservationPaid30: number;
+  reservationPending30: number;
+  refunded30: number;
+  failed7: number;
+  successRate30: number;
+  successCount30: number;
+  attempts30: number;
+};
+
 export default async function AdminPaiementsPage({
   searchParams,
 }: {
@@ -65,22 +76,21 @@ export default async function AdminPaiementsPage({
   const failed7 = tx7.filter((t) => t.status === "failed");
   const isPaidOrActive = (t: { status: string }) => t.status === "paid" || t.status === "active";
   const revenue30 = tx30.filter(isPaidOrActive).reduce((s, t) => s + t.amount, 0);
-  const pass24h = tx30.filter((t) => t.product_type === "pass_24h" && t.status === "paid").length;
-  const pass48h = tx30.filter((t) => t.product_type === "pass_48h" && t.status === "paid").length;
-  const abonnements = tx30.filter((t) => t.product_type === "abonnement" && isPaidOrActive(t)).length;
-  const totalPaid = tx30.filter(isPaidOrActive).length;
-  const totalAttempts = tx30.length;
-  const conversionRate = totalAttempts > 0 ? (totalPaid / totalAttempts) * 100 : 0;
+  const reservationTx30 = tx30.filter((t) => t.product_type === "reservation");
+  const reservationPaid30 = reservationTx30.filter((t) => isPaidOrActive(t)).length;
+  const reservationPending30 = reservationTx30.filter((t) => t.status === "pending").length;
+  const refunded30 = reservationTx30.filter((t) => t.status === "refunded").length;
+  const successRate30 = reservationTx30.length > 0 ? (reservationPaid30 / reservationTx30.length) * 100 : 0;
 
-  const stats = {
+  const stats: PaymentStats = {
     revenue30,
-    pass24h,
-    pass48h,
-    abonnements,
-    failed: failed7.length,
-    conversionRate,
-    totalPaid,
-    totalAttempts,
+    reservationPaid30,
+    reservationPending30,
+    refunded30,
+    failed7: failed7.length,
+    successRate30,
+    successCount30: reservationPaid30,
+    attempts30: reservationTx30.length,
   };
 
   const totalPages = Math.ceil(transactions.length / PAGE_SIZE) || 1;

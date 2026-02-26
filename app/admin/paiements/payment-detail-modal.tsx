@@ -33,6 +33,8 @@ type Props = {
 
 function formatProduct(type: string) {
   switch (type) {
+    case "reservation":
+      return "Réservation";
     case "pass_24h":
       return "Pass 24h";
     case "pass_48h":

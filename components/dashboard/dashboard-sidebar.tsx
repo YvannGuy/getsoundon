@@ -77,6 +77,7 @@ function NavContent({
   const markSeen = (badgeKey: string, rawValue: number) => {
     if (typeof window === "undefined" || rawValue <= 0) return;
     setSeenByKey((prev) => {
+      if ((prev[badgeKey] ?? 0) >= rawValue) return prev;
       const next = { ...prev, [badgeKey]: rawValue };
       window.localStorage.setItem(SEEKER_BADGE_STORAGE_KEY, JSON.stringify(next));
       return next;
