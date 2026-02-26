@@ -7,6 +7,7 @@ import { CheckCircle2, FileText, Heart, Inbox, MessageCircle } from "lucide-reac
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SearchModalButton } from "@/components/search/search-modal";
+import { WelcomeOnboardingBanner } from "@/components/dashboard/welcome-onboarding-banner";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -205,6 +206,16 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-bold text-black">Loueur · Tableau de bord</h1>
         <p className="mt-1 text-slate-500">Suivez vos recherches et demandes</p>
       </div>
+
+      <WelcomeOnboardingBanner
+        userId={user.id}
+        dashboard="seeker"
+        videoUrl={
+          process.env.NEXT_PUBLIC_ONBOARDING_VIDEO_URL?.trim() ||
+          "https://www.youtube.com/watch?v=ysz5S6PUM-U"
+        }
+        tourUrl={process.env.NEXT_PUBLIC_ONBOARDING_TOUR_SEEKER_URL ?? "/centre-aide/organisateur"}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {overviewCards.map((card) => {

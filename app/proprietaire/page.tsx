@@ -10,6 +10,7 @@ import { ConnectOnboardingButton } from "@/components/paiement/connect-onboardin
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { WelcomeOnboardingBanner } from "@/components/dashboard/welcome-onboarding-banner";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -162,6 +163,16 @@ export default async function ProprietaireDashboardPage() {
         <h1 className="text-2xl font-bold text-black">Propriétaire · Tableau de bord</h1>
         <p className="mt-1 text-slate-500">Gérez vos annonces et vos demandes</p>
       </div>
+
+      <WelcomeOnboardingBanner
+        userId={user.id}
+        dashboard="owner"
+        videoUrl={
+          process.env.NEXT_PUBLIC_ONBOARDING_VIDEO_URL?.trim() ||
+          "https://www.youtube.com/watch?v=ysz5S6PUM-U"
+        }
+        tourUrl={process.env.NEXT_PUBLIC_ONBOARDING_TOUR_OWNER_URL ?? "/centre-aide/proprietaire"}
+      />
 
       {/* Recevoir les paiements / Paiements activés */}
       <Card id="recevoir-paiements" className="mt-6 border-0 shadow-sm scroll-mt-24">
