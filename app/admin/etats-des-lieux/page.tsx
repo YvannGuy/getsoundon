@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 
+import { AdminEdlPhotoViewer } from "@/components/etats-des-lieux/admin-edl-photo-viewer";
 import { Card, CardContent } from "@/components/ui/card";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -28,6 +28,7 @@ type PhotoRow = {
   offer_id: string;
   storage_path: string;
   description: string | null;
+  created_at: string | null;
 };
 
 type CaseRow = {
@@ -114,7 +115,7 @@ export default async function AdminEtatsDesLieuxPage({
           .in("offer_id", offerIds),
         admin
           .from("etat_des_lieux_photos")
-          .select("id, etat_des_lieux_id, offer_id, storage_path, description")
+          .select("id, etat_des_lieux_id, offer_id, storage_path, description, created_at")
           .in("offer_id", offerIds),
         admin
           .from("refund_cases")
@@ -361,52 +362,42 @@ export default async function AdminEtatsDesLieuxPage({
                   </summary>
 
                   <div className="mt-4 space-y-4">
-                    {(["before", "after"] as const).map((phase) => {
-                      const ownerEdl = offerEdl.find((r) => r.role === "owner" && r.phase === phase);
-                      const seekerEdl = offerEdl.find((r) => r.role === "seeker" && r.phase === phase);
-                      return (
-                        <div key={phase} className="rounded-lg border border-slate-200 p-3 md:p-4">
-                          <h3 className="text-sm font-semibold text-black md:text-base">{PHASE_LABEL[phase]}</h3>
-                          <div className="mt-3 grid gap-3 md:grid-cols-2">
-                            {[ownerEdl, seekerEdl].map((entry, idx) => (
-                              <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3">
-                                <p className="text-xs font-semibold uppercase text-slate-600">
-                                  {idx === 0 ? "Photos propriétaire" : "Photos locataire"}
-                                </p>
-                                {!entry ? (
-                                  <p className="mt-2 text-sm text-slate-500">Aucun dépôt.</p>
-                                ) : (
-                                  <>
-                                    <p className="mt-2 text-sm text-slate-700">{entry.notes || "—"}</p>
-                                    <p className="mt-1 text-xs text-slate-500">
-                                      Déposé le {new Date(entry.submitted_at).toLocaleString("fr-FR")}
-                                    </p>
-                                    <div className="mt-3 grid grid-cols-4 gap-2">
-                                      {(photosByEdl.get(entry.id) ?? []).map((photo) => {
-                                        const signedUrl = fileUrlMap.get(photo.id);
-                                        if (!signedUrl) return null;
-                                        return (
-                                          <a key={photo.id} href={signedUrl} target="_blank" rel="noreferrer">
-                                            <Image
-                                              src={signedUrl}
-                                              alt="Photo état des lieux"
-                                              width={220}
-                                              height={150}
-                                              unoptimized
-                                              className="h-16 w-full rounded object-cover md:h-20"
-                                            />
-                                          </a>
-                                        );
-                                      })}
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
+                    <AdminEdlPhotoViewer
+                      phases={(["before", "after"] as const).map((phase) => {
+                        const ownerEdl = offerEdl.find((r) => r.role === "owner" && r.phase === phase);
+                        const seekerEdl = offerEdl.find((r) => r.role === "seeker" && r.phase === phase);
+                        return {
+                          phase,
+                          label: PHASE_LABEL[phase],
+                          owner: ownerEdl
+                            ? {
+                                notes: ownerEdl.notes,
+                                submittedAt: ownerEdl.submitted_at,
+                                photos: (photosByEdl.get(ownerEdl.id) ?? [])
+                                  .map((photo) => ({
+                                    id: photo.id,
+                                    url: fileUrlMap.get(photo.id) ?? "",
+                                    uploadedAt: photo.created_at,
+                                  }))
+                                  .filter((photo) => !!photo.url),
+                              }
+                            : null,
+                          seeker: seekerEdl
+                            ? {
+                                notes: seekerEdl.notes,
+                                submittedAt: seekerEdl.submitted_at,
+                                photos: (photosByEdl.get(seekerEdl.id) ?? [])
+                                  .map((photo) => ({
+                                    id: photo.id,
+                                    url: fileUrlMap.get(photo.id) ?? "",
+                                    uploadedAt: photo.created_at,
+                                  }))
+                                  .filter((photo) => !!photo.url),
+                              }
+                            : null,
+                        };
+                      })}
+                    />
 
                     {offerCases.length > 0 && (
                       <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 md:p-4">
@@ -427,12 +418,9 @@ export default async function AdminEtatsDesLieuxPage({
                                     if (!signedUrl) return null;
                                     return (
                                       <a key={evidence.id} href={signedUrl} target="_blank" rel="noreferrer">
-                                        <Image
+                                        <img
                                           src={signedUrl}
                                           alt="Preuve litige"
-                                          width={220}
-                                          height={150}
-                                          unoptimized
                                           className="h-14 w-full rounded object-cover md:h-16"
                                         />
                                       </a>

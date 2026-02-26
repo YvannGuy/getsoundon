@@ -1,7 +1,8 @@
-import Image from "next/image";
+import { ChevronDown } from "lucide-react";
 
-import { openUserDisputeCaseAction, submitEtatDesLieuxAction } from "@/app/actions/etats-des-lieux";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EdlMiniWizard } from "@/components/etats-des-lieux/edl-mini-wizard";
+import { EdlPhotoViewer } from "@/components/etats-des-lieux/edl-photo-viewer";
+import { Card, CardContent } from "@/components/ui/card";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,6 +21,7 @@ type PhotoRow = {
   offer_id: string;
   storage_path: string;
   description: string | null;
+  created_at: string | null;
 };
 
 type CaseRow = {
@@ -116,7 +118,7 @@ export default async function SeekerEtatsDesLieuxPage() {
           .in("offer_id", offerIds),
         admin
           .from("etat_des_lieux_photos")
-          .select("id, etat_des_lieux_id, offer_id, storage_path, description")
+          .select("id, etat_des_lieux_id, offer_id, storage_path, description, created_at")
           .in("offer_id", offerIds),
         admin
           .from("refund_cases")
@@ -218,185 +220,128 @@ export default async function SeekerEtatsDesLieuxPage() {
             const doneCount = [seekerBefore, seekerAfter].filter(Boolean).length;
             const eventStartYmd = offer.date_debut ?? null;
             const eventEndYmd = offer.date_fin ?? offer.date_debut ?? null;
+            const now = new Date();
+            const beforeDate = parseYmdToDate(eventStartYmd);
+            const beforeDeadline = beforeDate ? addDays(beforeDate, 1) : null;
+            const beforeLockedBefore = !!beforeDate && now < beforeDate;
+            const beforeLockedAfter = !!beforeDeadline && now > beforeDeadline;
+            const beforeOpen = !beforeLockedBefore && !beforeLockedAfter;
+            const beforeLockText = beforeLockedBefore
+              ? `Disponible à partir du ${formatYmdToFr(eventStartYmd)}`
+              : beforeLockedAfter
+                ? `Fenêtre expirée (24h après ${formatYmdToFr(eventStartYmd)})`
+                : "";
+
+            const afterDate = parseYmdToDate(eventEndYmd);
+            const afterDeadline = afterDate ? addDays(afterDate, 1) : null;
+            const afterLockedBefore = !!afterDate && now < afterDate;
+            const afterLockedAfter = !!afterDeadline && now > afterDeadline;
+            const afterOpen = !afterLockedBefore && !afterLockedAfter;
+            const afterLockText = afterLockedBefore
+              ? `Disponible à partir du ${formatYmdToFr(eventEndYmd)}`
+              : afterLockedAfter
+                ? `Fenêtre expirée (24h après ${formatYmdToFr(eventEndYmd)})`
+                : "";
+            const phaseViewData = (["before", "after"] as const).map((phase) => {
+              const seekerEdl = offerEdl.find((r) => r.role === "seeker" && r.phase === phase);
+              const ownerEdl = offerEdl.find((r) => r.role === "owner" && r.phase === phase);
+              const phaseDateYmd = phase === "before" ? eventStartYmd : eventEndYmd;
+              const phaseDate = parseYmdToDate(phaseDateYmd);
+              const phaseDeadline = phaseDate ? addDays(phaseDate, 1) : null;
+              const lockedBefore = !!phaseDate && now < phaseDate;
+              const lockedAfter = !!phaseDeadline && now > phaseDeadline;
+              const lockText = lockedBefore
+                ? `Disponible à partir du ${formatYmdToFr(phaseDateYmd)}`
+                : lockedAfter
+                  ? `Fenêtre expirée (24h après ${formatYmdToFr(phaseDateYmd)})`
+                  : "";
+
+              return {
+                phase,
+                label: PHASE_LABEL[phase],
+                lockText,
+                isOpen: !lockedBefore && !lockedAfter,
+                self: seekerEdl
+                  ? {
+                      notes: seekerEdl.notes,
+                      photos: (photosByEdl.get(seekerEdl.id) ?? [])
+                        .map((photo) => ({
+                          id: photo.id,
+                          url: photoUrlMap.get(photo.id) ?? "",
+                          uploadedAt: photo.created_at,
+                        }))
+                        .filter((photo) => !!photo.url),
+                    }
+                  : null,
+                other: ownerEdl
+                  ? {
+                      notes: ownerEdl.notes,
+                      photos: (photosByEdl.get(ownerEdl.id) ?? [])
+                        .map((photo) => ({
+                          id: photo.id,
+                          url: photoUrlMap.get(photo.id) ?? "",
+                          uploadedAt: photo.created_at,
+                        }))
+                        .filter((photo) => !!photo.url),
+                    }
+                  : null,
+              };
+            });
             return (
               <details
                 key={offer.id}
                 open={offerIndex === 0}
-                className="rounded-xl border border-slate-200 bg-white p-4 md:p-5"
+                className="group rounded-xl border border-slate-200 bg-white p-4 md:p-5"
               >
-                <summary className="cursor-pointer list-none">
+                <summary className="cursor-pointer">
                   <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-base font-semibold text-black md:text-lg">
                         {salleMap.get(offer.salle_id) ?? "Salle"} • {(offer.amount_cents / 100).toFixed(2)} €
                       </p>
-                      <p className="mt-1 text-xs text-slate-500 md:text-sm">
+                      <p className="mt-1 truncate text-xs text-slate-500 md:text-sm">
                         Propriétaire : {ownerMap.get(offer.owner_id) ?? "—"} • Offre : {offer.id}
                       </p>
                     </div>
-                    <span className="inline-flex w-fit items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-                      {doneCount}/2 phases déposées
-                    </span>
+                    <div className="flex shrink-0 items-center">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700">
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700">
+                          {doneCount}/2 phases déposées
+                        </span>
+                        <span className="mx-0.5 h-3.5 w-px bg-slate-200" aria-hidden="true" />
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-black transition-transform duration-200 group-open:rotate-180" />
+                        <span className="whitespace-nowrap">Replier / Déplier</span>
+                      </span>
+                    </div>
                   </div>
                 </summary>
 
                 <div className="mt-4 space-y-4">
-                  {(["before", "after"] as const).map((phase) => {
-                    const seekerEdl = offerEdl.find((r) => r.role === "seeker" && r.phase === phase);
-                    const ownerEdl = offerEdl.find((r) => r.role === "owner" && r.phase === phase);
-                    const now = new Date();
-                    const phaseDateYmd = phase === "before" ? eventStartYmd : eventEndYmd;
-                    const phaseDate = parseYmdToDate(phaseDateYmd);
-                    const phaseDeadline = phaseDate ? addDays(phaseDate, 1) : null;
-                    const isLockedBefore = !!phaseDate && now < phaseDate;
-                    const isLockedAfter = !!phaseDeadline && now > phaseDeadline;
-                    const isUploadOpen = !isLockedBefore && !isLockedAfter;
-                    const lockText = isLockedBefore
-                      ? `Disponible à partir du ${formatYmdToFr(phaseDateYmd)}`
-                      : isLockedAfter
-                        ? `Fenêtre expirée (24h après ${formatYmdToFr(phaseDateYmd)})`
-                        : "";
-                    return (
-                      <div key={phase} className="rounded-lg border border-slate-200 p-3 md:p-4">
-                        <div className="flex items-center justify-between gap-2">
-                          <h3 className="text-sm font-semibold text-black md:text-base">{PHASE_LABEL[phase]}</h3>
-                          <span className="text-xs text-slate-500">max 10 photos</span>
+                  <EdlMiniWizard
+                    offerId={offer.id}
+                    actorLabel="Locataire"
+                    beforeDone={!!seekerBefore}
+                    afterDone={!!seekerAfter}
+                    beforeOpen={beforeOpen}
+                    afterOpen={afterOpen}
+                    beforeLockText={beforeLockText}
+                    afterLockText={afterLockText}
+                    leadingAction={<EdlPhotoViewer actorLabel="Locataire" phases={phaseViewData} />}
+                  />
+
+                  {offerCases.length > 0 && (
+                    <div className="grid gap-2 md:grid-cols-2">
+                      {offerCases.map((c) => (
+                        <div key={c.id} className="rounded border border-amber-200 bg-amber-50/40 p-2 text-xs text-slate-700">
+                          <span className="font-semibold">{CASE_LABEL[c.case_type] ?? c.case_type}</span>
+                          {" - "}
+                          <span>{c.status}</span>
+                          {c.amount_cents > 0 && <> - {(c.amount_cents / 100).toFixed(2)} €</>}
+                          {c.reason && <p className="mt-1">{c.reason}</p>}
                         </div>
-
-                        <div className="mt-3 grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
-                          {isUploadOpen ? (
-                            <form
-                              action={async (formData) => {
-                                "use server";
-                                await submitEtatDesLieuxAction(formData);
-                              }}
-                              className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3"
-                            >
-                              <input type="hidden" name="offerId" value={offer.id} />
-                              <input type="hidden" name="phase" value={phase} />
-                              <p className="text-xs font-medium text-slate-700">Votre dépôt</p>
-                              <textarea
-                                name="notes"
-                                rows={3}
-                                required
-                                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                                placeholder="État observé, points à signaler..."
-                              />
-                              <input
-                                type="file"
-                                name="photos"
-                                accept="image/*"
-                                multiple
-                                required
-                                className="block w-full text-sm"
-                              />
-                              <button
-                                type="submit"
-                                className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                              >
-                                Envoyer {phase === "before" ? "l'entrée" : "la sortie"}
-                              </button>
-                            </form>
-                          ) : (
-                            <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/60 p-3 opacity-70">
-                              <p className="text-xs font-medium text-slate-700">Votre dépôt</p>
-                              <p className="text-xs text-slate-500">{lockText}</p>
-                              <button
-                                type="button"
-                                disabled
-                                className="w-full cursor-not-allowed rounded-md bg-slate-300 px-4 py-2 text-sm font-medium text-slate-600"
-                              >
-                                Upload verrouillé
-                              </button>
-                            </div>
-                          )}
-
-                          <div className="grid gap-3 md:grid-cols-2">
-                            {[seekerEdl, ownerEdl].map((entry, idx) => (
-                              <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3">
-                                <p className="text-xs font-semibold uppercase text-slate-600">
-                                  {idx === 0 ? "Vos photos" : "Photos propriétaire"}
-                                </p>
-                                {!entry ? (
-                                  <p className="mt-2 text-sm text-slate-500">Aucun dépôt.</p>
-                                ) : (
-                                  <>
-                                    <p className="mt-2 line-clamp-2 text-sm text-slate-700">{entry.notes || "—"}</p>
-                                    <div className="mt-3 grid grid-cols-3 gap-2">
-                                      {(photosByEdl.get(entry.id) ?? []).map((photo) => {
-                                        const signedUrl = photoUrlMap.get(photo.id);
-                                        if (!signedUrl) return null;
-                                        return (
-                                          <a key={photo.id} href={signedUrl} target="_blank" rel="noreferrer">
-                                            <Image
-                                              src={signedUrl}
-                                              alt="Photo état des lieux"
-                                              width={220}
-                                              height={150}
-                                              unoptimized
-                                              className="h-16 w-full rounded object-cover md:h-20"
-                                            />
-                                          </a>
-                                        );
-                                      })}
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 md:p-4">
-                    <h3 className="text-sm font-semibold text-amber-900 md:text-base">Ouvrir un litige</h3>
-                    <p className="mt-1 text-xs text-amber-800">Ajoutez un motif clair et des preuves photo.</p>
-                    <form
-                      action={async (formData) => {
-                        "use server";
-                        await openUserDisputeCaseAction(formData);
-                      }}
-                      className="mt-3 space-y-3"
-                    >
-                      <input type="hidden" name="offerId" value={offer.id} />
-                      <textarea
-                        name="reason"
-                        rows={3}
-                        required
-                        className="w-full rounded-md border border-amber-300 px-3 py-2 text-sm"
-                        placeholder="Motif du litige, détails du dommage, contexte..."
-                      />
-                      <input
-                        type="file"
-                        name="photos"
-                        accept="image/*"
-                        multiple
-                        required
-                        className="block w-full text-sm"
-                      />
-                      <button
-                        type="submit"
-                        className="w-full rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 sm:w-auto"
-                      >
-                        Soumettre un litige avec preuves
-                      </button>
-                    </form>
-                    {offerCases.length > 0 && (
-                      <div className="mt-4 grid gap-2 md:grid-cols-2">
-                        {offerCases.map((c) => (
-                          <div key={c.id} className="rounded border border-amber-200 bg-white p-2 text-xs text-slate-700">
-                            <span className="font-semibold">{CASE_LABEL[c.case_type] ?? c.case_type}</span>
-                            {" - "}
-                            <span>{c.status}</span>
-                            {c.amount_cents > 0 && <> - {(c.amount_cents / 100).toFixed(2)} €</>}
-                            {c.reason && <p className="mt-1">{c.reason}</p>}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </details>
             );

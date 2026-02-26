@@ -49,6 +49,7 @@ export default async function AdminLayout({
     paiements: 0,
     cautions: 0,
     etatsDesLieux: 0,
+    litiges: 0,
   };
 
   try {
@@ -156,6 +157,14 @@ export default async function AdminLayout({
           const seekerAfter = edlSet.has(`${offerId}:seeker:after`);
           return !ownerBefore || !ownerAfter || !seekerBefore || !seekerAfter;
         }).length;
+
+        badgeCounts.litiges = (caseRows ?? []).filter(
+          (c) =>
+            (c as { case_type: "refund_full" | "refund_partial" | "dispute"; status: "open" | "resolved" | "rejected" })
+              .case_type === "dispute" &&
+            (c as { case_type: "refund_full" | "refund_partial" | "dispute"; status: "open" | "resolved" | "rejected" })
+              .status === "open"
+        ).length;
       } catch {
         // Tables EDL/refund_cases peuvent ne pas exister
       }

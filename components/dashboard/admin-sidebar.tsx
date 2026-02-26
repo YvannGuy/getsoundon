@@ -13,6 +13,7 @@ import {
   FileText,
   Flag,
   Home,
+  Scale,
   Menu,
   Settings,
   Shield,
@@ -34,6 +35,7 @@ type AdminSidebarProps = {
     paiements: number;
     cautions: number;
     etatsDesLieux: number;
+    litiges: number;
   };
   userEmail?: string | null;
 };
@@ -98,6 +100,13 @@ const navItems = (
     icon: Camera,
     badge: counts.etatsDesLieux,
     badgeTone: "warning" as const,
+  },
+  {
+    href: "/admin/litiges",
+    label: "Litiges",
+    icon: Scale,
+    badge: counts.litiges,
+    badgeTone: "danger" as const,
   },
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ];

@@ -207,7 +207,14 @@ export async function submitEtatDesLieuxAction(
     await admin.from("etat_des_lieux_photos").delete().eq("etat_des_lieux_id", edlId);
   }
 
-  const uploadedRows: { etat_des_lieux_id: string; offer_id: string; storage_path: string; description: string | null; created_by: string }[] = [];
+  const uploadedRows: {
+    etat_des_lieux_id: string;
+    offer_id: string;
+    storage_path: string;
+    description: string | null;
+    created_by: string;
+    created_at: string;
+  }[] = [];
   const stamp = Date.now();
 
   for (let i = 0; i < files.length; i += 1) {
@@ -237,6 +244,7 @@ export async function submitEtatDesLieuxAction(
       storage_path: storagePath,
       description: notes,
       created_by: user.id,
+      created_at: nowIso,
     });
   }
 
@@ -277,6 +285,26 @@ export async function openUserDisputeCaseAction(
 
   const admin = createAdminClient();
   const role = actor.role;
+
+  const { data: actorEdlRows } = await admin
+    .from("etat_des_lieux")
+    .select("phase")
+    .eq("offer_id", offerId)
+    .eq("role", role)
+    .in("phase", ["before", "after"]);
+
+  const actorPhases = new Set(
+    (actorEdlRows ?? []).map(
+      (row) => (row as { phase: "before" | "after" }).phase
+    )
+  );
+  if (!actorPhases.has("before") || !actorPhases.has("after")) {
+    return {
+      success: false,
+      error:
+        "Vous devez d'abord compléter vos états des lieux d'entrée et de sortie avant d'ouvrir un litige.",
+    };
+  }
 
   const { data: payment } = await admin
     .from("payments")
