@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Banknote, FileText, Receipt } from "lucide-react";
+import { Banknote, FileText, Info, Receipt } from "lucide-react";
 
 import { refuseOfferAction } from "@/app/actions/offers";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import type { OfferStatus } from "@/lib/types/offer";
 
@@ -65,6 +66,11 @@ const CANCELLATION_POLICY_LABEL: Record<"strict" | "moderate" | "flexible", stri
   strict: "Stricte",
   moderate: "Modérée",
   flexible: "Flexible",
+};
+const CANCELLATION_POLICY_HELP: Record<"strict" | "moderate" | "flexible", string> = {
+  strict: "Stricte : > J-90 = 100%, J-90 à J-30 = 50%, < J-30 = 0% de remboursement location.",
+  moderate: "Modérée : > J-30 = 100%, J-30 à J-15 = 50%, < J-15 = 0% de remboursement location.",
+  flexible: "Flexible : > J-7 = 100%, J-7 à J-2 = 50%, < J-2 = 0% de remboursement location.",
 };
 
 const STATUS_LABEL: Record<OfferStatus, string> = {
@@ -157,6 +163,10 @@ export function OfferCard({
     hasDateRange && offer.date_debut && offer.date_fin
       ? `${format(new Date(offer.date_debut), "d MMM yyyy", { locale: fr })} au ${format(new Date(offer.date_fin), "d MMM yyyy", { locale: fr })}`
       : null;
+  const cancellationPolicy = (offer.cancellation_policy ?? "strict") as
+    | "strict"
+    | "moderate"
+    | "flexible";
 
   return (
     <>
@@ -175,9 +185,23 @@ export function OfferCard({
               Type : {EVENT_TYPE_LABEL[offer.event_type] ?? offer.event_type}
             </p>
           )}
-          <p className="text-slate-600">
-            Annulation :{" "}
-            {CANCELLATION_POLICY_LABEL[(offer.cancellation_policy ?? "strict") as "strict" | "moderate" | "flexible"]}
+          <p className="inline-flex items-center gap-1 text-slate-600">
+            Annulation : {CANCELLATION_POLICY_LABEL[cancellationPolicy]}
+            <Popover modal>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex h-4 w-4 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
+                  aria-label="Voir le détail de la politique d'annulation"
+                >
+                  <Info className="h-3.5 w-3.5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-72 text-xs text-slate-600">
+                {CANCELLATION_POLICY_HELP[cancellationPolicy]}
+              </PopoverContent>
+            </Popover>
           </p>
           {dateRangeFormatted && (
             <p className="text-slate-600">Valable du {dateRangeFormatted}</p>

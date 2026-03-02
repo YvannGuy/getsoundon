@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { Info } from "lucide-react";
 
 import { createOfferAction } from "@/app/actions/offers";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type CreateOfferModalProps = {
   open: boolean;
@@ -24,6 +26,34 @@ const defaultExpiresAt = () => {
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
+const CANCELLATION_POLICY_HELP = {
+  strict:
+    "Stricte : > J-90 = 100%, J-90 à J-30 = 50%, < J-30 = 0% de remboursement location.",
+  moderate:
+    "Modérée : > J-30 = 100%, J-30 à J-15 = 50%, < J-15 = 0% de remboursement location.",
+  flexible:
+    "Flexible : > J-7 = 100%, J-7 à J-2 = 50%, < J-2 = 0% de remboursement location.",
+} as const;
+
+function PolicyInfo({ text }: { text: string }) {
+  return (
+    <Popover modal>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex h-4 w-4 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
+          aria-label="Voir le détail de la politique"
+        >
+          <Info className="h-3.5 w-3.5" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-72 text-xs text-slate-600">
+        {text}
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function CreateOfferModal({
   open,
@@ -217,39 +247,48 @@ export function CreateOfferModal({
           <div>
             <label className="text-sm font-medium text-black">Politique d&apos;annulation</label>
             <div className="mt-1.5 flex flex-wrap gap-4">
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  name="cancellationPolicy"
-                  value="strict"
-                  checked={cancellationPolicy === "strict"}
-                  onChange={() => setCancellationPolicy("strict")}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Stricte</span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  name="cancellationPolicy"
-                  value="moderate"
-                  checked={cancellationPolicy === "moderate"}
-                  onChange={() => setCancellationPolicy("moderate")}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Modérée</span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  name="cancellationPolicy"
-                  value="flexible"
-                  checked={cancellationPolicy === "flexible"}
-                  onChange={() => setCancellationPolicy("flexible")}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Flexible</span>
-              </label>
+              <div className="flex items-center gap-2">
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="radio"
+                    name="cancellationPolicy"
+                    value="strict"
+                    checked={cancellationPolicy === "strict"}
+                    onChange={() => setCancellationPolicy("strict")}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">Stricte</span>
+                </label>
+                <PolicyInfo text={CANCELLATION_POLICY_HELP.strict} />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="radio"
+                    name="cancellationPolicy"
+                    value="moderate"
+                    checked={cancellationPolicy === "moderate"}
+                    onChange={() => setCancellationPolicy("moderate")}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">Modérée</span>
+                </label>
+                <PolicyInfo text={CANCELLATION_POLICY_HELP.moderate} />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="radio"
+                    name="cancellationPolicy"
+                    value="flexible"
+                    checked={cancellationPolicy === "flexible"}
+                    onChange={() => setCancellationPolicy("flexible")}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">Flexible</span>
+                </label>
+                <PolicyInfo text={CANCELLATION_POLICY_HELP.flexible} />
+              </div>
             </div>
             <p className="mt-1 text-xs text-slate-500">
               Cette politique servira au calcul automatique de remboursement en cas d&apos;annulation.
