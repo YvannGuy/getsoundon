@@ -224,28 +224,6 @@ export async function sendNewDemandeNotification(
   return { success: !error, error: error?.message };
 }
 
-/** Email de confirmation après inscription à la liste Coming Soon */
-export async function sendComingSoonConfirmationEmail(to: string) {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn("[email] RESEND_API_KEY non configuré, email non envoyé");
-    return { success: false };
-  }
-  const { error } = await resend.emails.send({
-    from,
-    to,
-    subject: "Merci pour votre inscription — salledeculte.com",
-    html: renderEmailLayout({
-      title: "Merci pour votre inscription",
-      intro:
-        "Vous serez informé en priorité de l'ouverture de salledeculte.com.",
-      sections: [],
-      ctaLabel: "Visiter salledeculte.com",
-      ctaUrl: siteUrl,
-    }),
-  });
-  return { success: !error, error: error?.message };
-}
-
 /** Notifie le propriétaire d'une demande de visite */
 export async function sendNewVisiteRequestNotification(
   to: string,
