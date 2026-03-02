@@ -70,11 +70,11 @@ Exécutez `config/supabase-offers-connect.sql` dans l'éditeur SQL Supabase pour
 Puis `config/supabase-offers-alter-event-type.sql` pour ajouter le type d'évènement (ponctuel/mensuel) et la période valable (date_debut, date_fin).
 
 **Contrats & factures** :
-- `config/supabase-contract-templates.sql` : table `contract_templates` (modèle par salle)
+- `config/supabase-contract-templates.sql` : table `contract_templates` (informations légales optionnelles pour le PDF standard)
 - `config/supabase-offers-contract.sql` : colonne `contract_path` sur `offers`
 - `config/supabase-payments-invoice.sql` : colonne `invoice_path` sur `payments`
 - `npm run supabase:init-contract-storage` : bucket storage `contrats` (contrats + factures PDF)
-- Le propriétaire remplit les infos contrat dans `/proprietaire/contrat`. L'organisateur lit le contrat avant de payer, coche l'acceptation, puis paie. Contrat et facture sont générés après paiement.
+- Le contrat affiché avant paiement est le contrat standard salledeculte.com. Après paiement, contrat et facture PDF sont disponibles dans la carte d'offre et dans `/proprietaire/contrat`.
 
 Crée les tables :
 

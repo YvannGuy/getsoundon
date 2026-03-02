@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Archive, Banknote, Check, ChevronDown, ChevronLeft, FileText, Lightbulb, MessageCircle, MoreVertical, Paperclip, Pencil, RotateCcw, Send, Search, Trash2, X } from "lucide-react";
+import { Archive, Banknote, Check, ChevronDown, ChevronLeft, Lightbulb, MessageCircle, MoreVertical, Paperclip, Pencil, RotateCcw, Send, Search, Trash2, X } from "lucide-react";
 
 import { updateDemandeStatusAction } from "@/app/actions/demande-owner";
 import { markExpiredOffersAction } from "@/app/actions/offers";
@@ -652,10 +652,7 @@ export function MessagerieClient({
     !hasPendingOffer &&
     !!selected?.salleId;
   const showEnablePaymentsCta = ownerOfferBase && !hasConnectAccount;
-  const showUploadContractCta =
-    ownerOfferBase && hasConnectAccount && !selected?.hasContract;
-  const canSendOffer =
-    ownerOfferBase && hasConnectAccount && !!selected?.hasContract;
+  const canSendOffer = ownerOfferBase && hasConnectAccount;
 
   const handleAcceptAndPay = async (offerId: string, acceptance: OfferAcceptancePayload) => {
     try {
@@ -1107,17 +1104,6 @@ export function MessagerieClient({
                     </Link>
                   </div>
                 )}
-                {detailsOpen && showUploadContractCta && (
-                  <div className="mt-4 border-t border-slate-100 pt-3">
-                    <Link
-                      href="/proprietaire/contrat"
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-100"
-                    >
-                      <FileText className="h-3.5 w-3.5" />
-                      Téléchargez votre contrat et envoyez une offre
-                    </Link>
-                  </div>
-                )}
                 {detailsOpen && canSendOffer && (
                   <div className="mt-4 border-t border-slate-100 pt-3">
                     <Button
@@ -1362,17 +1348,6 @@ export function MessagerieClient({
                 >
                   <Banknote className="h-3.5 w-3.5" />
                   Activez les paiements pour envoyer une offre
-                </Link>
-              </div>
-            )}
-            {showUploadContractCta && (
-              <div className="mt-2">
-                <Link
-                  href="/proprietaire/contrat"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-100"
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  Téléchargez votre contrat et envoyez une offre
                 </Link>
               </div>
             )}

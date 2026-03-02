@@ -20,6 +20,7 @@ const navItems = [
   { href: "/dashboard/demandes", label: "Mes demandes", icon: FileText, badgeKey: "demandes" },
   { href: "/dashboard/reservations", label: "Réservations", icon: FileText, badgeKey: "reservations" },
   { href: "/dashboard/paiement", label: "Paiement", icon: CreditCard, badgeKey: "paiement" },
+  { href: "/dashboard/contrat", label: "Contrat & facture", icon: FileText },
   { href: "/dashboard/etats-des-lieux", label: "États des lieux", icon: Camera, badgeKey: "etats" },
   { href: "/dashboard/litiges", label: "Litiges", icon: Scale },
   { href: "/dashboard/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },

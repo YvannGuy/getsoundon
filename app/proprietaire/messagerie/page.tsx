@@ -14,15 +14,6 @@ function formatTime(t: string | null): string {
   return m ? `${m[1]}h${m[2]}` : "";
 }
 
-async function salleHasContract(salleId: string): Promise<boolean> {
-  const admin = createAdminClient();
-  const { data, error } = await admin.storage
-    .from("contrats")
-    .list(`salles/${salleId}`, { search: "modele.pdf", limit: 1 });
-  if (error) return false;
-  return !!(data ?? []).find((item) => item.name === "modele.pdf");
-}
-
 export default async function MessageriePage({
   searchParams,
 }: {
@@ -113,10 +104,6 @@ export default async function MessageriePage({
 
   const profileMap = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
   const salleMap = new Map((sallesRes.data ?? []).map((s) => [s.id, s]));
-  const salleContractStatus = await Promise.all(
-    salleIdsDem.map(async (salleId) => [salleId, await salleHasContract(salleId)] as const)
-  );
-  const contractBySalle = new Map<string, boolean>(salleContractStatus);
   const convByDemande = new Map(convsData.map((c) => [c.demande_id, c]));
   const convByDemandeVisiteTriple = new Map(
     convsVisiteData.map((c) => [`${c.seeker_id}:${c.owner_id}:${c.salle_id}`, c])
@@ -227,7 +214,7 @@ export default async function MessageriePage({
       salleCity: salleRow?.city ?? "",
       salleCapacity: salleRow?.capacity ?? null,
       salleSlug: salleRow?.slug ?? "",
-      hasContract: contractBySalle.get(d.salle_id) ?? false,
+      hasContract: true,
       typeEvenement: d.type_evenement ?? null,
       dateDebut: dateStr,
       dateDebutHeure: horaires || undefined,
@@ -275,7 +262,7 @@ export default async function MessageriePage({
       salleCity: salleRow?.city ?? "",
       salleCapacity: salleRow?.capacity ?? null,
       salleSlug: salleRow?.slug ?? "",
-      hasContract: contractBySalle.get(dv.salle_id) ?? false,
+      hasContract: true,
       typeEvenement: dv.type_evenement ?? null,
       dateDebut: dateStr,
       dateDebutHeure: horaires || undefined,

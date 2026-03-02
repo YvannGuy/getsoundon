@@ -17,6 +17,7 @@ function renderEmailLayout({
   ctaUrl,
   ctaTitle = "Commencez maintenant",
   ctaText = "Accédez à votre espace pour continuer sur salledeculte.com.",
+  includeDemoCta = false,
 }: {
   title: string;
   intro?: string;
@@ -25,6 +26,7 @@ function renderEmailLayout({
   ctaUrl?: string;
   ctaTitle?: string;
   ctaText?: string;
+  includeDemoCta?: boolean;
 }) {
   const logoUrl = `${siteUrl}/logopleinsdc.png`;
   const ctaBlock = ctaLabel && ctaUrl
@@ -32,7 +34,11 @@ function renderEmailLayout({
          <h3>${ctaTitle}</h3>
          <p>${ctaText}</p>
          <p><a href="${ctaUrl}" class="btn">${ctaLabel}</a></p>
-         <p class="cta-secondary">Ou regardez la démo : <a href="${demoVideoUrl}">Voir la vidéo</a></p>
+         ${
+           includeDemoCta
+             ? `<p class="cta-secondary">Ou regardez la démo : <a href="${demoVideoUrl}">Voir la vidéo</a></p>`
+             : ""
+         }
        </div>`
     : "";
   const cta = ctaLabel && ctaUrl
@@ -125,6 +131,7 @@ export async function sendWelcomeSeekerEmail(to: string, fullName: string) {
       ],
       ctaLabel: "Accéder à mon espace",
       ctaUrl: siteUrl,
+      includeDemoCta: true,
     }),
   });
   return { success: !error, error: error?.message };
@@ -163,6 +170,7 @@ export async function sendWelcomeOwnerEmail(to: string, _fullName: string) {
       ],
       ctaLabel: "Créer ou gérer mon annonce",
       ctaUrl: `${siteUrl}/onboarding/salle`,
+      includeDemoCta: true,
     }),
   });
   return { success: !error, error: error?.message };
