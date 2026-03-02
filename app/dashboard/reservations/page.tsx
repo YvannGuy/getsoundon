@@ -10,6 +10,7 @@ type OfferRow = {
   salle_id: string;
   owner_id: string;
   amount_cents: number;
+  cancellation_policy: "strict" | "moderate" | "flexible" | null;
   date_debut: string | null;
   date_fin: string | null;
   created_at: string;
@@ -37,6 +38,12 @@ function filterPillClass(active: boolean) {
     : "inline-flex h-11 items-center rounded-full bg-slate-100 px-4 text-sm font-medium text-slate-700 hover:bg-slate-200";
 }
 
+function policyLabel(value: OfferRow["cancellation_policy"]) {
+  if (value === "moderate") return "Modérée";
+  if (value === "flexible") return "Flexible";
+  return "Stricte";
+}
+
 export default async function DashboardReservationsPage({
   searchParams,
 }: {
@@ -58,7 +65,7 @@ export default async function DashboardReservationsPage({
   const admin = createAdminClient();
   const { data: offers } = await admin
     .from("offers")
-    .select("id, salle_id, owner_id, amount_cents, date_debut, date_fin, created_at")
+    .select("id, salle_id, owner_id, amount_cents, cancellation_policy, date_debut, date_fin, created_at")
     .eq("seeker_id", user.id)
     .eq("status", "paid")
     .order("created_at", { ascending: false })
@@ -216,6 +223,9 @@ export default async function DashboardReservationsPage({
                   <div className="space-y-1 text-sm text-slate-600">
                     <div>
                       EDL entrée: {beforeDone ? "fait" : "à faire"} - EDL sortie: {afterDone ? "fait" : "à faire"}
+                    </div>
+                    <div>
+                      Annulation: {policyLabel(offer.cancellation_policy)} (impact variable selon délai avant l&apos;événement)
                     </div>
                     <div className="flex gap-2">
                       {aTraiter ? (

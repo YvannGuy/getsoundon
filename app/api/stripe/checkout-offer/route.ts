@@ -36,6 +36,10 @@ async function getPlatformFeeCents(params: {
 
 const checkoutOfferSchema = z.object({
   offerId: z.string().uuid(),
+  acceptedContract: z.literal(true),
+  acceptedCgv: z.literal(true),
+  acceptanceVersion: z.string().min(1).max(40),
+  acceptedAt: z.string().datetime().optional(),
 });
 
 export async function POST(request: Request) {
@@ -50,13 +54,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { offerId } = checkoutOfferSchema.parse(body);
+    const { offerId, acceptedContract, acceptedCgv, acceptanceVersion, acceptedAt } =
+      checkoutOfferSchema.parse(body);
 
     const adminSupabase = createAdminClient();
 
     const { data: offer, error: offerError } = await adminSupabase
       .from("offers")
-      .select("id, conversation_id, demande_id, owner_id, seeker_id, salle_id, amount_cents, payment_mode, upfront_amount_cents, balance_amount_cents, balance_due_at, deposit_amount_cents, service_fee_cents, expires_at, status, event_type")
+      .select("id, conversation_id, demande_id, owner_id, seeker_id, salle_id, amount_cents, payment_mode, upfront_amount_cents, balance_amount_cents, balance_due_at, deposit_amount_cents, service_fee_cents, expires_at, status, event_type, cancellation_policy")
       .eq("id", offerId)
       .single();
 
@@ -80,6 +85,7 @@ export async function POST(request: Request) {
       conversation_id: string;
       salle_id: string;
       event_type: string | null;
+      cancellation_policy?: "strict" | "moderate" | "flexible" | null;
     };
 
     if (offerRow.seeker_id !== user.id) {
@@ -92,6 +98,29 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    const acceptedAtIso = acceptedAt ? new Date(acceptedAt).toISOString() : new Date().toISOString();
+    const policyLabel =
+      offerRow.cancellation_policy === "moderate"
+        ? "moderee"
+        : offerRow.cancellation_policy === "flexible"
+          ? "flexible"
+          : "stricte";
+    const contractSnapshot = [
+      `accept_contract=${acceptedContract ? "yes" : "no"}`,
+      `accept_cgv=${acceptedCgv ? "yes" : "no"}`,
+      `policy=${policyLabel}`,
+      "milestones=J-7_solde,48h_incident,J+3_versement,J+7_liberation_caution",
+    ].join(";");
+    await adminSupabase
+      .from("offers")
+      .update({
+        contract_accepted_at: acceptedAtIso,
+        contract_acceptance_version: acceptanceVersion,
+        contract_terms_snapshot: contractSnapshot,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", offerId)
+      .eq("status", "pending");
 
     if (new Date(offerRow.expires_at) < new Date()) {
       await adminSupabase
@@ -258,6 +287,9 @@ export async function POST(request: Request) {
         deposit_amount_cents: String(depositAmountCents),
         service_fee_cents: String(serviceFeeCents),
         checkout_total_cents: String(checkoutTotalCents),
+        cancellation_policy: offerRow.cancellation_policy ?? "strict",
+        contract_acceptance_version: acceptanceVersion,
+        contract_accepted_at: acceptedAtIso,
       },
       ...(existingStripeCustomerId
         ? { customer: existingStripeCustomerId }

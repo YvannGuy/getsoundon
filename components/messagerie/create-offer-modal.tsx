@@ -39,6 +39,7 @@ export function CreateOfferModal({
   const [upfrontAmount, setUpfrontAmount] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
   const [eventType, setEventType] = useState<"ponctuel" | "mensuel">("ponctuel");
+  const [cancellationPolicy, setCancellationPolicy] = useState<"strict" | "moderate" | "flexible">("strict");
   const [dateDebut, setDateDebut] = useState(today());
   const [dateFin, setDateFin] = useState(today());
   const [expiresAt, setExpiresAt] = useState(defaultExpiresAt());
@@ -92,6 +93,7 @@ export function CreateOfferModal({
     formData.set("upfrontAmount", String(upfront));
     formData.set("depositAmount", String(deposit));
     formData.set("eventType", eventType);
+    formData.set("cancellationPolicy", cancellationPolicy);
     formData.set("dateDebut", dateDebut);
     formData.set("dateFin", dateFin);
     formData.set("expiresAt", expiresAt);
@@ -108,6 +110,7 @@ export function CreateOfferModal({
       setUpfrontAmount("");
       setDepositAmount("");
       setEventType("ponctuel");
+      setCancellationPolicy("strict");
       setDateDebut(today());
       setDateFin(today());
       setExpiresAt(defaultExpiresAt());
@@ -207,9 +210,50 @@ export function CreateOfferModal({
                   onChange={() => setPaymentMode("split")}
                   className="h-4 w-4"
                 />
-                <span className="text-sm">Acompte + solde J-1</span>
+                <span className="text-sm">Acompte + solde J-7</span>
               </label>
             </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-black">Politique d&apos;annulation</label>
+            <div className="mt-1.5 flex flex-wrap gap-4">
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="cancellationPolicy"
+                  value="strict"
+                  checked={cancellationPolicy === "strict"}
+                  onChange={() => setCancellationPolicy("strict")}
+                  className="h-4 w-4"
+                />
+                <span className="text-sm">Stricte</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="cancellationPolicy"
+                  value="moderate"
+                  checked={cancellationPolicy === "moderate"}
+                  onChange={() => setCancellationPolicy("moderate")}
+                  className="h-4 w-4"
+                />
+                <span className="text-sm">Modérée</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="cancellationPolicy"
+                  value="flexible"
+                  checked={cancellationPolicy === "flexible"}
+                  onChange={() => setCancellationPolicy("flexible")}
+                  className="h-4 w-4"
+                />
+                <span className="text-sm">Flexible</span>
+              </label>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              Cette politique servira au calcul automatique de remboursement en cas d&apos;annulation.
+            </p>
           </div>
           {paymentMode === "split" && (
             <div>
@@ -226,7 +270,7 @@ export function CreateOfferModal({
                 className="mt-1.5"
               />
               <p className="mt-1 text-xs text-slate-500">
-                Le solde sera prélevé automatiquement à J-1 de l&apos;événement.
+                Le solde sera prélevé automatiquement à J-7 de l&apos;événement.
               </p>
             </div>
           )}

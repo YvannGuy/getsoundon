@@ -25,6 +25,7 @@ import {
 } from "@/app/actions/messagerie";
 import { CreateOfferModal } from "@/components/messagerie/create-offer-modal";
 import { OfferCard } from "@/components/messagerie/offer-card";
+import type { OfferAcceptancePayload } from "@/components/messagerie/offer-card";
 import { AddSalleButton } from "@/components/proprietaire/add-salle-modal";
 import { SearchModalButton } from "@/components/search/search-modal";
 import { Button } from "@/components/ui/button";
@@ -212,6 +213,7 @@ type OfferItem = {
   date_fin?: string | null;
   created_at: string;
   contract_path?: string | null;
+  cancellation_policy?: "strict" | "moderate" | "flexible" | null;
 };
 
 export function MessagerieClient({
@@ -350,7 +352,7 @@ export function MessagerieClient({
 
     const { data: offersData } = await supabase
       .from("offers")
-      .select("id, owner_id, salle_id, amount_cents, payment_mode, upfront_amount_cents, balance_amount_cents, balance_due_at, payment_plan_status, deposit_amount_cents, service_fee_cents, deposit_refunded_cents, deposit_status, deposit_hold_status, expires_at, status, message, event_type, date_debut, date_fin, created_at, contract_path")
+      .select("id, owner_id, salle_id, amount_cents, payment_mode, upfront_amount_cents, balance_amount_cents, balance_due_at, payment_plan_status, deposit_amount_cents, service_fee_cents, deposit_refunded_cents, deposit_status, deposit_hold_status, expires_at, status, message, event_type, date_debut, date_fin, created_at, contract_path, cancellation_policy")
       .eq("conversation_id", convId)
       .order("created_at", { ascending: true });
     setOffers((offersData ?? []) as OfferItem[]);
@@ -655,12 +657,18 @@ export function MessagerieClient({
   const canSendOffer =
     ownerOfferBase && hasConnectAccount && !!selected?.hasContract;
 
-  const handleAcceptAndPay = async (offerId: string) => {
+  const handleAcceptAndPay = async (offerId: string, acceptance: OfferAcceptancePayload) => {
     try {
       const res = await fetch("/api/stripe/checkout-offer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ offerId }),
+        body: JSON.stringify({
+          offerId,
+          acceptedContract: acceptance.acceptedContract,
+          acceptedCgv: acceptance.acceptedCgv,
+          acceptanceVersion: acceptance.acceptanceVersion,
+          acceptedAt: acceptance.acceptedAt,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erreur");

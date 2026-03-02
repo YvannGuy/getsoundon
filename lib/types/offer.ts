@@ -3,6 +3,7 @@
  */
 
 export type OfferStatus = "pending" | "paid" | "refused" | "expired";
+export type CancellationPolicy = "strict" | "moderate" | "flexible";
 
 export type Offer = {
   id: string;
@@ -13,6 +14,7 @@ export type Offer = {
   salle_id: string;
   amount_cents: number;
   payment_mode: "full" | "split";
+  cancellation_policy: CancellationPolicy;
   upfront_amount_cents: number;
   balance_amount_cents: number;
   balance_due_at: string | null;
@@ -40,6 +42,19 @@ export type Offer = {
   deposit_claim_requested_at: string | null;
   deposit_released_at: string | null;
   deposit_captured_at: string | null;
+  contract_accepted_at: string | null;
+  contract_acceptance_version: string | null;
+  contract_terms_snapshot: string | null;
+  event_end_at: string | null;
+  incident_deadline_at: string | null;
+  owner_payout_due_at: string | null;
+  owner_payout_status: "pending" | "scheduled" | "paid" | "blocked" | "skipped";
+  deposit_release_due_at: string | null;
+  incident_status: "none" | "reported" | "under_review" | "resolved";
+  incident_reported_at: string | null;
+  no_show_reported_by: "none" | "owner" | "seeker";
+  no_show_reported_at: string | null;
+  cancellation_outcome_status: "none" | "pending" | "applied";
   expires_at: string;
   status: OfferStatus;
   message: string | null;
@@ -58,6 +73,7 @@ export type OfferRow = {
   salle_id: string;
   amount_cents: number;
   payment_mode: "full" | "split";
+  cancellation_policy: CancellationPolicy;
   upfront_amount_cents: number;
   balance_amount_cents: number;
   balance_due_at: string | null;
@@ -85,6 +101,19 @@ export type OfferRow = {
   deposit_claim_requested_at: string | null;
   deposit_released_at: string | null;
   deposit_captured_at: string | null;
+  contract_accepted_at: string | null;
+  contract_acceptance_version: string | null;
+  contract_terms_snapshot: string | null;
+  event_end_at: string | null;
+  incident_deadline_at: string | null;
+  owner_payout_due_at: string | null;
+  owner_payout_status: "pending" | "scheduled" | "paid" | "blocked" | "skipped";
+  deposit_release_due_at: string | null;
+  incident_status: "none" | "reported" | "under_review" | "resolved";
+  incident_reported_at: string | null;
+  no_show_reported_by: "none" | "owner" | "seeker";
+  no_show_reported_at: string | null;
+  cancellation_outcome_status: "none" | "pending" | "applied";
   expires_at: string;
   status: OfferStatus;
   message: string | null;

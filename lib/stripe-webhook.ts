@@ -13,21 +13,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendAdminPaymentTelegramNotification } from "@/lib/telegram";
 import { sendUserNotification } from "@/lib/user-notifications";
 
-async function paymentAlreadyRecorded(
-  supabase: ReturnType<typeof createAdminClient>,
-  stripeSessionId: string,
-  productType: "reservation" | "pass_24h" | "pass_48h" | "abonnement"
-): Promise<boolean> {
-  const { data } = await supabase
-    .from("payments")
-    .select("id")
-    .eq("stripe_session_id", stripeSessionId)
-    .eq("product_type", productType)
-    .limit(1)
-    .maybeSingle();
-  return !!data;
-}
-
 export async function handleStripeWebhook(event: Stripe.Event) {
   switch (event.type) {
     case "checkout.session.completed": {
@@ -37,7 +22,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
       let reservationJustProcessed = false;
       let shouldSendAdminPaymentTelegram = false;
 
-      if (!productType || (productType !== "reservation" && !["pass_24h", "pass_48h", "abonnement"].includes(productType))) {
+      if (!productType || productType !== "reservation") {
         console.log("[webhook] checkout.session.completed ignoré (metadata):", { productType, offer_id: metadata?.offer_id, user_id: metadata?.user_id });
       }
 
@@ -219,7 +204,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
 
           const msgContent =
             paymentStage === "deposit"
-              ? `A payé l'acompte de ${(paidNowCents / 100).toFixed(2)} € (solde prévu J-1).`
+              ? `A payé l'acompte de ${(paidNowCents / 100).toFixed(2)} € (solde prévu J-7).`
               : `A payé l'offre de ${amountEur} €.`;
           const { error: msgError } = await supabase.from("messages").insert({
             conversation_id: convId,
@@ -359,41 +344,6 @@ export async function handleStripeWebhook(event: Stripe.Event) {
 
           console.log("[webhook] Réservation traitée: offer_id=", offerId, "user_id=", metadata.user_id, "amount=", amountEur, "€");
         }
-      } else if (
-        productType &&
-        ["pass_24h", "pass_48h", "abonnement"].includes(productType) &&
-        metadata?.user_id
-      ) {
-        const amount = session.amount_total ?? 0;
-        const isSubscription = session.mode === "subscription" && session.subscription;
-        const supabase = createAdminClient();
-
-        const alreadyRecorded = await paymentAlreadyRecorded(
-          supabase,
-          session.id,
-          productType as "pass_24h" | "pass_48h" | "abonnement"
-        );
-        if (!alreadyRecorded) {
-          await supabase.from("payments").insert({
-            user_id: metadata.user_id,
-            stripe_session_id: session.id,
-            amount,
-            currency: session.currency ?? "eur",
-            product_type: productType,
-            status: isSubscription ? "active" : "paid",
-            subscription_id: isSubscription ? session.subscription : null,
-          });
-          shouldSendAdminPaymentTelegram = true;
-        }
-
-        const updates: Record<string, unknown> = {};
-        const customerId = session.customer as string | null;
-        if (customerId) updates.stripe_customer_id = customerId;
-        if (isSubscription && session.subscription) updates.stripe_subscription_id = session.subscription;
-
-        if (Object.keys(updates).length > 0) {
-          await supabase.from("profiles").update(updates).eq("id", metadata.user_id);
-        }
       }
 
       if (
@@ -483,63 +433,6 @@ export async function handleStripeWebhook(event: Stripe.Event) {
         customerEmail: session.customer_details?.email ?? null,
         sessionId: session.id,
       };
-    }
-    case "customer.subscription.deleted": {
-      const subscription = event.data.object as Stripe.Subscription;
-      const supabase = createAdminClient();
-      await supabase.from("profiles").update({ stripe_subscription_id: null }).eq("stripe_subscription_id", subscription.id);
-      await supabase.from("payments").update({ status: "canceled" }).eq("subscription_id", subscription.id);
-      return { type: event.type, subscriptionId: subscription.id };
-    }
-    case "customer.subscription.updated": {
-      const subscription = event.data.object as Stripe.Subscription;
-      if (["canceled", "unpaid", "incomplete_expired"].includes(subscription.status)) {
-        const supabase = createAdminClient();
-        await supabase.from("profiles").update({ stripe_subscription_id: null }).eq("stripe_subscription_id", subscription.id);
-        await supabase.from("payments").update({ status: "canceled" }).eq("subscription_id", subscription.id);
-      }
-      return { type: event.type, subscriptionId: subscription.id, status: subscription.status };
-    }
-    case "invoice.paid": {
-      const invoice = event.data.object as Stripe.Invoice & { subscription?: string };
-      const subRaw = invoice.subscription ?? invoice.parent?.subscription_details?.subscription;
-      const subscriptionId = typeof subRaw === "string" ? subRaw : subRaw?.id ?? null;
-      if (subscriptionId && invoice.billing_reason === "subscription_cycle") {
-        const supabase = createAdminClient();
-        const customerId = typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("stripe_customer_id", customerId)
-          .single();
-        if (profile?.id) {
-          const alreadyRecorded = await paymentAlreadyRecorded(
-            supabase,
-            invoice.id,
-            "abonnement"
-          );
-          if (!alreadyRecorded) {
-            await supabase.from("payments").insert({
-              user_id: profile.id,
-              stripe_session_id: invoice.id,
-              amount: invoice.amount_paid ?? 0,
-              currency: invoice.currency ?? "eur",
-              product_type: "abonnement",
-              status: "paid",
-              subscription_id: subscriptionId,
-            });
-            sendAdminPaymentTelegramNotification({
-              amountCents: invoice.amount_paid ?? 0,
-              currency: invoice.currency ?? "eur",
-              productType: "abonnement",
-              offerId: null,
-              userId: profile.id,
-              source: "invoice_paid",
-            }).catch((e) => console.error("[webhook] notification telegram invoice paid:", e));
-          }
-        }
-      }
-      return { type: event.type, invoiceId: invoice.id };
     }
     case "payment_intent.payment_failed": {
       const pi = event.data.object as Stripe.PaymentIntent;

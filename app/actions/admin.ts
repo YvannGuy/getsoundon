@@ -225,6 +225,8 @@ export async function resolveDepositClaimAdminAction(params: {
       .update({
         deposit_hold_status: "captured",
         deposit_captured_at: new Date().toISOString(),
+        incident_status: "resolved",
+        cancellation_outcome_status: "applied",
         updated_at: new Date().toISOString(),
       })
       .eq("id", offerId);
@@ -244,6 +246,8 @@ export async function resolveDepositClaimAdminAction(params: {
       .update({
         deposit_hold_status: "released",
         deposit_released_at: new Date().toISOString(),
+        incident_status: "resolved",
+        cancellation_outcome_status: "applied",
         updated_at: new Date().toISOString(),
       })
       .eq("id", offerId);
@@ -251,6 +255,11 @@ export async function resolveDepositClaimAdminAction(params: {
   }
 
   revalidatePath("/admin/paiements");
+  revalidatePath("/admin/cautions");
+  revalidatePath("/admin/litiges");
+  revalidatePath("/admin/reservations");
+  revalidatePath("/dashboard/reservations");
+  revalidatePath("/proprietaire/reservations");
   revalidatePath("/proprietaire/paiement");
   return { success: true };
 }

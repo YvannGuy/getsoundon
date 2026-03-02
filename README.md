@@ -114,9 +114,9 @@ Optionnel pour upload automatique des sourcemaps en CI/CD :
 - `SENTRY_ORG`
 - `SENTRY_PROJECT`
 
-## Cron solde J-1 (acompte / paiement fractionné)
+## Cron solde J-7 (acompte / paiement fractionné)
 
-Le cron appelle l'endpoint `POST /api/stripe/process-balance` pour tenter le prélèvement du solde des réservations à J-1.
+Le cron appelle l'endpoint `POST /api/stripe/process-balance` pour tenter le prélèvement du solde des réservations à J-7.
 
 1. Ajouter les variables d'environnement sur Vercel :
    - `CRON_SECRET`
@@ -143,6 +143,15 @@ curl -X POST "https://salledeculte.com/api/stripe/process-balance" \
 ```
 
 > Important: le header doit contenir `Bearer` (avec un espace), sinon l'API renvoie `401 Unauthorized`.
+
+## Crons cycle réservation (J-7 / J+3 / J+7)
+
+Endpoints disponibles (protégés via `Authorization: Bearer ${CRON_SECRET}`):
+
+- `POST /api/cron/balance-j-minus-7` : déclenche le prélèvement solde (proxy vers `process-balance`).
+- `POST /api/cron/payout-j-plus-3` : marque les versements propriétaire à J+3 (ou bloque si incident/litige).
+- `POST /api/cron/deposit-release-j-plus-7` : libère les cautions autorisées à J+7 si aucun litige ouvert.
+- `POST /api/cron/visit-reminders` : rappels visite J-1 (owner+seeker), H-4 (owner), H-1 (seeker).
 
 ## Admin Dashboard
 

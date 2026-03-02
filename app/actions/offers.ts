@@ -55,6 +55,8 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
   const upfrontAmountStr = formData.get("upfrontAmount") as string | null;
   const depositAmountStr = formData.get("depositAmount") as string | null;
   const eventType = (formData.get("eventType") as string | null) || "ponctuel";
+  const cancellationPolicyRaw =
+    (formData.get("cancellationPolicy") as string | null) || "strict";
   const dateDebut = formData.get("dateDebut") as string | null;
   const dateFin = formData.get("dateFin") as string | null;
   const expiresAt = formData.get("expiresAt") as string | null;
@@ -65,6 +67,10 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
   }
 
   const validEventType = eventType === "mensuel" ? "mensuel" : "ponctuel";
+  const cancellationPolicy =
+    cancellationPolicyRaw === "moderate" || cancellationPolicyRaw === "flexible"
+      ? cancellationPolicyRaw
+      : "strict";
   const validDateDebut = dateDebut || expiresAt;
   const validDateFin = dateFin || dateDebut || expiresAt;
 
@@ -90,11 +96,19 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
   }
   const balanceAmountCents = Math.max(0, amountCents - upfrontAmountCents);
   const baseDate = new Date(`${validDateDebut}T10:00:00.000Z`);
-  baseDate.setUTCDate(baseDate.getUTCDate() - 1);
+  baseDate.setUTCDate(baseDate.getUTCDate() - 7);
   const balanceDueAt =
     paymentMode === "split"
       ? (Number.isNaN(baseDate.getTime()) ? null : baseDate.toISOString())
       : null;
+  const eventEndBase = new Date(`${validDateFin}T18:00:00.000Z`);
+  const eventEndAt = Number.isNaN(eventEndBase.getTime()) ? null : eventEndBase.toISOString();
+  const incidentDeadlineAt =
+    eventEndAt ? new Date(new Date(eventEndAt).getTime() + 48 * 60 * 60 * 1000).toISOString() : null;
+  const ownerPayoutDueAt =
+    eventEndAt ? new Date(new Date(eventEndAt).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString() : null;
+  const depositReleaseDueAt =
+    eventEndAt ? new Date(new Date(eventEndAt).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString() : null;
   const depositAmountCents = Math.round(parseFloat((depositAmountStr || "0").replace(",", ".")) * 100);
   if (!Number.isFinite(depositAmountCents) || depositAmountCents < 0) {
     return { success: false, error: "Caution invalide." };
@@ -161,6 +175,16 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
       service_fee_cents: serviceFeeCents,
       deposit_refunded_cents: 0,
       deposit_status: "none",
+      cancellation_policy: cancellationPolicy,
+      contract_acceptance_version: "v2026-02",
+      event_end_at: eventEndAt,
+      incident_deadline_at: incidentDeadlineAt,
+      owner_payout_due_at: ownerPayoutDueAt,
+      owner_payout_status: "scheduled",
+      deposit_release_due_at: depositReleaseDueAt,
+      incident_status: "none",
+      no_show_reported_by: "none",
+      cancellation_outcome_status: "none",
       expires_at: expiresAt,
       status: "pending",
       message,

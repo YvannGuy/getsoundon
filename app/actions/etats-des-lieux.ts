@@ -51,7 +51,7 @@ async function getActorRoleForOffer(userId: string, offerId: string) {
   const admin = createAdminClient();
   const { data: offer } = await admin
     .from("offers")
-    .select("id, status, owner_id, seeker_id, date_debut, date_fin")
+    .select("id, status, owner_id, seeker_id, date_debut, date_fin, incident_deadline_at")
     .eq("id", offerId)
     .maybeSingle();
 
@@ -64,6 +64,7 @@ async function getActorRoleForOffer(userId: string, offerId: string) {
     seeker_id: string;
     date_debut: string | null;
     date_fin: string | null;
+    incident_deadline_at?: string | null;
   };
 
   if (row.status !== "paid") {
@@ -71,10 +72,20 @@ async function getActorRoleForOffer(userId: string, offerId: string) {
   }
 
   if (row.owner_id === userId) {
-    return { role: "owner" as ActorRole, dateDebut: row.date_debut, dateFin: row.date_fin };
+    return {
+      role: "owner" as ActorRole,
+      dateDebut: row.date_debut,
+      dateFin: row.date_fin,
+      incidentDeadlineAt: row.incident_deadline_at ?? null,
+    };
   }
   if (row.seeker_id === userId) {
-    return { role: "seeker" as ActorRole, dateDebut: row.date_debut, dateFin: row.date_fin };
+    return {
+      role: "seeker" as ActorRole,
+      dateDebut: row.date_debut,
+      dateFin: row.date_fin,
+      incidentDeadlineAt: row.incident_deadline_at ?? null,
+    };
   }
 
   return { error: "Accès refusé." as string };
@@ -281,6 +292,12 @@ export async function openUserDisputeCaseAction(
   if (actor.role !== "owner") {
     return { success: false, error: "Seul le propriétaire peut ouvrir un litige." };
   }
+  if (actor.incidentDeadlineAt && new Date() > new Date(actor.incidentDeadlineAt)) {
+    return {
+      success: false,
+      error: "Le délai de déclaration de litige est expiré (48h après la fin de l'événement).",
+    };
+  }
 
   const files = readPhotos(formData);
   const photoValidationError = validatePhotos(files);
@@ -430,6 +447,64 @@ export async function openUserDisputeCaseAction(
   revalidatePath("/proprietaire/cautions");
   revalidatePath("/admin/paiements");
 
+  return { success: true };
+}
+
+export async function reportNoShowAction(
+  offerId: string,
+  details: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecté." };
+  if (!offerId) return { success: false, error: "Offre manquante." };
+
+  const actor = await getActorRoleForOffer(user.id, offerId);
+  if ("error" in actor) return { success: false, error: actor.error };
+  if (actor.incidentDeadlineAt && new Date() > new Date(actor.incidentDeadlineAt)) {
+    return {
+      success: false,
+      error: "Le délai de signalement no-show est expiré (48h après la fin).",
+    };
+  }
+
+  const admin = createAdminClient();
+  const role = actor.role;
+  const nowIso = new Date().toISOString();
+  await admin
+    .from("offers")
+    .update({
+      no_show_reported_by: role,
+      no_show_reported_at: nowIso,
+      incident_status: "reported",
+      cancellation_outcome_status: "pending",
+      updated_at: nowIso,
+    })
+    .eq("id", offerId);
+
+  await admin.from("refund_cases").insert({
+    offer_id: offerId,
+    requested_by_role: role,
+    side: role,
+    case_type: "dispute",
+    status: "open",
+    amount_cents: 0,
+    reason: `No-show déclaré (${role})${details ? `: ${details}` : ""}`,
+    evidence_required: true,
+    created_by: user.id,
+    created_at: nowIso,
+    updated_at: nowIso,
+  });
+
+  revalidatePath("/dashboard/litiges");
+  revalidatePath("/proprietaire/litiges");
+  revalidatePath("/admin/litiges");
+  revalidatePath("/admin/cautions");
+  revalidatePath("/dashboard/reservations");
+  revalidatePath("/proprietaire/reservations");
+  revalidatePath("/admin/reservations");
   return { success: true };
 }
 

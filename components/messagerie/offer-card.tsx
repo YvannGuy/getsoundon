@@ -18,6 +18,13 @@ import {
 
 import type { OfferStatus } from "@/lib/types/offer";
 
+export type OfferAcceptancePayload = {
+  acceptedAt: string;
+  acceptanceVersion: string;
+  acceptedContract: true;
+  acceptedCgv: true;
+};
+
 type Offer = {
   id: string;
   amount_cents: number;
@@ -47,11 +54,17 @@ type Offer = {
   date_debut?: string | null;
   date_fin?: string | null;
   contract_path?: string | null;
+  cancellation_policy?: "strict" | "moderate" | "flexible" | null;
 };
 
 const EVENT_TYPE_LABEL: Record<string, string> = {
   ponctuel: "Ponctuel",
   mensuel: "Mensuel",
+};
+const CANCELLATION_POLICY_LABEL: Record<"strict" | "moderate" | "flexible", string> = {
+  strict: "Stricte",
+  moderate: "Modérée",
+  flexible: "Flexible",
 };
 
 const STATUS_LABEL: Record<OfferStatus, string> = {
@@ -72,7 +85,7 @@ type OfferCardProps = {
   offer: Offer;
   userType: "owner" | "seeker";
   currentUserId: string;
-  onAcceptAndPay?: (offerId: string) => void;
+  onAcceptAndPay?: (offerId: string, acceptance: OfferAcceptancePayload) => void;
   onRefused?: () => void;
   onNewOffer?: () => void;
 };
@@ -115,9 +128,9 @@ export function OfferCard({
     }
   };
 
-  const handlePayAfterContract = () => {
+  const handlePayAfterContract = (acceptance: OfferAcceptancePayload) => {
     if (onAcceptAndPay) {
-      onAcceptAndPay(offer.id);
+      onAcceptAndPay(offer.id, acceptance);
     }
     setContractModalOpen(false);
   };
@@ -162,6 +175,10 @@ export function OfferCard({
               Type : {EVENT_TYPE_LABEL[offer.event_type] ?? offer.event_type}
             </p>
           )}
+          <p className="text-slate-600">
+            Annulation :{" "}
+            {CANCELLATION_POLICY_LABEL[(offer.cancellation_policy ?? "strict") as "strict" | "moderate" | "flexible"]}
+          </p>
           {dateRangeFormatted && (
             <p className="text-slate-600">Valable du {dateRangeFormatted}</p>
           )}
@@ -176,7 +193,7 @@ export function OfferCard({
               </p>
               <p className="text-slate-600">
                 Solde : <span className="tabular-nums">{(balanceCents / 100).toFixed(2)} €</span>
-                {balanceDueLabel ? ` (prélèvement prévu le ${balanceDueLabel})` : " (prélèvement prévu J-1)"}
+                {balanceDueLabel ? ` (prélèvement prévu le ${balanceDueLabel})` : " (prélèvement prévu J-7)"}
               </p>
               {offer.status === "paid" && (
                 <p className="text-xs text-slate-500">
@@ -186,7 +203,7 @@ export function OfferCard({
                     : offer.payment_plan_status === "balance_failed"
                       ? "Échec de prélèvement"
                       : offer.payment_plan_status === "balance_scheduled" || offer.payment_plan_status === "deposit_paid"
-                        ? "Planifié (J-1)"
+                        ? "Planifié (J-7)"
                         : "En attente"}
                 </p>
               )}
@@ -277,6 +294,7 @@ export function OfferCard({
 
       <ContractAcceptModal
         offerId={offer.id}
+        cancellationPolicy={offer.cancellation_policy ?? "strict"}
         open={contractModalOpen}
         onOpenChange={setContractModalOpen}
         onPay={handlePayAfterContract}

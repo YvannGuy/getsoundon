@@ -9,6 +9,7 @@ type OfferRow = {
   owner_id: string;
   seeker_id: string;
   amount_cents: number;
+  cancellation_policy: "strict" | "moderate" | "flexible" | null;
   deposit_hold_status: string | null;
   created_at: string;
 };
@@ -36,6 +37,12 @@ function filterPillClass(active: boolean) {
     : "rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200";
 }
 
+function policyLabel(value: OfferRow["cancellation_policy"]) {
+  if (value === "moderate") return "Modérée";
+  if (value === "flexible") return "Flexible";
+  return "Stricte";
+}
+
 export default async function AdminReservationsPage({
   searchParams,
 }: {
@@ -55,7 +62,7 @@ export default async function AdminReservationsPage({
   const admin = createAdminClient();
   const { data: offers } = await admin
     .from("offers")
-    .select("id, salle_id, owner_id, seeker_id, amount_cents, deposit_hold_status, created_at")
+    .select("id, salle_id, owner_id, seeker_id, amount_cents, cancellation_policy, deposit_hold_status, created_at")
     .eq("status", "paid")
     .order("created_at", { ascending: false })
     .limit(200);
@@ -227,6 +234,7 @@ export default async function AdminReservationsPage({
                     <div>
                       Owner EDL: {ownerIncomplete ? "incomplet" : "complet"} - Seeker EDL: {seekerIncomplete ? "incomplet" : "complet"} - Caution: {offer.deposit_hold_status ?? "—"}
                     </div>
+                    <div>Annulation: {policyLabel(offer.cancellation_policy)}</div>
                     <div className="flex flex-wrap gap-2">
                       {aTraiter ? (
                         <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
