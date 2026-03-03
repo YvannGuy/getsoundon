@@ -10,6 +10,7 @@ const facebookUrl = "https://www.facebook.com/profile.php?id=61588281587238";
 const demoVideoUrl = "https://youtu.be/demo-salledeculte";
 const seekerWelcomeVideoUrl = "https://vimeo.com/1169991938";
 const seekerWelcomeGuideUrl = `${siteUrl}/pdf/salledeculte.com_bien_debuter.pdf`;
+const ownerWelcomeVideoUrl = "https://vimeo.com/1170020143";
 
 function renderEmailLayout({
   title,
@@ -166,14 +167,12 @@ export async function sendWelcomeOwnerEmail(to: string, _fullName: string) {
          </ul>`,
         `<h2>Conseil pour bien démarrer</h2>
          <p>Prenez quelques minutes pour compléter votre annonce avec des photos de qualité, une description claire et les informations pratiques. Plus votre annonce est détaillée, plus vous recevrez des demandes pertinentes.</p>`,
-        `<h2>Guide démo (temporaire)</h2>
-         <p>Voici un lien vidéo de démonstration pour découvrir les principales fonctionnalités :</p>
-         <p><a href="${demoVideoUrl}">${demoVideoUrl}</a></p>
-         <p class="tip">Ce lien est temporaire et sera remplacé par la version finale.</p>`,
+        `<h2>Vidéo de prise en main</h2>
+         <p>Découvrez les principales fonctionnalités propriétaire :</p>
+         <p><a href="${ownerWelcomeVideoUrl}">${ownerWelcomeVideoUrl}</a></p>`,
       ],
       ctaLabel: "Créer ou gérer mon annonce",
       ctaUrl: `${siteUrl}/onboarding/salle`,
-      includeDemoCta: true,
     }),
   });
   return { success: !error, error: error?.message };

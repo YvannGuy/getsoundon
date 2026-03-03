@@ -9,6 +9,7 @@ type WelcomeOnboardingBannerProps = {
   dashboard: "seeker" | "owner";
   firstName?: string | null;
   videoUrl?: string;
+  videoDurationLabel?: string;
   tourUrl?: string;
 };
 
@@ -17,6 +18,7 @@ export function WelcomeOnboardingBanner({
   dashboard,
   firstName,
   videoUrl,
+  videoDurationLabel,
   tourUrl,
 }: WelcomeOnboardingBannerProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -72,7 +74,7 @@ export function WelcomeOnboardingBanner({
           onClick={() => setVideoOpen(true)}
         >
           <Play className="h-5 w-5" />
-          Voir la vidéo (5 min 27)
+          Voir la vidéo ({videoDurationLabel?.trim() || "5 min 27"})
         </button>
         <a
           href={resolvedGuideUrl}
