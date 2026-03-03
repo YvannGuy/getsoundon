@@ -11,6 +11,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { CategoryCarousel } from "@/components/home/category-carousel";
 import { CategoryRotatingBold } from "@/components/home/category-rotating-bold";
+import { HeroBackgroundCarousel } from "@/components/home/hero-background-carousel";
 import { HeroSearchBar } from "@/components/home/hero-search-bar";
 import { InstallAppPopup } from "@/components/home/install-app-popup";
 import { PourquoiReserverCarousel } from "@/components/home/pourquoi-reserver-carousel";
@@ -85,20 +86,7 @@ export default async function Home() {
       <InstallAppPopup />
 
       <SectionReveal id="recherche" className="relative min-h-[480px] overflow-hidden md:min-h-[560px]">
-        <div className="absolute inset-0">
-          <Image
-            src="/img.png"
-            alt="Intérieur d'une salle de culte"
-            fill
-            className="object-cover object-center"
-            priority
-            sizes="100vw"
-          />
-          <div
-            className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60"
-            aria-hidden
-          />
-        </div>
+        <HeroBackgroundCarousel />
         <div className="container relative z-10 flex flex-col items-center px-4 py-12 md:py-16">
           <h1 className="max-w-3xl text-center text-[28px] font-bold leading-tight text-white sm:text-[38px] md:text-[44px] lg:text-[52px]">
             Trouvez et réservez un lieu adapté en toute sérénité

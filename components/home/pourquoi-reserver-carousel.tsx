@@ -16,28 +16,28 @@ const BLOCS = [
     title: "Annonces vérifiées",
     desc: "Réservez en toute confiance grâce à des lieux contrôlés et présentés avec précision.",
     sub: "Des informations fiables pour éviter les mauvaises surprises.",
-    image: "/img.png",
+    image: "/images/caroussel/annoncesvérifié.png",
   },
   {
     id: "informations",
     title: "Informations claires",
     desc: "Capacité, équipements, contraintes, accessibilité…",
     sub: "Tout ce dont vous avez besoin pour choisir rapidement.",
-    image: "/img2.png",
+    image: "/images/caroussel/informationsclaires.png",
   },
   {
     id: "demandes",
     title: "Demandes simples",
     desc: "Contactez plusieurs propriétaires facilement et recevez des réponses rapides.",
     sub: "Un processus fluide, sans friction.",
-    image: "/img.png",
+    image: "/images/caroussel/demandessimples.png",
   },
   {
     id: "lieux",
     title: "Lieux réellement adaptés",
     desc: "Des salles pensées pour accueillir cultes, cérémonies et rassemblements.",
     sub: null,
-    image: "/img2.png",
+    image: "/images/caroussel/lieuxréellementadapté.png",
   },
 ];
 
@@ -124,6 +124,7 @@ export function PourquoiReserverCarousel() {
               sizes="(max-width: 768px) 100vw, 50vw"
               priority={index === 0}
             />
+            <div className="absolute inset-0 bg-black/35" aria-hidden />
             <div className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-lg bg-white/95 shadow-md">
               <span className="text-amber-500">★</span>
             </div>
