@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
+import { computePaymentProcessingFeeCents } from "@/lib/payment-processing-fee";
 import type { OfferStatus } from "@/lib/types/offer";
 
 export type OfferAcceptancePayload = {
@@ -153,7 +154,11 @@ export function OfferCard({
       : 0;
   const depositCents = offer.deposit_amount_cents ?? 0;
   const serviceFeeCents = offer.service_fee_cents ?? 1500;
-  const totalToPayNowEur = ((upfrontCents + serviceFeeCents) / 100).toFixed(2);
+  const charge1BaseCents = upfrontCents + serviceFeeCents;
+  const processingFeeCharge1Cents = computePaymentProcessingFeeCents(charge1BaseCents);
+  const charge2BaseCents = balanceCents + depositCents;
+  const processingFeeCharge2Cents = computePaymentProcessingFeeCents(charge2BaseCents);
+  const totalToPayNowEur = ((charge1BaseCents + processingFeeCharge1Cents) / 100).toFixed(2);
   const balanceDueDate = offer.balance_due_at ? new Date(offer.balance_due_at) : null;
   const balanceDueLabel = balanceDueDate
     ? format(balanceDueDate, "d MMM yyyy", { locale: fr })
@@ -256,6 +261,17 @@ export function OfferCard({
           <p className="text-slate-600">
             Frais plateforme : <span className="tabular-nums">{(serviceFeeCents / 100).toFixed(2)} €</span>
           </p>
+          <p className="text-slate-600">
+            Frais de traitement paiement :{" "}
+            <span className="tabular-nums">{(processingFeeCharge1Cents / 100).toFixed(2)} €</span>
+          </p>
+          {paymentMode === "split" && (
+            <p className="text-xs text-slate-500">
+              Frais de traitement estimés à J-7 :{" "}
+              <span className="tabular-nums">{(processingFeeCharge2Cents / 100).toFixed(2)} €</span>
+              {" "} (sur solde + caution).
+            </p>
+          )}
           <p className="font-medium text-black">
             {paymentMode === "split" ? "Total à payer maintenant" : "Total à payer"} :{" "}
             <span className="tabular-nums">{totalToPayNowEur} €</span>
@@ -334,6 +350,11 @@ export function OfferCard({
       <ContractAcceptModal
         offerId={offer.id}
         cancellationPolicy={offer.cancellation_policy ?? "strict"}
+        paymentMode={paymentMode}
+        upfrontAmountCents={upfrontCents}
+        balanceAmountCents={balanceCents}
+        serviceFeeCents={serviceFeeCents}
+        depositAmountCents={depositCents}
         open={contractModalOpen}
         onOpenChange={setContractModalOpen}
         onPay={handlePayAfterContract}

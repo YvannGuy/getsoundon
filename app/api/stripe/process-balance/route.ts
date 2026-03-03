@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { computePaymentProcessingFeeCents } from "@/lib/payment-processing-fee";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -52,6 +53,10 @@ async function processBalances() {
   for (const offer of rows) {
     processed += 1;
     const balanceAmountCents = Math.max(0, offer.balance_amount_cents ?? 0);
+    const depositAmountCents = Math.max(0, offer.deposit_amount_cents ?? 0);
+    const charge2BaseCents = balanceAmountCents + depositAmountCents;
+    const processingFeeCharge2Cents = computePaymentProcessingFeeCents(charge2BaseCents);
+    const charge2TotalCents = balanceAmountCents + processingFeeCharge2Cents;
     if (!offer.stripe_payment_intent_id || balanceAmountCents <= 0) {
       failed += 1;
       await admin
@@ -80,7 +85,7 @@ async function processBalances() {
       }
 
       const balancePi = await stripe.paymentIntents.create({
-        amount: balanceAmountCents,
+        amount: charge2TotalCents,
         currency: "eur",
         customer: customerId,
         payment_method: paymentMethodId,
@@ -98,7 +103,6 @@ async function processBalances() {
 
       let nextDepositPaymentIntentId = offer.deposit_payment_intent_id;
       let nextDepositHoldStatus = offer.deposit_hold_status ?? "none";
-      const depositAmountCents = Math.max(0, offer.deposit_amount_cents ?? 0);
       const hasExistingDepositHold = !!offer.deposit_payment_intent_id;
       const shouldCreateDepositHold = depositAmountCents > 0 && !hasExistingDepositHold;
 
@@ -167,16 +171,34 @@ async function processBalances() {
         })
         .eq("id", offer.id);
 
-      await admin.from("payments").insert({
+      const paymentInsertPayload = {
         user_id: offer.seeker_id,
         stripe_session_id: balancePi.id,
-        amount: balanceAmountCents,
+        amount: charge2TotalCents,
         currency: "eur",
         product_type: "reservation",
         status: "paid",
         payment_type: "balance",
         offer_id: offer.id,
-      });
+        breakdown: {
+          charge_stage: "balance",
+          balance_amount_cents: balanceAmountCents,
+          deposit_amount_cents: depositAmountCents,
+          service_fee_cents: 0,
+          processing_fee_cents: processingFeeCharge2Cents,
+          charged_total_cents: charge2TotalCents,
+        },
+      };
+      const { error: paymentInsertError } = await admin.from("payments").insert(paymentInsertPayload);
+      if (paymentInsertError) {
+        if (paymentInsertError.message.toLowerCase().includes("breakdown")) {
+          const fallbackPayload = { ...paymentInsertPayload } as Record<string, unknown>;
+          delete fallbackPayload.breakdown;
+          await admin.from("payments").insert(fallbackPayload);
+        } else {
+          throw paymentInsertError;
+        }
+      }
 
       const { data: conv } = await admin
         .from("offers")

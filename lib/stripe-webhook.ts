@@ -8,6 +8,7 @@ import {
   sendReservationConfirmedSeekerEmail,
 } from "@/lib/email";
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
+import { computePaymentProcessingFeeCents } from "@/lib/payment-processing-fee";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendAdminPaymentTelegramNotification } from "@/lib/telegram";
@@ -38,6 +39,12 @@ export async function handleStripeWebhook(event: Stripe.Event) {
             ? session.payment_intent
             : session.payment_intent?.id ?? null;
         const depositAmountCents = Number(metadata?.deposit_amount_cents ?? "0");
+        const paidNowCents = Number(metadata?.amount_cents ?? String(amount ?? 0));
+        const serviceFeeCents = Number(metadata?.service_fee_cents ?? "0");
+        const processingFeeCharge1Cents = Number(
+          metadata?.processing_fee_charge1_cents ??
+            String(computePaymentProcessingFeeCents(Math.max(0, paidNowCents + serviceFeeCents)))
+        );
         const paymentMode = metadata?.payment_mode === "split" ? "split" : "full";
         const paymentStage =
           metadata?.payment_stage === "deposit"
@@ -45,7 +52,6 @@ export async function handleStripeWebhook(event: Stripe.Event) {
             : metadata?.payment_stage === "balance"
               ? "balance"
               : "full";
-        const paidNowCents = Number(metadata?.amount_cents ?? String(amount ?? 0));
         const now = new Date().toISOString();
         const nextPlanStatus = paymentMode === "split" ? "balance_scheduled" : "fully_paid";
 
@@ -182,22 +188,50 @@ export async function handleStripeWebhook(event: Stripe.Event) {
 
           const convId = (updatedOffer as { conversation_id: string }).conversation_id;
 
-          const { data: insertedPayment, error: payError } = await supabase
+          const paymentInsertPayload = {
+            user_id: metadata.user_id,
+            stripe_session_id: session.id,
+            amount,
+            currency: session.currency ?? "eur",
+            product_type: "reservation",
+            status: "paid",
+            payment_type: paymentStage === "deposit" ? "deposit" : "full",
+            offer_id: offerId,
+            breakdown: {
+              charge_stage: paymentStage === "deposit" ? "deposit" : "full",
+              reservation_amount_cents: Math.max(0, paidNowCents),
+              service_fee_cents: Math.max(0, serviceFeeCents),
+              processing_fee_cents: Math.max(0, processingFeeCharge1Cents),
+              charged_total_cents: Math.max(0, amount),
+            },
+          };
+          let insertedPayment:
+            | {
+                id?: string;
+              }
+            | null = null;
+          let payErrorMessage: string | null = null;
+          const { data: insertedWithBreakdown, error: payError } = await supabase
             .from("payments")
-            .insert({
-              user_id: metadata.user_id,
-              stripe_session_id: session.id,
-              amount,
-              currency: session.currency ?? "eur",
-              product_type: "reservation",
-              status: "paid",
-              payment_type: paymentStage === "deposit" ? "deposit" : "full",
-              offer_id: offerId,
-            })
+            .insert(paymentInsertPayload)
             .select("id")
             .single();
-          if (payError) {
-            console.error("[webhook] Erreur insert payments:", payError.message);
+          if (payError && payError.message.toLowerCase().includes("breakdown")) {
+            const fallbackPayload = { ...paymentInsertPayload } as Record<string, unknown>;
+            delete fallbackPayload.breakdown;
+            const { data: insertedFallback, error: fallbackError } = await supabase
+              .from("payments")
+              .insert(fallbackPayload)
+              .select("id")
+              .single();
+            insertedPayment = insertedFallback as { id?: string } | null;
+            payErrorMessage = fallbackError?.message ?? null;
+          } else {
+            insertedPayment = insertedWithBreakdown as { id?: string } | null;
+            payErrorMessage = payError?.message ?? null;
+          }
+          if (payErrorMessage) {
+            console.error("[webhook] Erreur insert payments:", payErrorMessage);
           } else {
             console.log("[webhook] Payment insert OK: reservation", offerId);
           }

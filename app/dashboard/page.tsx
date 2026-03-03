@@ -226,7 +226,7 @@ export default async function DashboardPage() {
           process.env.NEXT_PUBLIC_ONBOARDING_VIDEO_URL?.trim() ||
           "https://www.youtube.com/watch?v=ysz5S6PUM-U"
         }
-        tourUrl={process.env.NEXT_PUBLIC_ONBOARDING_TOUR_SEEKER_URL ?? "/centre-aide/organisateur"}
+        tourUrl="/pdf/salledeculte.com_bien_debuter.pdf"
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

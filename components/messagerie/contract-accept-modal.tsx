@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FileText } from "lucide-react";
 
+import { computePaymentProcessingFeeCents } from "@/lib/payment-processing-fee";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,6 +17,11 @@ import type { OfferAcceptancePayload } from "@/components/messagerie/offer-card"
 type ContractAcceptModalProps = {
   offerId: string;
   cancellationPolicy: "strict" | "moderate" | "flexible";
+  paymentMode: "full" | "split";
+  upfrontAmountCents: number;
+  balanceAmountCents: number;
+  serviceFeeCents: number;
+  depositAmountCents: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onPay: (acceptance: OfferAcceptancePayload) => void;
@@ -32,6 +38,11 @@ const CONTRACT_VERSION = "standard-salledeculte-v1";
 export function ContractAcceptModal({
   offerId,
   cancellationPolicy,
+  paymentMode,
+  upfrontAmountCents,
+  balanceAmountCents,
+  serviceFeeCents,
+  depositAmountCents,
   open,
   onOpenChange,
   onPay,
@@ -40,6 +51,12 @@ export function ContractAcceptModal({
   const [acceptedCgv, setAcceptedCgv] = useState(false);
 
   const canPay = acceptedContract && acceptedCgv;
+  const charge1BaseCents = upfrontAmountCents + serviceFeeCents;
+  const processingFeeCharge1Cents = computePaymentProcessingFeeCents(charge1BaseCents);
+  const charge1TotalCents = charge1BaseCents + processingFeeCharge1Cents;
+  const charge2BaseCents = balanceAmountCents + depositAmountCents;
+  const processingFeeCharge2Cents =
+    paymentMode === "split" ? computePaymentProcessingFeeCents(charge2BaseCents) : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -210,6 +227,23 @@ export function ContractAcceptModal({
             Échéances de référence : solde ponctuel à J-7, fenêtre incident 48h après la fin,
             versement propriétaire visé à J+3, libération caution visée à J+7.
           </p>
+        </div>
+
+        <div className="rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-700">
+          <p className="font-medium text-slate-900">Paiement d&apos;aujourd&apos;hui</p>
+          <p>Montant location : {(upfrontAmountCents / 100).toFixed(2)} €</p>
+          <p>Frais de service : {(serviceFeeCents / 100).toFixed(2)} €</p>
+          <p>Frais de traitement paiement : {(processingFeeCharge1Cents / 100).toFixed(2)} €</p>
+          <p className="mt-1 font-semibold text-slate-900">
+            Total à payer maintenant : {(charge1TotalCents / 100).toFixed(2)} €
+          </p>
+          {paymentMode === "split" && (
+            <p className="mt-2 text-xs text-slate-500">
+              À J-7 (automatique) : solde {(balanceAmountCents / 100).toFixed(2)} € + caution{" "}
+              {(depositAmountCents / 100).toFixed(2)} € ; frais de traitement estimés{" "}
+              {(processingFeeCharge2Cents / 100).toFixed(2)} €.
+            </p>
+          )}
         </div>
 
         <label className="mt-2 flex cursor-pointer items-start gap-3">

@@ -3,6 +3,7 @@ import { z } from "zod";
 import type Stripe from "stripe";
 
 import { siteConfig } from "@/config/site";
+import { computePaymentProcessingFeeCents } from "@/lib/payment-processing-fee";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -201,7 +202,9 @@ export async function POST(request: Request) {
         .update({ service_fee_cents: serviceFeeCents, updated_at: new Date().toISOString() })
         .eq("id", offerId);
     }
-    const checkoutTotalCents = chargeNowCents + serviceFeeCents;
+    const charge1BaseCents = chargeNowCents + serviceFeeCents;
+    const processingFeeCharge1Cents = computePaymentProcessingFeeCents(charge1BaseCents);
+    const checkoutTotalCents = charge1BaseCents + processingFeeCharge1Cents;
     let demandeParam = offerRow.demande_id;
     if (!demandeParam) {
       const { data: conv } = await adminSupabase
@@ -254,6 +257,19 @@ export async function POST(request: Request) {
         quantity: 1,
       });
     }
+    if (processingFeeCharge1Cents > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "eur",
+          product_data: {
+            name: "Frais de traitement paiement",
+            description: "Calculés sur la charge de paiement",
+          },
+          unit_amount: processingFeeCharge1Cents,
+        },
+        quantity: 1,
+      });
+    }
 
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       mode: "payment",
@@ -283,6 +299,7 @@ export async function POST(request: Request) {
         payment_stage: paymentMode === "split" ? "deposit" : "full",
         deposit_amount_cents: String(depositAmountCents),
         service_fee_cents: String(serviceFeeCents),
+        processing_fee_charge1_cents: String(processingFeeCharge1Cents),
         checkout_total_cents: String(checkoutTotalCents),
         cancellation_policy: offerRow.cancellation_policy ?? "strict",
         contract_acceptance_version: acceptanceVersion,

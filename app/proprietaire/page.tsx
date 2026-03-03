@@ -178,7 +178,7 @@ export default async function ProprietaireDashboardPage() {
           process.env.NEXT_PUBLIC_ONBOARDING_VIDEO_URL?.trim() ||
           "https://www.youtube.com/watch?v=ysz5S6PUM-U"
         }
-        tourUrl={process.env.NEXT_PUBLIC_ONBOARDING_TOUR_OWNER_URL ?? "/centre-aide/proprietaire"}
+        tourUrl="/pdf/salledeculte.com_bien_debuter.pdf"
       />
 
       {/* Recevoir les paiements / Paiements activés */}

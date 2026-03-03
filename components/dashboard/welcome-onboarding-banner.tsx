@@ -17,11 +17,18 @@ export function WelcomeOnboardingBanner({
   dashboard,
   firstName,
   videoUrl,
-  tourUrl: _tourUrl,
+  tourUrl,
 }: WelcomeOnboardingBannerProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const resolvedVideoUrl = videoUrl?.trim() || "https://www.youtube.com/watch?v=ysz5S6PUM-U";
+  const defaultGuideUrl = "/pdf/salledeculte.com_bien_debuter.pdf";
+  const resolvedGuideUrl = useMemo(() => {
+    const candidate = tourUrl?.trim();
+    if (!candidate) return defaultGuideUrl;
+    // On n'accepte ici qu'un PDF pour éviter le téléchargement d'une page HTML.
+    return /\.pdf($|\?)/i.test(candidate) ? candidate : defaultGuideUrl;
+  }, [tourUrl]);
 
   const storageKey = useMemo(
     () => `onboarding_banner_dismissed:${dashboard}:${userId}`,
@@ -63,13 +70,14 @@ export function WelcomeOnboardingBanner({
           <Play className="h-5 w-5" />
           Voir la vidéo (1 min 45)
         </button>
-        <button
-          type="button"
+        <a
+          href={resolvedGuideUrl}
+          download
           className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-medium text-[#0f1f52] hover:bg-slate-50"
         >
           <BookOpenText className="h-5 w-5" />
-          Faire la visite guidée
-        </button>
+          Bien débuter
+        </a>
       </div>
 
       <div className="mt-3 flex justify-end">
