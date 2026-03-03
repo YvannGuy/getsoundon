@@ -53,7 +53,7 @@ export default async function MessageriePage({
 
   const [sallesRes, convsResRaw, convsVisiteResRaw] = await Promise.all([
     salleIds.length > 0
-      ? supabase.from("salles").select("id, name, city, capacity, images, slug, owner_id, address").in("id", salleIds)
+      ? supabase.from("salles").select("id, name, city, capacity, images, slug, owner_id, address, conditions").in("id", salleIds)
       : { data: [] },
     demandeIds.length > 0
       ? supabase
@@ -161,8 +161,21 @@ export default async function MessageriePage({
     const hFin = formatTime(d.heure_fin_souhaitee ?? null);
     const horaires = hDebut && hFin ? `${hDebut} - ${hFin}` : hDebut || "";
 
-    const salleRow = salle as { images?: string[]; city?: string; capacity?: number; slug?: string } | undefined;
+    const salleRow = salle as {
+      images?: string[];
+      city?: string;
+      capacity?: number;
+      slug?: string;
+      conditions?: { label?: string }[] | null;
+    } | undefined;
     const salleImage = salleRow?.images && Array.isArray(salleRow.images) && salleRow.images[0] ? String(salleRow.images[0]) : "/img.png";
+    const salleRulesSummary = Array.isArray(salleRow?.conditions)
+      ? salleRow!.conditions
+          .map((c) => c?.label?.trim())
+          .filter((v): v is string => !!v)
+          .slice(0, 4)
+          .join(", ")
+      : null;
     return {
       demandeId: d.id,
       conversationId: convId,
@@ -173,6 +186,7 @@ export default async function MessageriePage({
       salleName: salle?.name ?? "Salle",
       salleImage,
       salleCity: salleRow?.city ?? "",
+      salleRulesSummary,
       salleCapacity: salleRow?.capacity ?? null,
       salleSlug: salleRow?.slug ?? "",
       typeEvenement: d.type_evenement ?? null,
@@ -212,8 +226,21 @@ export default async function MessageriePage({
     const horaires =
       dv.heure_debut && dv.heure_fin ? `${formatTime(dv.heure_debut)} - ${formatTime(dv.heure_fin)}` : "";
 
-    const salleRow = salle as { images?: string[]; city?: string; capacity?: number; slug?: string } | undefined;
+    const salleRow = salle as {
+      images?: string[];
+      city?: string;
+      capacity?: number;
+      slug?: string;
+      conditions?: { label?: string }[] | null;
+    } | undefined;
     const salleImage = salleRow?.images && Array.isArray(salleRow.images) && salleRow.images[0] ? String(salleRow.images[0]) : "/img.png";
+    const salleRulesSummary = Array.isArray(salleRow?.conditions)
+      ? salleRow!.conditions
+          .map((c) => c?.label?.trim())
+          .filter((v): v is string => !!v)
+          .slice(0, 4)
+          .join(", ")
+      : null;
     return {
       demandeId: `visite-${dv.id}`,
       demandeVisiteId: dv.id,
@@ -225,6 +252,7 @@ export default async function MessageriePage({
       salleName: salle?.name ?? "Salle",
       salleImage,
       salleCity: salleRow?.city ?? "",
+      salleRulesSummary,
       salleCapacity: salleRow?.capacity ?? null,
       salleSlug: salleRow?.slug ?? "",
       typeEvenement: null,
@@ -289,6 +317,7 @@ export default async function MessageriePage({
         initialConversationId={conversationIdParam}
         currentUserId={user.id}
         currentUserFullName={(profile as { full_name?: string } | null)?.full_name ?? user.user_metadata?.full_name}
+        currentUserEmail={user.email ?? null}
         userType="seeker"
         offerReturnStatus={offerReturnStatus}
         initialComposerText={initialComposerText}

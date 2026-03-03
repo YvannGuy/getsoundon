@@ -66,7 +66,7 @@ export default async function MessageriePage({
       ? adminSupabase.from("profiles").select("id, full_name, email").in("id", seekerIds)
       : { data: [] },
     salleIdsDem.length > 0
-      ? supabase.from("salles").select("id, name, city, capacity, images, slug").in("id", salleIdsDem)
+      ? supabase.from("salles").select("id, name, city, capacity, images, slug, conditions").in("id", salleIdsDem)
       : { data: [] },
     demandeIds.length > 0
       ? supabase
@@ -163,8 +163,21 @@ export default async function MessageriePage({
         })
       : "";
 
-    const salleRow = salle as { images?: string[]; city?: string; capacity?: number; slug?: string } | undefined;
+    const salleRow = salle as {
+      images?: string[];
+      city?: string;
+      capacity?: number;
+      slug?: string;
+      conditions?: { label?: string }[] | null;
+    } | undefined;
     const salleImage = salleRow?.images && Array.isArray(salleRow.images) && salleRow.images[0] ? String(salleRow.images[0]) : "/img.png";
+    const salleRulesSummary = Array.isArray(salleRow?.conditions)
+      ? salleRow!.conditions
+          .map((c) => c?.label?.trim())
+          .filter((v): v is string => !!v)
+          .slice(0, 4)
+          .join(", ")
+      : null;
     const hDebut = formatTime((d as { heure_debut_souhaitee?: string }).heure_debut_souhaitee ?? null);
     const hFin = formatTime((d as { heure_fin_souhaitee?: string }).heure_fin_souhaitee ?? null);
     const horaires = hDebut && hFin ? `${hDebut} - ${hFin}` : hDebut || "";
@@ -178,6 +191,7 @@ export default async function MessageriePage({
       salleName: salle?.name ?? "Salle",
       salleImage,
       salleCity: salleRow?.city ?? "",
+      salleRulesSummary,
       salleCapacity: salleRow?.capacity ?? null,
       salleSlug: salleRow?.slug ?? "",
       hasContract: true,
@@ -212,8 +226,21 @@ export default async function MessageriePage({
           year: "numeric",
         })
       : "";
-    const salleRow = salle as { images?: string[]; city?: string; capacity?: number; slug?: string } | undefined;
+    const salleRow = salle as {
+      images?: string[];
+      city?: string;
+      capacity?: number;
+      slug?: string;
+      conditions?: { label?: string }[] | null;
+    } | undefined;
     const salleImage = salleRow?.images && Array.isArray(salleRow.images) && salleRow.images[0] ? String(salleRow.images[0]) : "/img.png";
+    const salleRulesSummary = Array.isArray(salleRow?.conditions)
+      ? salleRow!.conditions
+          .map((c) => c?.label?.trim())
+          .filter((v): v is string => !!v)
+          .slice(0, 4)
+          .join(", ")
+      : null;
     const horaires = dv.heure_debut && dv.heure_fin ? `${formatTime(dv.heure_debut)} - ${formatTime(dv.heure_fin)}` : "";
     return {
       demandeId: `visite-${dv.id}`,
@@ -226,6 +253,7 @@ export default async function MessageriePage({
       salleName: salle?.name ?? "Salle",
       salleImage,
       salleCity: salleRow?.city ?? "",
+      salleRulesSummary,
       salleCapacity: salleRow?.capacity ?? null,
       salleSlug: salleRow?.slug ?? "",
       hasContract: true,
@@ -289,6 +317,7 @@ export default async function MessageriePage({
         initialConversationId={conversationIdParam}
         currentUserId={user.id}
         currentUserFullName={(profile as { full_name?: string } | null)?.full_name ?? user.user_metadata?.full_name}
+        currentUserEmail={user.email ?? null}
         userType="owner"
         hasConnectAccount={!!(profile as { stripe_account_id?: string } | null)?.stripe_account_id}
         pagination={

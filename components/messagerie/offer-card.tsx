@@ -92,6 +92,13 @@ type OfferCardProps = {
   offer: Offer;
   userType: "owner" | "seeker";
   currentUserId: string;
+  currentUserFullName?: string | null;
+  currentUserEmail?: string | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  venueName?: string | null;
+  venueCity?: string | null;
+  rulesSummary?: string | null;
   onAcceptAndPay?: (offerId: string, acceptance: OfferAcceptancePayload) => void;
   onRefused?: () => void;
   onNewOffer?: () => void;
@@ -101,6 +108,13 @@ export function OfferCard({
   offer,
   userType,
   currentUserId,
+  currentUserFullName,
+  currentUserEmail,
+  contactName,
+  contactEmail,
+  venueName,
+  venueCity,
+  rulesSummary,
   onAcceptAndPay,
   onRefused,
   onNewOffer,
@@ -351,6 +365,16 @@ export function OfferCard({
         offerId={offer.id}
         cancellationPolicy={offer.cancellation_policy ?? "strict"}
         paymentMode={paymentMode}
+        eventType={offer.event_type}
+        startAt={offer.date_debut}
+        endAt={offer.date_fin}
+        venueName={venueName}
+        venueCity={venueCity}
+        organizerName={userType === "seeker" ? currentUserFullName : contactName}
+        organizerEmail={userType === "seeker" ? currentUserEmail : contactEmail}
+        ownerName={userType === "seeker" ? contactName : currentUserFullName}
+        ownerEmail={userType === "seeker" ? contactEmail : currentUserEmail}
+        rulesSummary={rulesSummary}
         upfrontAmountCents={upfrontCents}
         balanceAmountCents={balanceCents}
         serviceFeeCents={serviceFeeCents}

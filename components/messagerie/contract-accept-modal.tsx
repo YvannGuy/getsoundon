@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { FileText } from "lucide-react";
 
 import { computePaymentProcessingFeeCents } from "@/lib/payment-processing-fee";
@@ -18,6 +19,16 @@ type ContractAcceptModalProps = {
   offerId: string;
   cancellationPolicy: "strict" | "moderate" | "flexible";
   paymentMode: "full" | "split";
+  eventType?: string | null;
+  startAt?: string | null;
+  endAt?: string | null;
+  venueName?: string | null;
+  venueCity?: string | null;
+  organizerName?: string | null;
+  organizerEmail?: string | null;
+  ownerName?: string | null;
+  ownerEmail?: string | null;
+  rulesSummary?: string | null;
   upfrontAmountCents: number;
   balanceAmountCents: number;
   serviceFeeCents: number;
@@ -28,17 +39,37 @@ type ContractAcceptModalProps = {
 };
 
 const POLICY_LABEL: Record<"strict" | "moderate" | "flexible", string> = {
-  strict: "Stricte",
-  moderate: "Modérée",
+  strict: "Strict",
+  moderate: "Standard",
   flexible: "Flexible",
 };
 
 const CONTRACT_VERSION = "standard-salledeculte-v1";
 
+function formatDateTimeLabel(value?: string | null): string {
+  if (!value) return "Non renseigné";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleString("fr-FR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
 export function ContractAcceptModal({
   offerId,
   cancellationPolicy,
   paymentMode,
+  eventType,
+  startAt,
+  endAt,
+  venueName,
+  venueCity,
+  organizerName,
+  organizerEmail,
+  ownerName,
+  ownerEmail,
+  rulesSummary,
   upfrontAmountCents,
   balanceAmountCents,
   serviceFeeCents,
@@ -57,6 +88,22 @@ export function ContractAcceptModal({
   const charge2BaseCents = balanceAmountCents + depositAmountCents;
   const processingFeeCharge2Cents =
     paymentMode === "split" ? computePaymentProcessingFeeCents(charge2BaseCents) : 0;
+  const acceptedAtLabel = new Date().toLocaleString("fr-FR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  const startAtLabel = formatDateTimeLabel(startAt);
+  const endAtLabel = formatDateTimeLabel(endAt);
+  const paymentModeLabel =
+    paymentMode === "split" ? "Acompte 30% + solde J-7" : "Paiement total (100%)";
+  const eventTypeLabel =
+    eventType === "mensuel" ? "Mensuel" : eventType === "ponctuel" ? "Ponctuel" : "Ponctuel / Mensuel";
+  const locationAmountEur = ((upfrontAmountCents + balanceAmountCents) / 100).toFixed(2);
+  const processingNowEur = (processingFeeCharge1Cents / 100).toFixed(2);
+  const processingSecondEur = (processingFeeCharge2Cents / 100).toFixed(2);
+  const venueLine = `${venueName?.trim() || "Salle"} — ${venueCity?.trim() || "Ville"}`;
+  const organizerLine = `${organizerName?.trim() || "Organisateur"} — ${organizerEmail?.trim() || "Email non renseigné"}`;
+  const ownerLine = `${ownerName?.trim() || "Propriétaire"} — ${ownerEmail?.trim() || "Email non renseigné"}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -69,156 +116,152 @@ export function ContractAcceptModal({
         </DialogHeader>
 
         <div className="max-h-[55vh] space-y-4 overflow-y-auto rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-700">
-          <h3 className="text-base font-semibold text-slate-900">
-            Contrat standard de location — salledeculte.com (v1)
-          </h3>
-          <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-900">
-            IMPORTANT — À lire avant paiement. Ce contrat encadre la réservation réalisée via
-            salledeculte.com. Il s&apos;applique à toute offre acceptée et payée sur la plateforme.
-          </p>
+          <div className="rounded-lg border border-[#213398]/20 bg-[#213398]/5 p-4">
+            <div className="flex items-center gap-3">
+              <Image src="/logosdcbl.png" alt="salledeculte.com" width={38} height={38} className="h-9 w-9 object-contain" />
+              <div>
+                <p className="text-sm font-semibold text-[#213398]">CONTRAT STANDARD SALLEDECULTE.COM</p>
+                <p className="text-xs text-slate-600">À accepter obligatoirement avant tout paiement</p>
+              </div>
+            </div>
+          </div>
 
-          <p className="text-xs text-slate-500">Référence offre : {offerId}</p>
+          <div className="grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+            <p><span className="font-semibold">Référence Offre :</span> {offerId}</p>
+            <p><span className="font-semibold">Date d&apos;acceptation :</span> {acceptedAtLabel}</p>
+            <p><span className="font-semibold">Lieu :</span> {venueLine}</p>
+            <p><span className="font-semibold">Dates / Horaires :</span> du {startAtLabel} au {endAtLabel}</p>
+            <p><span className="font-semibold">Fin d&apos;événement (référence litiges) :</span> {endAtLabel}</p>
+          </div>
 
           <h4 className="font-semibold text-slate-900">1) Parties</h4>
           <ul className="list-disc space-y-1 pl-5">
-            <li>Le Propriétaire : personne physique ou morale proposant un lieu à la location.</li>
-            <li>L&apos;Organisateur : personne physique ou morale réservant un lieu.</li>
-            <li>
-              salledeculte.com : plateforme de mise en relation et de facilitation des paiements,
-              agissant en qualité d&apos;intermédiaire technique.
-            </li>
+            <li>Organisateur / Locataire : {organizerLine}</li>
+            <li>Propriétaire / Loueur : {ownerLine}</li>
+            <li>Plateforme : salledeculte.com</li>
           </ul>
 
           <h4 className="font-semibold text-slate-900">2) Objet</h4>
-          <p>
-            Le présent contrat a pour objet la mise à disposition temporaire par le Propriétaire, au
-            profit de l&apos;Organisateur, du lieu décrit dans l&apos;offre acceptée.
-          </p>
           <ul className="list-disc space-y-1 pl-5">
-            <li>Location ponctuelle (événement unique)</li>
-            <li>Location mensuelle / récurrente (créneaux réguliers)</li>
+            <li>Location du lieu décrit dans l&apos;Offre (Annexe 1) entre Organisateur et Propriétaire.</li>
+            <li>Utilisation des services de la Plateforme (messagerie, outils, paiement, documents).</li>
           </ul>
+          <p>La réservation devient effective après acceptation du contrat et paiement selon l&apos;Offre.</p>
 
-          <h4 className="font-semibold text-slate-900">3) Valeur contractuelle de l&apos;Offre</h4>
-          <p>
-            L&apos;Offre envoyée via la messagerie (montant, dates/heures, caution, politique
-            d&apos;annulation, conditions) fait partie intégrante du présent contrat. En cas de
-            contradiction avec un document externe, l&apos;Offre et le présent contrat prévalent.
-          </p>
-
-          <h4 className="font-semibold text-slate-900">4) Rôle de la Plateforme</h4>
+          <h4 className="font-semibold text-slate-900">3) Rôle de la Plateforme (important)</h4>
           <ul className="list-disc space-y-1 pl-5">
-            <li>Mise en relation Propriétaire / Organisateur</li>
-            <li>Outils de gestion (messagerie, visites, offres, suivi)</li>
-            <li>Facilitation des paiements</li>
+            <li>Mise en relation et centralisation des échanges.</li>
+            <li>Outils : visite, offre, réservation, état des lieux, litiges.</li>
+            <li>Paiement en ligne optionnel via Stripe Connect.</li>
           </ul>
+          <p>La Plateforme n&apos;est pas le loueur du lieu et n&apos;exécute pas la prestation matérielle.</p>
+
+          <h4 className="font-semibold text-slate-900">4) Offre et conditions applicables</h4>
           <p>
-            La Plateforme n&apos;est pas propriétaire du Lieu et n&apos;exécute pas la prestation de
-            location.
+            Les conditions contractuelles (prix, dates, horaires, règles, équipements, annulation, caution)
+            sont celles indiquées dans l&apos;Offre acceptée (Annexe 1). En cas de contradiction, l&apos;Offre prévaut.
           </p>
 
-          <h4 className="font-semibold text-slate-900">5) Processus de réservation</h4>
-          <p>La réservation est confirmée lorsque :</p>
+          <h4 className="font-semibold text-slate-900">5) Prix & frais (affichés avant paiement)</h4>
           <ul className="list-disc space-y-1 pl-5">
-            <li>le Propriétaire envoie une Offre via la Plateforme,</li>
-            <li>l&apos;Organisateur accepte l&apos;Offre,</li>
-            <li>l&apos;Organisateur effectue le paiement requis (acompte ou total),</li>
-            <li>l&apos;Organisateur accepte le présent contrat avant paiement.</li>
+            <li>Prix de location : {locationAmountEur} €</li>
+            <li>Frais de service Plateforme (fixe) : {(serviceFeeCents / 100).toFixed(2)} €</li>
+            <li>Frais de traitement paiement (variable) : {processingNowEur} € (paiement actuel)</li>
           </ul>
+          {paymentMode === "split" && (
+            <p className="text-xs text-slate-600">
+              En mode acompte + solde, frais de traitement estimés au second paiement : {processingSecondEur} €.
+            </p>
+          )}
 
-          <h4 className="font-semibold text-slate-900">SECTION A — Location ponctuelle</h4>
-          <p>
-            Fin d&apos;événement = heure de fin indiquée dans l&apos;Offre (déclenche la fenêtre incident
-            de 48h).
-          </p>
-          <p>Paiement possible en 2 modes :</p>
+          <h4 className="font-semibold text-slate-900">6) Paiement (Ponctuel) — 2 options</h4>
+          <p>Mode choisi dans cette offre : <span className="font-semibold">{paymentModeLabel}</span>.</p>
           <ul className="list-disc space-y-1 pl-5">
-            <li>Paiement total (100%) + frais de service 15€ + caution si prévue.</li>
-            <li>
-              Acompte 30% à la réservation + solde automatique J-7 (avec notification en cas
-              d&apos;échec).
-            </li>
+            <li>Option A : paiement total immédiat (location 100% + frais de service + frais de traitement + caution si prévue).</li>
+            <li>Option B : acompte 30% immédiat, puis solde automatique à J-7 (+ caution si prévue).</li>
           </ul>
           <p>
-            Caution ponctuelle : capturée à J-7, jamais une pénalité, remboursée intégralement si la
-            prestation n&apos;a pas lieu, restitution automatique J+7 sans incident.
-          </p>
-          <p>
-            Incident / litige : le Propriétaire peut déclarer un incident jusqu&apos;à 48h après la fin.
-            Toute retenue exige des preuves (photos EDL + messages).
-          </p>
-          <p>
-            Paiement Propriétaire : libération à J+3 après la fin si aucun incident déclaré dans la
-            fenêtre des 48h.
-          </p>
-          <p>
-            No-show Organisateur : remboursement 0% location. Changement de date : annulation +
-            nouvelle réservation (sauf report V2).
+            En acceptant ce contrat, l&apos;Organisateur autorise le prélèvement automatique du solde
+            (et de la caution le cas échéant) à J-7 sur le moyen de paiement enregistré.
           </p>
 
-          <h4 className="font-semibold text-slate-900">
-            SECTION B — Location mensuelle / récurrente
-          </h4>
+          <h4 className="font-semibold text-slate-900">7) Caution (dépôt de garantie) — règles</h4>
           <ul className="list-disc space-y-1 pl-5">
-            <li>Paiement mensuel à l&apos;avance.</li>
+            <li>La caution est un dépôt remboursable, ce n&apos;est pas une pénalité.</li>
+            <li>Si paiement total : caution prélevée au paiement.</li>
+            <li>Si acompte + solde : caution prélevée à J-7 avec le solde.</li>
             <li>
-              Caution mensuelle : 1 mois par défaut, 2 mois possible en cas à risque, conservée
-              pendant le contrat.
-            </li>
-            <li>
-              Restitution caution : maximum 14 jours après fin de contrat + état des lieux final
-              conforme.
-            </li>
-            <li>Préavis mensuel : 30 jours sauf mention différente dans l&apos;Offre.</li>
-            <li>Retenue uniquement avec justificatifs (photos + échanges).</li>
-          </ul>
-
-          <h4 className="font-semibold text-slate-900">
-            SECTION C — Politique d&apos;annulation (3 options standardisées)
-          </h4>
-          <p>
-            Le Propriétaire choisit une politique (Flexible / Standard / Strict) affichée dans
-            l&apos;Offre et acceptée avant paiement.
-          </p>
-          <ul className="list-disc space-y-1 pl-5">
-            <li>
-              Flexible : &gt; J-7 = 100%, J-7 à J-2 = 50%, &lt; J-2 = 0%.
-            </li>
-            <li>
-              Standard : &gt; J-30 = 100%, J-30 à J-15 = 50%, &lt; J-15 = 0%.
-            </li>
-            <li>
-              Strict : &gt; J-90 = 100%, J-90 à J-30 = 50%, &lt; J-30 = 0%.
-            </li>
-          </ul>
-          <p>
-            Règles générales : frais de service 15€ non remboursables sauf annulation imputable au
-            Propriétaire, caution remboursée intégralement si la prestation n&apos;a pas lieu.
-          </p>
-          <p>
-            Annulation par le Propriétaire : remboursement 100% location + 100% caution + 15€ frais
-            de service.
-          </p>
-
-          <h4 className="font-semibold text-slate-900">SECTION D — Dispositions complémentaires</h4>
-          <ul className="list-disc space-y-1 pl-5">
-            <li>
-              Responsabilité : chaque partie reste responsable de ses obligations et dommages
-              éventuels.
-            </li>
-            <li>
-              Communications : les échanges doivent passer par la messagerie de la Plateforme.
-            </li>
-            <li>
-              Acceptation : en cliquant sur « Payer », l&apos;Organisateur valide l&apos;Offre, la
-              politique d&apos;annulation, le solde auto J-7 (si acompte) et la capture caution J-7
-              (si applicable).
+              Sans incident déclaré dans les 48h après fin d&apos;événement, remboursement automatique visé
+              au plus tard à J+7.
             </li>
           </ul>
 
-          <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
-            Politique d&apos;annulation appliquée à cette offre :{" "}
-            <span className="font-semibold text-slate-800">{POLICY_LABEL[cancellationPolicy]}</span>.
+          <h4 className="font-semibold text-slate-900">8) États des lieux (photos)</h4>
+          <p>
+            La Plateforme peut proposer un module d&apos;état des lieux (photos avant/après).
+            Les parties s&apos;engagent à fournir les éléments utiles en cas de litige.
+          </p>
+
+          <h4 className="font-semibold text-slate-900">9) Incidents & litiges (ponctuel)</h4>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>Fin d&apos;événement de référence : {endAtLabel}.</li>
+            <li>Délai de déclaration : 48h après la fin d&apos;événement.</li>
+            <li>Retenue caution possible uniquement avec preuves suffisantes.</li>
+            <li>Statuts : Incident déclaré → En discussion → Résolu.</li>
+          </ul>
+
+          <h4 className="font-semibold text-slate-900">10) Annulation & remboursement (ponctuel)</h4>
+          <p>
+            Politique applicable à cette offre :{" "}
+            <span className="font-semibold text-slate-900">{POLICY_LABEL[cancellationPolicy]}</span>.
+          </p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>Flexible : &gt; J-7 = 100%, J-7 à J-2 = 50%, &lt; J-2 = 0%.</li>
+            <li>Standard : &gt; J-30 = 100%, J-30 à J-15 = 50%, &lt; J-15 = 0%.</li>
+            <li>Strict : &gt; J-90 = 100%, J-90 à J-30 = 50%, &lt; J-30 = 0%.</li>
+          </ul>
+          <p>
+            Les frais de service restent non remboursables sauf annulation imputable au Propriétaire.
+            Les frais de traitement peuvent ne pas être remboursables (frais bancaires).
+          </p>
+
+          <h4 className="font-semibold text-slate-900">11) Libération du paiement Propriétaire (payout)</h4>
+          <p>
+            Si paiement via la Plateforme, les fonds de location destinés au Propriétaire sont
+            libérés à J+3 après la fin d&apos;événement, sauf incident déclaré dans la fenêtre de 48h.
+          </p>
+
+          <h4 className="font-semibold text-slate-900">12) Règles d&apos;usage du lieu</h4>
+          <p>
+            L&apos;Organisateur respecte la capacité, les horaires, les règles sonores, la sécurité,
+            la propreté, le voisinage et les conditions prévues dans l&apos;Offre.
+          </p>
+
+          <h4 className="font-semibold text-slate-900">13) Documents</h4>
+          <p>
+            Après paiement, l&apos;Organisateur peut accéder (selon disponibilité) à la facture/reçu,
+            au contrat, à l&apos;historique des paiements et aux éléments liés à la réservation.
+          </p>
+
+          <h4 className="font-semibold text-slate-900">14) Acceptation</h4>
+          <p>
+            En cochant « J&apos;accepte », les parties valident ce contrat et l&apos;Offre (Annexe 1).
+            L&apos;Organisateur autorise les prélèvements automatiques prévus (solde/caution à J-7 si applicable).
+          </p>
+
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="font-semibold text-slate-900">ANNEXE 1 — RÉCAPITULATIF DE L&apos;OFFRE</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-700">
+              <li>Salle : {venueLine}</li>
+              <li>Type : {eventTypeLabel}</li>
+              <li>Dates : {startAtLabel} → {endAtLabel}</li>
+              <li>Prix location : {locationAmountEur} €</li>
+              <li>Mode paiement : {paymentModeLabel}</li>
+              <li>Caution : {(depositAmountCents / 100).toFixed(2)} €</li>
+              <li>Politique d&apos;annulation : {POLICY_LABEL[cancellationPolicy]}</li>
+              <li>Règles clés : {rulesSummary?.trim() || "Voir les conditions prévues dans l’offre."}</li>
+              <li>Fin d&apos;événement : {endAtLabel} (déclenche les 48h)</li>
+            </ul>
           </div>
         </div>
 
@@ -295,6 +338,10 @@ export function ContractAcceptModal({
             Payer et valider
           </Button>
         </DialogFooter>
+        <p className="text-center text-xs text-slate-500">
+          En payant, vous acceptez le Contrat standard salledeculte.com et la politique
+          d&apos;annulation indiquée dans l&apos;offre.
+        </p>
       </DialogContent>
     </Dialog>
   );

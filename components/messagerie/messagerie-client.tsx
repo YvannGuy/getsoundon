@@ -46,6 +46,7 @@ export type Thread = {
   salleName: string;
   salleImage?: string;
   salleCity?: string;
+  salleRulesSummary?: string | null;
   salleCapacity?: number | null;
   salleSlug?: string;
   hasContract?: boolean;
@@ -152,6 +153,7 @@ type Props = {
   threads: Thread[];
   currentUserId: string;
   currentUserFullName?: string | null;
+  currentUserEmail?: string | null;
   userType: "seeker" | "owner";
   pagination?: PaginationInfo | null;
   /** Quand défini, ouvre automatiquement la conversation correspondante */
@@ -219,6 +221,7 @@ export function MessagerieClient({
   threads,
   currentUserId,
   currentUserFullName,
+  currentUserEmail,
   userType,
   pagination,
   initialDemandeId,
@@ -1124,6 +1127,13 @@ export function MessagerieClient({
                         offer={item.data}
                         userType={userType}
                         currentUserId={currentUserId}
+                        currentUserFullName={currentUserFullName}
+                        currentUserEmail={currentUserEmail}
+                        contactName={selected?.seekerName}
+                        contactEmail={selected?.seekerEmail}
+                        venueName={selected?.salleName}
+                        venueCity={selected?.salleCity}
+                        rulesSummary={selected?.salleRulesSummary}
                         onAcceptAndPay={handleAcceptAndPay}
                         onRefused={() => {
                           setOffers((prev) =>
