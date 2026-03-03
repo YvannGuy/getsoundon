@@ -10,6 +10,7 @@ type OfferRow = {
   seeker_id: string;
   amount_cents: number;
   cancellation_policy: "strict" | "moderate" | "flexible" | null;
+  cancellation_outcome_status: string | null;
   deposit_hold_status: string | null;
   created_at: string;
 };
@@ -27,7 +28,7 @@ type CaseRow = {
   status: "open" | "resolved" | "rejected";
 };
 
-type FilterKey = "all" | "a_traiter" | "edl_incomplet" | "litige_ouvert" | "caution_a_arbitrer" | "terminees";
+type FilterKey = "all" | "a_traiter" | "edl_incomplet" | "litige_ouvert" | "caution_a_arbitrer" | "terminees" | "annulees";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,7 @@ export default async function AdminReservationsPage({
     "litige_ouvert",
     "caution_a_arbitrer",
     "terminees",
+    "annulees",
   ].includes(String(statut))
     ? (statut as FilterKey)
     : "all";
@@ -62,7 +64,7 @@ export default async function AdminReservationsPage({
   const admin = createAdminClient();
   const { data: offers } = await admin
     .from("offers")
-    .select("id, salle_id, owner_id, seeker_id, amount_cents, cancellation_policy, deposit_hold_status, created_at")
+    .select("id, salle_id, owner_id, seeker_id, amount_cents, cancellation_policy, cancellation_outcome_status, deposit_hold_status, created_at")
     .eq("status", "paid")
     .order("created_at", { ascending: false })
     .limit(200);
@@ -117,6 +119,7 @@ export default async function AdminReservationsPage({
     const litigeOuvert = openDisputeOffers.has(offer.id);
     const cautionAArbitrer = offer.deposit_hold_status === "claim_requested";
     const aTraiter = edlIncomplete || litigeOuvert || cautionAArbitrer;
+    const isAnnulee = offer.cancellation_outcome_status === "applied";
     return {
       offer,
       ownerIncomplete,
@@ -125,6 +128,7 @@ export default async function AdminReservationsPage({
       litigeOuvert,
       cautionAArbitrer,
       aTraiter,
+      isAnnulee,
     };
   });
 
@@ -134,7 +138,8 @@ export default async function AdminReservationsPage({
     edl_incomplet: rows.filter((r) => r.edlIncomplete).length,
     litige_ouvert: rows.filter((r) => r.litigeOuvert).length,
     caution_a_arbitrer: rows.filter((r) => r.cautionAArbitrer).length,
-    terminees: rows.filter((r) => !r.aTraiter).length,
+    terminees: rows.filter((r) => !r.aTraiter && !r.isAnnulee).length,
+    annulees: rows.filter((r) => r.isAnnulee).length,
   };
 
   const filteredRows = rows.filter((r) => {
@@ -148,7 +153,9 @@ export default async function AdminReservationsPage({
       case "caution_a_arbitrer":
         return r.cautionAArbitrer;
       case "terminees":
-        return !r.aTraiter;
+        return !r.aTraiter && !r.isAnnulee;
+      case "annulees":
+        return r.isAnnulee;
       default:
         return true;
     }
@@ -186,6 +193,12 @@ export default async function AdminReservationsPage({
             <p className="text-xl font-bold text-violet-800">{counts.caution_a_arbitrer}</p>
           </CardContent>
         </Card>
+        <Card className="border-slate-300">
+          <CardContent className="p-4">
+            <p className="text-xs text-slate-600">Annulées</p>
+            <p className="text-xl font-bold text-slate-700">{counts.annulees}</p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -210,6 +223,9 @@ export default async function AdminReservationsPage({
         <Link href="/admin/reservations?statut=terminees" className={filterPillClass(currentFilter === "terminees")}>
           Terminées ({counts.terminees})
         </Link>
+        <Link href="/admin/reservations?statut=annulees" className={filterPillClass(currentFilter === "annulees")}>
+          Annulées ({counts.annulees})
+        </Link>
       </div>
 
       <div className="mt-6 space-y-4">
@@ -220,11 +236,21 @@ export default async function AdminReservationsPage({
             </CardContent>
           </Card>
         ) : (
-          filteredRows.map(({ offer, ownerIncomplete, seekerIncomplete, litigeOuvert, cautionAArbitrer, aTraiter }) => {
+          filteredRows.map(({ offer, ownerIncomplete, seekerIncomplete, litigeOuvert, cautionAArbitrer, aTraiter, isAnnulee }) => {
             return (
-              <Card key={offer.id}>
+              <Card
+                key={offer.id}
+                className={isAnnulee ? "border-slate-300 bg-slate-50/60" : undefined}
+              >
                 <CardHeader>
-                  <CardTitle className="text-lg">{salleMap.get(offer.salle_id) ?? "Salle"}</CardTitle>
+                  <CardTitle className="text-lg">
+                    {salleMap.get(offer.salle_id) ?? "Salle"}
+                    {isAnnulee && (
+                      <span className="ml-2 rounded-full bg-slate-400 px-2 py-0.5 text-xs font-medium text-white">
+                        Annulée
+                      </span>
+                    )}
+                  </CardTitle>
                   <CardDescription>
                     Propriétaire: {profileMap.get(offer.owner_id) ?? "—"} - Locataire: {profileMap.get(offer.seeker_id) ?? "—"}
                   </CardDescription>
@@ -236,7 +262,11 @@ export default async function AdminReservationsPage({
                     </div>
                     <div>Annulation: {policyLabel(offer.cancellation_policy)}</div>
                     <div className="flex flex-wrap gap-2">
-                      {aTraiter ? (
+                      {isAnnulee ? (
+                        <span className="rounded-full bg-slate-300 px-2 py-0.5 text-xs font-medium text-slate-700">
+                          Réservation annulée
+                        </span>
+                      ) : aTraiter ? (
                         <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                           Priorité: à traiter
                         </span>
@@ -245,12 +275,12 @@ export default async function AdminReservationsPage({
                           Terminée
                         </span>
                       )}
-                      {litigeOuvert && (
+                      {!isAnnulee && litigeOuvert && (
                         <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
                           Litige ouvert
                         </span>
                       )}
-                      {cautionAArbitrer && (
+                      {!isAnnulee && cautionAArbitrer && (
                         <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800">
                           Caution à arbitrer
                         </span>

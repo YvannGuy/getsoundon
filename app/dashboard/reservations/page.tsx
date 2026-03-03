@@ -257,6 +257,9 @@ export default async function DashboardReservationsPage({
                       salleName={salleMap.get(offer.salle_id) ?? "Salle"}
                       amountCents={offer.amount_cents}
                       policyLabel={policyLabel(offer.cancellation_policy)}
+                      eventStartAt={offer.date_debut}
+                      cancellationPolicy={offer.cancellation_policy}
+                      actor="seeker"
                       disabled={litigeOuvert}
                       disabledReason="Annulation indisponible: un litige est déjà ouvert."
                     />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { computeCancellationRefund } from "@/lib/cancellation-policy";
+
+type CancellationPolicy = "strict" | "moderate" | "flexible";
 
 type CancelReservationButtonProps = {
   offerId: string;
   salleName: string;
   amountCents: number;
   policyLabel: string;
+  eventStartAt?: string | null;
+  cancellationPolicy?: CancellationPolicy | null;
+  actor?: "seeker" | "owner";
   disabled?: boolean;
   disabledReason?: string;
 };
@@ -27,6 +33,9 @@ export function CancelReservationButton({
   salleName,
   amountCents,
   policyLabel,
+  eventStartAt,
+  cancellationPolicy,
+  actor = "seeker",
   disabled = false,
   disabledReason,
 }: CancelReservationButtonProps) {
@@ -36,6 +45,22 @@ export function CancelReservationButton({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const previewRefund = useMemo(() => {
+    if (actor === "owner") {
+      return { refundCents: amountCents, refundPercent: 100 };
+    }
+    const eventStart = eventStartAt ? new Date(`${eventStartAt}T10:00:00.000Z`) : new Date();
+    const outcome = computeCancellationRefund({
+      actor: "seeker",
+      policy: cancellationPolicy ?? "strict",
+      eventStartAt: eventStart,
+      now: new Date(),
+      amountPaidCents: amountCents,
+    });
+    const pct = amountCents > 0 ? Math.round((outcome.refundCents / amountCents) * 100) : 0;
+    return { refundCents: outcome.refundCents, refundPercent: pct };
+  }, [actor, amountCents, eventStartAt, cancellationPolicy]);
 
   const canSubmit = reason.trim().length >= 3 && !isPending;
 
@@ -63,8 +88,12 @@ export function CancelReservationButton({
           setError(data.error ?? "Annulation impossible pour le moment.");
           return;
         }
-        const refund = ((data.refundCents ?? 0) / 100).toFixed(2);
-        setSuccess(`Annulation prise en compte. Remboursement estimé : ${refund} €.`);
+        const refund = (data.refundCents ?? 0) / 100;
+        const msg =
+          refund > 0
+            ? `Annulation prise en compte. Remboursement estimé : ${refund.toFixed(2)} €.`
+            : "Annulation prise en compte. La réservation a été annulée et le créneau libéré.";
+        setSuccess(msg);
         setTimeout(() => {
           setOpen(false);
           setReason("");
@@ -100,7 +129,8 @@ export function CancelReservationButton({
           <DialogHeader>
             <DialogTitle>Annuler la réservation ?</DialogTitle>
             <DialogDescription>
-              Cette action applique la politique d&apos;annulation de l&apos;offre et déclenche le calcul du remboursement.
+              Cette action applique la politique d&apos;annulation de l&apos;offre.
+              {actor === "owner" && " Le locataire sera intégralement remboursé."}
             </DialogDescription>
           </DialogHeader>
 
@@ -116,8 +146,25 @@ export function CancelReservationButton({
               <p>
                 <span className="font-medium text-slate-900">Politique :</span> {policyLabel}
               </p>
+              {actor === "seeker" ? (
+                previewRefund.refundCents > 0 ? (
+                  <p className="mt-2 font-medium text-emerald-700">
+                    Vous serez remboursé de {(previewRefund.refundCents / 100).toFixed(2)} € (
+                    {previewRefund.refundPercent} %).
+                  </p>
+                ) : (
+                  <p className="mt-2 text-amber-700">
+                    Aucun remboursement selon la politique choisie. La réservation sera annulée et le créneau libéré.
+                  </p>
+                )
+              ) : (
+                <p className="mt-2 font-medium text-emerald-700">
+                  Le locataire sera intégralement remboursé.
+                </p>
+              )}
               <p className="mt-2 text-xs text-slate-500">
-                Les frais de service (15€) et frais de traitement peuvent ne pas être remboursés selon les règles en vigueur.
+                Les frais de service (15€) et frais de traitement peuvent ne pas être remboursés selon les règles en
+                vigueur.
               </p>
             </div>
 

@@ -264,6 +264,7 @@ export default async function OwnerReservationsPage({
                       salleName={salleMap.get(offer.salle_id) ?? "Salle"}
                       amountCents={offer.amount_cents}
                       policyLabel={policyLabel(offer.cancellation_policy)}
+                      actor="owner"
                       disabled={litigeOuvert}
                       disabledReason="Annulation indisponible : un litige est déjà ouvert."
                     />
