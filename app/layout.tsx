@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
+import Script from "next/script";
 
 import { Analytics } from "@/components/Analytics";
 import { CookieProvider } from "@/components/cookies/CookieProvider";
@@ -58,6 +59,18 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <body className={`${manrope.variable} font-sans antialiased`} suppressHydrationWarning>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-17978481756"
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-17978481756');
+          `}
+        </Script>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
