@@ -1,9 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Salle } from "@/lib/types/salle";
 import { rowToSalle } from "@/lib/types/salle";
+import { DEPT_LABELS, getDepartmentCoverUrl } from "@/lib/covers";
 
 export type SearchFilters = {
   ville?: string;
+  departement?: string;
   date?: string;
   personnes?: string;
   type?: string;
@@ -56,6 +58,10 @@ export async function searchSalles(filters: SearchFilters): Promise<Salle[]> {
     }
   }
 
+  if (filters.departement?.trim()) {
+    query = query.eq("department", filters.departement.trim());
+  }
+
   // Filtre par capacité (nombre de personnes)
   const capaciteMin = filters.personnes ? parseInt(filters.personnes, 10) : 0;
   if (!isNaN(capaciteMin) && capaciteMin > 0) {
@@ -106,6 +112,39 @@ export async function searchSalles(filters: SearchFilters): Promise<Salle[]> {
   }
 
   return salles;
+}
+
+export async function getFeaturedDepartments(): Promise<
+  { departmentCode: string; departmentLabel: string; count: number; image: string }[]
+> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("salles")
+    .select("department")
+    .eq("status", "approved");
+
+  if (error) {
+    console.error("getFeaturedDepartments error:", error);
+    return [];
+  }
+
+  const validIdf = new Set(["75", "77", "78", "91", "92", "93", "94", "95"]);
+  const byDept = new Map<string, number>();
+
+  (data ?? []).forEach((r) => {
+    const dept = String((r as { department?: string | null }).department ?? "").trim();
+    if (!dept || !validIdf.has(dept)) return;
+    byDept.set(dept, (byDept.get(dept) ?? 0) + 1);
+  });
+
+  return Array.from(byDept.entries())
+    .map(([departmentCode, count]) => ({
+      departmentCode,
+      departmentLabel: DEPT_LABELS[departmentCode] ?? `Département ${departmentCode}`,
+      count,
+      image: getDepartmentCoverUrl(departmentCode),
+    }))
+    .sort((a, b) => b.count - a.count);
 }
 
 export async function getSalleBySlug(slug: string): Promise<Salle | null> {

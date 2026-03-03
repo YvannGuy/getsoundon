@@ -13,11 +13,12 @@ export default async function RechercherPage({
 }) {
   const params = await searchParams;
   const ville = typeof params.ville === "string" ? params.ville : undefined;
+  const departement = typeof params.departement === "string" ? params.departement : undefined;
   const date = typeof params.date === "string" ? params.date : undefined;
   const personnes = typeof params.personnes === "string" ? params.personnes : undefined;
   const type = typeof params.type === "string" ? params.type : undefined;
 
-  const salles = await searchSalles({ ville, date, personnes, type });
+  const salles = await searchSalles({ ville, departement, date, personnes, type });
 
   const ratingStats = salles.length > 0
     ? await getBulkRatingStats(salles.map((s) => s.id))

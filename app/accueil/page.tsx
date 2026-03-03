@@ -16,9 +16,8 @@ import { InstallAppPopup } from "@/components/home/install-app-popup";
 import { PourquoiReserverCarousel } from "@/components/home/pourquoi-reserver-carousel";
 import { SectionReveal } from "@/components/ui/section-reveal";
 import { siteConfig } from "@/config/site";
-import { getVilleImage } from "@/config/ville-images";
 import { BLOG_POSTS } from "@/lib/blog-posts";
-import { getFeaturedCities } from "@/lib/salles";
+import { getFeaturedDepartments } from "@/lib/salles";
 import { getUserOrNull } from "@/lib/supabase/server";
 
 const steps = [
@@ -74,8 +73,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [cityCards, authResult] = await Promise.all([
-    getFeaturedCities(getVilleImage),
+  const [departmentCards, authResult] = await Promise.all([
+    getFeaturedDepartments(),
     getUserOrNull(),
   ]);
   const { user } = authResult;
@@ -129,38 +128,40 @@ export default async function Home() {
 
       <PourquoiReserverCarousel />
 
-      {cityCards.length > 0 && (
+      {departmentCards.length > 0 && (
       <SectionReveal className="bg-white py-12">
         <div className="container max-w-[1120px]">
           <h2 className="text-center text-[46px] font-semibold tracking-[-0.02em] text-black [zoom:0.5]">
             Découvrir les lieux en Île-de-France
           </h2>
           <p className="mt-2 text-center text-[25px] text-slate-500 [zoom:0.5]">
-            Explorez les espaces disponibles dans votre région
+            Explorez les espaces disponibles par département
           </p>
           <div className="mx-auto mt-10 grid max-w-5xl gap-6 sm:grid-cols-2 md:grid-cols-3">
-            {cityCards.map((item) => (
+            {departmentCards.map((item) => (
               <Link
-                key={item.city}
-                href={`/rechercher?ville=${encodeURIComponent(item.city)}`}
+                key={item.departmentCode}
+                href={`/rechercher?departement=${encodeURIComponent(item.departmentCode)}`}
                 className="group relative block overflow-hidden rounded-xl border border-slate-200 transition hover:border-slate-300 hover:shadow-lg"
               >
                 <div className="relative aspect-[4/3] bg-slate-100">
                   <Image
                     src={item.image}
-                    alt={item.city}
+                    alt={item.departmentLabel}
                     fill
                     className="object-cover transition duration-300 group-hover:scale-[1.05]"
                     sizes="(max-width: 640px) 100vw, 33vw"
                   />
                   <div
-                    className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"
+                    className="absolute inset-0 bg-black/15 transition duration-300 group-hover:bg-black/20"
                     aria-hidden
                   />
                   <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <p className="font-semibold text-white drop-shadow-sm">{item.city}</p>
+                    <p className="font-semibold text-white drop-shadow-sm">
+                      {item.departmentLabel} ({item.departmentCode})
+                    </p>
                     <p className="mt-0.5 text-sm text-white/90">
-                      {item.count} lieu{item.count > 1 ? "x" : ""}
+                      {item.count} salle{item.count > 1 ? "s" : ""}
                     </p>
                   </div>
                 </div>
