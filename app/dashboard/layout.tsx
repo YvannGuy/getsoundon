@@ -23,9 +23,16 @@ export default async function DashboardLayout({
     redirect("/auth");
   }
 
+  const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  const isAdminByEnv =
+    adminEmails.length > 0 && adminEmails.includes(user.email?.toLowerCase() ?? "");
+
   const { data: profile } = await supabase
     .from("profiles")
-    .select("suspended, full_name")
+    .select("suspended, full_name, user_type")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -33,15 +40,11 @@ export default async function DashboardLayout({
     redirect("/auth?suspended=1");
   }
 
-  const getProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("user_type")
-      .eq("id", userId)
-      .maybeSingle();
-    return data;
-  };
-  const userType = await getEffectiveUserType(user, getProfile);
+  const userType = isAdminByEnv
+    ? "admin"
+    : await getEffectiveUserType(user, async () => ({
+        user_type: (profile as { user_type?: string | null } | null)?.user_type ?? "seeker",
+      }));
   if (userType === "admin") redirect("/admin");
 
   const { data: mySalles } = await supabase

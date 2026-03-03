@@ -15,7 +15,6 @@ import {
   deleteConversation,
   deleteMessage,
   editMessage,
-  getLastMessagePreviews,
   getOrCreateConversation,
   getOrCreateConversationForVisite,
   markConversationAsRead,
@@ -396,19 +395,6 @@ export function MessagerieClient({
   }, [threads]);
 
   useEffect(() => {
-    const toFetch = threads
-      .filter((t) => t.conversationId)
-      .map((t) => ({ demandeId: t.demandeId, conversationId: t.conversationId! }));
-    if (toFetch.length === 0) return;
-    (async () => {
-      const previews = await getLastMessagePreviews(toFetch);
-      if (Object.keys(previews).length) {
-        setLastPreviews((prev) => new Map([...prev, ...Object.entries(previews)]));
-      }
-    })();
-  }, [threads]);
-
-  useEffect(() => {
     if (selected && messages.length > 0) {
       const last = messages[messages.length - 1];
       const preview = last.content.length > 80 ? last.content.slice(0, 77) + "..." : last.content;
@@ -440,7 +426,6 @@ export function MessagerieClient({
       if (convId) {
         loadMessages(convId);
         await markConversationAsRead(convId);
-        router.refresh();
       }
       setMobileShowChat(true);
     };
@@ -525,7 +510,6 @@ export function MessagerieClient({
         const preview = text.length > 80 ? text.slice(0, 77) + "..." : text || "[Pièce(s) jointe(s)]";
         setLastPreviews((prev) => new Map(prev).set(selected.demandeId, preview));
       }
-      router.refresh();
     } else if (res.error) {
       alert(res.error);
     }
@@ -547,7 +531,6 @@ export function MessagerieClient({
       setEditModalOpen(false);
       setEditingMessage(null);
       setEditContent("");
-      router.refresh();
     } else if (res.error) {
       alert(res.error);
     }
@@ -568,7 +551,6 @@ export function MessagerieClient({
     const res = await archiveConversation(convId!);
     if (res.success) {
       setThreadPreferences((prev) => new Map(prev).set(t.demandeId, { archivedAt: new Date().toISOString(), deletedAt: null }));
-      router.refresh();
     } else if (res.error) alert(res.error);
   };
 
@@ -585,7 +567,6 @@ export function MessagerieClient({
     const res = await unarchiveConversation(convId);
     if (res.success) {
       setThreadPreferences((prev) => new Map(prev).set(t.demandeId, { archivedAt: null, deletedAt: null }));
-      router.refresh();
     } else if (res.error) alert(res.error);
   };
 
@@ -608,7 +589,6 @@ export function MessagerieClient({
         setMessages([]);
         setMobileShowChat(false);
       }
-      router.refresh();
     } else if (res.error) alert(res.error);
   };
 
@@ -625,7 +605,6 @@ export function MessagerieClient({
           setLastPreviews((prev) => new Map(prev).set(selected.demandeId, preview));
         }
       }
-      router.refresh();
     } else if (res.error) {
       alert(res.error);
     }
@@ -652,7 +631,6 @@ export function MessagerieClient({
           },
         ]);
       }
-      router.refresh();
     }
   };
 
@@ -1151,7 +1129,6 @@ export function MessagerieClient({
                           setOffers((prev) =>
                             prev.map((o) => (o.id === item.data.id ? { ...o, status: "refused" as const } : o))
                           );
-                          router.refresh();
                         }}
                         onNewOffer={() => setCreateOfferModalOpen(true)}
                       />
@@ -1386,7 +1363,6 @@ export function MessagerieClient({
               seekerId={selected.seekerId}
               onSuccess={() => {
                 loadMessages(conversationId);
-                router.refresh();
               }}
             />
           )}

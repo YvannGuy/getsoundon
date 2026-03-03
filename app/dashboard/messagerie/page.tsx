@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
 import { MessagerieClient, type Thread } from "@/components/messagerie/messagerie-client";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -51,8 +50,6 @@ export default async function MessageriePage({
       ...(demandesVisite ?? []).map((d) => d.salle_id),
     ]),
   ];
-
-  const adminSupabase = createAdminClient();
 
   const [sallesRes, convsResRaw, convsVisiteResRaw] = await Promise.all([
     salleIds.length > 0
@@ -122,58 +119,25 @@ export default async function MessageriePage({
 
   let unreadByConv = new Map<string, number>();
   const lastMsgByConv = new Map<string, string>();
+  for (const conv of [...convsData, ...convsVisiteData]) {
+    const preview = (conv.last_message_preview ?? "").trim();
+    if (preview && !lastMsgByConv.has(conv.id)) {
+      lastMsgByConv.set(conv.id, preview);
+    }
+  }
   if (convIds.length > 0) {
-    const [unreadRes, lastMsgsResSent, lastMsgsResCreated] = await Promise.all([
-      supabase
-        .from("messages")
-        .select("conversation_id")
-        .in("conversation_id", convIds)
-        .neq("sender_id", user.id)
-        .is("read_at", null),
-      adminSupabase
-        .from("messages")
-        .select("conversation_id, content, sent_at")
-        .in("conversation_id", convIds)
-        .is("deleted_at", null)
-        .order("sent_at", { ascending: false }),
-      adminSupabase
-        .from("messages")
-        .select("conversation_id, content, created_at")
-        .in("conversation_id", convIds)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false }),
-    ]);
+    const unreadRes = await supabase
+      .from("messages")
+      .select("conversation_id")
+      .in("conversation_id", convIds)
+      .neq("sender_id", user.id)
+      .is("read_at", null);
     if (!unreadRes.error) {
       (unreadRes.data ?? []).forEach((m) => {
         const cid = m.conversation_id as string;
         unreadByConv.set(cid, (unreadByConv.get(cid) ?? 0) + 1);
       });
     }
-    type MsgRow = { conversation_id: string; content: string };
-    let lastMsgsData: MsgRow[] = !lastMsgsResSent.error && lastMsgsResSent.data?.length
-      ? (lastMsgsResSent.data as MsgRow[])
-      : !lastMsgsResCreated.error && lastMsgsResCreated.data?.length
-        ? (lastMsgsResCreated.data as MsgRow[])
-        : [];
-    if (!lastMsgsData.length) {
-      const fallback = await adminSupabase
-        .from("messages")
-        .select("conversation_id, content, id")
-        .in("conversation_id", convIds)
-        .is("deleted_at", null)
-        .order("id", { ascending: false });
-      if (!fallback.error && fallback.data?.length) lastMsgsData = fallback.data as MsgRow[];
-    }
-    lastMsgsData.forEach((m) => {
-      if (!lastMsgByConv.has(m.conversation_id)) {
-        const raw = (m as { content?: string | null }).content;
-        const text = (raw && String(raw).trim()) || "";
-        if (text) {
-          const preview = text.length > 80 ? text.slice(0, 77) + "..." : text;
-          lastMsgByConv.set(m.conversation_id, preview);
-        }
-      }
-    });
   }
 
   const demandeThreads: Thread[] = (demandes ?? []).map((d) => {

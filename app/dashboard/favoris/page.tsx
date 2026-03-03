@@ -6,27 +6,11 @@ import { SearchModalButton } from "@/components/search/search-modal";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { createClient } from "@/lib/supabase/server";
-import { rowToSalle } from "@/lib/types/salle";
-import type { Salle } from "@/lib/types/salle";
 import { Heart, MapPin, Users } from "lucide-react";
 
 const PAGE_SIZE = 12;
 
 type SortOption = "ville" | "capacite" | "budget";
-
-function sortSalles(salles: Salle[], sort: SortOption): Salle[] {
-  const copy = [...salles];
-  switch (sort) {
-    case "ville":
-      return copy.sort((a, b) => a.city.localeCompare(b.city));
-    case "capacite":
-      return copy.sort((a, b) => b.capacity - a.capacity);
-    case "budget":
-      return copy.sort((a, b) => a.pricePerDay - b.pricePerDay);
-    default:
-      return copy;
-  }
-}
 
 export default async function FavorisPage({
   searchParams,
@@ -50,26 +34,51 @@ export default async function FavorisPage({
     .eq("user_id", user.id);
 
   const salleIds = (favoriRows ?? []).map((r) => r.salle_id);
-  let allSalles: Salle[] = [];
+  const requestedPage = Math.max(1, parseInt(String(pageParam || "1"), 10) || 1);
+  const sortQuery = `&sort=${sort}`;
+  const orderBy =
+    sort === "ville"
+      ? { column: "city", ascending: true }
+      : sort === "capacite"
+        ? { column: "capacity", ascending: false }
+        : { column: "price_per_day", ascending: true };
+  let totalItems = 0;
+  let salles: {
+    id: string;
+    slug: string;
+    name: string;
+    city: string;
+    capacity: number;
+    price_per_day: number;
+    images: string[] | null;
+  }[] = [];
 
   if (salleIds.length > 0) {
-    const { data: salleRows } = await supabase
+    const { count } = await supabase
       .from("salles")
-      .select("*")
+      .select("id", { count: "exact", head: true })
       .in("id", salleIds)
       .eq("status", "approved");
-    allSalles = (salleRows ?? []).map((r) =>
-      rowToSalle(r as Parameters<typeof rowToSalle>[0])
-    );
-    allSalles = sortSalles(allSalles, sort);
+    totalItems = count ?? 0;
+
+    if (totalItems > 0) {
+      const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+      const currentPage = Math.min(requestedPage, totalPages);
+      const from = (currentPage - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      const { data } = await supabase
+        .from("salles")
+        .select("id, slug, name, city, capacity, price_per_day, images")
+        .in("id", salleIds)
+        .eq("status", "approved")
+        .order(orderBy.column, { ascending: orderBy.ascending })
+        .range(from, to);
+      salles = (data ?? []) as typeof salles;
+    }
   }
 
-  const page = Math.max(1, parseInt(String(pageParam || "1"), 10) || 1);
-  const totalPages = Math.max(1, Math.ceil(allSalles.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const from = (currentPage - 1) * PAGE_SIZE;
-  const salles = allSalles.slice(from, from + PAGE_SIZE);
-  const sortQuery = `&sort=${sort}`;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  const currentPage = Math.min(requestedPage, totalPages);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -78,7 +87,7 @@ export default async function FavorisPage({
           <h1 className="text-2xl font-bold text-black">Mes favoris</h1>
           <p className="mt-1 text-slate-600">Salles enregistrées</p>
         </div>
-        {allSalles.length > 0 && (
+        {totalItems > 0 && (
           <div className="flex flex-wrap gap-2">
             <Link
               href="/dashboard/favoris?sort=ville"
@@ -158,7 +167,7 @@ export default async function FavorisPage({
                     <span>{salle.capacity} personnes</span>
                   </div>
                   <p className="mt-3 text-sm font-semibold text-black">
-                    {salle.pricePerDay} € / jour
+                    {salle.price_per_day} € / jour
                   </p>
                   <Link href={`/salles/${salle.slug}`} className="mt-4 block">
                     <Button className="w-full bg-[#213398] hover:bg-[#1a2980]">
@@ -173,7 +182,7 @@ export default async function FavorisPage({
             baseUrl="/dashboard/favoris"
             currentPage={currentPage}
             totalPages={totalPages}
-            totalItems={allSalles.length}
+            totalItems={totalItems}
             pageSize={PAGE_SIZE}
             queryParams={sortQuery}
           />

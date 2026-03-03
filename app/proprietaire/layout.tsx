@@ -22,25 +22,28 @@ export default async function ProprietaireLayout({
     redirect("/auth");
   }
 
-  const { data: suspendedCheck } = await supabase
+  const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  const isAdminByEnv =
+    adminEmails.length > 0 && adminEmails.includes(user.email?.toLowerCase() ?? "");
+
+  const { data: profile } = await supabase
     .from("profiles")
-    .select("suspended")
+    .select("suspended, full_name, user_type")
     .eq("id", user.id)
     .maybeSingle();
 
-  if ((suspendedCheck as { suspended?: boolean } | null)?.suspended) {
+  if ((profile as { suspended?: boolean } | null)?.suspended) {
     redirect("/auth?suspended=1");
   }
 
-  const getProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("user_type")
-      .eq("id", userId)
-      .maybeSingle();
-    return data;
-  };
-  const userType = await getEffectiveUserType(user, getProfile);
+  const userType = isAdminByEnv
+    ? "admin"
+    : await getEffectiveUserType(user, async () => ({
+        user_type: (profile as { user_type?: string | null } | null)?.user_type ?? "seeker",
+      }));
   if (userType === "admin") redirect("/admin");
 
   const { data: mySalles } = await supabase
@@ -51,13 +54,10 @@ export default async function ProprietaireLayout({
   const canAccessOwner = canAccessOwnerDashboard(userType, hasSalles);
   if (!canAccessOwner) redirect("/dashboard");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const displayName = profile?.full_name ?? user.user_metadata?.full_name ?? "Utilisateur";
+  const displayName =
+    (profile as { full_name?: string | null } | null)?.full_name ??
+    user.user_metadata?.full_name ??
+    "Utilisateur";
   const { visiteCount, reservationCount, messageCount, paymentCount, edlCount, cautionCount, contractCount } =
     await getOwnerBadgeCounts(supabase, user.id);
 

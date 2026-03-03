@@ -91,6 +91,11 @@ export async function DELETE(
       }
     }
 
+    await admin
+      .from("salles")
+      .update({ has_contract_template: false })
+      .eq("id", salleId);
+
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("Contract salle DELETE:", e);

@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 type BadgeCounts = {
   demandeCount: number;
@@ -150,19 +149,6 @@ export async function getSeekerBadgeCounts(
   };
 }
 
-async function ownerMissingContractCount(salleIds: string[]): Promise<number> {
-  if (salleIds.length === 0) return 0;
-  const admin = createAdminClient();
-  let missing = 0;
-  for (const salleId of salleIds) {
-    const { error } = await admin.storage
-      .from("contrats")
-      .download(`salles/${salleId}/modele.pdf`);
-    if (error) missing += 1;
-  }
-  return missing;
-}
-
 export async function getOwnerBadgeCounts(
   supabase: SupabaseClient,
   userId: string
@@ -205,7 +191,20 @@ export async function getOwnerBadgeCounts(
   }
 
   const messageCount = await getUnreadMessageCount(supabase, userId, "owner_id");
-  const contractCount = await ownerMissingContractCount(salleIds);
+  let contractCount = 0;
+  if (salleIds.length > 0) {
+    try {
+      const { count } = await supabase
+        .from("salles")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", userId)
+        .eq("has_contract_template", false);
+      contractCount = count ?? 0;
+    } catch {
+      // Compat migration: si la colonne n'existe pas encore, on garde 0.
+      contractCount = 0;
+    }
+  }
   const hasStripeAccount = !!(profile as { stripe_account_id?: string | null } | null)?.stripe_account_id;
   const paymentCount = salleIds.length > 0 && !hasStripeAccount ? 1 : 0;
   let reservationCount = 0;

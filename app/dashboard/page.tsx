@@ -109,7 +109,8 @@ export default async function DashboardPage() {
     supabase
       .from("favoris")
       .select("salle_id")
-      .eq("user_id", seekerId),
+      .eq("user_id", seekerId)
+      .limit(12),
   ]);
 
   const salleIdsDemandes = [...new Set((demandesList ?? []).map((d) => d.salle_id).filter(Boolean))];

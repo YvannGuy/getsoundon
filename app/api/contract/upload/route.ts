@@ -63,6 +63,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: uploadError.message }, { status: 500 });
     }
 
+    await adminSupabase
+      .from("salles")
+      .update({ has_contract_template: true })
+      .eq("id", salleId);
+
     return NextResponse.json({ success: true, path });
   } catch (error) {
     console.error("Contract upload error:", error);
