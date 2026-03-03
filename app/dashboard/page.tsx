@@ -222,10 +222,7 @@ export default async function DashboardPage() {
         userId={user.id}
         dashboard="seeker"
         firstName={seekerFirstName}
-        videoUrl={
-          process.env.NEXT_PUBLIC_ONBOARDING_VIDEO_URL?.trim() ||
-          "https://www.youtube.com/watch?v=ysz5S6PUM-U"
-        }
+        videoUrl="/videos/Présentation de SallesDeCulte.com _ Trouvez la salle idéale pour vos événements.mp4"
         tourUrl="/pdf/salledeculte.com_bien_debuter.pdf"
       />
 

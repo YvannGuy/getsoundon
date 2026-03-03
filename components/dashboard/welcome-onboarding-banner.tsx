@@ -45,6 +45,10 @@ export function WelcomeOnboardingBanner({
   }, [storageKey]);
 
   const embedVideoUrl = useMemo(() => toEmbedVideoUrl(resolvedVideoUrl), [resolvedVideoUrl]);
+  const isNativeVideo = useMemo(
+    () => isNativeVideoUrl(resolvedVideoUrl),
+    [resolvedVideoUrl]
+  );
 
   if (!isVisible) return null;
 
@@ -68,7 +72,7 @@ export function WelcomeOnboardingBanner({
           onClick={() => setVideoOpen(true)}
         >
           <Play className="h-5 w-5" />
-          Voir la vidéo (1 min 45)
+          Voir la vidéo (5 min 27)
         </button>
         <a
           href={resolvedGuideUrl}
@@ -103,7 +107,19 @@ export function WelcomeOnboardingBanner({
             <DialogTitle>Vidéo de prise en main</DialogTitle>
           </DialogHeader>
           <div className="overflow-hidden rounded-lg border border-slate-200 bg-black">
-            {embedVideoUrl ? (
+            {isNativeVideo ? (
+              <video
+                key={resolvedVideoUrl}
+                className="aspect-video w-full"
+                controls
+                autoPlay
+                playsInline
+                preload="metadata"
+              >
+                <source src={resolvedVideoUrl} />
+                Votre navigateur ne supporte pas la lecture video.
+              </video>
+            ) : embedVideoUrl ? (
               <iframe
                 title="Vidéo onboarding"
                 src={embedVideoUrl}
@@ -168,5 +184,14 @@ function toEmbedVideoUrl(url: string): string | null {
     return null;
   } catch {
     return null;
+  }
+}
+
+function isNativeVideoUrl(url: string): boolean {
+  try {
+    const u = new URL(url, "http://localhost");
+    return /\.(mp4|webm|ogg|ogv|mov)($|\?)/i.test(u.pathname);
+  } catch {
+    return false;
   }
 }

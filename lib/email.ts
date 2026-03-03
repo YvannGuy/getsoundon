@@ -8,6 +8,8 @@ const contactEmail = "contact@salledeculte.com";
 const instagramUrl = "https://www.instagram.com/salledeculte/";
 const facebookUrl = "https://www.facebook.com/profile.php?id=61588281587238";
 const demoVideoUrl = "https://youtu.be/demo-salledeculte";
+const seekerWelcomeVideoUrl = "https://vimeo.com/1169991938";
+const seekerWelcomeGuideUrl = `${siteUrl}/pdf/salledeculte.com_bien_debuter.pdf`;
 
 function renderEmailLayout({
   title,
@@ -124,14 +126,15 @@ export async function sendWelcomeSeekerEmail(to: string, fullName: string) {
          </ul>`,
         `<h2>Astuce pour bien démarrer</h2>
          <p>Complétez votre demande avec un maximum de détails (type d’événement, date, capacité, budget). Vous recevrez des réponses plus rapides et plus pertinentes.</p>`,
-        `<h2>Guide démo (temporaire)</h2>
-         <p>Pour découvrir rapidement le fonctionnement de la plateforme, voici une vidéo explicative :</p>
-         <p><a href="${demoVideoUrl}">${demoVideoUrl}</a></p>
-         <p class="tip">Ce lien est temporaire et sera remplacé par la version finale.</p>`,
+        `<h2>Bien débuter</h2>
+         <p>Pour vous lancer rapidement :</p>
+         <ul>
+           <li><a href="${seekerWelcomeVideoUrl}">Voir la vidéo de présentation (Vimeo)</a></li>
+           <li><a href="${seekerWelcomeGuideUrl}">Télécharger le guide PDF “Bien débuter”</a></li>
+         </ul>`,
       ],
       ctaLabel: "Accéder à mon espace",
-      ctaUrl: siteUrl,
-      includeDemoCta: true,
+      ctaUrl: `${siteUrl}/dashboard`,
     }),
   });
   return { success: !error, error: error?.message };
