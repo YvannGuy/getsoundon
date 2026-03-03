@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { CancelReservationButton } from "@/components/dashboard/cancel-reservation-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -251,6 +252,14 @@ export default async function DashboardReservationsPage({
                     <Link href="/dashboard/etats-des-lieux" className="rounded border px-3 py-1.5 text-sm">
                       États des lieux
                     </Link>
+                    <CancelReservationButton
+                      offerId={offer.id}
+                      salleName={salleMap.get(offer.salle_id) ?? "Salle"}
+                      amountCents={offer.amount_cents}
+                      policyLabel={policyLabel(offer.cancellation_policy)}
+                      disabled={litigeOuvert}
+                      disabledReason="Annulation indisponible: un litige est déjà ouvert."
+                    />
                   </div>
                 </CardContent>
               </Card>
