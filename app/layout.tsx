@@ -31,14 +31,23 @@ const structuredData = {
       "@id": `${siteConfig.url}#organization`,
       name: siteConfig.name,
       url: siteConfig.url,
+      description: siteConfig.description,
       logo: `${siteConfig.url}/logosdcbl.png`,
       sameAs: [siteConfig.instagram, siteConfig.facebook],
+      contactPoint: {
+        "@type": "ContactPoint",
+        url: `${siteConfig.url}/centre-aide`,
+        contactType: "customer service",
+        availableLanguage: "French",
+      },
     },
     {
       "@type": "WebSite",
       "@id": `${siteConfig.url}#website`,
       name: siteConfig.name,
       url: siteConfig.url,
+      inLanguage: "fr",
+      description: siteConfig.description,
       publisher: {
         "@id": `${siteConfig.url}#organization`,
       },
@@ -75,6 +84,9 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
+        <Script id="crisp-chat" strategy="afterInteractive">
+          {`window.$crisp=[];window.CRISP_WEBSITE_ID="62bde919-94c1-4b2e-8a44-990fb6533f17";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();`}
+        </Script>
         <CookieProvider>
           {children}
           <ScrollToTop />

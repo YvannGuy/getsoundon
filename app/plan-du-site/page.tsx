@@ -1,3 +1,4 @@
+import { AddSalleLink } from "@/components/links/add-salle-link";
 import Link from "next/link";
 
 export const metadata = {
@@ -75,9 +76,9 @@ export default function PlanDuSitePage() {
               </Link>
             </li>
             <li>
-              <Link href="/auth?tab=signup&userType=owner" className="text-blue-700 hover:underline">
+              <AddSalleLink className="text-blue-700 hover:underline">
                 Inscription propriétaire
-              </Link>
+              </AddSalleLink>
             </li>
             <li>
               <Link href="/proprietaire" className="text-blue-700 hover:underline">

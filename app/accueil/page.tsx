@@ -393,7 +393,14 @@ export default async function Home() {
               <p className="text-[24px] font-semibold leading-none text-white [zoom:0.5]">Plateforme</p>
               <ul className="mt-3 space-y-2 text-[13px] text-slate-300">
                 <li><Link href="/#recherche" className="hover:text-white">Rechercher une salle</Link></li>
-                <li><Link href="/auth?tab=signup&userType=owner" className="hover:text-white">Ajoutez ma salle</Link></li>
+                <li>
+                  <Link
+                    href={user ? "/onboarding/salle" : "/auth?tab=signup&userType=owner"}
+                    className="hover:text-white"
+                  >
+                    Ajoutez ma salle
+                  </Link>
+                </li>
                 <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
                 <li><Link href="/centre-aide" className="hover:text-white">Centre d&apos;aide</Link></li>
               </ul>

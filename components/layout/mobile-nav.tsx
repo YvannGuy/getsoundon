@@ -10,16 +10,17 @@ interface MobileNavProps {
   isLoggedIn: boolean;
   userType?: "seeker" | "owner" | "admin" | null;
   dashboardHref?: string;
+  addSalleHref: string;
 }
 
 const navLinks = [
   { href: "/#categories-evenement", label: "Catégories" },
   { href: "/blog", label: "Blog" },
   { href: "/avantages", label: "Nos avantages" },
-  { href: "/auth?tab=signup&userType=owner", label: "Ajoutez ma salle" },
+  { label: "Ajoutez ma salle", isAddSalle: true as const },
 ];
 
-export function MobileNav({ isLoggedIn, userType, dashboardHref }: MobileNavProps) {
+export function MobileNav({ isLoggedIn, userType, dashboardHref, addSalleHref }: MobileNavProps) {
   const [open, setOpen] = useState(false);
 
   const handleClose = () => setOpen(false);
@@ -50,8 +51,8 @@ export function MobileNav({ isLoggedIn, userType, dashboardHref }: MobileNavProp
             <div className="flex flex-col py-4">
               {navLinks.map((link) => (
                 <Link
-                  key={link.href}
-                  href={link.href}
+                  key={"href" in link ? link.href : link.label}
+                  href={"isAddSalle" in link ? addSalleHref : (link as { href: string }).href}
                   onClick={handleClose}
                   className="border-b border-slate-100 px-6 py-3 text-[15px] font-medium text-slate-700 hover:bg-slate-50 hover:text-black"
                 >

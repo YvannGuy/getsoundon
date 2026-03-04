@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle2, ChevronRight } from "lucide-react";
 
+import { AddSalleLink } from "@/components/links/add-salle-link";
 import { buildCanonical } from "@/lib/seo";
 import { siteConfig } from "@/config/site";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -100,13 +101,10 @@ export default function AvantagesPage() {
                 Publiez votre salle et recevez des demandes qualifiées. Un parcours clair pour gérer vos échanges, vos offres et vos réservations.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
-                <Link
-                  href="/auth?tab=signup&userType=owner"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#213398] px-6 text-[15px] font-semibold text-white transition hover:bg-[#1a2980]"
-                >
+                <AddSalleLink className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#213398] px-6 text-[15px] font-semibold text-white transition hover:bg-[#1a2980]">
                   Ajouter ma salle
                   <ChevronRight className="h-5 w-5" />
-                </Link>
+                </AddSalleLink>
                 <Link
                   href="#plateforme"
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-6 text-[15px] font-semibold text-slate-700 transition hover:bg-slate-50"
@@ -307,12 +305,9 @@ export default function AvantagesPage() {
             Testez gratuitement et activez ensuite les options selon vos besoins.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href="/auth?tab=signup&userType=owner"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#213398] px-8 text-[15px] font-semibold text-white transition hover:bg-[#1a2980]"
-            >
+            <AddSalleLink className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#213398] px-8 text-[15px] font-semibold text-white transition hover:bg-[#1a2980]">
               Ajouter ma salle
-            </Link>
+            </AddSalleLink>
             <Link
               href="/centre-aide/proprietaire"
               className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-8 text-[15px] font-semibold text-slate-700 transition hover:bg-slate-50"

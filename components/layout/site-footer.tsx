@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Facebook, Instagram } from "lucide-react";
 
+import { AddSalleLink } from "@/components/links/add-salle-link";
 import { CookiePreferencesLink } from "@/components/cookies/CookiePreferencesLink";
 import { siteConfig } from "@/config/site";
 
@@ -28,9 +29,9 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/auth?tab=signup&userType=owner" className="hover:text-white">
+                <AddSalleLink className="hover:text-white">
                   Ajoutez ma salle
-                </Link>
+                </AddSalleLink>
               </li>
               <li>
                 <Link href="/blog" className="hover:text-white">

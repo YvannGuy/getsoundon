@@ -40,7 +40,10 @@ export async function SiteHeader() {
           <Link href="/avantages" className="hover:text-black">
             Nos avantages
           </Link>
-          <Link href="/auth?tab=signup&userType=owner" className="hover:text-black">
+          <Link
+            href={isLoggedIn ? "/onboarding/salle" : "/auth?tab=signup&userType=owner"}
+            className="hover:text-black"
+          >
             Ajoutez ma salle
           </Link>
         </nav>
@@ -52,6 +55,7 @@ export async function SiteHeader() {
             isLoggedIn={isLoggedIn}
             userType={userType}
             dashboardHref={isLoggedIn ? getDashboardHref(userType ?? "seeker") : undefined}
+            addSalleHref={isLoggedIn ? "/onboarding/salle" : "/auth?tab=signup&userType=owner"}
           />
         </div>
       </div>
