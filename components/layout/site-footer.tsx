@@ -58,6 +58,11 @@ export function SiteFooter() {
                   Catégories
                 </Link>
               </li>
+              <li>
+                <Link href="/plan-du-site" className="hover:text-white">
+                  Plan du site
+                </Link>
+              </li>
             </ul>
           </div>
           <div>

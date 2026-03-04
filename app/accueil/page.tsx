@@ -405,7 +405,16 @@ export default async function Home() {
                 <li>
                   <a href="mailto:contact@salledeculte.com" className="hover:text-white">Contact</a>
                 </li>
-                <li><Link href="/#categories-evenement" className="hover:text-white">Catégories</Link></li>
+              <li>
+                <Link href="/#categories-evenement" className="hover:text-white">
+                  Catégories
+                </Link>
+              </li>
+              <li>
+                <Link href="/plan-du-site" className="hover:text-white">
+                  Plan du site
+                </Link>
+              </li>
               </ul>
             </div>
             <div>
