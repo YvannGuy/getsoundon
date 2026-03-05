@@ -24,20 +24,47 @@ function generateSlug(nom: string): string {
   return `${base}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
+/** Pour le debug : code lisible (401, 403, 409, 413, 500, STORAGE, etc.) et détails optionnels. */
 export type CreateSalleResult =
   | { success: true; slug?: string; status: "approved" | "pending" }
-  | { success: false; error: string };
+  | {
+      success: false;
+      error: string;
+      errorCode?: string;
+      errorDetails?: string;
+      /** Index 1-based de la photo en échec (upload). */
+      photoIndex?: number;
+    };
+
+function maskId(id: string): string {
+  if (!id || id.length < 12) return "***";
+  return `${id.slice(0, 4)}…${id.slice(-4)}`;
+}
 
 export async function createSalleFromOnboarding(formData: FormData): Promise<CreateSalleResult> {
+  const correlationId = String(formData.get("correlationId") ?? "").trim() || undefined;
+  const log = (msg: string, data?: Record<string, unknown>) => {
+    const prefix = correlationId ? `[createSalle][${correlationId}]` : "[createSalle]";
+    if (data !== undefined) console.log(prefix, msg, data);
+    else console.log(prefix, msg);
+  };
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { success: false, error: "Vous devez être connecté pour ajouter une salle." };
+    log("auth missing");
+    return {
+      success: false,
+      error: "Session expirée, reconnectez-vous.",
+      errorCode: "SESSION_REQUIRED",
+    };
   }
+  log("user", { userId: maskId(user.id) });
 
+  try {
   const nom = String(formData.get("nom") ?? "").trim();
   const ville = String(formData.get("ville") ?? "").trim();
   const capacite = String(formData.get("capacite") ?? "");
@@ -112,13 +139,14 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     (tarifMensuel.trim() !== "" && parseInt(tarifMensuel, 10) > 0) ||
     (tarifHoraire.trim() !== "" && parseInt(tarifHoraire, 10) > 0);
   if (!hasAtLeastOneTarif) {
-    return { success: false, error: "Indiquez au moins un tarif (jour, mois ou heure)." };
+    return { success: false, error: "Indiquez au moins un tarif (jour, mois ou heure).", errorCode: "VALIDATION" };
   }
 
   if (files.length < 3) {
     return {
       success: false,
       error: "Veuillez ajouter au moins 3 photos de votre salle.",
+      errorCode: "VALIDATION",
     };
   }
 
@@ -130,11 +158,13 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
       return {
         success: false,
         error: "Certains fichiers sont invalides (JPG/PNG, max 5 Mo).",
+        errorCode: "VALIDATION",
       };
     }
 
     const prefix = user.id;
     const timestamp = Date.now();
+    log("upload start", { bucket: BUCKET_NAME, count: validFiles.length });
 
     for (let i = 0; i < validFiles.length; i++) {
       const file = validFiles[i];
@@ -148,12 +178,25 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
       });
 
       if (error) {
-        return { success: false, error: `Upload échoué : ${error.message}` };
+        log("storage upload failed", {
+          photoIndex: i + 1,
+          path,
+          code: error.message,
+          errorMessage: error.message,
+        });
+        return {
+          success: false,
+          error: `Photo ${i + 1} : upload échoué. ${error.message} Réessayez ou changez de fichier.`,
+          errorCode: "STORAGE",
+          errorDetails: error.message,
+          photoIndex: i + 1,
+        };
       }
 
       const { data: urlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
       imageUrls.push(urlData.publicUrl);
     }
+    log("upload done", { imageCount: imageUrls.length });
   }
 
   if (imageUrls.length === 0) {
@@ -215,8 +258,17 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
   });
 
   if (error) {
-    console.error("createSalle error:", error);
-    return { success: false, error: error.message };
+    const code = (error as { code?: string }).code ?? "DB";
+    const details = [error.message, (error as { details?: string }).details, (error as { hint?: string }).hint]
+      .filter(Boolean)
+      .join(" | ");
+    log("insert salles failed", { code, message: error.message });
+    return {
+      success: false,
+      error: error.message,
+      errorCode: code,
+      errorDetails: details,
+    };
   }
 
   // Notification admin si annonce en attente de validation (non bloquant)
@@ -245,4 +297,14 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
   }
 
   return { success: true, slug, status };
+  } catch (e) {
+    const err = e instanceof Error ? e : new Error(String(e));
+    log("unexpected error", { message: err.message });
+    return {
+      success: false,
+      error: err.message,
+      errorCode: "UNKNOWN",
+      errorDetails: err.stack?.slice(0, 500),
+    };
+  }
 }

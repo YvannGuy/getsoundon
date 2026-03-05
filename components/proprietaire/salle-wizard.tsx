@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useCallback, useRef, useMemo, type RefObject } from "react";
 import { addMonths, subMonths, startOfDay, addDays } from "date-fns";
 import { createSalleFromOnboarding } from "@/app/actions/create-salle";
+import { createClient } from "@/lib/supabase/client";
 import {
   Accessibility,
   Armchair,
@@ -331,8 +333,16 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
   const [createdStatus, setCreatedStatus] = useState<"approved" | "pending">("pending");
   const [submitError, setSubmitError] = useState<string | null>(null);
+  /** En mode debug, code d’erreur affiché (ex. SESSION_REQUIRED, STORAGE, 23505). */
+  const [debugErrorCode, setDebugErrorCode] = useState<string | null>(null);
+  /** Index 1-based de la photo en échec (pour afficher "Réessayer" ciblé). */
+  const [lastErrorPhotoIndex, setLastErrorPhotoIndex] = useState<number | null>(null);
+  /** Dernier correlationId en erreur (pour que l'utilisateur puisse le transmettre au support). */
+  const [lastCorrelationId, setLastCorrelationId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
+  const searchParams = useSearchParams();
+  const debug = searchParams.get("debug") === "1";
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const submitErrorRef = useRef<HTMLDivElement | null>(null);
@@ -512,6 +522,9 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
 
   const handleSubmit = async () => {
     setSubmitError(null);
+    setDebugErrorCode(null);
+    setLastErrorPhotoIndex(null);
+    setLastCorrelationId(null);
     const validationError = getWizardValidationError(data, MIN_PHOTOS);
     if (validationError) {
       setStep(validationError.step);
@@ -519,33 +532,63 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
       return;
     }
     setIsSubmitting(true);
-    try {
-      const formData = new FormData();
-      formData.set("nom", data.nom);
-      formData.set("ville", data.ville);
-      formData.set("capacite", data.capacite);
-      formData.set("adresse", data.adresse);
-      if (data.postalCode) formData.set("postalCode", data.postalCode);
-      if (data.lat != null) formData.set("lat", String(data.lat));
-      if (data.lng != null) formData.set("lng", String(data.lng));
-      formData.set("description", data.description);
-      formData.set("tarifParJour", data.tarifParJour);
-      formData.set("tarifMensuel", data.tarifMensuel);
-      formData.set("tarifHoraire", data.tarifHoraire);
-      formData.set("cautionRequise", data.cautionRequise ? "1" : "0");
-      formData.set("inclusions", JSON.stringify(data.inclusions));
-      formData.set("placesParking", data.placesParking);
-      formData.set("features", JSON.stringify(data.features));
-      formData.set("horairesParJour", JSON.stringify(data.horairesParJour));
-      formData.set("joursOuverture", JSON.stringify(data.joursOuverture));
-      formData.set("joursVisite", JSON.stringify(data.joursVisite));
-      formData.set("visiteDates", JSON.stringify(data.visiteDates));
-      formData.set("visiteHorairesParDate", JSON.stringify(data.visiteHorairesParDate));
-      formData.set("restrictionSonore", data.restrictionSonore);
-      formData.set("evenementsAcceptes", JSON.stringify(data.evenementsAcceptes));
-      data.photos.forEach((file) => formData.append("photos", file));
+    const correlationId = crypto.randomUUID();
+    const formData = new FormData();
+    formData.set("correlationId", correlationId);
+    formData.set("nom", data.nom);
+    formData.set("ville", data.ville);
+    formData.set("capacite", data.capacite);
+    formData.set("adresse", data.adresse);
+    if (data.postalCode) formData.set("postalCode", data.postalCode);
+    if (data.lat != null) formData.set("lat", String(data.lat));
+    if (data.lng != null) formData.set("lng", String(data.lng));
+    formData.set("description", data.description);
+    formData.set("tarifParJour", data.tarifParJour);
+    formData.set("tarifMensuel", data.tarifMensuel);
+    formData.set("tarifHoraire", data.tarifHoraire);
+    formData.set("cautionRequise", data.cautionRequise ? "1" : "0");
+    formData.set("inclusions", JSON.stringify(data.inclusions));
+    formData.set("placesParking", data.placesParking);
+    formData.set("features", JSON.stringify(data.features));
+    formData.set("horairesParJour", JSON.stringify(data.horairesParJour));
+    formData.set("joursOuverture", JSON.stringify(data.joursOuverture));
+    formData.set("joursVisite", JSON.stringify(data.joursVisite));
+    formData.set("visiteDates", JSON.stringify(data.visiteDates));
+    formData.set("visiteHorairesParDate", JSON.stringify(data.visiteHorairesParDate));
+    formData.set("restrictionSonore", data.restrictionSonore);
+    formData.set("evenementsAcceptes", JSON.stringify(data.evenementsAcceptes));
+    data.photos.forEach((file) => formData.append("photos", file));
 
+    if (debug) {
+      const supabase = createClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const uid = sessionData.session?.user?.id;
+      const mask = (id: string) => (id && id.length >= 12 ? `${id.slice(0, 4)}…${id.slice(-4)}` : "—");
+      const totalMb = data.photos.reduce((s, f) => s + f.size, 0) / (1024 * 1024);
+      console.log("[onboarding][debug]", {
+        correlationId,
+        userId: uid ? mask(uid) : null,
+        hasSession: !!sessionData.session,
+        nbPhotos: data.photos.length,
+        totalSizeMb: Math.round(totalMb * 100) / 100,
+        mimeTypes: data.photos.map((f) => f.type),
+        endpoint: "createSalleFromOnboarding (server action)",
+      });
+    }
+
+    const start = performance.now();
+    try {
       const result = await createSalleFromOnboarding(formData);
+      const duration = Math.round(performance.now() - start);
+
+      if (debug) {
+        console.log("[onboarding][debug]", {
+          correlationId,
+          durationMs: duration,
+          success: result.success,
+          ...(result.success ? {} : { errorCode: (result as { errorCode?: string }).errorCode, error: (result as { error: string }).error, errorDetails: (result as { errorDetails?: string }).errorDetails, photoIndex: (result as { photoIndex?: number }).photoIndex }),
+        });
+      }
 
       if (result.success) {
         localStorage.removeItem(ONBOARDING_DRAFT_KEY);
@@ -554,10 +597,28 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
         setSubmitted(true);
         onSuccess?.(result.slug ?? null, result.status ?? "pending");
       } else {
-        setSubmitError(result.error ?? "Impossible de soumettre votre annonce pour le moment.");
+        const err = result as { error: string; errorCode?: string; errorDetails?: string; photoIndex?: number };
+        setSubmitError(err.error ?? "Impossible de soumettre votre annonce pour le moment.");
+        setDebugErrorCode(err.errorCode ?? null);
+        setLastCorrelationId(correlationId);
+        if (err.photoIndex != null) setLastErrorPhotoIndex(err.photoIndex);
+        if (debug && err.errorCode) {
+          const msg = `Code: ${err.errorCode}${err.photoIndex ? ` | Photo #${err.photoIndex}` : ""}`;
+          console.warn("[onboarding][debug] Erreur soumission:", msg);
+        }
       }
-    } catch {
-      setSubmitError("Une erreur réseau est survenue. Vérifiez votre connexion et réessayez.");
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e));
+      setLastCorrelationId(correlationId);
+      if (debug) {
+        console.error("[onboarding][debug] Exception:", { correlationId, message: err.message, name: err.name });
+      }
+      setSubmitError(
+        err.message?.includes("fetch") || err.message?.includes("network")
+          ? "Une erreur réseau est survenue. Vérifiez votre connexion et réessayez."
+          : `Erreur : ${err.message || "Une erreur inattendue s'est produite."}`
+      );
+      setDebugErrorCode("EXCEPTION");
     }
     setIsSubmitting(false);
   };
@@ -818,6 +879,10 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
             submitError={submitError}
             submitErrorRef={submitErrorRef}
             minPhotos={MIN_PHOTOS}
+            debug={debug}
+            debugErrorCode={debugErrorCode}
+            lastErrorPhotoIndex={lastErrorPhotoIndex}
+            lastCorrelationId={lastCorrelationId}
           />
         )}
     </>
@@ -1724,6 +1789,9 @@ function Step6({
   submitError,
   submitErrorRef,
   minPhotos,
+  debug,
+  debugErrorCode,
+  lastErrorPhotoIndex,
 }: {
   data: WizardData;
   onSubmit: () => void;
@@ -1732,8 +1800,35 @@ function Step6({
   submitError?: string | null;
   submitErrorRef?: RefObject<HTMLDivElement | null>;
   minPhotos: number;
+  debug?: boolean;
+  debugErrorCode?: string | null;
+  lastErrorPhotoIndex?: number | null;
+  lastCorrelationId?: string | null;
 }) {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [copyDone, setCopyDone] = useState(false);
+
+  const reportLines = [
+    "Rapport d'erreur – création d'annonce salledeculte.com",
+    "----------------------------------------",
+    lastCorrelationId ? `ID de suivi : ${lastCorrelationId}` : null,
+    debugErrorCode ? `Code erreur : ${debugErrorCode}` : null,
+    lastErrorPhotoIndex != null ? `Photo concernée : n°${lastErrorPhotoIndex}` : null,
+    `Date : ${new Date().toISOString()}`,
+    "",
+    "Merci d'envoyer ce texte au support pour faciliter le diagnostic.",
+  ].filter(Boolean) as string[];
+
+  const copyReport = () => {
+    const text = reportLines.join("\n");
+    navigator.clipboard.writeText(text).then(
+      () => {
+        setCopyDone(true);
+        setTimeout(() => setCopyDone(false), 2000);
+      },
+      () => {}
+    );
+  };
 
   return (
     <>
@@ -1745,7 +1840,47 @@ function Step6({
           role="alert"
           className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
         >
-          {submitError}
+          <p>{submitError}</p>
+          {debug && debugErrorCode && (
+            <p className="mt-2 font-mono text-xs text-red-600">
+              [Debug] Code : {debugErrorCode}
+            </p>
+          )}
+          {lastCorrelationId && (
+            <p className="mt-1 font-mono text-xs text-red-600">
+              ID de suivi : {lastCorrelationId}
+            </p>
+          )}
+          {lastErrorPhotoIndex != null && (
+            <p className="mt-2 text-red-700">
+              Photo concernée : n°{lastErrorPhotoIndex}. Remplacez-la si besoin puis cliquez sur Réessayer.
+            </p>
+          )}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {(debug || lastCorrelationId) && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-red-300 text-red-700 hover:bg-red-100"
+                onClick={copyReport}
+              >
+                {copyDone ? "Copié !" : "Copier le rapport d'erreur"}
+              </Button>
+            )}
+            {(debug || lastErrorPhotoIndex != null) && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-red-300 text-red-700 hover:bg-red-100"
+                onClick={onSubmit}
+                disabled={isSubmitting}
+              >
+                Réessayer
+              </Button>
+            )}
+          </div>
         </div>
       )}
       <div className="mt-8 space-y-4 rounded-xl border border-slate-200 bg-slate-50/50 p-6">
