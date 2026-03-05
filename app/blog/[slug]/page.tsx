@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 
 import type { Metadata } from "next";
+import type { Graph, BlogPosting, BreadcrumbList, Organization, ImageObject } from "schema-dts";
 import { AddSalleLink } from "@/components/links/add-salle-link";
 import { BLOG_POSTS, getBlogPost } from "@/lib/blog-posts";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -72,51 +73,30 @@ export default async function BlogPostPage({ params }: Props) {
 
   if (!post) notFound();
   const canonical = buildCanonical(`/blog/${slug}`);
-  const blogStructuredData = {
+  const blogStructuredData: Graph = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          {
-            "@type": "ListItem",
-            position: 1,
-            name: "Accueil",
-            item: siteConfig.url,
-          },
-          {
-            "@type": "ListItem",
-            position: 2,
-            name: "Blog",
-            item: `${siteConfig.url}/blog`,
-          },
-          {
-            "@type": "ListItem",
-            position: 3,
-            name: post.title,
-            item: canonical,
-          },
+          { "@type": "ListItem", position: 1, name: "Accueil", item: siteConfig.url },
+          { "@type": "ListItem", position: 2, name: "Blog", item: `${siteConfig.url}/blog` },
+          { "@type": "ListItem", position: 3, name: post.title, item: canonical },
         ],
-      },
+      } satisfies BreadcrumbList,
       {
         "@type": "BlogPosting",
         mainEntityOfPage: canonical,
         headline: post.title,
         description: post.excerpt,
         image: [post.image],
-        author: {
-          "@type": "Organization",
-          name: siteConfig.name,
-        },
+        author: { "@type": "Organization", name: siteConfig.name } satisfies Organization,
         publisher: {
           "@type": "Organization",
           name: siteConfig.name,
-          logo: {
-            "@type": "ImageObject",
-            url: `${siteConfig.url}/logosdcbl.png`,
-          },
-        },
-      },
+          logo: { "@type": "ImageObject", url: `${siteConfig.url}/logosdcbl.png` } satisfies ImageObject,
+        } satisfies Organization,
+      } satisfies BlogPosting,
     ],
   };
 

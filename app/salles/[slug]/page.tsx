@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Graph, Place, BreadcrumbList, Offer, AggregateRating, PostalAddress } from "schema-dts";
 import {
   CheckCircle2,
   Clock,
@@ -135,32 +136,17 @@ export default async function SalleDetailPage({
     .slice(1)
     .map((p) => `${p.value} € ${p.label}`)
     .join(" · ");
-  const salleStructuredData = {
+  const salleStructuredData: Graph = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          {
-            "@type": "ListItem",
-            position: 1,
-            name: "Accueil",
-            item: siteConfig.url,
-          },
-          {
-            "@type": "ListItem",
-            position: 2,
-            name: "Rechercher",
-            item: `${siteConfig.url}/rechercher`,
-          },
-          {
-            "@type": "ListItem",
-            position: 3,
-            name: salle.name,
-            item: canonical,
-          },
+          { "@type": "ListItem", position: 1, name: "Accueil", item: siteConfig.url },
+          { "@type": "ListItem", position: 2, name: "Rechercher", item: `${siteConfig.url}/rechercher` },
+          { "@type": "ListItem", position: 3, name: salle.name, item: canonical },
         ],
-      },
+      } satisfies BreadcrumbList,
       {
         "@type": "Place",
         name: salle.name,
@@ -171,7 +157,7 @@ export default async function SalleDetailPage({
           "@type": "PostalAddress",
           addressLocality: salle.city,
           addressCountry: "FR",
-        },
+        } satisfies PostalAddress,
         ...(minTarif
           ? {
               offers: {
@@ -180,7 +166,7 @@ export default async function SalleDetailPage({
                 price: minTarif,
                 availability: "https://schema.org/InStock",
                 url: canonical,
-              },
+              } satisfies Offer,
             }
           : {}),
         ...(ratingStats.count > 0
@@ -189,10 +175,10 @@ export default async function SalleDetailPage({
                 "@type": "AggregateRating",
                 ratingValue: ratingStats.avg,
                 reviewCount: ratingStats.count,
-              },
+              } satisfies AggregateRating,
             }
           : {}),
-      },
+      } satisfies Place,
     ],
   };
 

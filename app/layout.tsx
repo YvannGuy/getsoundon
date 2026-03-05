@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import Script from "next/script";
+import type { Graph, Organization, WebSite, ContactPoint, SearchAction } from "schema-dts";
 
 import { Analytics } from "@/components/Analytics";
 import { CookieProvider } from "@/components/cookies/CookieProvider";
@@ -23,7 +24,7 @@ export const viewport: Viewport = {
   themeColor: "#213398",
 };
 
-const structuredData = {
+const structuredData: Graph = {
   "@context": "https://schema.org",
   "@graph": [
     {
@@ -39,8 +40,8 @@ const structuredData = {
         url: `${siteConfig.url}/centre-aide`,
         contactType: "customer service",
         availableLanguage: "French",
-      },
-    },
+      } satisfies ContactPoint,
+    } satisfies Organization,
     {
       "@type": "WebSite",
       "@id": `${siteConfig.url}#website`,
@@ -48,15 +49,13 @@ const structuredData = {
       url: siteConfig.url,
       inLanguage: "fr",
       description: siteConfig.description,
-      publisher: {
-        "@id": `${siteConfig.url}#organization`,
-      },
+      publisher: { "@id": `${siteConfig.url}#organization` },
       potentialAction: {
         "@type": "SearchAction",
         target: `${siteConfig.url}/rechercher?ville={search_term_string}`,
         "query-input": "required name=search_term_string",
-      },
-    },
+      } as SearchAction,
+    } satisfies WebSite,
   ],
 };
 
