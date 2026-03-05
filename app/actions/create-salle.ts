@@ -36,33 +36,19 @@ export type CreateSalleResult =
       photoIndex?: number;
     };
 
-function maskId(id: string): string {
-  if (!id || id.length < 12) return "***";
-  return `${id.slice(0, 4)}…${id.slice(-4)}`;
-}
-
 export async function createSalleFromOnboarding(formData: FormData): Promise<CreateSalleResult> {
-  const correlationId = String(formData.get("correlationId") ?? "").trim() || undefined;
-  const log = (msg: string, data?: Record<string, unknown>) => {
-    const prefix = correlationId ? `[createSalle][${correlationId}]` : "[createSalle]";
-    if (data !== undefined) console.log(prefix, msg, data);
-    else console.log(prefix, msg);
-  };
-
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    log("auth missing");
     return {
       success: false,
       error: "Session expirée, reconnectez-vous.",
       errorCode: "SESSION_REQUIRED",
     };
   }
-  log("user", { userId: maskId(user.id) });
 
   try {
   const nom = String(formData.get("nom") ?? "").trim();
@@ -154,7 +140,7 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
 
   const REQUIRED_PHOTOS = 5;
   if (imageUrls.length >= REQUIRED_PHOTOS) {
-    log("using client-uploaded imageUrls", { count: imageUrls.length });
+    // utilise les URLs uploadées côté client
   } else if (imageUrls.length > 0) {
     return {
       success: false,
@@ -185,7 +171,6 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
 
       const prefix = user.id;
       const timestamp = Date.now();
-      log("upload start", { bucket: BUCKET_NAME, count: validFiles.length });
 
       for (let i = 0; i < validFiles.length; i++) {
         const file = validFiles[i];
@@ -199,12 +184,6 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
         });
 
         if (error) {
-          log("storage upload failed", {
-            photoIndex: i + 1,
-            path,
-            code: error.message,
-            errorMessage: error.message,
-          });
           return {
             success: false,
             error: `Photo ${i + 1} : upload échoué. ${error.message} Réessayez ou changez de fichier.`,
@@ -217,7 +196,6 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
         const { data: urlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
         imageUrls.push(urlData.publicUrl);
       }
-      log("upload done", { imageCount: imageUrls.length });
     }
   }
 
@@ -280,16 +258,11 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
   });
 
   if (error) {
-    const code = (error as { code?: string }).code ?? "DB";
-    const details = [error.message, (error as { details?: string }).details, (error as { hint?: string }).hint]
-      .filter(Boolean)
-      .join(" | ");
-    log("insert salles failed", { code, message: error.message });
+    const code = (error as { code?: string }).code;
     return {
       success: false,
       error: error.message,
-      errorCode: code,
-      errorDetails: details,
+      ...(code ? { errorCode: code } : {}),
     };
   }
 
@@ -321,7 +294,6 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
   return { success: true, slug, status };
   } catch (e) {
     const err = e instanceof Error ? e : new Error(String(e));
-    log("unexpected error", { message: err.message });
     return {
       success: false,
       error: err.message,

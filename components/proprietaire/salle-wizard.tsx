@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useCallback, useRef, useMemo, type RefObject } from "react";
 import { addMonths, subMonths, startOfDay, addDays } from "date-fns";
 import { createSalleFromOnboarding } from "@/app/actions/create-salle";
@@ -334,18 +333,12 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
   const [createdStatus, setCreatedStatus] = useState<"approved" | "pending">("pending");
   const [submitError, setSubmitError] = useState<string | null>(null);
-  /** En mode debug, code d’erreur affiché (ex. SESSION_REQUIRED, STORAGE, 23505). */
-  const [debugErrorCode, setDebugErrorCode] = useState<string | null>(null);
   /** Index 1-based de la photo en échec (pour afficher "Réessayer" ciblé). */
   const [lastErrorPhotoIndex, setLastErrorPhotoIndex] = useState<number | null>(null);
-  /** Dernier correlationId en erreur (pour que l'utilisateur puisse le transmettre au support). */
-  const [lastCorrelationId, setLastCorrelationId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   /** Progression upload photos : { current: 1..total, total } */
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [draftRestored, setDraftRestored] = useState(false);
-  const searchParams = useSearchParams();
-  const debug = searchParams.get("debug") === "1";
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const submitErrorRef = useRef<HTMLDivElement | null>(null);
@@ -353,8 +346,8 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
 
   const MIN_PHOTOS = 5;
   const MAX_PHOTOS = 10;
-  /** 5 photos × 50 Mo max par fichier (bucket salle-photos) = 250 Mo total */
-  const TOTAL_PHOTOS_SIZE_LIMIT_MB = 250;
+  /** 10 photos max × 50 Mo max par fichier (bucket salle-photos) = 500 Mo total pour ne jamais bloquer en prod */
+  const TOTAL_PHOTOS_SIZE_LIMIT_MB = 500;
   const TOTAL_PHOTOS_SIZE_LIMIT = TOTAL_PHOTOS_SIZE_LIMIT_MB * 1024 * 1024;
 
   const progress = (step / TOTAL_STEPS) * 100;
@@ -528,9 +521,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
 
   const handleSubmit = async () => {
     setSubmitError(null);
-    setDebugErrorCode(null);
     setLastErrorPhotoIndex(null);
-    setLastCorrelationId(null);
     setUploadProgress(null);
     const validationError = getWizardValidationError(data, MIN_PHOTOS);
     if (validationError) {
@@ -541,13 +532,10 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
     const totalPhotosSize = data.photos.reduce((s, f) => s + f.size, 0);
     if (totalPhotosSize > TOTAL_PHOTOS_SIZE_LIMIT) {
       setSubmitError(`Photos trop lourdes (max ${TOTAL_PHOTOS_SIZE_LIMIT_MB} Mo au total). Réduisez la taille ou le nombre de photos.`);
-      setDebugErrorCode("VALIDATION");
       return;
     }
     setIsSubmitting(true);
-    const correlationId = crypto.randomUUID();
     const formData = new FormData();
-    formData.set("correlationId", correlationId);
     formData.set("nom", data.nom);
     formData.set("ville", data.ville);
     formData.set("capacite", data.capacite);
@@ -576,7 +564,6 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
     const user = sessionData.session?.user;
     if (!user) {
       setSubmitError("Session expirée, reconnectez-vous.");
-      setDebugErrorCode("SESSION_REQUIRED");
       setIsSubmitting(false);
       return;
     }
@@ -589,7 +576,6 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
     );
     if (validPhotos.length !== data.photos.length) {
       setSubmitError("Certains fichiers sont invalides (JPG/PNG, max 50 Mo par fichier).");
-      setDebugErrorCode("VALIDATION");
       setIsSubmitting(false);
       return;
     }
@@ -607,9 +593,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Erreur de compression.";
         setSubmitError(`Photo ${i + 1} : ${msg}`);
-        setDebugErrorCode("VALIDATION");
         setLastErrorPhotoIndex(i + 1);
-        setLastCorrelationId(correlationId);
         setUploadProgress(null);
         setIsSubmitting(false);
         return;
@@ -621,9 +605,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
       });
       if (error) {
         setSubmitError(`Photo ${i + 1} : upload échoué. ${error.message} Réessayez ou changez de fichier.`);
-        setDebugErrorCode("STORAGE");
         setLastErrorPhotoIndex(i + 1);
-        setLastCorrelationId(correlationId);
         setUploadProgress(null);
         setIsSubmitting(false);
         return;
@@ -635,33 +617,8 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
 
     formData.set("imageUrls", JSON.stringify(imageUrls));
 
-    if (debug) {
-      const mask = (id: string) => (id && id.length >= 12 ? `${id.slice(0, 4)}…${id.slice(-4)}` : "—");
-      const totalMb = data.photos.reduce((s, f) => s + f.size, 0) / (1024 * 1024);
-      console.log("[onboarding][debug]", {
-        correlationId,
-        userId: mask(user.id),
-        hasSession: true,
-        nbPhotos: data.photos.length,
-        totalSizeMb: Math.round(totalMb * 100) / 100,
-        imageUrlsUploaded: imageUrls.length,
-        endpoint: "createSalleFromOnboarding (server action)",
-      });
-    }
-
-    const start = performance.now();
     try {
       const result = await createSalleFromOnboarding(formData);
-      const duration = Math.round(performance.now() - start);
-
-      if (debug) {
-        console.log("[onboarding][debug]", {
-          correlationId,
-          durationMs: duration,
-          success: result.success,
-          ...(result.success ? {} : { errorCode: (result as { errorCode?: string }).errorCode, error: (result as { error: string }).error, errorDetails: (result as { errorDetails?: string }).errorDetails, photoIndex: (result as { photoIndex?: number }).photoIndex }),
-        });
-      }
 
       if (result.success) {
         localStorage.removeItem(ONBOARDING_DRAFT_KEY);
@@ -670,23 +627,13 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
         setSubmitted(true);
         onSuccess?.(result.slug ?? null, result.status ?? "pending");
       } else {
-        const err = result as { error: string; errorCode?: string; errorDetails?: string; photoIndex?: number };
+        const err = result as { error: string; photoIndex?: number };
         setSubmitError(err.error ?? "Impossible de soumettre votre annonce pour le moment.");
-        setDebugErrorCode(err.errorCode ?? null);
-        setLastCorrelationId(correlationId);
         if (err.photoIndex != null) setLastErrorPhotoIndex(err.photoIndex);
-        if (debug && err.errorCode) {
-          const msg = `Code: ${err.errorCode}${err.photoIndex ? ` | Photo #${err.photoIndex}` : ""}`;
-          console.warn("[onboarding][debug] Erreur soumission:", msg);
-        }
       }
     } catch (e) {
       const err = e instanceof Error ? e : new Error(String(e));
-      setLastCorrelationId(correlationId);
       setUploadProgress(null);
-      if (debug) {
-        console.error("[onboarding][debug] Exception:", { correlationId, message: err.message, name: err.name });
-      }
       const is413 =
         /413|payload\s*too\s*large|PAYLOAD_TOO_LARGE|function_payload/i.test(err.message) ||
         (err as { status?: number }).status === 413;
@@ -697,7 +644,6 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
             ? "Une erreur réseau est survenue. Vérifiez votre connexion et réessayez."
             : `Erreur : ${err.message || "Une erreur inattendue s'est produite."}`
       );
-      setDebugErrorCode(is413 ? "413" : "EXCEPTION");
     }
     setIsSubmitting(false);
   };
@@ -959,10 +905,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
             submitError={submitError}
             submitErrorRef={submitErrorRef}
             minPhotos={MIN_PHOTOS}
-            debug={debug}
-            debugErrorCode={debugErrorCode}
             lastErrorPhotoIndex={lastErrorPhotoIndex}
-            lastCorrelationId={lastCorrelationId}
           />
         )}
     </>
@@ -1870,10 +1813,7 @@ function Step6({
   submitError,
   submitErrorRef,
   minPhotos,
-  debug,
-  debugErrorCode,
   lastErrorPhotoIndex,
-  lastCorrelationId,
 }: {
   data: WizardData;
   onSubmit: () => void;
@@ -1883,35 +1823,9 @@ function Step6({
   submitError?: string | null;
   submitErrorRef?: RefObject<HTMLDivElement | null>;
   minPhotos: number;
-  debug?: boolean;
-  debugErrorCode?: string | null;
   lastErrorPhotoIndex?: number | null;
-  lastCorrelationId?: string | null;
 }) {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [copyDone, setCopyDone] = useState(false);
-
-  const reportLines = [
-    "Rapport d'erreur – création d'annonce salledeculte.com",
-    "----------------------------------------",
-    lastCorrelationId ? `ID de suivi : ${lastCorrelationId}` : null,
-    debugErrorCode ? `Code erreur : ${debugErrorCode}` : null,
-    lastErrorPhotoIndex != null ? `Photo concernée : n°${lastErrorPhotoIndex}` : null,
-    `Date : ${new Date().toISOString()}`,
-    "",
-    "Merci d'envoyer ce texte au support pour faciliter le diagnostic.",
-  ].filter(Boolean) as string[];
-
-  const copyReport = () => {
-    const text = reportLines.join("\n");
-    navigator.clipboard.writeText(text).then(
-      () => {
-        setCopyDone(true);
-        setTimeout(() => setCopyDone(false), 2000);
-      },
-      () => {}
-    );
-  };
 
   return (
     <>
@@ -1935,46 +1849,23 @@ function Step6({
           className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
         >
           <p>{submitError}</p>
-          {debug && debugErrorCode && (
-            <p className="mt-2 font-mono text-xs text-red-600">
-              [Debug] Code : {debugErrorCode}
-            </p>
-          )}
-          {lastCorrelationId && (
-            <p className="mt-1 font-mono text-xs text-red-600">
-              ID de suivi : {lastCorrelationId}
-            </p>
-          )}
           {lastErrorPhotoIndex != null && (
             <p className="mt-2 text-red-700">
               Photo concernée : n°{lastErrorPhotoIndex}. Remplacez-la si besoin puis cliquez sur Réessayer.
             </p>
           )}
-          <div className="mt-3 flex flex-wrap gap-2">
-            {(debug || lastCorrelationId) && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="border-red-300 text-red-700 hover:bg-red-100"
-                onClick={copyReport}
-              >
-                {copyDone ? "Copié !" : "Copier le rapport d'erreur"}
-              </Button>
-            )}
-            {(debug || lastErrorPhotoIndex != null) && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="border-red-300 text-red-700 hover:bg-red-100"
-                onClick={onSubmit}
-                disabled={isSubmitting}
-              >
-                Réessayer
-              </Button>
-            )}
-          </div>
+          {lastErrorPhotoIndex != null && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-3 border-red-300 text-red-700 hover:bg-red-100"
+              onClick={onSubmit}
+              disabled={isSubmitting}
+            >
+              Réessayer
+            </Button>
+          )}
         </div>
       )}
       <div className="mt-8 space-y-4 rounded-xl border border-slate-200 bg-slate-50/50 p-6">
