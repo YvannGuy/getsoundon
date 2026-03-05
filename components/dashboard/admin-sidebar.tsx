@@ -120,7 +120,7 @@ const navItems = (
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ];
 
-const ADMIN_BADGE_STORAGE_KEY = "admin_nav_seen_badges_v1";
+const ADMIN_BADGE_STORAGE_KEY = "admin_nav_seen_badges_v2";
 
 export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
   const pathname = usePathname();
