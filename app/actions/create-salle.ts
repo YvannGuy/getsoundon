@@ -131,9 +131,6 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     evenementsAcceptes,
   };
 
-  let imageUrls: string[] = [];
-  const files = formData.getAll("photos") as File[];
-
   const hasAtLeastOneTarif =
     (tarifParJour.trim() !== "" && parseInt(tarifParJour, 10) > 0) ||
     (tarifMensuel.trim() !== "" && parseInt(tarifMensuel, 10) > 0) ||
@@ -142,61 +139,86 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     return { success: false, error: "Indiquez au moins un tarif (jour, mois ou heure).", errorCode: "VALIDATION" };
   }
 
-  if (files.length < 3) {
-    return {
-      success: false,
-      error: "Veuillez ajouter au moins 3 photos de votre salle.",
-      errorCode: "VALIDATION",
-    };
+  let imageUrls: string[] = [];
+  const imageUrlsRaw = formData.get("imageUrls");
+  if (imageUrlsRaw && typeof imageUrlsRaw === "string") {
+    try {
+      const parsed = JSON.parse(imageUrlsRaw) as unknown;
+      if (Array.isArray(parsed) && parsed.every((u) => typeof u === "string")) {
+        imageUrls = parsed;
+      }
+    } catch {
+      // ignore invalid JSON
+    }
   }
 
-  if (files.length > 0) {
-    const validFiles = files.filter(
-      (f) => ALLOWED_TYPES.includes(f.type) && f.size <= MAX_FILE_SIZE
-    );
-    if (validFiles.length !== files.length) {
+  const REQUIRED_PHOTOS = 5;
+  if (imageUrls.length >= REQUIRED_PHOTOS) {
+    log("using client-uploaded imageUrls", { count: imageUrls.length });
+  } else if (imageUrls.length > 0) {
+    return {
+      success: false,
+      error: `Veuillez ajouter ${REQUIRED_PHOTOS} photos de votre salle (reçu : ${imageUrls.length}).`,
+      errorCode: "VALIDATION",
+    };
+  } else {
+    const files = formData.getAll("photos") as File[];
+    if (files.length < 3) {
       return {
         success: false,
-        error: "Certains fichiers sont invalides (JPG/PNG, max 5 Mo).",
+        error: "Veuillez ajouter au moins 3 photos de votre salle.",
         errorCode: "VALIDATION",
       };
     }
 
-    const prefix = user.id;
-    const timestamp = Date.now();
-    log("upload start", { bucket: BUCKET_NAME, count: validFiles.length });
-
-    for (let i = 0; i < validFiles.length; i++) {
-      const file = validFiles[i];
-      const ext = file.name.match(/\.(jpe?g|png)$/i)?.[1] ?? "jpg";
-      const path = `${prefix}/${timestamp}-${i}.${ext}`;
-      const buffer = Buffer.from(await file.arrayBuffer());
-
-      const { error } = await supabase.storage.from(BUCKET_NAME).upload(path, buffer, {
-        contentType: file.type,
-        upsert: false,
-      });
-
-      if (error) {
-        log("storage upload failed", {
-          photoIndex: i + 1,
-          path,
-          code: error.message,
-          errorMessage: error.message,
-        });
+    if (files.length > 0) {
+      const validFiles = files.filter(
+        (f) => ALLOWED_TYPES.includes(f.type) && f.size <= MAX_FILE_SIZE
+      );
+      if (validFiles.length !== files.length) {
         return {
           success: false,
-          error: `Photo ${i + 1} : upload échoué. ${error.message} Réessayez ou changez de fichier.`,
-          errorCode: "STORAGE",
-          errorDetails: error.message,
-          photoIndex: i + 1,
+          error: "Certains fichiers sont invalides (JPG/PNG, max 5 Mo).",
+          errorCode: "VALIDATION",
         };
       }
 
-      const { data: urlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
-      imageUrls.push(urlData.publicUrl);
+      const prefix = user.id;
+      const timestamp = Date.now();
+      log("upload start", { bucket: BUCKET_NAME, count: validFiles.length });
+
+      for (let i = 0; i < validFiles.length; i++) {
+        const file = validFiles[i];
+        const ext = file.name.match(/\.(jpe?g|png)$/i)?.[1] ?? "jpg";
+        const path = `${prefix}/${timestamp}-${i}.${ext}`;
+        const buffer = Buffer.from(await file.arrayBuffer());
+
+        const { error } = await supabase.storage.from(BUCKET_NAME).upload(path, buffer, {
+          contentType: file.type,
+          upsert: false,
+        });
+
+        if (error) {
+          log("storage upload failed", {
+            photoIndex: i + 1,
+            path,
+            code: error.message,
+            errorMessage: error.message,
+          });
+          return {
+            success: false,
+            error: `Photo ${i + 1} : upload échoué. ${error.message} Réessayez ou changez de fichier.`,
+            errorCode: "STORAGE",
+            errorDetails: error.message,
+            photoIndex: i + 1,
+          };
+        }
+
+        const { data: urlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
+        imageUrls.push(urlData.publicUrl);
+      }
+      log("upload done", { imageCount: imageUrls.length });
     }
-    log("upload done", { imageCount: imageUrls.length });
   }
 
   if (imageUrls.length === 0) {

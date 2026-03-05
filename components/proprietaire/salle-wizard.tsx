@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useRef, useMemo, type RefObject } fro
 import { addMonths, subMonths, startOfDay, addDays } from "date-fns";
 import { createSalleFromOnboarding } from "@/app/actions/create-salle";
 import { createClient } from "@/lib/supabase/client";
+import { compressImage } from "@/lib/compress-image";
 import {
   Accessibility,
   Armchair,
@@ -340,6 +341,8 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
   /** Dernier correlationId en erreur (pour que l'utilisateur puisse le transmettre au support). */
   const [lastCorrelationId, setLastCorrelationId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  /** Progression upload photos : { current: 1..total, total } */
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [draftRestored, setDraftRestored] = useState(false);
   const searchParams = useSearchParams();
   const debug = searchParams.get("debug") === "1";
@@ -350,6 +353,8 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
 
   const MIN_PHOTOS = 5;
   const MAX_PHOTOS = 10;
+  const TOTAL_PHOTOS_SIZE_LIMIT_MB = 8;
+  const TOTAL_PHOTOS_SIZE_LIMIT = TOTAL_PHOTOS_SIZE_LIMIT_MB * 1024 * 1024;
 
   const progress = (step / TOTAL_STEPS) * 100;
 
@@ -525,10 +530,17 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
     setDebugErrorCode(null);
     setLastErrorPhotoIndex(null);
     setLastCorrelationId(null);
+    setUploadProgress(null);
     const validationError = getWizardValidationError(data, MIN_PHOTOS);
     if (validationError) {
       setStep(validationError.step);
       setSubmitError(validationError.message);
+      return;
+    }
+    const totalPhotosSize = data.photos.reduce((s, f) => s + f.size, 0);
+    if (totalPhotosSize > TOTAL_PHOTOS_SIZE_LIMIT) {
+      setSubmitError(`Photos trop lourdes (max ${TOTAL_PHOTOS_SIZE_LIMIT_MB} Mo au total). Réduisez la taille ou le nombre de photos.`);
+      setDebugErrorCode("VALIDATION");
       return;
     }
     setIsSubmitting(true);
@@ -557,21 +569,81 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
     formData.set("visiteHorairesParDate", JSON.stringify(data.visiteHorairesParDate));
     formData.set("restrictionSonore", data.restrictionSonore);
     formData.set("evenementsAcceptes", JSON.stringify(data.evenementsAcceptes));
-    data.photos.forEach((file) => formData.append("photos", file));
+
+    const supabaseClient = createClient();
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+    const user = sessionData.session?.user;
+    if (!user) {
+      setSubmitError("Session expirée, reconnectez-vous.");
+      setDebugErrorCode("SESSION_REQUIRED");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const BUCKET_PHOTOS = "salle-photos";
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    const ALLOWED_TYPES = ["image/jpeg", "image/png"];
+    const validPhotos = data.photos.filter(
+      (f) => ALLOWED_TYPES.includes(f.type) && f.size <= MAX_FILE_SIZE
+    );
+    if (validPhotos.length !== data.photos.length) {
+      setSubmitError("Certains fichiers sont invalides (JPG/PNG, max 5 Mo).");
+      setDebugErrorCode("VALIDATION");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const uploadTimestamp = Date.now();
+    const imageUrls: string[] = [];
+    const totalToUpload = validPhotos.length;
+
+    for (let i = 0; i < validPhotos.length; i++) {
+      setUploadProgress({ current: i + 1, total: totalToUpload });
+      const file = validPhotos[i];
+      let blob: Blob;
+      try {
+        blob = await compressImage(file, { maxSizePx: 1600, quality: 0.75 });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Erreur de compression.";
+        setSubmitError(`Photo ${i + 1} : ${msg}`);
+        setDebugErrorCode("VALIDATION");
+        setLastErrorPhotoIndex(i + 1);
+        setLastCorrelationId(correlationId);
+        setUploadProgress(null);
+        setIsSubmitting(false);
+        return;
+      }
+      const path = `${user.id}/${uploadTimestamp}-${i}.jpg`;
+      const { error } = await supabaseClient.storage.from(BUCKET_PHOTOS).upload(path, blob, {
+        contentType: "image/jpeg",
+        upsert: false,
+      });
+      if (error) {
+        setSubmitError(`Photo ${i + 1} : upload échoué. ${error.message} Réessayez ou changez de fichier.`);
+        setDebugErrorCode("STORAGE");
+        setLastErrorPhotoIndex(i + 1);
+        setLastCorrelationId(correlationId);
+        setUploadProgress(null);
+        setIsSubmitting(false);
+        return;
+      }
+      const { data: urlData } = supabaseClient.storage.from(BUCKET_PHOTOS).getPublicUrl(path);
+      imageUrls.push(urlData.publicUrl);
+    }
+    setUploadProgress(null);
+
+    formData.set("imageUrls", JSON.stringify(imageUrls));
 
     if (debug) {
-      const supabase = createClient();
-      const { data: sessionData } = await supabase.auth.getSession();
-      const uid = sessionData.session?.user?.id;
       const mask = (id: string) => (id && id.length >= 12 ? `${id.slice(0, 4)}…${id.slice(-4)}` : "—");
       const totalMb = data.photos.reduce((s, f) => s + f.size, 0) / (1024 * 1024);
       console.log("[onboarding][debug]", {
         correlationId,
-        userId: uid ? mask(uid) : null,
-        hasSession: !!sessionData.session,
+        userId: mask(user.id),
+        hasSession: true,
         nbPhotos: data.photos.length,
         totalSizeMb: Math.round(totalMb * 100) / 100,
-        mimeTypes: data.photos.map((f) => f.type),
+        imageUrlsUploaded: imageUrls.length,
         endpoint: "createSalleFromOnboarding (server action)",
       });
     }
@@ -610,15 +682,21 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
     } catch (e) {
       const err = e instanceof Error ? e : new Error(String(e));
       setLastCorrelationId(correlationId);
+      setUploadProgress(null);
       if (debug) {
         console.error("[onboarding][debug] Exception:", { correlationId, message: err.message, name: err.name });
       }
+      const is413 =
+        /413|payload\s*too\s*large|PAYLOAD_TOO_LARGE|function_payload/i.test(err.message) ||
+        (err as { status?: number }).status === 413;
       setSubmitError(
-        err.message?.includes("fetch") || err.message?.includes("network")
-          ? "Une erreur réseau est survenue. Vérifiez votre connexion et réessayez."
-          : `Erreur : ${err.message || "Une erreur inattendue s'est produite."}`
+        is413
+          ? "Photos trop lourdes, compressez ou réessayez."
+          : err.message?.includes("fetch") || err.message?.includes("network")
+            ? "Une erreur réseau est survenue. Vérifiez votre connexion et réessayez."
+            : `Erreur : ${err.message || "Une erreur inattendue s'est produite."}`
       );
-      setDebugErrorCode("EXCEPTION");
+      setDebugErrorCode(is413 ? "413" : "EXCEPTION");
     }
     setIsSubmitting(false);
   };
@@ -876,6 +954,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
             onSubmit={handleSubmit}
             onBack={() => setStep(5)}
             isSubmitting={isSubmitting}
+            uploadProgress={uploadProgress}
             submitError={submitError}
             submitErrorRef={submitErrorRef}
             minPhotos={MIN_PHOTOS}
@@ -1786,6 +1865,7 @@ function Step6({
   onSubmit,
   onBack,
   isSubmitting,
+  uploadProgress,
   submitError,
   submitErrorRef,
   minPhotos,
@@ -1798,6 +1878,7 @@ function Step6({
   onSubmit: () => void;
   onBack: () => void;
   isSubmitting?: boolean;
+  uploadProgress?: { current: number; total: number } | null;
   submitError?: string | null;
   submitErrorRef?: RefObject<HTMLDivElement | null>;
   minPhotos: number;
@@ -1835,6 +1916,17 @@ function Step6({
     <>
       <h2 className="text-2xl font-bold text-black">Récapitulatif</h2>
       <p className="mt-2 text-slate-600">Vérifiez les informations avant de soumettre</p>
+      {uploadProgress && (
+        <div className="mt-4 rounded-lg border border-[#5b4dbf]/30 bg-[#5b4dbf]/5 px-4 py-3 text-sm text-[#5b4dbf]">
+          <p className="font-medium">Envoi des photos… {uploadProgress.current}/{uploadProgress.total}</p>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#5b4dbf]/20">
+            <div
+              className="h-full rounded-full bg-[#5b4dbf] transition-all duration-300"
+              style={{ width: `${(100 * uploadProgress.current) / uploadProgress.total}%` }}
+            />
+          </div>
+        </div>
+      )}
       {submitError && (
         <div
           ref={submitErrorRef}
