@@ -353,7 +353,8 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
 
   const MIN_PHOTOS = 5;
   const MAX_PHOTOS = 10;
-  const TOTAL_PHOTOS_SIZE_LIMIT_MB = 8;
+  /** 5 photos × 50 Mo max par fichier (bucket salle-photos) = 250 Mo total */
+  const TOTAL_PHOTOS_SIZE_LIMIT_MB = 250;
   const TOTAL_PHOTOS_SIZE_LIMIT = TOTAL_PHOTOS_SIZE_LIMIT_MB * 1024 * 1024;
 
   const progress = (step / TOTAL_STEPS) * 100;
@@ -581,13 +582,13 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
     }
 
     const BUCKET_PHOTOS = "salle-photos";
-    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 Mo (aligné sur le bucket salle-photos)
     const ALLOWED_TYPES = ["image/jpeg", "image/png"];
     const validPhotos = data.photos.filter(
       (f) => ALLOWED_TYPES.includes(f.type) && f.size <= MAX_FILE_SIZE
     );
     if (validPhotos.length !== data.photos.length) {
-      setSubmitError("Certains fichiers sont invalides (JPG/PNG, max 5 Mo).");
+      setSubmitError("Certains fichiers sont invalides (JPG/PNG, max 50 Mo par fichier).");
       setDebugErrorCode("VALIDATION");
       setIsSubmitting(false);
       return;

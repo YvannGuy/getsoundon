@@ -7,7 +7,7 @@ import { mapOnboardingToSalle } from "@/lib/onboarding-to-salle";
 import { createClient } from "@/lib/supabase/server";
 
 const BUCKET_NAME = "salle-photos";
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 Mo (aligné sur le bucket)
 const ALLOWED_TYPES = ["image/jpeg", "image/png"];
 
 function slugify(text: string): string {
@@ -178,7 +178,7 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
       if (validFiles.length !== files.length) {
         return {
           success: false,
-          error: "Certains fichiers sont invalides (JPG/PNG, max 5 Mo).",
+          error: "Certains fichiers sont invalides (JPG/PNG, max 50 Mo par fichier).",
           errorCode: "VALIDATION",
         };
       }
