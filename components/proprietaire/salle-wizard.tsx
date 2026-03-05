@@ -1792,6 +1792,7 @@ function Step6({
   debug,
   debugErrorCode,
   lastErrorPhotoIndex,
+  lastCorrelationId,
 }: {
   data: WizardData;
   onSubmit: () => void;
