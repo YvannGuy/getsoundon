@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { CategoryCarousel } from "@/components/home/category-carousel";
+import { DepartmentCarousel } from "@/components/home/department-carousel";
 import { CategoryRotatingBold } from "@/components/home/category-rotating-bold";
 import { HeroBackgroundCarousel } from "@/components/home/hero-background-carousel";
 import { HeroSearchBar } from "@/components/home/hero-search-bar";
@@ -125,36 +126,8 @@ export default async function Home() {
           <p className="mt-2 text-center text-[25px] text-slate-500 [zoom:0.5]">
             Explorez les espaces disponibles par département
           </p>
-          <div className="mx-auto mt-10 grid max-w-5xl gap-6 sm:grid-cols-2 md:grid-cols-3">
-            {departmentCards.map((item) => (
-              <Link
-                key={item.departmentCode}
-                href={`/rechercher?departement=${encodeURIComponent(item.departmentCode)}`}
-                className="group relative block overflow-hidden rounded-xl border border-slate-200 transition hover:border-slate-300 hover:shadow-lg"
-              >
-                <div className="relative aspect-[4/3] bg-slate-100">
-                  <Image
-                    src={item.image}
-                    alt={item.departmentLabel}
-                    fill
-                    className="object-cover transition duration-300 group-hover:scale-[1.05]"
-                    sizes="(max-width: 640px) 100vw, 33vw"
-                  />
-                  <div
-                    className="absolute inset-0 bg-black/15 transition duration-300 group-hover:bg-black/20"
-                    aria-hidden
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <p className="font-semibold text-white drop-shadow-sm">
-                      {item.departmentLabel} ({item.departmentCode})
-                    </p>
-                    <p className="mt-0.5 text-sm text-white/90">
-                      {item.count} salle{item.count > 1 ? "s" : ""}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
+          <div className="mt-10 px-4 sm:px-8">
+            <DepartmentCarousel items={departmentCards} />
           </div>
         </div>
       </SectionReveal>

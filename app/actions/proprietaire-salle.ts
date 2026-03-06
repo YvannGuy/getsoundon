@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import type { Salle } from "@/lib/types/salle";
 import { rowToSalle } from "@/lib/types/salle";
+import { FEATURE_TO_SALLE, INCLUSION_LABELS } from "@/lib/salle-features";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -58,12 +59,44 @@ export async function updateSalleOwnerAction(
   const address = String(formData.get("address") ?? "").trim();
   const capacity = parseInt(String(formData.get("capacity") ?? "0"), 10);
   const pricePerDay = parseInt(String(formData.get("price_per_day") ?? "0"), 10);
+  const pricePerHour = formData.get("price_per_hour");
+  const pricePerMonth = formData.get("price_per_month");
+  const pricePerHourVal = pricePerHour !== null && pricePerHour !== "" ? parseInt(String(pricePerHour), 10) : null;
+  const pricePerMonthVal = pricePerMonth !== null && pricePerMonth !== "" ? parseInt(String(pricePerMonth), 10) : null;
   const description = String(formData.get("description") ?? "").trim();
-  const contactPhone = String(formData.get("contact_phone") ?? "").trim() || null;
-  const displayContactPhone = formData.get("display_contact_phone") === "1";
+  const featuresRaw = formData.get("features");
+  const features = Array.isArray(featuresRaw)
+    ? (featuresRaw as string[])
+    : typeof featuresRaw === "string"
+      ? ((): string[] => {
+          try {
+            const parsed = JSON.parse(featuresRaw) as unknown;
+            return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : [];
+          } catch {
+            return [];
+          }
+        })()
+      : [];
+  const inclusionsRaw = formData.get("pricing_inclusions");
+  const pricingInclusions = Array.isArray(inclusionsRaw)
+    ? (inclusionsRaw as string[])
+    : typeof inclusionsRaw === "string"
+      ? ((): string[] => {
+          try {
+            const parsed = JSON.parse(inclusionsRaw) as unknown;
+            return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : [];
+          } catch {
+            return [];
+          }
+        })()
+      : [];
 
-  if (!name || !city || !address || capacity <= 0 || pricePerDay <= 0) {
+  if (!name || !city || !address || capacity <= 0) {
     return { success: false, error: "Champs obligatoires manquants ou invalides" };
+  }
+  const hasTarif = pricePerDay > 0 || (pricePerHourVal !== null && pricePerHourVal > 0) || (pricePerMonthVal !== null && pricePerMonthVal > 0);
+  if (!hasTarif) {
+    return { success: false, error: "Indiquez au moins un tarif (jour, heure ou mois)." };
   }
 
   let images: string[] = [];
@@ -107,6 +140,10 @@ export async function updateSalleOwnerAction(
 
   if (images.length === 0) images = ["/img.png"];
 
+  const featuresForDb = features
+    .map((id) => FEATURE_TO_SALLE[id])
+    .filter((f): f is { label: string; sublabel?: string; icon: string } => !!f);
+
   const { error } = await supabase
     .from("salles")
     .update({
@@ -115,9 +152,11 @@ export async function updateSalleOwnerAction(
       address,
       capacity,
       price_per_day: pricePerDay,
+      price_per_hour: pricePerHourVal,
+      price_per_month: pricePerMonthVal,
       description,
-      contact_phone: contactPhone,
-      display_contact_phone: displayContactPhone,
+      features: featuresForDb,
+      pricing_inclusions: pricingInclusions,
       images,
       updated_at: new Date().toISOString(),
     })

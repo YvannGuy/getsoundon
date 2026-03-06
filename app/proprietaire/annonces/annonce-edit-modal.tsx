@@ -24,17 +24,30 @@ import {
   removeSalleLocationBlockedDateAction,
   updateSalleOwnerAction,
 } from "@/app/actions/proprietaire-salle";
+import {
+  FEATURE_EDIT_LIST,
+  getFeatureIdsFromSalle,
+  getInclusionIdsFromSalle,
+  INCLUSION_EDIT_LIST,
+  INCLUSION_LABELS,
+} from "@/lib/salle-features";
 
-const schema = z.object({
-  name: z.string().min(2, "Nom trop court"),
-  city: z.string().min(2, "Ville requise"),
-  address: z.string().min(5, "Adresse requise"),
-  capacity: z.number().min(1, "Capacité invalide"),
-  price_per_day: z.number().min(1, "Prix invalide"),
-  description: z.string(),
-  contact_phone: z.string(),
-  display_contact_phone: z.boolean(),
-});
+const schema = z
+  .object({
+    name: z.string().min(2, "Nom trop court"),
+    city: z.string().min(2, "Ville requise"),
+    address: z.string().min(5, "Adresse requise"),
+    capacity: z.number().min(1, "Capacité invalide"),
+    price_per_day: z.number().min(0),
+    price_per_hour: z.number().min(0),
+    price_per_month: z.number().min(0),
+    description: z.string(),
+  })
+  .refine(
+    (v) =>
+      (v.price_per_day > 0) || (v.price_per_hour > 0) || (v.price_per_month > 0),
+    { message: "Indiquez au moins un tarif (jour, heure ou mois).", path: ["price_per_day"] }
+  );
 
 type FormValues = z.infer<typeof schema>;
 
@@ -57,6 +70,9 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
   const [blocking, setBlocking] = useState(false);
   const [unblockingDate, setUnblockingDate] = useState<string | null>(null);
 
+  const [features, setFeatures] = useState<string[]>([]);
+  const [inclusions, setInclusions] = useState<string[]>([]);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema) as Resolver<FormValues>,
     defaultValues: {
@@ -65,8 +81,9 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
       address: "",
       capacity: 0,
       price_per_day: 0,
+      price_per_hour: 0,
+      price_per_month: 0,
       description: "",
-      contact_phone: "",
     },
   });
 
@@ -77,11 +94,13 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
         city: salle.city,
         address: salle.address,
         capacity: salle.capacity,
-        price_per_day: salle.pricePerDay,
+        price_per_day: salle.pricePerDay ?? 0,
+        price_per_hour: salle.pricePerHour ?? 0,
+        price_per_month: salle.pricePerMonth ?? 0,
         description: salle.description ?? "",
-        contact_phone: salle.contactPhone ?? "",
-        display_contact_phone: salle.displayContactPhone !== false,
       });
+      setFeatures(getFeatureIdsFromSalle(salle.features));
+      setInclusions(getInclusionIdsFromSalle(salle.pricingInclusions));
       setImages(salle.images?.length ? [...salle.images] : []);
       setNewFiles([]);
       setNewFilePreviews([]);
@@ -131,8 +150,11 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
     fd.append("address", values.address);
     fd.append("capacity", String(values.capacity));
     fd.append("price_per_day", String(values.price_per_day));
+    fd.append("price_per_hour", String(values.price_per_hour));
+    fd.append("price_per_month", String(values.price_per_month));
     fd.append("description", values.description);
-    fd.append("contact_phone", values.contact_phone);
+    fd.append("features", JSON.stringify(features));
+    fd.append("pricing_inclusions", JSON.stringify(inclusions.map((id) => INCLUSION_LABELS[id])));
     fd.append("images_keep", JSON.stringify(images));
     newFiles.forEach((f) => fd.append("photos", f));
 
@@ -262,17 +284,38 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
               <label className="text-sm font-medium text-slate-700">Prix / jour (€)</label>
               <Input
                 type="number"
+                min={0}
                 {...form.register("price_per_day", { valueAsNumber: true })}
                 className="border-slate-200"
                 placeholder="150"
               />
-              {form.formState.errors.price_per_day && (
-                <p className="text-xs text-red-600">
-                  {form.formState.errors.price_per_day.message}
-                </p>
-              )}
+            </div>
+            <div className="min-w-0 space-y-2">
+              <label className="text-sm font-medium text-slate-700">Prix / heure (€)</label>
+              <Input
+                type="number"
+                min={0}
+                {...form.register("price_per_hour", { valueAsNumber: true })}
+                className="border-slate-200"
+                placeholder="20"
+              />
+            </div>
+            <div className="min-w-0 space-y-2">
+              <label className="text-sm font-medium text-slate-700">Prix / mois (€)</label>
+              <Input
+                type="number"
+                min={0}
+                {...form.register("price_per_month", { valueAsNumber: true })}
+                className="border-slate-200"
+                placeholder="800"
+              />
             </div>
           </div>
+          {(form.formState.errors.price_per_day ?? form.formState.errors.price_per_hour ?? form.formState.errors.price_per_month) && (
+            <p className="text-xs text-red-600">
+              Indiquez au moins un tarif (jour, heure ou mois).
+            </p>
+          )}
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700">Description</label>
             <textarea
@@ -283,32 +326,47 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Téléphone contact</label>
-            <Input
-              {...form.register("contact_phone")}
-              className="border-slate-200"
-              placeholder="06 12 34 56 78"
-            />
-            <p className="text-sm font-medium text-slate-600">Afficher « Contactez le propriétaire » avec téléphone ?</p>
-            <div className="flex gap-4">
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  checked={Boolean((form.watch("display_contact_phone") ?? true) === true)}
-                  onChange={() => form.setValue("display_contact_phone", true)}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Oui</span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  checked={Boolean((form.watch("display_contact_phone") ?? true) === false)}
-                  onChange={() => form.setValue("display_contact_phone", false)}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Non</span>
-              </label>
+            <label className="text-sm font-medium text-slate-700">Équipements et caractéristiques</label>
+            <div className="flex flex-wrap gap-2">
+              {FEATURE_EDIT_LIST.map(({ id, label }) => (
+                <label
+                  key={id}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm transition hover:border-slate-300 has-[:checked]:border-[#213398] has-[:checked]:bg-[#213398]/5"
+                >
+                  <input
+                    type="checkbox"
+                    checked={features.includes(id)}
+                    onChange={(e) => {
+                      if (e.target.checked) setFeatures((prev) => [...prev, id]);
+                      else setFeatures((prev) => prev.filter((x) => x !== id));
+                    }}
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">Ce tarif comprend</label>
+            <div className="flex flex-wrap gap-2">
+              {INCLUSION_EDIT_LIST.map(({ id, label }) => (
+                <label
+                  key={id}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm transition hover:border-slate-300 has-[:checked]:border-[#213398] has-[:checked]:bg-[#213398]/5"
+                >
+                  <input
+                    type="checkbox"
+                    checked={inclusions.includes(id)}
+                    onChange={(e) => {
+                      if (e.target.checked) setInclusions((prev) => [...prev, id]);
+                      else setInclusions((prev) => prev.filter((x) => x !== id));
+                    }}
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
             </div>
           </div>
 
