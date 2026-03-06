@@ -86,8 +86,10 @@ export default async function Home() {
       <SiteHeader />
       <InstallAppPopup />
 
-      <SectionReveal id="recherche" className="relative min-h-[480px] overflow-hidden md:min-h-[560px]">
-        <HeroBackgroundCarousel />
+      <SectionReveal id="recherche" className="relative min-h-[480px] overflow-visible md:min-h-[560px]">
+        <div className="absolute inset-0 overflow-hidden">
+          <HeroBackgroundCarousel />
+        </div>
         <div className="container relative z-10 flex flex-col items-center px-4 py-12 md:py-16">
           <h1 className="max-w-3xl text-center text-[28px] font-bold leading-tight text-white sm:text-[38px] md:text-[44px] lg:text-[52px]">
             Trouvez et réservez un lieu adapté en toute sérénité
@@ -95,7 +97,7 @@ export default async function Home() {
           <p className="mt-4 max-w-2xl text-center text-[14px] leading-relaxed text-white/95 sm:text-[16px]">
             Des lieux sélectionnés et vérifiés pour accueillir vos cultes et évènements.
           </p>
-          <div className="mt-8 w-full max-w-4xl">
+          <div className="mt-8 w-full max-w-[1120px]">
             <HeroSearchBar />
           </div>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-white/90">
