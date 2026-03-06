@@ -49,156 +49,140 @@ export function HeroSearchBar({ className }: { className?: string }) {
     router.push(`/rechercher?${params.toString()}`);
   };
 
-  const fieldBase = "flex flex-col gap-1.5";
-  const labelClass = "text-[11px] font-semibold uppercase tracking-wider text-slate-500";
+  const errorMessages = [
+    errors.departement,
+    errors.date,
+    errors.personnes,
+    errors.type,
+  ].filter(Boolean) as string[];
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={cn(
-        "relative overflow-visible rounded-2xl bg-white shadow-[0_8px_32px_rgba(15,23,42,0.12)]",
-        className
-      )}
-    >
-      {/* Desktop: grille horizontale avec labels */}
-      <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:gap-5 sm:p-5 lg:grid-cols-5 lg:items-end lg:gap-0 lg:divide-x lg:divide-slate-200 lg:p-0">
-        {/* Département */}
-        <div className={cn(fieldBase, "lg:flex-1 lg:px-5 lg:py-5")}>
-          <label className={labelClass}>
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5" />
+    <div className={cn("relative", className)}>
+      <form
+        onSubmit={handleSubmit}
+        className="relative overflow-visible rounded-[36px] border border-slate-200/90 bg-white p-2.5 shadow-[0_14px_34px_rgba(15,23,42,0.16)] sm:rounded-[999px]"
+      >
+        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-[1.05fr_1.15fr_0.8fr_0.85fr_auto] sm:items-center lg:gap-0">
+          <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:border-r lg:border-slate-200">
+            <p className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <MapPin className="h-3.5 w-3.5 text-slate-400" />
               Département
-            </span>
-          </label>
-          <DepartmentAutocomplete
-            value={departement}
-            onChange={setDepartement}
-            valueRef={deptValueRef}
-            placeholder="Paris, Yvelines, 78..."
-            inputClassName={cn(
-              "h-11 w-full rounded-lg border bg-white text-[14px]",
-              errors.departement ? "border-rose-500 bg-rose-50/50" : "border-slate-200",
-              "focus-visible:border-[#213398] focus-visible:ring-[#213398]/20"
-            )}
-          />
-          {errors.departement && (
-            <p className="text-[11px] text-rose-600">{errors.departement}</p>
-          )}
-        </div>
-
-        {/* Période (Du / au) */}
-        <div className={cn(fieldBase, "lg:min-w-[220px] lg:flex-[1.2] lg:px-5 lg:py-5")}>
-          <label className={labelClass}>
-            <span className="inline-flex items-center gap-1.5">
-              <CalendarDays className="h-3.5 w-3.5" />
-              Période
-            </span>
-          </label>
-          <DateRangePicker
-            value={dateRange}
-            onChange={setDateRange}
-            placeholder="Du jj/mm/aaaa au jj/mm/aaaa"
-            className="w-full"
-            inputClassName={cn(
-              "h-11 w-full rounded-lg border bg-white text-[14px]",
-              errors.date ? "border-rose-500 bg-rose-50/50" : "border-slate-200",
-              "focus-visible:border-[#213398] focus-visible:ring-[#213398]/20"
-            )}
-            error={!!errors.date}
-          />
-          {errors.date && (
-            <p className="text-[11px] text-rose-600">{errors.date}</p>
-          )}
-        </div>
-
-        {/* Capacité */}
-        <div className={cn(fieldBase, "lg:flex-1 lg:px-5 lg:py-5")}>
-          <label htmlFor="hero-cap-min" className={labelClass}>
-            <span className="inline-flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5" />
-              Capacité
-            </span>
-          </label>
-          <div className="flex items-center gap-2">
-            <Input
-              id="hero-cap-min"
-              type="number"
-              min={1}
-              value={personnesMin}
-              onChange={(e) => setPersonnesMin(e.target.value)}
-              placeholder="Min"
-              className={cn(
-                "h-11 flex-1 rounded-lg border bg-white text-[14px]",
-                errors.personnes ? "border-rose-500 bg-rose-50/50" : "border-slate-200",
-                "focus-visible:border-[#213398] focus-visible:ring-[#213398]/20"
-              )}
-            />
-            <span className="text-slate-400">à</span>
-            <Input
-              type="number"
-              min={1}
-              value={personnesMax}
-              onChange={(e) => setPersonnesMax(e.target.value)}
-              placeholder="Max"
-              className={cn(
-                "h-11 flex-1 rounded-lg border bg-white text-[14px]",
-                errors.personnes ? "border-rose-500 bg-rose-50/50" : "border-slate-200",
-                "focus-visible:border-[#213398] focus-visible:ring-[#213398]/20"
+            </p>
+            <DepartmentAutocomplete
+              value={departement}
+              onChange={setDepartement}
+              valueRef={deptValueRef}
+              placeholder="Paris, Yvelines, 78..."
+              inputClassName={cn(
+                "mt-2 h-11 rounded-full border border-slate-200 bg-white pl-10 pr-4 text-[14px] font-medium text-slate-950 shadow-none placeholder:text-slate-400 focus-visible:border-[#213398] focus-visible:ring-[#213398]/15",
+                errors.departement && "text-rose-600 placeholder:text-rose-300"
               )}
             />
           </div>
-          {errors.personnes && (
-            <p className="text-[11px] text-rose-600">{errors.personnes}</p>
-          )}
-        </div>
 
-        {/* Type d'événement */}
-        <div className={cn(fieldBase, "lg:flex-1 lg:px-5 lg:py-5")}>
-          <label htmlFor="hero-type" className={labelClass}>
-            <span className="inline-flex items-center gap-1.5">
-              <Building2 className="h-3.5 w-3.5" />
-              Type d&apos;événement
-            </span>
-          </label>
-          <Select value={type || "all"} onValueChange={(v) => setType(v === "all" ? "" : v)}>
-            <SelectTrigger
-              id="hero-type"
-              className={cn(
-                "h-11 w-full rounded-lg border bg-white text-[14px] shadow-none",
-                errors.type ? "border-rose-500 bg-rose-50/50" : "border-slate-200",
-                "focus:border-[#213398] focus:ring-[#213398]/20"
+          <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:border-r lg:border-slate-200">
+            <p className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
+              Période
+            </p>
+            <DateRangePicker
+              value={dateRange}
+              onChange={setDateRange}
+              placeholder="Du jj/mm/aaaa au jj/mm/aaaa"
+              className="mt-2 w-full"
+              inputClassName={cn(
+                "min-h-[44px] rounded-full border border-slate-200 bg-white px-3 py-2 text-[14px] font-medium text-slate-950 shadow-none hover:border-slate-300 focus:ring-0",
+                errors.date && "border-rose-500"
               )}
-            >
-              <SelectValue placeholder="Sélectionnez" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Sélectionnez un type</SelectItem>
-              <SelectItem value="culte-regulier">Culte régulier</SelectItem>
-              <SelectItem value="conference">Conférence</SelectItem>
-              <SelectItem value="celebration">Célébration</SelectItem>
-              <SelectItem value="bapteme">Baptême</SelectItem>
-              <SelectItem value="retraite">Retraite</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.type && (
-            <p className="text-[11px] text-rose-600">{errors.type}</p>
-          )}
-        </div>
+              error={!!errors.date}
+            />
+          </div>
 
-        {/* Bouton Rechercher */}
-        <div className="flex flex-col gap-1.5 pt-1 sm:col-span-2 lg:col-span-1 lg:min-w-[140px] lg:flex-shrink-0 lg:px-5 lg:py-5 lg:pt-0">
-          <label className="hidden text-[11px] font-semibold uppercase tracking-wider text-slate-500 lg:block">
-            &nbsp;
-          </label>
-          <Button
-            type="submit"
-            className="h-12 w-full rounded-xl bg-[#213398] px-6 text-[15px] font-semibold text-white shadow-md transition hover:bg-[#1a2980] hover:shadow-lg lg:h-11"
-          >
-            <Search className="mr-2 h-4 w-4" />
-            Rechercher
-          </Button>
+          <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:border-r lg:border-slate-200">
+            <label htmlFor="hero-cap-min" className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <Users className="h-3.5 w-3.5 text-slate-400" />
+              Capacité
+            </label>
+            <div className="mt-2 flex items-center gap-2">
+              <Input
+                id="hero-cap-min"
+                type="number"
+                min={1}
+                value={personnesMin}
+                onChange={(e) => setPersonnesMin(e.target.value)}
+                placeholder="Min"
+                className={cn(
+                  "h-11 w-full rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none placeholder:text-slate-400 focus-visible:border-[#213398] focus-visible:ring-[#213398]/15",
+                  errors.personnes && "placeholder:text-rose-300 text-rose-600"
+                )}
+              />
+              <span className="shrink-0 text-sm text-slate-300">-</span>
+              <Input
+                type="number"
+                min={1}
+                value={personnesMax}
+                onChange={(e) => setPersonnesMax(e.target.value)}
+                placeholder="Max"
+                className={cn(
+                  "h-11 w-full rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none placeholder:text-slate-400 focus-visible:border-[#213398] focus-visible:ring-[#213398]/15",
+                  errors.personnes && "placeholder:text-rose-300 text-rose-600"
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:border-r lg:border-slate-200">
+            <label htmlFor="hero-type" className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <Building2 className="h-3.5 w-3.5 text-slate-400" />
+              Type
+            </label>
+            <Select value={type || "all"} onValueChange={(v) => setType(v === "all" ? "" : v)}>
+              <SelectTrigger
+                id="hero-type"
+                className={cn(
+                  "mt-2 h-11 w-full rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none focus:border-[#213398] focus:ring-[#213398]/15",
+                  errors.type && "border-rose-500 text-rose-600"
+                )}
+              >
+                <SelectValue placeholder="Sélectionnez" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Sélectionnez un type</SelectItem>
+                <SelectItem value="culte-regulier">Culte régulier</SelectItem>
+                <SelectItem value="conference">Conférence</SelectItem>
+                <SelectItem value="celebration">Célébration</SelectItem>
+                <SelectItem value="bapteme">Baptême</SelectItem>
+                <SelectItem value="retraite">Retraite</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="pt-1 sm:col-span-2 lg:col-span-1 lg:pl-1.5 lg:pt-0">
+            <Button
+              type="submit"
+              className="h-11 w-full rounded-full bg-[#213398] px-5 text-[14px] font-semibold text-white shadow-[0_10px_24px_rgba(33,51,152,0.24)] transition hover:bg-[#1a2980] lg:min-w-[145px]"
+            >
+              Rechercher
+              <span className="ml-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/15">
+                <Search className="h-3 w-3" />
+              </span>
+            </Button>
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+
+      {errorMessages.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {errorMessages.map((message) => (
+            <p
+              key={message}
+              className="rounded-full bg-rose-50 px-3 py-1.5 text-[12px] font-medium text-rose-700 shadow-sm"
+            >
+              {message}
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

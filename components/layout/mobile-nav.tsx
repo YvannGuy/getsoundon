@@ -85,18 +85,18 @@ export function MobileNav({ isLoggedIn, userType, dashboardHref, addSalleHref }:
                 ) : (
                   <div className="flex flex-col gap-2">
                     <Link
-                      href="/auth"
-                      onClick={handleClose}
-                      className="block py-2 text-center text-[14px] font-medium text-slate-700 hover:text-black"
-                    >
-                      Connexion
-                    </Link>
-                    <Link
                       href="/auth?tab=signup"
                       onClick={handleClose}
                       className="flex w-full items-center justify-center rounded-md bg-[#213398] py-3 text-[14px] font-medium text-white hover:bg-[#1a2980]"
                     >
                       Inscription
+                    </Link>
+                    <Link
+                      href="/auth"
+                      onClick={handleClose}
+                      className="block py-2 text-center text-[14px] font-medium text-slate-700 hover:text-black"
+                    >
+                      Connexion
                     </Link>
                   </div>
                 )}

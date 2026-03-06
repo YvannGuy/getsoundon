@@ -179,12 +179,20 @@ export default async function Home() {
                 <span className="font-bold text-[#213398]">occasion</span>
               </h2>
               <CategoryRotatingBold />
-              <Link
-                href="/#recherche"
-                className="mt-10 inline-flex h-11 w-fit shrink-0 items-center justify-center rounded-lg bg-[#213398] px-4 text-base font-semibold text-white transition hover:bg-[#1a2980]"
-              >
-                Trouvez une salle
-              </Link>
+              <div className="mt-10 flex flex-wrap gap-3">
+                <Link
+                  href="/#recherche"
+                  className="inline-flex h-11 w-fit shrink-0 items-center justify-center rounded-lg bg-[#213398] px-4 text-base font-semibold text-white transition hover:bg-[#1a2980]"
+                >
+                  Trouvez une salle
+                </Link>
+                <Link
+                  href={user ? "/onboarding/salle" : "/auth?tab=signup&userType=owner"}
+                  className="inline-flex h-11 w-fit shrink-0 items-center justify-center rounded-lg border border-[#213398] bg-white px-4 text-base font-semibold text-[#213398] transition hover:bg-[#213398]/5"
+                >
+                  Ajoutez ma salle
+                </Link>
+              </div>
             </div>
             <div className="relative min-h-[320px] overflow-hidden rounded-xl sm:min-h-[380px] lg:min-h-0 lg:h-full">
               <Image
@@ -242,10 +250,10 @@ export default async function Home() {
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-14">
             <div>
               <h2 className="text-[32px] font-bold tracking-tight text-black sm:text-[40px] lg:text-[48px]">
-                Pourquoi lister votre salle chez nous ?
+                Pourquoi ajouter votre salle chez nous ?
               </h2>
               <p className="mt-5 text-[17px] leading-relaxed text-slate-600">
-                Mettez-le en ligne dès aujourd&apos;hui et gérez simplement vos demandes, visites et paiements.
+                Mettez en ligne dès aujourd&apos;hui votre salle et gérez simplement vos demandes, visites et paiements.
               </p>
               <p className="mt-3 text-[17px] leading-relaxed text-slate-600">
                 Une plateforme claire, conçue pour simplifier votre organisation.
