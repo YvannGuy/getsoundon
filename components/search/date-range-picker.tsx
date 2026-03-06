@@ -96,6 +96,8 @@ export function DateRangePicker({
     return () => mq.removeEventListener("change", fn);
   }, []);
 
+  const dateSlotWidthClass = isCompactLayout ? "min-w-[72px]" : "min-w-[88px] lg:min-w-[96px]";
+
   useEffect(() => {
     if (!open) return;
 
@@ -128,7 +130,7 @@ export function DateRangePicker({
         type="button"
         onClick={() => setOpen((current) => !current)}
         className={cn(
-          "relative flex w-full cursor-pointer flex-wrap items-center gap-2 rounded-lg border bg-white p-2 pr-10 text-left transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#213398]/20",
+          "relative flex w-full cursor-pointer flex-nowrap items-center gap-2 overflow-hidden rounded-lg border bg-white p-2 pr-10 text-left transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#213398]/20",
           error ? "border-rose-500" : "border-slate-200",
           inputClassName
         )}
@@ -136,12 +138,13 @@ export function DateRangePicker({
         aria-haspopup="dialog"
       >
         <CalendarDays className="pointer-events-none h-[18px] w-[18px] shrink-0 text-slate-400" />
-        <div className="flex min-w-0 flex-1 items-center gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
           <div className="flex items-center gap-1.5">
             <span className="shrink-0 text-[12px] font-medium text-slate-500">Du</span>
             <span
               className={cn(
-                "inline-block min-w-[100px] rounded-lg px-2 py-2.5 text-[13px]",
+                "inline-block rounded-lg px-2 py-2.5 text-[13px] whitespace-nowrap",
+                dateSlotWidthClass,
                 fromInput ? "text-slate-900" : "text-slate-400"
               )}
             >
@@ -151,7 +154,8 @@ export function DateRangePicker({
           <span className="shrink-0 text-[12px] font-medium text-slate-500">au</span>
           <span
             className={cn(
-              "inline-block min-w-[100px] rounded-lg px-2 py-2.5 text-[13px]",
+              "inline-block rounded-lg px-2 py-2.5 text-[13px] whitespace-nowrap",
+              dateSlotWidthClass,
               toInput ? "text-slate-900" : "text-slate-400"
             )}
           >

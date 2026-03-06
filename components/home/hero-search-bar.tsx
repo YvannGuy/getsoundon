@@ -62,7 +62,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
         onSubmit={handleSubmit}
         className="relative overflow-visible rounded-[36px] border border-slate-200/90 bg-white p-2.5 shadow-[0_14px_34px_rgba(15,23,42,0.16)] sm:rounded-[999px]"
       >
-        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-[1.05fr_1.15fr_0.8fr_0.85fr_auto] sm:items-center lg:gap-0">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_1.25fr_0.95fr_0.9fr_auto] sm:items-center lg:gap-0">
           <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:border-r lg:border-slate-200">
             <p className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
               <MapPin className="h-3.5 w-3.5 text-slate-400" />
@@ -80,7 +80,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
             />
           </div>
 
-          <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:border-r lg:border-slate-200">
+          <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:min-w-[300px] lg:border-r lg:border-slate-200">
             <p className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
               <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
               Période
@@ -98,12 +98,12 @@ export function HeroSearchBar({ className }: { className?: string }) {
             />
           </div>
 
-          <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:border-r lg:border-slate-200">
+          <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:min-w-[250px] lg:border-r lg:border-slate-200">
             <label htmlFor="hero-cap-min" className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
               <Users className="h-3.5 w-3.5 text-slate-400" />
               Capacité
             </label>
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2 flex items-center gap-3">
               <Input
                 id="hero-cap-min"
                 type="number"
@@ -112,7 +112,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
                 onChange={(e) => setPersonnesMin(e.target.value)}
                 placeholder="Min"
                 className={cn(
-                  "h-11 w-full rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none placeholder:text-slate-400 focus-visible:border-[#213398] focus-visible:ring-[#213398]/15",
+                  "h-11 w-full min-w-[108px] rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none placeholder:text-slate-400 focus-visible:border-[#213398] focus-visible:ring-[#213398]/15",
                   errors.personnes && "placeholder:text-rose-300 text-rose-600"
                 )}
               />
@@ -124,7 +124,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
                 onChange={(e) => setPersonnesMax(e.target.value)}
                 placeholder="Max"
                 className={cn(
-                  "h-11 w-full rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none placeholder:text-slate-400 focus-visible:border-[#213398] focus-visible:ring-[#213398]/15",
+                  "h-11 w-full min-w-[108px] rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none placeholder:text-slate-400 focus-visible:border-[#213398] focus-visible:ring-[#213398]/15",
                   errors.personnes && "placeholder:text-rose-300 text-rose-600"
                 )}
               />
