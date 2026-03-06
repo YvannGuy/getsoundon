@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AdresseAutocomplete } from "@/components/search/adresse-autocomplete";
+import { VilleAutocomplete } from "@/components/search/ville-autocomplete";
 import type { Salle } from "@/lib/types/salle";
 import {
   addSalleLocationBlockedDateAction,
@@ -72,6 +74,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
 
   const [features, setFeatures] = useState<string[]>([]);
   const [inclusions, setInclusions] = useState<string[]>([]);
+  const [citycode, setCitycode] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema) as Resolver<FormValues>,
@@ -108,6 +111,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
       setBlockedDateInput("");
       setBlocking(false);
       setUnblockingDate(null);
+      setCitycode(null);
       getSalleLocationBlockedDatesAction(salle.id).then((res) => {
         if (res.success) setBlockedDates(res.dates ?? []);
       });
@@ -247,10 +251,15 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700">Ville</label>
-            <Input
-              {...form.register("city")}
-              className="border-slate-200"
+            <VilleAutocomplete
+              value={form.watch("city")}
+              onChange={(value) => {
+                form.setValue("city", value, { shouldDirty: true, shouldValidate: true });
+                if (!value) setCitycode(null);
+              }}
+              onCitySelect={(_, code) => setCitycode(code)}
               placeholder="Ville"
+              inputClassName="border-slate-200"
             />
             {form.formState.errors.city && (
               <p className="text-xs text-red-600">{form.formState.errors.city.message}</p>
@@ -258,10 +267,20 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
           </div>
           <div className="min-w-0 space-y-2">
             <label className="text-sm font-medium text-slate-700">Adresse</label>
-            <Input
-              {...form.register("address")}
-              className="border-slate-200"
+            <AdresseAutocomplete
+              value={form.watch("address")}
+              citycode={citycode}
+              onChange={(value) => {
+                form.setValue("address", value, { shouldDirty: true, shouldValidate: true });
+              }}
+              onSelectAddress={(address, city) => {
+                form.setValue("address", address, { shouldDirty: true, shouldValidate: true });
+                if (city) {
+                  form.setValue("city", city, { shouldDirty: true, shouldValidate: true });
+                }
+              }}
               placeholder="Adresse complète"
+              inputClassName="border-slate-200"
             />
             {form.formState.errors.address && (
               <p className="text-xs text-red-600">{form.formState.errors.address.message}</p>

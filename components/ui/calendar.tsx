@@ -12,13 +12,14 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker> & { compact?:
 
 function Calendar({ className, classNames, showOutsideDays = true, compact = false, ...props }: CalendarProps) {
   const cellSize = compact ? "w-8 min-w-8" : "w-9 min-w-9";
+  const hasMultipleMonths = (props.numberOfMonths ?? 1) > 1;
   return (
     <DayPicker
       locale={fr}
       showOutsideDays={showOutsideDays}
       className={cn(compact ? "p-2" : "p-3", className)}
       classNames={{
-        months: "flex flex-col",
+        months: cn("flex flex-col gap-3", hasMultipleMonths && !compact && "sm:flex-row sm:gap-4"),
         month: compact ? "space-y-1" : "space-y-4",
         month_caption: "flex justify-center py-1 relative items-center",
         caption_label: compact ? "text-xs font-medium" : "text-sm font-medium",

@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AdresseAutocomplete } from "@/components/search/adresse-autocomplete";
+import { VilleAutocomplete } from "@/components/search/ville-autocomplete";
 import type { Salle } from "@/lib/types/salle";
 import { updateSalleAction } from "@/app/actions/admin";
 
@@ -41,6 +43,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [citycode, setCitycode] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema) as Resolver<FormValues>,
@@ -67,6 +70,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
         contact_phone: salle.contactPhone ?? "",
       });
       setError(null);
+      setCitycode(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [salle?.id, open]);
@@ -121,10 +125,15 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700">Ville</label>
-            <Input
-              {...form.register("city")}
-              className="border-slate-200"
+            <VilleAutocomplete
+              value={form.watch("city")}
+              onChange={(value) => {
+                form.setValue("city", value, { shouldDirty: true, shouldValidate: true });
+                if (!value) setCitycode(null);
+              }}
+              onCitySelect={(_, code) => setCitycode(code)}
               placeholder="Ville"
+              inputClassName="border-slate-200"
             />
             {form.formState.errors.city && (
               <p className="text-xs text-red-600">
@@ -134,10 +143,20 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
           </div>
           <div className="min-w-0 space-y-2">
             <label className="text-sm font-medium text-slate-700">Adresse</label>
-            <Input
-              {...form.register("address")}
-              className="border-slate-200"
+            <AdresseAutocomplete
+              value={form.watch("address")}
+              citycode={citycode}
+              onChange={(value) => {
+                form.setValue("address", value, { shouldDirty: true, shouldValidate: true });
+              }}
+              onSelectAddress={(address, city) => {
+                form.setValue("address", address, { shouldDirty: true, shouldValidate: true });
+                if (city) {
+                  form.setValue("city", city, { shouldDirty: true, shouldValidate: true });
+                }
+              }}
               placeholder="Adresse complète"
+              inputClassName="border-slate-200"
             />
             {form.formState.errors.address && (
               <p className="text-xs text-red-600">

@@ -6,8 +6,10 @@ import { DEPT_LABELS, getDepartmentCoverUrl } from "@/lib/covers";
 export type SearchFilters = {
   ville?: string;
   departement?: string;
-  date?: string;
-  personnes?: string;
+  date_debut?: string;
+  date_fin?: string;
+  personnes_min?: string;
+  personnes_max?: string;
   type?: string;
 };
 
@@ -62,10 +64,14 @@ export async function searchSalles(filters: SearchFilters): Promise<Salle[]> {
     query = query.eq("department", filters.departement.trim());
   }
 
-  // Filtre par capacité (nombre de personnes)
-  const capaciteMin = filters.personnes ? parseInt(filters.personnes, 10) : 0;
+  // Filtre par capacité (fourchette min-max)
+  const capaciteMin = filters.personnes_min ? parseInt(filters.personnes_min, 10) : 0;
+  const capaciteMax = filters.personnes_max ? parseInt(filters.personnes_max, 10) : 0;
   if (!isNaN(capaciteMin) && capaciteMin > 0) {
     query = query.gte("capacity", capaciteMin);
+  }
+  if (!isNaN(capaciteMax) && capaciteMax > 0) {
+    query = query.lte("capacity", capaciteMax);
   }
 
   // Filtre par type d'événement (evenements_acceptes contient le type)
@@ -94,20 +100,27 @@ export async function searchSalles(filters: SearchFilters): Promise<Salle[]> {
     rowToSalle(row as Parameters<typeof rowToSalle>[0])
   );
 
-  // Filtre par date : exclure les salles avec une réservation sur cette date
-  if (filters.date?.trim()) {
+  // Filtre par plage de dates : exclure les salles avec une réservation qui chevauche la période
+  const dateDebut = filters.date_debut?.trim()?.slice(0, 10);
+  const dateFin = filters.date_fin?.trim()?.slice(0, 10);
+  if (dateDebut && dateFin) {
     try {
-      const searchDate = filters.date.slice(0, 10);
-      const { data: resaData } = await supabase
-        .from("reservations")
-        .select("salle_id")
-        .lte("date_debut", searchDate)
-        .gte("date_fin", searchDate);
+      // Offres qui commencent avant la fin de la recherche (candidats au chevauchement)
+      const { data: offerData } = await supabase
+        .from("offers")
+        .select("salle_id, date_debut, date_fin")
+        .eq("status", "paid")
+        .lte("date_debut", dateFin);
 
-      const blockedSalleIds = new Set((resaData ?? []).map((r) => r.salle_id));
+      const blockedSalleIds = new Set(
+        (offerData ?? []).filter((r: { salle_id?: string; date_debut?: string; date_fin?: string | null }) => {
+          const offerEnd = (r.date_fin ?? r.date_debut ?? "").slice(0, 10);
+          return offerEnd >= dateDebut; // chevauchement : offerEnd >= searchStart
+        }).map((r: { salle_id: string }) => r.salle_id)
+      );
       salles = salles.filter((s) => !blockedSalleIds.has(s.id));
     } catch {
-      // Table reservations inexistante ou erreur → pas de filtre date
+      // Table offers inexistante ou erreur → pas de filtre date
     }
   }
 

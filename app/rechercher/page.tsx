@@ -14,11 +14,13 @@ export default async function RechercherPage({
   const params = await searchParams;
   const ville = typeof params.ville === "string" ? params.ville : undefined;
   const departement = typeof params.departement === "string" ? params.departement : undefined;
-  const date = typeof params.date === "string" ? params.date : undefined;
-  const personnes = typeof params.personnes === "string" ? params.personnes : undefined;
+  const date_debut = typeof params.date_debut === "string" ? params.date_debut : undefined;
+  const date_fin = typeof params.date_fin === "string" ? params.date_fin : undefined;
+  const personnes_min = typeof params.personnes_min === "string" ? params.personnes_min : undefined;
+  const personnes_max = typeof params.personnes_max === "string" ? params.personnes_max : undefined;
   const type = typeof params.type === "string" ? params.type : undefined;
 
-  const salles = await searchSalles({ ville, departement, date, personnes, type });
+  const salles = await searchSalles({ ville, departement, date_debut, date_fin, personnes_min, personnes_max, type });
 
   const ratingStats = salles.length > 0
     ? await getBulkRatingStats(salles.map((s) => s.id))

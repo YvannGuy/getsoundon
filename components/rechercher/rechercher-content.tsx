@@ -17,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Salle } from "@/lib/types/salle";
 import { getSallePriceFrom } from "@/lib/types/salle";
+import { DEPT_LABELS } from "@/lib/covers";
 
 const SearchMap = dynamic(
   () => import("@/components/rechercher/search-map").then((mod) => ({ default: mod.SearchMap })),
@@ -64,19 +65,32 @@ export function RechercherContent({
   const initialFilters = useMemo(() => {
     const filters: { key: string; label: string; paramKey: string }[] = [];
     const ville = searchParams.get("ville");
-    const date = searchParams.get("date");
-    const personnes = searchParams.get("personnes");
+    const departement = searchParams.get("departement");
+    const date_debut = searchParams.get("date_debut");
+    const date_fin = searchParams.get("date_fin");
+    const personnes_min = searchParams.get("personnes_min");
+    const personnes_max = searchParams.get("personnes_max");
     const type = searchParams.get("type");
     if (ville) filters.push({ key: "ville", label: ville, paramKey: "ville" });
-    if (date) {
+    if (departement) filters.push({ key: "departement", label: DEPT_LABELS[departement] ?? `Département ${departement}`, paramKey: "departement" });
+    if (date_debut && date_fin) {
       try {
-        const d = new Date(date);
-        if (!isNaN(d.getTime())) filters.push({ key: "date", label: format(d, "d MMMM yyyy", { locale: fr }), paramKey: "date" });
+        const d1 = new Date(date_debut);
+        const d2 = new Date(date_fin);
+        if (!isNaN(d1.getTime()) && !isNaN(d2.getTime())) {
+          filters.push({
+            key: "date",
+            label: `Du ${format(d1, "d MMM yyyy", { locale: fr })} au ${format(d2, "d MMM yyyy", { locale: fr })}`,
+            paramKey: "date",
+          });
+        }
       } catch {
-        filters.push({ key: "date", label: date, paramKey: "date" });
+        filters.push({ key: "date", label: `${date_debut} → ${date_fin}`, paramKey: "date" });
       }
     }
-    if (personnes) filters.push({ key: "capacite", label: `${personnes} pers.`, paramKey: "personnes" });
+    if (personnes_min && personnes_max) {
+      filters.push({ key: "capacite", label: `${personnes_min} à ${personnes_max} pers.`, paramKey: "capacite" });
+    }
     if (type) filters.push({ key: "type", label: TYPE_LABELS[type] ?? type, paramKey: "type" });
     return filters;
   }, [searchParams]);
@@ -117,7 +131,15 @@ export function RechercherContent({
 
   const removeFilter = (paramKey: string) => {
     const sp = new URLSearchParams(searchParams.toString());
-    sp.delete(paramKey);
+    if (paramKey === "date") {
+      sp.delete("date_debut");
+      sp.delete("date_fin");
+    } else if (paramKey === "capacite") {
+      sp.delete("personnes_min");
+      sp.delete("personnes_max");
+    } else {
+      sp.delete(paramKey);
+    }
     router.push(`/rechercher${sp.toString() ? `?${sp.toString()}` : ""}`);
   };
 
