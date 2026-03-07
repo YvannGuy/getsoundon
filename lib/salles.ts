@@ -127,6 +127,58 @@ export async function searchSalles(filters: SearchFilters): Promise<Salle[]> {
   return salles;
 }
 
+/** Max 5 annonces dans "Lieux populaires", 1 à 2 par département */
+const POPULAR_SALLES_MAX = 5;
+const POPULAR_SALLES_PER_DEPT = 2;
+
+/**
+ * Retourne jusqu'à 5 annonces populaires (1 à 2 par département disponible).
+ * Utilisé pour la section "Lieux populaires" sur l'accueil.
+ */
+export async function getPopularSalles(): Promise<Salle[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("salles")
+    .select("*")
+    .eq("status", "approved")
+    .not("department", "is", null)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("getPopularSalles error:", error);
+    return [];
+  }
+
+  const validIdf = new Set(["75", "77", "78", "91", "92", "93", "94", "95"]);
+  const byDept = new Map<string, Parameters<typeof rowToSalle>[0][]>();
+
+  (data ?? []).forEach((row) => {
+    const dept = String((row as { department?: string | null }).department ?? "").trim();
+    if (!dept || !validIdf.has(dept)) return;
+    const arr = byDept.get(dept) ?? [];
+    if (arr.length < POPULAR_SALLES_PER_DEPT) {
+      arr.push(row as Parameters<typeof rowToSalle>[0]);
+      byDept.set(dept, arr);
+    }
+  });
+
+  const deptOrder = Array.from(byDept.entries())
+    .sort((a, b) => b[1].length - a[1].length)
+    .map(([code]) => code);
+
+  const result: Salle[] = [];
+  for (const code of deptOrder) {
+    const rows = byDept.get(code) ?? [];
+    const toTake = Math.min(rows.length, POPULAR_SALLES_MAX - result.length);
+    for (let i = 0; i < toTake; i++) {
+      result.push(rowToSalle(rows[i]));
+    }
+    if (result.length >= POPULAR_SALLES_MAX) break;
+  }
+
+  return result;
+}
+
 export async function getFeaturedDepartments(): Promise<
   { departmentCode: string; departmentLabel: string; count: number; image: string }[]
 > {

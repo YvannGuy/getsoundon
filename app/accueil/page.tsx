@@ -11,6 +11,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { CategoryCarousel } from "@/components/home/category-carousel";
 import { DepartmentCarousel } from "@/components/home/department-carousel";
+import { LieuxPopulairesCarousel } from "@/components/home/lieux-populaires-carousel";
 import { CategoryRotatingBold } from "@/components/home/category-rotating-bold";
 import { HeroBackgroundCarousel } from "@/components/home/hero-background-carousel";
 import { HeroSearchBar } from "@/components/home/hero-search-bar";
@@ -19,7 +20,7 @@ import { PourquoiReserverCarousel } from "@/components/home/pourquoi-reserver-ca
 import { SectionReveal } from "@/components/ui/section-reveal";
 import { siteConfig } from "@/config/site";
 import { BLOG_POSTS } from "@/lib/blog-posts";
-import { getFeaturedDepartments } from "@/lib/salles";
+import { getFeaturedDepartments, getPopularSalles } from "@/lib/salles";
 import { getUserOrNull } from "@/lib/supabase/server";
 
 const steps = [
@@ -74,9 +75,13 @@ export const metadata: Metadata = {
   alternates: { canonical: buildCanonical("/accueil") },
 };
 
+/** Revalidation ISR hebdomadaire pour intégrer les nouvelles salles */
+export const revalidate = 604800;
+
 export default async function Home() {
-  const [departmentCards, authResult] = await Promise.all([
+  const [departmentCards, popularSalles, authResult] = await Promise.all([
     getFeaturedDepartments(),
+    getPopularSalles(),
     getUserOrNull(),
   ]);
   const { user } = authResult;
@@ -118,6 +123,22 @@ export default async function Home() {
       </SectionReveal>
 
       <PourquoiReserverCarousel />
+
+      {popularSalles.length > 0 && (
+        <SectionReveal className="bg-slate-50 py-12">
+          <div className="container max-w-[1120px]">
+            <h2 className="text-center text-[46px] font-semibold tracking-[-0.02em] text-black [zoom:0.5]">
+              Lieux populaires
+            </h2>
+            <p className="mt-2 text-center text-[25px] text-slate-500 [zoom:0.5]">
+              Des salles sélectionnées pour vous en Île-de-France
+            </p>
+            <div className="mt-10 px-4 sm:px-8">
+              <LieuxPopulairesCarousel salles={popularSalles} />
+            </div>
+          </div>
+        </SectionReveal>
+      )}
 
       {departmentCards.length > 0 && (
       <SectionReveal className="bg-white py-12">
