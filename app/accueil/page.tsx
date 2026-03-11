@@ -24,21 +24,6 @@ import { BLOG_POSTS } from "@/lib/blog-posts";
 import { getFeaturedDepartments, getPopularSalles } from "@/lib/salles";
 import { getUserOrNull } from "@/lib/supabase/server";
 
-const steps = [
-  {
-    title: "Explorez librement",
-    desc: "Parcourez les annonces et découvrez les salles disponibles dans votre région",
-  },
-  {
-    title: "Envoyez vos demandes",
-    desc: "Contactez directement les propriétaires pour vérifier la disponibilité",
-  },
-  {
-    title: "Recevez les réponses",
-    desc: "Obtenez rapidement des confirmations et organisez votre événement",
-  },
-];
-
 const faqSectionItems = [
   {
     question: "Comment fonctionne la réservation ?",
@@ -231,40 +216,73 @@ export default async function Home() {
         </div>
       </SectionReveal>
 
-      <SectionReveal id="comment-ca-marche" className="py-12">
+      <SectionReveal id="comment-ca-marche" className="bg-white py-10 md:py-12">
         <div className="container max-w-[1120px]">
-          <h2 className="text-center text-[46px] font-semibold tracking-[-0.02em] text-black [zoom:0.5]">
-            Comment ça marche
+          <h2 className="text-center text-[38px] font-semibold tracking-[-0.02em] text-[#111827] sm:text-[42px] md:text-[46px]">
+            Comment ça marche ?
           </h2>
-          <p className="mt-2 text-center text-[25px] text-slate-500 [zoom:0.5]">
-            Trois étapes pour réserver en toute simplicité
+          <p className="mt-1 text-center text-[20px] text-slate-600 sm:text-[22px]">
+            Trouvez la salle idéale en 3 étapes simples.
           </p>
-          <div className="mx-auto mt-10 flex max-w-5xl flex-col items-center gap-8 sm:flex-row sm:justify-center sm:gap-8">
-            {steps.flatMap((step, idx) => [
-              <div
-                key={step.title}
-                className="w-full max-w-[360px] flex-1 rounded-xl border border-slate-200 bg-white px-6 py-6 shadow-sm transition hover:border-[#213398]/30 hover:shadow-md sm:max-w-none"
+
+          <div className="relative mx-auto mt-3 w-full overflow-hidden rounded-[28px] aspect-[2.85/1]">
+            <Image
+              src="/img3.png"
+              alt="Les 3 étapes: explorer, envoyer les demandes, recevoir les réponses"
+              fill
+              className="object-cover object-center"
+              sizes="(max-width: 1120px) 100vw, 1080px"
+            />
+          </div>
+
+          <div className="mx-auto mt-1 grid max-w-[1080px] gap-0 md:grid-cols-3">
+            <div className="px-4 py-2 md:border-r md:border-[#edf2fb] sm:px-5">
+              <p className="text-[19px] font-semibold tracking-[-0.02em] text-[#111827]">1. Explorez librement</p>
+              <p className="mt-1 text-[16px] leading-[1.33] text-slate-700">
+                Cherchez la salle idéale
+                <br />
+                selon vos critères.
+              </p>
+            </div>
+
+            <div className="px-4 py-2 md:flex md:min-h-[170px] md:flex-col md:border-r md:border-[#edf2fb] sm:px-5">
+              <p className="text-[19px] font-semibold tracking-[-0.02em] text-[#111827]">
+                2. Envoyez <span className="text-[#213398]">vos demandes</span>
+              </p>
+              <p className="mt-1 text-[16px] leading-[1.33] text-slate-700">
+                Envoyez vos demandes, posez
+                <br />
+                vos questions.
+              </p>
+              <Link
+                href="/accueil#recherche"
+                className="mt-2 hidden h-10 items-center justify-center gap-2 rounded-full bg-[#213398] px-6 text-[15px] font-semibold text-white transition hover:bg-[#1a2980] md:mt-auto md:inline-flex md:self-start"
               >
-                <div className="flex items-start gap-5">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#213398]/20 bg-[#213398]/5 text-base font-semibold text-[#213398]">
-                    {idx + 1}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xl font-semibold text-black">{step.title}</p>
-                    <p className="mt-3 text-base leading-snug text-slate-500">{step.desc}</p>
-                  </div>
-                </div>
-              </div>,
-              ...(idx < steps.length - 1
-                ? [
-                    <ChevronRight
-                      key={`arrow-${idx}`}
-                      className="h-8 w-8 shrink-0 rotate-90 text-slate-300 sm:rotate-0"
-                      aria-hidden
-                    />,
-                  ]
-                : []),
-            ])}
+                Trouvez ma salle
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="px-4 py-2 sm:px-5">
+              <p className="text-[19px] font-semibold tracking-[-0.02em] text-[#111827]">
+                3. Recevez <span className="text-[#213398]">les réponses</span>
+              </p>
+              <p className="mt-1 text-[16px] leading-[1.33] text-slate-700">
+                Recevez des réponses et
+                <br />
+                choisissez la meilleure offre.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3 flex md:hidden">
+            <Link
+              href="/accueil#recherche"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#213398] px-6 text-[15px] font-semibold text-white transition hover:bg-[#1a2980]"
+            >
+              Trouvez ma salle
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </SectionReveal>
