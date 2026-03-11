@@ -94,7 +94,12 @@ export default async function CentreAidePage({
               Votre demande a bien été envoyée. Nous revenons vers vous rapidement.
             </p>
           )}
-          {error && (
+          {error === "rate_limit" && (
+            <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              Trop de requêtes. Veuillez patienter avant de réessayer.
+            </p>
+          )}
+          {error && error !== "rate_limit" && (
             <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               Impossible d&apos;envoyer votre demande pour le moment. Vérifiez les champs puis réessayez.
             </p>

@@ -10,6 +10,7 @@ import { fr } from "date-fns/locale";
 import { Building2, Car, CheckCircle2, CookingPot, Filter, Heart, Piano, Search, SlidersHorizontal, Tv, Volume2, X } from "lucide-react";
 
 import { DatePicker } from "@/components/search/date-picker";
+import { ZeroResultsConcierge, type ConciergeSearchCriteria } from "@/components/search/ZeroResultsConcierge";
 import { VilleAutocomplete } from "@/components/search/ville-autocomplete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -316,6 +317,22 @@ export function RechercherContent({
 
       <div className="grid gap-4 lg:grid-cols-[400px_1fr]">
         <div className="flex flex-col gap-4 overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
+          {sortedSalles.length === 0 && (
+            <ZeroResultsConcierge
+              criteria={
+                {
+                  ville: searchParams.get("ville") ?? undefined,
+                  departement: searchParams.get("departement") ?? undefined,
+                  date_debut: searchParams.get("date_debut") ?? undefined,
+                  date_fin: searchParams.get("date_fin") ?? undefined,
+                  personnes_min: searchParams.get("personnes_min") ?? undefined,
+                  personnes_max: searchParams.get("personnes_max") ?? undefined,
+                  type: searchParams.get("type") ?? undefined,
+                } as ConciergeSearchCriteria
+              }
+              onModifyCriteria={() => router.push("/rechercher")}
+            />
+          )}
           {sortedSalles.map((salle) => {
             const features = ["erp"];
             if (salle.features.some((f) => f.label.includes("Parking"))) features.push("parking");

@@ -77,7 +77,8 @@ export async function signupAction(_: AuthFormState, formData: FormData): Promis
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
   const fullName = String(formData.get("fullName") ?? "");
-  const userType = String(formData.get("userType") ?? "seeker");
+  const raw = String(formData.get("userType") ?? "seeker");
+  const userType = raw === "owner" ? "owner" : "seeker";
   const redirectedFrom = String(formData.get("redirectedFrom") ?? "").trim();
 
   const supabase = await createClient();

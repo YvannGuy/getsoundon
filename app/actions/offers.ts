@@ -49,7 +49,6 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
   const conversationId = formData.get("conversationId") as string | null;
   const demandeId = formData.get("demandeId") as string | null;
   const salleId = formData.get("salleId") as string | null;
-  const seekerId = formData.get("seekerId") as string | null;
   const amountStr = formData.get("amount") as string | null;
   const paymentModeRaw = (formData.get("paymentMode") as string | null) ?? "full";
   const upfrontAmountStr = formData.get("upfrontAmount") as string | null;
@@ -62,7 +61,7 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
   const expiresAt = formData.get("expiresAt") as string | null;
   const message = (formData.get("message") as string | null)?.trim() || null;
 
-  if (!conversationId || !demandeId || !salleId || !seekerId || !amountStr || !expiresAt) {
+  if (!conversationId || !demandeId || !salleId || !amountStr || !expiresAt) {
     return { success: false, error: "Données manquantes." };
   }
 
@@ -132,14 +131,16 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
 
   const { data: conv } = await adminSupabase
     .from("conversations")
-    .select("owner_id, demande_id")
+    .select("owner_id, seeker_id, demande_id")
     .eq("id", conversationId)
     .single();
 
-  if (!conv || (conv as { owner_id: string; demande_id: string | null }).owner_id !== user.id) {
+  const convRow = conv as { owner_id: string; seeker_id: string | null; demande_id: string | null } | null;
+  if (!convRow || convRow.owner_id !== user.id || !convRow.seeker_id) {
     return { success: false, error: "Conversation introuvable ou accès refusé." };
   }
-  const conversationDemandeId = (conv as { owner_id: string; demande_id: string | null }).demande_id;
+  const seekerId = convRow.seeker_id;
+  const conversationDemandeId = convRow.demande_id;
 
   const { data: existingPending } = await adminSupabase
     .from("offers")

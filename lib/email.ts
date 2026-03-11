@@ -509,6 +509,62 @@ export async function sendPaymentFailedOwnerEmail(
   return { success: !error, error: error?.message };
 }
 
+/** Confirmation à l'utilisateur après soumission du formulaire conciergerie */
+export async function sendConciergeConfirmationEmail(to: string) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY non configuré, email confirmation conciergerie non envoyé");
+    return { success: false };
+  }
+  const { error } = await resend.emails.send({
+    from,
+    to,
+    subject: "Demande enregistrée — Conciergerie salledeculte.com",
+    html: renderEmailLayout({
+      title: "Votre demande a bien été enregistrée",
+      intro:
+        "Merci d'avoir confié votre recherche de salle à notre équipe. Nous avons bien reçu votre brief et nous vous recontacterons sous 24–72h avec une shortlist de 3 à 5 lieux adaptés à votre besoin.",
+      sections: [
+        "<p>En attendant, vous pouvez continuer à explorer nos <a href=\"" + siteUrl + "/rechercher\">salles disponibles</a>.</p>",
+      ],
+      ctaLabel: "Explorer les salles",
+      ctaUrl: `${siteUrl}/rechercher`,
+    }),
+  });
+  return { success: !error, error: error?.message };
+}
+
+/** Notification à l'équipe admin pour chaque nouvelle demande conciergerie */
+export async function sendConciergeRequestAdminNotification(
+  adminEmails: string[],
+  contactEmail: string,
+  source: string,
+  messagePreview: string,
+  adminUrl: string
+) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY non configuré, notification admin conciergerie non envoyée");
+    return { success: false };
+  }
+  if (adminEmails.length === 0) return { success: false };
+  const safePreview = messagePreview.length > 150 ? messagePreview.slice(0, 147) + "..." : messagePreview;
+  const { error } = await resend.emails.send({
+    from,
+    to: adminEmails,
+    subject: `[Conciergerie] Nouvelle demande — ${contactEmail}`,
+    html: renderEmailLayout({
+      title: "Nouvelle demande conciergerie",
+      intro: `Une nouvelle demande de conciergerie a été soumise (source: ${escapeHtml(source)}).`,
+      sections: [
+        `<p><strong>Contact:</strong> ${escapeHtml(contactEmail)}</p>`,
+        `<p class="tip">${escapeHtml(safePreview)}</p>`,
+      ],
+      ctaLabel: "Voir les demandes",
+      ctaUrl: adminUrl,
+    }),
+  });
+  return { success: !error, error: error?.message };
+}
+
 export async function sendSupportContactEmail(params: {
   name: string;
   email: string;

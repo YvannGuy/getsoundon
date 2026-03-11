@@ -15,6 +15,7 @@ import { LieuxPopulairesCarousel } from "@/components/home/lieux-populaires-caro
 import { CategoryRotatingBold } from "@/components/home/category-rotating-bold";
 import { HeroBackgroundCarousel } from "@/components/home/hero-background-carousel";
 import { HeroSearchBar } from "@/components/home/hero-search-bar";
+import { ConciergeSection } from "@/components/concierge/ConciergeSection";
 import { InstallAppPopup } from "@/components/home/install-app-popup";
 import { PourquoiReserverCarousel } from "@/components/home/pourquoi-reserver-carousel";
 import { SectionReveal } from "@/components/ui/section-reveal";
@@ -266,6 +267,10 @@ export default async function Home() {
             ])}
           </div>
         </div>
+      </SectionReveal>
+
+      <SectionReveal>
+        <ConciergeSection />
       </SectionReveal>
 
       <SectionReveal id="proprietaire" className="bg-white py-16">

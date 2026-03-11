@@ -12,6 +12,7 @@ import {
   CreditCard,
   FileText,
   Flag,
+  Headphones,
   Home,
   Scale,
   Menu,
@@ -36,6 +37,7 @@ type AdminSidebarProps = {
     cautions: number;
     etatsDesLieux: number;
     litiges: number;
+    conciergeRequests: number;
   };
   userEmail?: string | null;
 };
@@ -117,6 +119,14 @@ const navItems = (
     badge: counts.litiges,
     badgeTone: "danger" as const,
   },
+  {
+    href: "/admin/conciergerie",
+    label: "Conciergerie",
+    icon: Headphones,
+    badgeKey: "conciergeRequests",
+    badge: counts.conciergeRequests,
+    badgeTone: "warning" as const,
+  },
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ];
 
@@ -140,6 +150,7 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
     cautions: badgeCounts.cautions,
     etatsDesLieux: badgeCounts.etatsDesLieux,
     litiges: badgeCounts.litiges,
+    conciergeRequests: badgeCounts.conciergeRequests,
   };
 
   useEffect(() => {
@@ -179,7 +190,7 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
     const activeItem = items.find((item) => item.href === pathname && item.badgeKey);
     if (!activeItem?.badgeKey) return;
     markSeen(activeItem.badgeKey, rawByKey[activeItem.badgeKey] ?? 0);
-  }, [items, pathname, badgeCounts.pendingAnnonces, badgeCounts.signalements, badgeCounts.demandesVisite, badgeCounts.reservations, badgeCounts.utilisateurs, badgeCounts.paiements, badgeCounts.cautions, badgeCounts.etatsDesLieux, badgeCounts.litiges]);
+  }, [items, pathname, badgeCounts.pendingAnnonces, badgeCounts.signalements, badgeCounts.demandesVisite, badgeCounts.reservations, badgeCounts.utilisateurs, badgeCounts.paiements, badgeCounts.cautions, badgeCounts.etatsDesLieux, badgeCounts.litiges, badgeCounts.conciergeRequests]);
 
   const sidebarContent = (
     <>

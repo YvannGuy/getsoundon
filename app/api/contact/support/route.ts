@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { sendSupportContactEmail } from "@/lib/email";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const HELP_TYPES = new Set([
   "Recherche de salle",
@@ -12,6 +13,15 @@ const HELP_TYPES = new Set([
 
 export async function POST(request: Request) {
   try {
+    const ip = getClientIp(request);
+    const limit = checkRateLimit(`contact:${ip}`);
+    if (!limit.ok) {
+      return NextResponse.redirect(
+        new URL(`/centre-aide?error=rate_limit&retry=${limit.retryAfter}`, request.url),
+        303
+      );
+    }
+
     const formData = await request.formData();
     const name = String(formData.get("name") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim();

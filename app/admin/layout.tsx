@@ -53,6 +53,7 @@ export default async function AdminLayout({
     cautions: 0,
     etatsDesLieux: 0,
     litiges: 0,
+    conciergeRequests: 0,
   };
 
   try {
@@ -108,6 +109,16 @@ export default async function AdminLayout({
       badgeCounts.signalements = count ?? 0;
     } catch {
       // Table salles_reports peut ne pas exister
+    }
+
+    try {
+      const { count } = await admin
+        .from("concierge_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "new");
+      badgeCounts.conciergeRequests = count ?? 0;
+    } catch {
+      // Table concierge_requests peut ne pas exister
     }
 
     const paidOfferRows = (paidOffers ?? []) as { id: string; deposit_hold_status: string | null }[];
