@@ -17,8 +17,8 @@ export function LandingFooter({ isLoggedIn }: LandingFooterProps) {
       <div className="landing-container">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           <div>
-            <p className="font-landing-heading text-base font-bold uppercase tracking-wide text-white">Plateforme</p>
-            <ul className="mt-4 space-y-2.5 text-base">
+            <p className="font-landing-overline text-white">Plateforme</p>
+            <ul className="font-landing-body mt-4 space-y-2.5 text-base">
               <li>
                 <Link href="/rechercher" className="hover:text-white hover:underline">
                   Rechercher
@@ -42,8 +42,8 @@ export function LandingFooter({ isLoggedIn }: LandingFooterProps) {
             </ul>
           </div>
           <div>
-            <p className="font-landing-heading text-base font-bold uppercase tracking-wide text-white">Support</p>
-            <ul className="mt-4 space-y-2.5 text-base">
+            <p className="font-landing-overline text-white">Support</p>
+            <ul className="font-landing-body mt-4 space-y-2.5 text-base">
               <li>
                 <a href="mailto:contact@getsoundon.com" className="hover:text-white hover:underline">
                   Contact
@@ -65,15 +65,17 @@ export function LandingFooter({ isLoggedIn }: LandingFooterProps) {
             </ul>
           </div>
           <div>
-            <p className="font-landing-heading text-base font-bold uppercase tracking-wide text-white">Newsletter</p>
-            <p className="mt-3 text-sm leading-relaxed">Recevez les actus matériel et événements.</p>
+            <p className="font-landing-overline text-white">Newsletter</p>
+            <p className="font-landing-body mt-3 text-sm leading-relaxed">
+              Recevez les actus matériel et événements.
+            </p>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               <input
                 type="email"
                 name="email"
                 placeholder="Votre e-mail"
                 autoComplete="email"
-                className="min-h-[48px] flex-1 rounded-lg border border-gs-line bg-white px-4 text-sm text-gs-dark outline-none placeholder:text-[#888]"
+                className="font-landing-body min-h-[48px] flex-1 rounded-lg border border-gs-line bg-white px-4 text-sm text-gs-dark outline-none placeholder:text-[#888]"
               />
               <button
                 type="button"
@@ -93,11 +95,11 @@ export function LandingFooter({ isLoggedIn }: LandingFooterProps) {
                 height={48}
                 className="h-12 w-12 rounded-full object-cover"
               />
-              <span className="font-landing-heading text-xl font-bold uppercase tracking-tight text-white">
-                {siteConfig.name}
+              <span className="font-landing-logo-mark text-xl text-white">
+                {siteConfig.name.toUpperCase()}
               </span>
             </Link>
-            <p className="mt-4 text-sm leading-relaxed lg:ml-auto lg:max-w-[220px]">
+            <p className="font-landing-body mt-4 text-sm leading-relaxed lg:ml-auto lg:max-w-[220px]">
               Location de matériel événementiel entre particuliers et pros.
             </p>
           </div>
@@ -105,7 +107,7 @@ export function LandingFooter({ isLoggedIn }: LandingFooterProps) {
 
         <div className="mt-12 h-px w-full bg-white/10" />
 
-        <div className="mt-8 flex flex-col items-center justify-between gap-4 text-sm md:flex-row">
+        <div className="font-landing-body mt-8 flex flex-col items-center justify-between gap-4 text-sm md:flex-row">
           <p>© {new Date().getFullYear()} {siteConfig.name}. Tous droits réservés.</p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link href="/mentions-legales" className="hover:text-white hover:underline">

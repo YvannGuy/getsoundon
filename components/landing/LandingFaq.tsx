@@ -48,7 +48,7 @@ export function LandingFaq() {
                   onClick={() => setOpen(isOpen ? null : i)}
                   aria-expanded={isOpen}
                 >
-                  <span className="font-landing-heading text-[15px] font-semibold text-gs-dark">{item.q}</span>
+                  <span className="font-landing-heading text-base font-semibold text-gs-dark">{item.q}</span>
                   <ChevronDown
                     className={`h-5 w-5 shrink-0 text-gs-orange transition-transform duration-[400ms] ease-out ${
                       isOpen ? "rotate-180" : ""

@@ -5,6 +5,16 @@
   line-height: 1.6;
 }
 
+/* Libellés de colonne (footer) — Montserrat, caps, même letter-spacing que les badges */
+.font-landing-overline {
+  font-family: var(--font-landing-montserrat), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .font-landing-heading {
   font-family: var(--font-landing-montserrat), system-ui, sans-serif;
 }

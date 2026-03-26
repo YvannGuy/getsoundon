@@ -139,7 +139,7 @@ export function LandingHero() {
           </form>
           <p className="font-landing-body mt-3 text-sm text-white/80">
             Ou parcourir le{" "}
-            <Link href="/items" className="font-semibold underline underline-offset-2">
+            <Link href="/items" className="font-landing-body font-semibold underline underline-offset-2">
               catalogue
             </Link>
             .

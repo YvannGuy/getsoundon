@@ -47,10 +47,8 @@ export function LandingCtaDark() {
 
         <div ref={cardRef} className="relative mx-auto w-full max-w-md">
           <div className="rounded-2xl bg-white p-5 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
-            <p className="font-landing-heading text-sm font-bold uppercase tracking-[0.08em] text-gs-dark">
-              Aperçu tableau de bord
-            </p>
-            <ul className="mt-4 space-y-3 text-sm text-[#444]">
+            <p className="font-landing-overline text-gs-dark">Aperçu tableau de bord</p>
+            <ul className="font-landing-body mt-4 space-y-3 text-sm text-[#444]">
               <li className="flex items-center justify-between gap-2 rounded-lg border border-gs-line bg-gs-beige px-3 py-2.5">
                 <span className="font-medium">Pack DJ Pioneer</span>
                 <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-emerald-800">
@@ -65,7 +63,7 @@ export function LandingCtaDark() {
               </li>
               <li className="flex items-center justify-between gap-2 rounded-lg border border-gs-line px-3 py-2.5">
                 <span className="font-medium">Lumières Chauvet</span>
-                <button type="button" className="text-sm font-bold text-gs-orange">
+                <button type="button" className="font-landing-body text-sm font-bold text-gs-orange">
                   Supprimer
                 </button>
               </li>

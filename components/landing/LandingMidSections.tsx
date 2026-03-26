@@ -88,7 +88,7 @@ export function LandingFeaturesStrip() {
           <div key={item.title} className="flex flex-col items-center text-center md:items-start md:text-left">
             <item.icon className="h-8 w-8 text-gs-orange" strokeWidth={1.75} aria-hidden />
             <h3 className="font-landing-heading mt-4 text-lg font-bold text-gs-dark">{item.title}</h3>
-            <p className="mt-2 text-base leading-relaxed text-[#444]">{item.desc}</p>
+            <p className="font-landing-body mt-2 text-[#444]">{item.desc}</p>
           </div>
         ))}
       </div>
@@ -154,7 +154,7 @@ export function LandingPopularModels() {
               </div>
               <div className="p-5">
                 <p className="font-landing-heading text-lg font-bold text-gs-dark">{p.title}</p>
-                <p className="mt-1 text-base text-[#444]">À partir de {p.price} € / jour</p>
+                <p className="font-landing-body mt-1 text-[#444]">À partir de {p.price} € / jour</p>
                 <Link
                   href="/items"
                   className="font-landing-btn mt-4 inline-flex w-full items-center justify-center rounded-md bg-gs-orange py-3 text-white transition hover:brightness-105"
@@ -178,16 +178,16 @@ export function LandingInfoStrip() {
           <div className="rounded-2xl bg-white p-6 shadow-sm transition hover:shadow-md">
             <Zap className="h-8 w-8 text-gs-orange" />
             <h3 className="font-landing-heading mt-4 text-lg font-bold text-gs-dark">Filtres intelligents</h3>
-            <p className="mt-2 text-base leading-relaxed text-[#444]">
-              Affinez par ville, type de matériel, budget et disponibilités.
-            </p>
+            <p className="font-landing-body mt-2 text-[#444]">
+            Affinez par ville, type de matériel, budget et disponibilités.
+          </p>
           </div>
           <div className="rounded-2xl bg-white p-6 shadow-sm transition hover:shadow-md">
             <Headphones className="h-8 w-8 text-gs-orange" />
             <h3 className="font-landing-heading mt-4 text-lg font-bold text-gs-dark">Assurance incluse</h3>
-            <p className="mt-2 text-base leading-relaxed text-[#444]">
-              Des options de protection selon les annonces et partenaires.
-            </p>
+            <p className="font-landing-body mt-2 text-[#444]">
+            Des options de protection selon les annonces et partenaires.
+          </p>
           </div>
           <Link
             href="/items"
@@ -211,7 +211,7 @@ export function LandingInfoStrip() {
               </div>
               <div>
                 <h3 className="font-landing-heading text-xl font-bold text-gs-dark">Réservation rapide</h3>
-                <p className="mt-2 max-w-xl text-base leading-relaxed text-[#444]">
+                <p className="font-landing-body mt-2 max-w-xl text-[#444]">
                   Envoie une demande, reçois une offre et paie en ligne en toute sécurité.
                 </p>
               </div>
