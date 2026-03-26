@@ -1,144 +1,170 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, MapPin, Search } from "lucide-react";
+import { ArrowRight, MapPin, CalendarRange, Truck, Wrench, Headphones } from "lucide-react";
 
-import { DateRangePicker } from "@/components/search/date-range-picker";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+
+const PLACEHOLDER_EXAMPLES = [
+  "Ex. 2 enceintes pour une soirée samedi à Paris",
+  "Ex. 2 platines Pioneer pour ce soir à 21h à Paris",
+  "Ex. pack sono pour 50 personnes avec livraison",
+  "Ex. vidéoprojecteur pour demain à Montreuil",
+] as const;
+
+type ChipKey = "ou" | "quand" | "livraison" | "installation" | "technicien";
+
+const CHIPS: { key: ChipKey; label: string; icon: typeof MapPin; needsField?: "ville" | "date" }[] = [
+  { key: "ou", label: "Où", icon: MapPin, needsField: "ville" },
+  { key: "quand", label: "Quand", icon: CalendarRange, needsField: "date" },
+  { key: "livraison", label: "Livraison", icon: Truck },
+  { key: "installation", label: "Installation", icon: Wrench },
+  { key: "technicien", label: "Technicien", icon: Headphones },
+];
 
 export function HeroSearchBar({ className }: { className?: string }) {
   const router = useRouter();
-  const locationValueRef = useRef<string>("");
-  const [location, setLocation] = useState("");
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>();
-  const [category, setCategory] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const labelId = useId();
+  const [query, setQuery] = useState("");
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [activeChips, setActiveChips] = useState<Partial<Record<ChipKey, boolean>>>({});
+  const [ville, setVille] = useState("");
+  const [dateEvent, setDateEvent] = useState("");
+
+  useEffect(() => {
+    const t = window.setInterval(() => {
+      setPlaceholderIndex((i) => (i + 1) % PLACEHOLDER_EXAMPLES.length);
+    }, 4800);
+    return () => window.clearInterval(t);
+  }, []);
+
+  const toggleChip = (key: ChipKey) => {
+    setActiveChips((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const ouOn = !!activeChips.ou;
+  const quandOn = !!activeChips.quand;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const selectedLocation = (locationValueRef.current || location).trim();
-    const hasDateRange = dateRange?.from && dateRange?.to && !isNaN(dateRange.from.getTime()) && !isNaN(dateRange.to.getTime());
-
-    const newErrors: Record<string, string> = {};
-    if (!selectedLocation) newErrors.location = "Veuillez renseigner une localisation";
-    if (!category || category === "all") newErrors.category = "Veuillez selectionner une categorie";
-    if (!hasDateRange) newErrors.date = "Veuillez selectionner une periode";
-
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
-
     const params = new URLSearchParams();
-    params.set("location", selectedLocation);
-    params.set("category", category);
-    params.set("startDate", dateRange!.from!.toISOString().slice(0, 10));
-    params.set("endDate", dateRange!.to!.toISOString().slice(0, 10));
-    router.push(`/items?${params.toString()}`);
+    const q = query.trim();
+    if (q) params.set("q", q);
+    if (ouOn && ville.trim()) params.set("location", ville.trim());
+    if (quandOn && dateEvent) {
+      params.set("date_debut", dateEvent);
+      params.set("date_fin", dateEvent);
+    }
+    if (activeChips.livraison) params.set("livraison", "1");
+    if (activeChips.installation) params.set("installation", "1");
+    if (activeChips.technicien) params.set("technicien", "1");
+    const qs = params.toString();
+    router.push(qs ? `/items?${qs}` : "/items");
   };
 
-  const errorMessages = [
-    errors.location,
-    errors.date,
-    errors.category,
-  ].filter(Boolean) as string[];
-
   return (
-    <div className={cn("relative", className)}>
-      <form
-        onSubmit={handleSubmit}
-        className="relative overflow-visible rounded-[36px] border border-slate-200/90 bg-white p-2.5 shadow-[0_14px_34px_rgba(15,23,42,0.16)] sm:rounded-[999px]"
-      >
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_1.35fr_0.95fr_170px] sm:items-center lg:gap-0">
-          <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:border-r lg:border-slate-200">
-            <p className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-              <MapPin className="h-3.5 w-3.5 text-slate-400" />
-              Localisation
-            </p>
-            <Input
-              value={location}
-              onChange={(e) => {
-                setLocation(e.target.value);
-                locationValueRef.current = e.target.value;
-              }}
-              placeholder="Paris, Lyon, Marseille..."
-              className={cn(
-                "mt-2 h-11 rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none placeholder:text-slate-400 focus-visible:border-gs-orange focus-visible:ring-gs-orange/15",
-                errors.location && "text-rose-600 placeholder:text-rose-300"
-              )}
+    <div className={cn("relative min-w-0", className)}>
+      <form onSubmit={handleSubmit} className="relative min-w-0">
+        <label
+          id={labelId}
+          htmlFor="hero-intelligent-q"
+          className="font-landing-heading mb-3 block text-[0.95rem] font-semibold tracking-wide text-white/95 sm:text-base"
+        >
+          Que recherchez-vous ?
+        </label>
+
+        <div className="group relative flex flex-col gap-0 overflow-hidden rounded-2xl border border-white/25 bg-white/[0.97] shadow-[0_4px_40px_rgba(0,0,0,0.12)] backdrop-blur-sm transition-[box-shadow,border-color] focus-within:border-white/50 focus-within:shadow-[0_8px_48px_rgba(0,0,0,0.18)] sm:rounded-[1.35rem]">
+          <div className="flex min-h-[3.75rem] items-stretch sm:min-h-[4.25rem]">
+            <input
+              id="hero-intelligent-q"
+              name="q"
+              type="search"
+              autoComplete="off"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={PLACEHOLDER_EXAMPLES[placeholderIndex]}
+              aria-labelledby={labelId}
+              className="font-landing-body min-w-0 flex-1 border-0 bg-transparent px-4 py-4 text-lg leading-normal text-gs-dark outline-none placeholder:text-[#5c5c5c] placeholder:opacity-90 sm:px-5 sm:py-5 sm:text-xl sm:leading-snug sm:placeholder:text-xl"
             />
-          </div>
-
-          <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:min-w-[0] lg:border-r lg:border-slate-200">
-            <p className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-              <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
-              Période
-            </p>
-            <DateRangePicker
-              value={dateRange}
-              onChange={setDateRange}
-              placeholder="Du jj/mm/aaaa au jj/mm/aaaa"
-              className="mt-2 w-full"
-              inputClassName={cn(
-                "min-h-[44px] rounded-full border border-slate-200 bg-white px-3 py-2 text-[14px] font-medium text-slate-950 shadow-none hover:border-slate-300 focus:ring-0",
-                errors.date && "border-rose-500"
-              )}
-              error={!!errors.date}
-            />
-          </div>
-
-          <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:border-r lg:border-slate-200">
-            <label htmlFor="hero-category" className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-              Categorie
-            </label>
-            <Select value={category || "all"} onValueChange={(v) => setCategory(v === "all" ? "" : v)}>
-              <SelectTrigger
-                id="hero-category"
-                className={cn(
-                  "mt-2 h-11 w-full rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none focus:border-gs-orange focus:ring-gs-orange/15",
-                  errors.category && "border-rose-500 text-rose-600"
-                )}
-              >
-                <SelectValue placeholder="Sélectionnez" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Selectionnez une categorie</SelectItem>
-                <SelectItem value="sound">Sound</SelectItem>
-                <SelectItem value="dj">DJ</SelectItem>
-                <SelectItem value="lighting">Lighting</SelectItem>
-                <SelectItem value="services">Services</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="pt-1 sm:col-span-2 lg:col-span-1 lg:pl-2 lg:pt-0">
-            <Button
+            <button
               type="submit"
-              className="h-11 w-full rounded-full bg-gs-orange px-5 text-[14px] font-semibold text-white shadow-[0_10px_24px_rgba(33,51,152,0.24)] transition hover:brightness-95"
+              className="font-landing-btn m-1.5 inline-flex shrink-0 items-center justify-center gap-2 self-center rounded-xl bg-gs-orange px-4 py-3 text-[0.95rem] text-white transition hover:brightness-105 sm:m-2 sm:rounded-[0.85rem] sm:px-6 sm:py-3.5 sm:text-base"
+              aria-label="Lancer la recherche"
             >
-              Rechercher
-              <span className="ml-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/15">
-                <Search className="h-3 w-3" />
-              </span>
-            </Button>
+              <span className="hidden sm:inline">Rechercher</span>
+              <ArrowRight className="h-5 w-5 sm:h-5 sm:w-5" strokeWidth={2.25} aria-hidden />
+            </button>
           </div>
+
+          {(ouOn || quandOn) && (
+            <div className="flex flex-col gap-2 border-t border-gs-line/80 bg-[#faf9f7] px-4 py-3 sm:flex-row sm:items-end sm:gap-4 sm:px-5 sm:py-3.5">
+              {ouOn ? (
+                <div className="min-w-0 flex-1">
+                  <label htmlFor="hero-chip-ville" className="font-landing-badge text-[#666]">
+                    Lieu
+                  </label>
+                  <input
+                    id="hero-chip-ville"
+                    type="text"
+                    value={ville}
+                    onChange={(e) => setVille(e.target.value)}
+                    placeholder="Ville, code postal…"
+                    className="font-landing-heading mt-1 w-full border-0 border-b border-transparent bg-transparent p-0 text-sm font-bold text-gs-dark outline-none placeholder:font-normal placeholder:text-[#888] focus-visible:border-gs-orange/40"
+                  />
+                </div>
+              ) : null}
+              {quandOn ? (
+                <div className="min-w-0 flex-1 sm:max-w-[200px]">
+                  <label htmlFor="hero-chip-date" className="font-landing-badge text-[#666]">
+                    Date
+                  </label>
+                  <input
+                    id="hero-chip-date"
+                    type="date"
+                    value={dateEvent}
+                    onChange={(e) => setDateEvent(e.target.value)}
+                    className="font-landing-heading mt-1 w-full border-0 bg-transparent p-0 text-sm font-bold text-gs-dark outline-none [color-scheme:light]"
+                  />
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
+
+        {/* Une seule ligne : héritage text-[#222] du <main> neutralisé avec text-white + ! sur les puces */}
+        <div
+          className={cn(
+            "mt-5 flex min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain pb-1 pr-1 [-webkit-overflow-scrolling:touch] sm:mt-6 sm:gap-3 sm:pr-2",
+            "text-white [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          )}
+        >
+          <span className="shrink-0 font-landing-badge text-[0.65rem] uppercase tracking-wide text-white/70 sm:text-[0.72rem]">
+            Précisez si besoin
+          </span>
+          {CHIPS.map(({ key, label, icon: Icon }) => {
+            const on = !!activeChips[key];
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => toggleChip(key)}
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-left font-landing-nav text-xs font-medium outline-none transition sm:gap-1.5 sm:px-3.5 sm:py-2 sm:text-sm",
+                  "!text-white focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
+                  on
+                    ? "!border-white/60 !bg-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]"
+                    : "!border-white/40 !bg-white/10 hover:!border-white/55 hover:!bg-white/[0.18]"
+                )}
+                aria-pressed={on}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0 text-white opacity-95 sm:h-4 sm:w-4" aria-hidden />
+                {label}
+              </button>
+            );
+          })}
         </div>
       </form>
-
-      {errorMessages.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {errorMessages.map((message) => (
-            <p
-              key={message}
-              className="rounded-full bg-rose-50 px-3 py-1.5 text-[12px] font-medium text-rose-700 shadow-sm"
-            >
-              {message}
-            </p>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

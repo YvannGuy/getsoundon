@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
 type Listing = {
   id: string;
@@ -16,15 +17,24 @@ type Listing = {
 
 const CATEGORY_OPTIONS: Array<Listing["category"]> = ["sound", "dj", "lighting", "services"];
 
-export default function ItemsPage() {
+function ItemsPageInner() {
+  const searchParams = useSearchParams();
   const [items, setItems] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [q, setQ] = useState("");
-  const [category, setCategory] = useState("");
-  const [location, setLocation] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  const [q, setQ] = useState(() => searchParams.get("q")?.trim() ?? "");
+  const [category, setCategory] = useState(() => searchParams.get("category")?.trim() ?? "");
+  const [location, setLocation] = useState(() => searchParams.get("location")?.trim() ?? "");
+  const [minPrice, setMinPrice] = useState(() => searchParams.get("minPrice")?.trim() ?? "");
+  const [maxPrice, setMaxPrice] = useState(() => searchParams.get("maxPrice")?.trim() ?? "");
+
+  useEffect(() => {
+    setQ(searchParams.get("q")?.trim() ?? "");
+    setCategory(searchParams.get("category")?.trim() ?? "");
+    setLocation(searchParams.get("location")?.trim() ?? "");
+    setMinPrice(searchParams.get("minPrice")?.trim() ?? "");
+    setMaxPrice(searchParams.get("maxPrice")?.trim() ?? "");
+  }, [searchParams]);
 
   const queryString = useMemo(() => {
     const params = new URLSearchParams();
@@ -145,5 +155,19 @@ export default function ItemsPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function ItemsPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="container max-w-5xl py-10">
+          <p className="text-sm text-slate-500">Chargement...</p>
+        </main>
+      }
+    >
+      <ItemsPageInner />
+    </Suspense>
   );
 }

@@ -76,18 +76,18 @@ function AuthPageContent() {
             <ArrowLeft className="h-4 w-4 shrink-0" />
             Retour à l&apos;accueil
           </Link>
-          <h2 className="font-landing-heading mt-6 flex flex-wrap items-center gap-x-2 text-xl font-bold text-white sm:text-2xl">
-            <span className="shrink-0">Bienvenue sur</span>
+          <h2 className="font-landing-heading mt-6 flex flex-nowrap items-center gap-2 text-lg font-bold text-white sm:gap-2.5 sm:text-xl md:text-2xl">
+            <span className="shrink-0 whitespace-nowrap">Bienvenue sur</span>
             <Link
               href="/"
-              className="inline-flex min-w-0 items-center gap-1 leading-none transition hover:opacity-95"
+              className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap leading-none transition hover:opacity-95"
             >
               <Image
                 src="/images/logosound.png"
                 alt=""
                 width={48}
                 height={48}
-                className="h-10 w-10 shrink-0 rounded-full object-cover sm:h-12 sm:w-12"
+                className="h-9 w-9 shrink-0 rounded-full object-cover sm:h-10 sm:w-10 md:h-12 md:w-12"
               />
               <span className="font-landing-logo-mark text-gs-orange">{siteConfig.name.toUpperCase()}</span>
             </Link>
@@ -373,6 +373,21 @@ function SignupFormContent({ redirectedFrom, onSwitchToLogin, initialUserType }:
           </label>
         </div>
       </div>
+      <p className="font-landing-body mt-5 text-xs leading-relaxed text-gs-dark/80 sm:text-sm">
+        En créant mon compte, j&apos;accepte les{" "}
+        <Link href="/cgv" className="font-medium text-gs-orange underline-offset-2 hover:underline">
+          conditions générales
+        </Link>
+        , la{" "}
+        <Link href="/confidentialite" className="font-medium text-gs-orange underline-offset-2 hover:underline">
+          politique de confidentialité
+        </Link>{" "}
+        et les{" "}
+        <Link href="/cgu" className="font-medium text-gs-orange underline-offset-2 hover:underline">
+          CGU
+        </Link>
+        .
+      </p>
       {state.error && <p className="mt-3 text-sm text-red-600">{state.error}</p>}
       {state.success && <p className="mt-3 text-sm text-emerald-600">{state.success}</p>}
       <Button

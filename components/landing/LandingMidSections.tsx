@@ -52,16 +52,16 @@ const popular = [
   },
 ];
 
-/** Section « Les marques disponibles » — grille 2×4, cartes blanches (maquette) */
-const marquesShowcase: { label: string; className: string }[] = [
-  { label: "Pioneer DJ", className: "font-bold italic" },
-  { label: "JBL", className: "font-bold" },
-  { label: "SHURE", className: "font-bold uppercase tracking-wide" },
-  { label: "Yamaha", className: "font-bold italic" },
-  { label: "BOSE", className: "font-bold uppercase tracking-wide" },
-  { label: "SENNHEISER", className: "font-bold uppercase tracking-wide" },
-  { label: "CHAUVET", className: "font-bold uppercase tracking-wide" },
-  { label: "ROLAND", className: "font-bold uppercase italic tracking-wide" },
+/** Logos `public/images/logobrand` — grille type vitrine (cartes blanches, logos centrés) */
+const marquesLogos: { src: string; alt: string }[] = [
+  { src: "/images/logobrand/pioneer-dj.jpg.png", alt: "Pioneer DJ" },
+  { src: "/images/logobrand/Shure_Logo.svg.png", alt: "Shure" },
+  { src: "/images/logobrand/Sennheiser-logo-new.png", alt: "Sennheiser" },
+  { src: "/images/logobrand/Bose_Logo.png", alt: "Bose" },
+  { src: "/images/logobrand/yamaha_logo_black-42.jpg", alt: "Yamaha" },
+  { src: "/images/logobrand/rcf.png", alt: "RCF" },
+  { src: "/images/logobrand/fbt.png", alt: "FBT" },
+  { src: "/images/logobrand/images.png", alt: "Marque partenaire" },
 ];
 
 export function LandingFeaturesStrip() {
@@ -237,13 +237,23 @@ export function LandingBrands() {
         <h2 className="font-landing-section-title text-center text-gs-dark">
           Les marques disponibles sur GetSoundOn
         </h2>
-        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-          {marquesShowcase.map(({ label, className }) => (
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 md:gap-5 lg:gap-6">
+          {marquesLogos.map(({ src, alt }) => (
             <div
-              key={label}
-              className="font-landing-heading flex min-h-[72px] items-center justify-center rounded-lg border border-gs-line bg-white px-3 py-4 text-center text-sm text-gs-dark shadow-sm sm:min-h-[80px] sm:px-4 sm:text-base"
+              key={src}
+              className="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_4px_20px_rgba(15,23,42,0.06)] md:rounded-2xl"
             >
-              <span className={className}>{label}</span>
+              <div className="absolute inset-0 p-4 sm:p-5 md:p-6">
+                <div className="relative h-full w-full">
+                  <Image
+                    src={src}
+                    alt={alt}
+                    fill
+                    sizes="(max-width: 640px) 45vw, 22vw"
+                    className="object-contain object-center grayscale transition duration-300 hover:grayscale-0"
+                  />
+                </div>
+              </div>
             </div>
           ))}
         </div>
