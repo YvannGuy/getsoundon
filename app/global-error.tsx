@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
 
 export default function GlobalError({
   error,
@@ -11,7 +10,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    console.error(error);
   }, [error]);
 
   return (
@@ -20,7 +19,7 @@ export default function GlobalError({
         <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm">
           <h2 className="text-xl font-semibold text-black">Une erreur est survenue</h2>
           <p className="mt-2 text-sm text-slate-600">
-            L&apos;incident a été signalé automatiquement. Réessaie dans quelques instants.
+            Une erreur inattendue est survenue. Reessaie dans quelques instants.
           </p>
           <button
             type="button"

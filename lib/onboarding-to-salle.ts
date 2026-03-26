@@ -1,14 +1,14 @@
 /**
- * Mapping des données onboarding → structure page salle
- * Utilisé lorsque les propriétaires ajoutent leur salle via le wizard.
- * Les données sont transformées pour affichage sur /salles/[slug]
+ * Mapping des données onboarding → structure page annonce (`salles`).
+ * Table Postgres inchangée : `public.salles` = catalogue matériel / pack en v1.
  */
 
-import type { Salle } from "./types/salle";
+import { FEATURE_TO_SALLE, INCLUSION_LABELS } from "./salle-features";
+import type { ListingKind, Salle } from "./types/salle";
 
 type HorairesJour = { debut: string; fin: string };
 
-type OnboardingWizardData = {
+export type OnboardingWizardData = {
   nom: string;
   ville: string;
   capacite: string;
@@ -24,25 +24,10 @@ type OnboardingWizardData = {
   joursOuverture: string[];
   restrictionSonore: string;
   evenementsAcceptes: string[];
-};
-
-const FEATURE_TO_SALLE: Record<string, { label: string; sublabel?: string; icon: string }> = {
-  erp: { label: "ERP conforme", icon: "check" },
-  pmr: { label: "Accès PMR", sublabel: "Accessible aux personnes à mobilité réduite", icon: "wheelchair" },
-  scene: { label: "Scène / estrade", icon: "list" },
-  climatisation: { label: "Climatisation", icon: "check" },
-  chauffage: { label: "Chauffage", icon: "check" },
-  parking: { label: "Parking", sublabel: "places disponibles à proximité", icon: "parking" },
-  mobilier: { label: "Mobilier", sublabel: "Chaises et tables modulables incluses", icon: "furniture" },
-  bureau: { label: "Bureau", icon: "check" },
-  son: { label: "Sonorisation", sublabel: "Système audio professionnel inclus", icon: "speaker" },
-  lumiere: { label: "Lumière naturelle", icon: "check" },
-};
-
-const INCLUSION_LABELS: Record<string, string> = {
-  location: "Location de la salle",
-  mobilier: "Mobilier et équipements",
-  sono: "Système de sonorisation",
+  listingKind?: ListingKind;
+  gearCategory?: string;
+  gearBrand?: string;
+  gearModel?: string;
 };
 
 const RESTRICTION_LABELS: Record<string, string> = {
@@ -66,7 +51,8 @@ export function mapOnboardingToSalle(
   slug: string,
   images: string[] = ["/img.png"]
 ): Partial<Salle> {
-  const capacity = parseInt(data.capacite, 10) || 0;
+  const capacity = parseInt(data.capacite, 10);
+  const capacitySafe = Number.isFinite(capacity) && capacity >= 0 ? capacity : 0;
   const pricePerDay = parseInt(data.tarifParJour, 10) || 0;
   const pricePerMonth = data.tarifMensuel?.trim() ? parseInt(data.tarifMensuel, 10) || null : null;
   const pricePerHour = data.tarifHoraire?.trim() ? parseInt(data.tarifHoraire, 10) || null : null;
@@ -90,7 +76,7 @@ export function mapOnboardingToSalle(
       if (h?.debut && h?.fin) {
         const jourCapitalized = jour.charAt(0).toUpperCase() + jour.slice(1);
         conditions.push({
-          label: `Horaires - ${jourCapitalized} : ${h.debut} - ${h.fin}`,
+          label: `Disponibilité — ${jourCapitalized} : ${h.debut} - ${h.fin}`,
           icon: "clock",
         });
       }
@@ -99,14 +85,14 @@ export function mapOnboardingToSalle(
 
   if (data.restrictionSonore) {
     conditions.push({
-      label: `Restrictions sonores - ${RESTRICTION_LABELS[data.restrictionSonore] ?? data.restrictionSonore}`,
+      label: `Restrictions sonores — ${RESTRICTION_LABELS[data.restrictionSonore] ?? data.restrictionSonore}`,
       icon: "volume",
     });
   }
 
   if (data.evenementsAcceptes.length > 0) {
     conditions.push({
-      label: `Types d'événements acceptés - ${data.evenementsAcceptes.map((e) => EVENT_LABELS[e] ?? e).join(", ")}`,
+      label: `Usages cibles — ${data.evenementsAcceptes.map((e) => EVENT_LABELS[e] ?? e).join(", ")}`,
       icon: "list",
     });
   }
@@ -115,12 +101,18 @@ export function mapOnboardingToSalle(
     .map((id) => INCLUSION_LABELS[id])
     .filter(Boolean);
 
+  const ville = data.ville?.trim() ?? "";
+  const adresse = data.adresse?.trim() ?? "";
+  const addressLine = adresse ? `${adresse}, ${ville}`.trim() : ville;
+
+  const listingKind = (data.listingKind ?? "equipment") as ListingKind;
+
   return {
     slug,
-    name: data.nom || "Ma salle",
-    city: data.ville || "",
-    address: data.adresse ? `${data.adresse}, ${data.ville}` : data.ville,
-    capacity,
+    name: data.nom?.trim() || "Annonce matériel",
+    city: ville,
+    address: addressLine,
+    capacity: capacitySafe,
     pricePerDay,
     pricePerMonth: pricePerMonth ?? undefined,
     pricePerHour: pricePerHour ?? undefined,
@@ -129,5 +121,9 @@ export function mapOnboardingToSalle(
     features,
     conditions,
     pricingInclusions,
+    listingKind,
+    gearCategory: data.gearCategory?.trim() || null,
+    gearBrand: data.gearBrand?.trim() || null,
+    gearModel: data.gearModel?.trim() || null,
   };
 }

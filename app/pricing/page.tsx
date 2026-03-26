@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const metadata: Metadata = {
   title: "Tarifs et consultation gratuite",
   description:
-    "salledeculte.com propose une consultation gratuite. Les frais de service sont appliqués uniquement lors d'une réservation payée.",
+    "GetSoundOn propose une consultation gratuite. Les frais de service sont appliques uniquement lors d'une reservation payee.",
   alternates: { canonical: buildCanonical("/pricing") },
 };
 

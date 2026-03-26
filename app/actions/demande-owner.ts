@@ -49,9 +49,9 @@ export async function updateDemandeStatusAction(
 
   const msg =
     status === "accepted"
-      ? "Ma salle est disponible pour cette date."
+      ? "Le matériel / pack est disponible pour la période demandée."
       : status === "rejected"
-        ? "Ma salle n'est pas disponible pour cette date."
+        ? "Le matériel / pack n'est pas disponible pour cette période."
         : replyMessage ?? "J'aurais besoin de quelques précisions avant de confirmer.";
 
   const { error } = await supabase

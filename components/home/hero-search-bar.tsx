@@ -2,9 +2,8 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, CalendarDays, MapPin, Search, Users } from "lucide-react";
+import { CalendarDays, MapPin, Search } from "lucide-react";
 
-import { DepartmentAutocomplete } from "@/components/search/department-autocomplete";
 import { DateRangePicker } from "@/components/search/date-range-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,47 +12,37 @@ import { cn } from "@/lib/utils";
 
 export function HeroSearchBar({ className }: { className?: string }) {
   const router = useRouter();
-  const deptValueRef = useRef<string>("");
-  const [departement, setDepartement] = useState("");
+  const locationValueRef = useRef<string>("");
+  const [location, setLocation] = useState("");
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>();
-  const [personnesMin, setPersonnesMin] = useState("");
-  const [personnesMax, setPersonnesMax] = useState("");
-  const [type, setType] = useState("");
+  const [category, setCategory] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const dept = (deptValueRef.current || departement).trim();
+    const selectedLocation = (locationValueRef.current || location).trim();
     const hasDateRange = dateRange?.from && dateRange?.to && !isNaN(dateRange.from.getTime()) && !isNaN(dateRange.to.getTime());
-    const min = personnesMin.trim() ? parseInt(personnesMin, 10) : 0;
-    const max = personnesMax.trim() ? parseInt(personnesMax, 10) : 0;
-    const hasCapacity = !isNaN(min) && min > 0 && !isNaN(max) && max > 0 && min <= max;
-    const hasType = type && type !== "all";
 
     const newErrors: Record<string, string> = {};
-    if (!dept) newErrors.departement = "Veuillez sélectionner un département";
-    if (!hasDateRange) newErrors.date = "Veuillez sélectionner une période (date début et date fin)";
-    if (!hasCapacity) newErrors.personnes = "Veuillez entrer une fourchette de personnes (min et max)";
-    if (!hasType) newErrors.type = "Veuillez sélectionner un type d'événement";
+    if (!selectedLocation) newErrors.location = "Veuillez renseigner une localisation";
+    if (!category || category === "all") newErrors.category = "Veuillez selectionner une categorie";
+    if (!hasDateRange) newErrors.date = "Veuillez selectionner une periode";
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
     const params = new URLSearchParams();
-    params.set("departement", dept);
-    params.set("date_debut", dateRange!.from!.toISOString().slice(0, 10));
-    params.set("date_fin", dateRange!.to!.toISOString().slice(0, 10));
-    params.set("personnes_min", String(min));
-    params.set("personnes_max", String(max));
-    params.set("type", type);
-    router.push(`/rechercher?${params.toString()}`);
+    params.set("location", selectedLocation);
+    params.set("category", category);
+    params.set("startDate", dateRange!.from!.toISOString().slice(0, 10));
+    params.set("endDate", dateRange!.to!.toISOString().slice(0, 10));
+    router.push(`/items?${params.toString()}`);
   };
 
   const errorMessages = [
-    errors.departement,
+    errors.location,
     errors.date,
-    errors.personnes,
-    errors.type,
+    errors.category,
   ].filter(Boolean) as string[];
 
   return (
@@ -62,20 +51,22 @@ export function HeroSearchBar({ className }: { className?: string }) {
         onSubmit={handleSubmit}
         className="relative overflow-visible rounded-[36px] border border-slate-200/90 bg-white p-2.5 shadow-[0_14px_34px_rgba(15,23,42,0.16)] sm:rounded-[999px]"
       >
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_1.35fr_1fr_0.95fr_170px] sm:items-center lg:gap-0">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_1.35fr_0.95fr_170px] sm:items-center lg:gap-0">
           <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:border-r lg:border-slate-200">
             <p className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
               <MapPin className="h-3.5 w-3.5 text-slate-400" />
-              Département
+              Localisation
             </p>
-            <DepartmentAutocomplete
-              value={departement}
-              onChange={setDepartement}
-              valueRef={deptValueRef}
-              placeholder="Paris, Yvelines, 78..."
-              inputClassName={cn(
-                "mt-2 h-11 rounded-full border border-slate-200 bg-white pl-10 pr-4 text-[14px] font-medium text-slate-950 shadow-none placeholder:text-slate-400 focus-visible:border-[#213398] focus-visible:ring-[#213398]/15",
-                errors.departement && "text-rose-600 placeholder:text-rose-300"
+            <Input
+              value={location}
+              onChange={(e) => {
+                setLocation(e.target.value);
+                locationValueRef.current = e.target.value;
+              }}
+              placeholder="Paris, Lyon, Marseille..."
+              className={cn(
+                "mt-2 h-11 rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none placeholder:text-slate-400 focus-visible:border-[#213398] focus-visible:ring-[#213398]/15",
+                errors.location && "text-rose-600 placeholder:text-rose-300"
               )}
             />
           </div>
@@ -98,61 +89,26 @@ export function HeroSearchBar({ className }: { className?: string }) {
             />
           </div>
 
-          <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:min-w-[0] lg:border-r lg:border-slate-200">
-            <label htmlFor="hero-cap-min" className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-              <Users className="h-3.5 w-3.5 text-slate-400" />
-              Capacité
-            </label>
-            <div className="mt-2 flex items-center gap-3">
-              <Input
-                id="hero-cap-min"
-                type="number"
-                min={1}
-                value={personnesMin}
-                onChange={(e) => setPersonnesMin(e.target.value)}
-                placeholder="Min"
-                className={cn(
-                  "h-11 w-full min-w-0 rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none placeholder:text-slate-400 focus-visible:border-[#213398] focus-visible:ring-[#213398]/15",
-                  errors.personnes && "placeholder:text-rose-300 text-rose-600"
-                )}
-              />
-              <span className="shrink-0 text-sm text-slate-300">-</span>
-              <Input
-                type="number"
-                min={1}
-                value={personnesMax}
-                onChange={(e) => setPersonnesMax(e.target.value)}
-                placeholder="Max"
-                className={cn(
-                  "h-11 w-full min-w-0 rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none placeholder:text-slate-400 focus-visible:border-[#213398] focus-visible:ring-[#213398]/15",
-                  errors.personnes && "placeholder:text-rose-300 text-rose-600"
-                )}
-              />
-            </div>
-          </div>
-
           <div className="min-w-0 rounded-[18px] px-4 py-3 sm:px-5 sm:py-2.5 lg:border-r lg:border-slate-200">
-            <label htmlFor="hero-type" className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-              <Building2 className="h-3.5 w-3.5 text-slate-400" />
-              Type
+            <label htmlFor="hero-category" className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Categorie
             </label>
-            <Select value={type || "all"} onValueChange={(v) => setType(v === "all" ? "" : v)}>
+            <Select value={category || "all"} onValueChange={(v) => setCategory(v === "all" ? "" : v)}>
               <SelectTrigger
-                id="hero-type"
+                id="hero-category"
                 className={cn(
                   "mt-2 h-11 w-full rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none focus:border-[#213398] focus:ring-[#213398]/15",
-                  errors.type && "border-rose-500 text-rose-600"
+                  errors.category && "border-rose-500 text-rose-600"
                 )}
               >
                 <SelectValue placeholder="Sélectionnez" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Sélectionnez un type</SelectItem>
-                <SelectItem value="culte-regulier">Culte régulier</SelectItem>
-                <SelectItem value="conference">Conférence</SelectItem>
-                <SelectItem value="celebration">Célébration</SelectItem>
-                <SelectItem value="bapteme">Baptême</SelectItem>
-                <SelectItem value="retraite">Retraite</SelectItem>
+                <SelectItem value="all">Selectionnez une categorie</SelectItem>
+                <SelectItem value="sound">Sound</SelectItem>
+                <SelectItem value="dj">DJ</SelectItem>
+                <SelectItem value="lighting">Lighting</SelectItem>
+                <SelectItem value="services">Services</SelectItem>
               </SelectContent>
             </Select>
           </div>

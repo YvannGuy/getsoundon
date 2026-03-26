@@ -1,0 +1,139 @@
+.font-landing-body {
+  font-family: var(--font-landing-inter), system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.font-landing-heading {
+  font-family: var(--font-landing-montserrat), system-ui, sans-serif;
+}
+
+/* Mot « GETSOUNDON » header — noir, black 900, crénage très serré (maquette) */
+.font-landing-logo-mark {
+  font-family: var(--font-landing-montserrat), system-ui, sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+}
+
+/* Hero — casse phrase, Montserrat extrabold, blanc, serré, ~3.5rem max */
+.font-landing-hero-title {
+  font-family: var(--font-landing-montserrat), system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: #fff;
+  font-size: 2rem;
+}
+
+@media (min-width: 640px) {
+  .font-landing-hero-title {
+    font-size: 2.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .font-landing-hero-title {
+    font-size: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .font-landing-hero-title {
+    font-size: 3.5rem;
+  }
+}
+
+/* Titres de section — Montserrat 700, 2rem, #222 (couleur via utilitaire si besoin) */
+.font-landing-section-title {
+  font-family: var(--font-landing-montserrat), system-ui, sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Boutons — Montserrat bold, uppercase, 0.05em, 1rem */
+.font-landing-btn {
+  font-family: var(--font-landing-montserrat), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Badges / pilules / petits labels de champ */
+.font-landing-badge {
+  font-family: var(--font-landing-montserrat), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Navigation & liens secondaires — Inter (contraste avec titres Montserrat) */
+.font-landing-nav {
+  font-family: var(--font-landing-inter), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+@media (min-width: 640px) {
+  .font-landing-nav {
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .font-landing-nav {
+    font-size: 1rem;
+  }
+}
+
+.landing-hero-overlay {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 100%);
+}
+
+.landing-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+@media (min-width: 640px) {
+  .landing-container {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-container {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+.landing-section {
+  padding-top: 32px;
+  padding-bottom: 32px;
+}
+
+@media (min-width: 640px) {
+  .landing-section {
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-section {
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+}

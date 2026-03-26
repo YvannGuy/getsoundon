@@ -79,11 +79,11 @@ function AuthPageContent() {
               className="-ml-1 inline-flex items-center leading-none text-[#213398] hover:text-[#1a2980]"
             >
               <Image
-                src="/logopleinsdc.png"
+                src="/images/logosound.png"
                 alt=""
                 width={60}
                 height={60}
-                className="h-[44px] w-[44px] shrink-0 object-contain -mr-2 sm:h-[60px] sm:w-[60px] sm:-mr-3"
+                className="h-[44px] w-[44px] shrink-0 rounded-full object-cover -mr-2 sm:h-[60px] sm:w-[60px] sm:-mr-3"
               />
               {siteConfig.name}
             </Link>

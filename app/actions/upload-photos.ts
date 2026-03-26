@@ -4,7 +4,7 @@ import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
 
 const BUCKET_NAME = "salle-photos";
-const WATERMARK_TEXT = "salledeculte.com";
+const WATERMARK_TEXT = "getsoundon.com";
 
 function createWatermarkSvg(): Buffer {
   const svg = `

@@ -1,7 +1,26 @@
 "use server";
 
+import type { OfferListingSnapshotV1 } from "@/lib/offer-listing-snapshot";
+import { OFFER_LISTING_SNAPSHOT_VERSION } from "@/lib/offer-listing-snapshot";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+
+function featureLabelsFromSalle(features: unknown): string[] {
+  if (!Array.isArray(features)) return [];
+  return features
+    .map((f) =>
+      f && typeof f === "object" && "label" in f ? String((f as { label: string }).label) : ""
+    )
+    .filter(Boolean);
+}
+
+function parseFulfillmentMode(
+  raw: string | null | undefined
+): OfferListingSnapshotV1["logistics"]["mode"] {
+  const s = String(raw ?? "").trim();
+  if (s === "livraison" || s === "les_deux" || s === "a_convenir") return s;
+  return "retrait";
+}
 
 async function getPlatformFeeCents(params: {
   adminSupabase: ReturnType<typeof createAdminClient>;
@@ -60,6 +79,9 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
   const dateFin = formData.get("dateFin") as string | null;
   const expiresAt = formData.get("expiresAt") as string | null;
   const message = (formData.get("message") as string | null)?.trim() || null;
+  const accessoriesNotes = String(formData.get("accessoriesNotes") ?? "").trim();
+  const fulfillmentModeRaw = String(formData.get("fulfillmentMode") ?? "retrait").trim();
+  const fulfillmentNotes = String(formData.get("fulfillmentNotes") ?? "").trim();
 
   if (!conversationId || !demandeId || !salleId || !amountStr || !expiresAt) {
     return { success: false, error: "Données manquantes." };
@@ -163,6 +185,58 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
     return { success: false, error: "Activez les paiements avant d'envoyer une offre." };
   }
 
+  const { data: salleRow } = await adminSupabase
+    .from("salles")
+    .select("name, city, address, listing_kind, gear_category, gear_brand, gear_model, features")
+    .eq("id", salleId)
+    .maybeSingle();
+
+  const sr = salleRow as {
+    name?: string;
+    city?: string;
+    address?: string | null;
+    listing_kind?: string | null;
+    gear_category?: string | null;
+    gear_brand?: string | null;
+    gear_model?: string | null;
+    features?: unknown;
+  } | null;
+
+  const listingSnapshot: OfferListingSnapshotV1 = {
+    v: OFFER_LISTING_SNAPSHOT_VERSION,
+    captured_at: new Date().toISOString(),
+    listing: {
+      salle_id: salleId,
+      title: sr?.name?.trim() || "Annonce matériel",
+      city: sr?.city?.trim() || "",
+      address: sr?.address ?? null,
+      listing_kind: sr?.listing_kind ?? null,
+      gear_category: sr?.gear_category ?? null,
+      gear_brand: sr?.gear_brand ?? null,
+      gear_model: sr?.gear_model ?? null,
+      feature_labels: featureLabelsFromSalle(sr?.features),
+    },
+    rental_period: {
+      date_debut: validDateDebut,
+      date_fin: validDateFin,
+      event_type: validEventType,
+    },
+    money: {
+      amount_cents: amountCents,
+      deposit_cents: depositAmountCents,
+      service_fee_cents: serviceFeeCents,
+      payment_mode: paymentMode,
+      upfront_cents: upfrontAmountCents,
+      balance_cents: balanceAmountCents,
+      cancellation_policy: cancellationPolicy,
+    },
+    logistics: {
+      mode: parseFulfillmentMode(fulfillmentModeRaw),
+      notes: fulfillmentNotes,
+      accessories_notes: accessoriesNotes,
+    },
+  };
+
   const { data: offer, error } = await adminSupabase
     .from("offers")
     .insert({
@@ -197,6 +271,7 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
       event_type: validEventType,
       date_debut: validDateDebut,
       date_fin: validDateFin,
+      listing_snapshot: listingSnapshot,
     })
     .select("id")
     .single();

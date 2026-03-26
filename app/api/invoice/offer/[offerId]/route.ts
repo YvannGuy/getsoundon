@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
+import { snapshotLinesForPdf } from "@/lib/offer-listing-snapshot";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,7 +26,7 @@ export async function GET(
     const adminSupabase = createAdminClient();
     const { data: offer } = await adminSupabase
       .from("offers")
-      .select("id, owner_id, seeker_id, salle_id")
+      .select("id, owner_id, seeker_id, salle_id, listing_snapshot")
       .eq("id", offerId)
       .single();
 
@@ -33,7 +34,7 @@ export async function GET(
       return NextResponse.json({ error: "Offre introuvable" }, { status: 404 });
     }
 
-    const o = offer as { owner_id: string; seeker_id: string; salle_id: string };
+    const o = offer as { owner_id: string; seeker_id: string; salle_id: string; listing_snapshot?: unknown };
     if (o.owner_id !== user.id && o.seeker_id !== user.id) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
@@ -75,6 +76,7 @@ export async function GET(
         return NextResponse.json({ error: "Données manquantes" }, { status: 500 });
       }
       const amountEur = (pay.amount / 100).toFixed(2);
+      const snapLines = snapshotLinesForPdf(o.listing_snapshot);
       const invoicePdf = await generateInvoicePdf({
         paymentId: pay.id,
         amountEur,
@@ -85,6 +87,7 @@ export async function GET(
         ownerName: ownerProfile.full_name ?? "Propriétaire",
         salleName: (salle as { name?: string }).name ?? "Salle",
         salleCity: (salle as { city?: string }).city ?? "",
+        snapshotLines: snapLines.length ? snapLines : undefined,
       });
       const { error: uploadErr } = await adminSupabase.storage
         .from("contrats")

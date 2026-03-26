@@ -13,11 +13,11 @@ export function SiteFooter() {
         <div className="grid gap-8 md:grid-cols-4 md:items-start">
           <div>
             <Link href="/" className="flex items-center text-xl font-semibold leading-none text-white hover:text-white">
-              <Image src="/logosdcbl.png" alt="" width={60} height={60} className="h-[60px] w-[60px] shrink-0 object-contain -mr-3" />
+              <Image src="/images/logosound.png" alt="" width={60} height={60} className="h-[60px] w-[60px] shrink-0 rounded-full object-cover -mr-3" />
               {siteConfig.name}
             </Link>
             <p className="mt-3 max-w-[240px] text-[12px] leading-[1.6] text-slate-300">
-              La plateforme de référence pour trouver et proposer des salles dédiées aux événements cultuels.
+              Plateforme de mise en relation pour louer du materiel son, DJ et lumiere.
             </p>
           </div>
           <div>
@@ -25,12 +25,12 @@ export function SiteFooter() {
             <ul className="mt-3 space-y-2 text-[13px] text-slate-300">
               <li>
                 <Link href="/#recherche" className="hover:text-white">
-                  Rechercher une salle
+                  Rechercher du materiel
                 </Link>
               </li>
               <li>
                 <AddSalleLink className="hover:text-white">
-                  Ajoutez ma salle
+                  Publier mon materiel
                 </AddSalleLink>
               </li>
               <li>
@@ -50,7 +50,7 @@ export function SiteFooter() {
             <ul className="mt-3 space-y-2 text-[13px] text-slate-300">
               <li>À propos</li>
               <li>
-                <a href="mailto:contact@salledeculte.com" className="hover:text-white">
+                <a href="mailto:contact@getsoundon.com" className="hover:text-white">
                   Contact
                 </a>
               </li>

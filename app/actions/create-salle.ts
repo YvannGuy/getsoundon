@@ -25,9 +25,35 @@ function slugify(text: string): string {
     .replace(/^-|-$/g, "");
 }
 
+const JOURS_DISPONIBILITE_DEFAULT = [
+  "lundi",
+  "mardi",
+  "mercredi",
+  "jeudi",
+  "vendredi",
+  "samedi",
+  "dimanche",
+] as const;
+
+const HORAIRES_DEFAULT_JOUR = { debut: "08:00", fin: "22:00" };
+
 function generateSlug(nom: string): string {
-  const base = slugify(nom) || "salle";
+  const base = slugify(nom) || "materiel";
   return `${base}-${crypto.randomUUID().slice(0, 8)}`;
+}
+
+function ensureDisponibilite(
+  joursOuverture: string[],
+  horairesParJour: Record<string, { debut: string; fin: string }>
+): { jours: string[]; horaires: Record<string, { debut: string; fin: string }> } {
+  if (joursOuverture.length > 0) {
+    return { jours: joursOuverture, horaires: horairesParJour };
+  }
+  const horaires: Record<string, { debut: string; fin: string }> = {};
+  for (const j of JOURS_DISPONIBILITE_DEFAULT) {
+    horaires[j] = horairesParJour[j] ?? HORAIRES_DEFAULT_JOUR;
+  }
+  return { jours: [...JOURS_DISPONIBILITE_DEFAULT], horaires };
 }
 
 /** Pour le debug : code lisible (401, 403, 409, 413, 500, STORAGE, etc.) et détails optionnels. */
@@ -69,7 +95,7 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
   let lat = latStr ? parseFloat(latStr) : null;
   let lng = lngStr ? parseFloat(lngStr) : null;
 
-  if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && adresse) {
+  if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && adresse.trim()) {
     try {
       const res = await fetch(
         `https://api-adresse.data.gouv.fr/search?q=${encodeURIComponent(adresse)}&limit=1`
@@ -100,10 +126,23 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
   const visiteHorairesParDate = JSON.parse(
     String(formData.get("visiteHorairesParDate") ?? "{}")
   ) as Record<string, { debut: string; fin: string }>;
-  const restrictionSonore = String(formData.get("restrictionSonore") ?? "");
+  const restrictionSonore = String(formData.get("restrictionSonore") ?? "").trim() || "none";
   const evenementsAcceptes = JSON.parse(
     String(formData.get("evenementsAcceptes") ?? "[]")
   ) as string[];
+
+  const listingKindRaw = String(formData.get("listingKind") ?? "equipment").trim();
+  const listing_kind =
+    listingKindRaw === "pack" || listingKindRaw === "equipment" ? listingKindRaw : "equipment";
+  const gearCategory = String(formData.get("gearCategory") ?? "").trim();
+  const gearBrand = String(formData.get("gearBrand") ?? "").trim();
+  const gearModel = String(formData.get("gearModel") ?? "").trim();
+  const proposeVisite = formData.get("proposeVisite") === "1";
+
+  const { jours: joursEffectifs, horaires: horairesEffectifs } = ensureDisponibilite(
+    joursOuverture,
+    horairesParJour
+  );
 
   const onboardingData = {
     nom,
@@ -117,10 +156,14 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     inclusions,
     placesParking,
     features,
-    horairesParJour,
-    joursOuverture,
+    horairesParJour: horairesEffectifs,
+    joursOuverture: joursEffectifs,
     restrictionSonore,
     evenementsAcceptes,
+    listingKind: listing_kind as "equipment" | "pack",
+    gearCategory,
+    gearBrand,
+    gearModel,
   };
 
   const hasAtLeastOneTarif =
@@ -144,21 +187,21 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     }
   }
 
-  const REQUIRED_PHOTOS = 5;
-  if (imageUrls.length >= REQUIRED_PHOTOS) {
+  const MIN_PHOTOS = 3;
+  if (imageUrls.length >= MIN_PHOTOS) {
     // utilise les URLs uploadées côté client
   } else if (imageUrls.length > 0) {
     return {
       success: false,
-      error: `Veuillez ajouter ${REQUIRED_PHOTOS} photos de votre salle (reçu : ${imageUrls.length}).`,
+      error: `Veuillez ajouter ${MIN_PHOTOS} photos de votre matériel (reçu : ${imageUrls.length}).`,
       errorCode: "VALIDATION",
     };
   } else {
     const files = formData.getAll("photos") as File[];
-    if (files.length < 3) {
+    if (files.length < MIN_PHOTOS) {
       return {
         success: false,
-        error: "Veuillez ajouter au moins 3 photos de votre salle.",
+        error: `Veuillez ajouter au moins ${MIN_PHOTOS} photos de votre matériel.`,
         errorCode: "VALIDATION",
       };
     }
@@ -217,12 +260,15 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
   const status =
     !validation_manuelle || mode_publication === "auto" ? "approved" : "pending";
 
+  const firstJour = joursEffectifs[0];
+  const firstHoraire = firstJour ? horairesEffectifs[firstJour] : null;
+
   const { error } = await supabase.from("salles").insert({
     owner_id: user.id,
     slug,
-    name: (mapped.name ?? nom) || "Ma salle",
+    name: (mapped.name ?? nom) || "Annonce matériel",
     city: mapped.city ?? ville,
-    address: mapped.address ?? adresse,
+    address: mapped.address ?? (adresse ? `${adresse}, ${ville}`.trim() : ville),
     postal_code: postalCode || null,
     department: department || null,
     contact_phone: null,
@@ -240,22 +286,21 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     features: mapped.features ?? [],
     conditions: mapped.conditions ?? [],
     pricing_inclusions: mapped.pricingInclusions ?? [],
-    heure_debut: (() => {
-      const first = joursOuverture[0];
-      const h = first ? horairesParJour[first] : null;
-      return h?.debut ?? "08:00";
-    })(),
-    heure_fin: (() => {
-      const first = joursOuverture[0];
-      const h = first ? horairesParJour[first] : null;
-      return h?.fin ?? "22:00";
-    })(),
-    horaires_par_jour: Object.keys(horairesParJour).length > 0 ? horairesParJour : {},
-    jours_ouverture: joursOuverture.length > 0 ? joursOuverture : [],
-    jours_visite: joursVisite.length > 0 ? joursVisite : null,
-    visite_dates: visiteDates.length > 0 ? visiteDates : null,
+    listing_kind: listing_kind,
+    gear_category: gearCategory || null,
+    gear_brand: gearBrand || null,
+    gear_model: gearModel || null,
+    heure_debut: firstHoraire?.debut ?? "08:00",
+    heure_fin: firstHoraire?.fin ?? "22:00",
+    horaires_par_jour: Object.keys(horairesEffectifs).length > 0 ? horairesEffectifs : {},
+    jours_ouverture: joursEffectifs.length > 0 ? joursEffectifs : [],
+    jours_visite: proposeVisite && joursVisite.length > 0 ? joursVisite : null,
+    visite_dates:
+      proposeVisite && visiteDates.length > 0 ? visiteDates : null,
     visite_horaires_par_date:
-      visiteDates.length > 0 && Object.keys(visiteHorairesParDate).length > 0
+      proposeVisite &&
+      visiteDates.length > 0 &&
+      Object.keys(visiteHorairesParDate).length > 0
         ? visiteHorairesParDate
         : null,
     evenements_acceptes: evenementsAcceptes.length > 0 ? evenementsAcceptes : [],
@@ -277,7 +322,7 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://salledeculte.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com";
   const validationUrl = `${siteUrl}/admin/annonces-a-valider`;
   const salleName = (mapped.name ?? nom) || "Ma salle";
   const salleCity = mapped.city ?? ville;

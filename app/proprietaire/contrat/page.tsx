@@ -126,7 +126,7 @@ export default async function ProprietaireContratPage({
         <CardContent className="p-5">
           <h3 className="font-semibold text-black">À propos des factures</h3>
           <p className="mt-2 text-sm text-slate-600">
-            Après chaque paiement de réservation, le contrat salledeculte.com et la facture sont générés automatiquement en PDF.
+            Apres chaque paiement de reservation, le contrat GetSoundOn et la facture sont generes automatiquement en PDF.
             Vous pouvez les récupérer ici et directement depuis la carte d&apos;offre dans la messagerie.
           </p>
         </CardContent>

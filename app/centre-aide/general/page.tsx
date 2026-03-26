@@ -6,7 +6,7 @@ import { buildCanonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Questions générales",
-  description: "Questions fréquentes et informations générales sur salledeculte.com.",
+  description: "Questions frequentes et informations generales sur GetSoundOn.",
   alternates: { canonical: buildCanonical("/centre-aide/general") },
 };
 import { SiteHeader } from "@/components/layout/site-header";
@@ -14,7 +14,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 
 const FAQ_GENERAL = [
   {
-    q: "Qu'est-ce que salledeculte.com ?",
+    q: "Qu'est-ce que GetSoundOn ?",
     a: `${siteConfig.name} est la plateforme de référence pour trouver et proposer des salles dédiées aux événements cultuels : cultes, baptêmes, conférences, célébrations, retraites…`,
   },
   {
@@ -43,7 +43,7 @@ const FAQ_GENERAL = [
   },
   {
     q: "Comment contacter le support ?",
-    a: "Écrivez à contact@salledeculte.com. Nous répondons généralement sous 24 à 48 heures ouvrées.",
+    a: "Ecrivez a contact@getsoundon.com. Nous repondons generalement sous 24 a 48 heures ouvrees.",
   },
   {
     q: "Où trouver les questions fréquentes ?",
@@ -55,7 +55,7 @@ const FAQ_GENERAL = [
   },
   {
     q: "Comment s'abonner à la newsletter ?",
-    a: "Pour l'instant, inscrivez-vous sur la plateforme ou contactez-nous à contact@salledeculte.com pour être tenu au courant des actualités.",
+    a: "Pour l'instant, inscrivez-vous sur la plateforme ou contactez-nous a contact@getsoundon.com pour etre tenu au courant des actualites.",
   },
   {
     q: "La plateforme est-elle sécurisée ?",
@@ -63,7 +63,7 @@ const FAQ_GENERAL = [
   },
   {
     q: "Comment signaler un problème ?",
-    a: "Contactez-nous à contact@salledeculte.com en décrivant le problème. Nous traiterons votre signalement dans les meilleurs délais.",
+    a: "Contactez-nous a contact@getsoundon.com en decrivant le probleme. Nous traiterons votre signalement dans les meilleurs delais.",
   },
   {
     q: "Où sont les mentions légales et CGU ?",
@@ -71,7 +71,7 @@ const FAQ_GENERAL = [
   },
   {
     q: "Comment nous rejoindre ?",
-    a: "Pour toute question partenariat, collaboration ou presse : contact@salledeculte.com.",
+    a: "Pour toute question partenariat, collaboration ou presse : contact@getsoundon.com.",
   },
 ];
 

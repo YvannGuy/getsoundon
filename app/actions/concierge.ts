@@ -75,7 +75,7 @@ export async function submitConciergeRequest(
     .filter(Boolean);
   if (adminEmails.length > 0) {
     const contactForAdmin = recipientEmail ?? payload.phone ?? "non renseigné";
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://salledeculte.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com";
     await sendConciergeRequestAdminNotification(
       adminEmails,
       contactForAdmin,

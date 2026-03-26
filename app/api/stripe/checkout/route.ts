@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { pricingPlans, siteConfig } from "@/config/site";
 import { getStripe } from "@/lib/stripe";
+import { getUserOrNull } from "@/lib/supabase/server";
 
 const checkoutSchema = z.object({
   planId: z.string(),
@@ -10,6 +11,11 @@ const checkoutSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const { user } = await getUserOrNull();
+    if (!user) {
+      return NextResponse.json({ error: "Authentification requise." }, { status: 401 });
+    }
+
     const body = await request.json();
     const { planId } = checkoutSchema.parse(body);
 

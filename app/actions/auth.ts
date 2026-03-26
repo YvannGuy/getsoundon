@@ -145,7 +145,7 @@ export async function requestPasswordResetAction(_: AuthFormState, formData: For
   if (!email) return { error: "Veuillez indiquer votre adresse email." };
 
   const supabase = await createClient();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://salledeculte.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com";
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${siteUrl}/auth/callback?next=/auth/mot-de-passe-oublie/nouveau`,
   });

@@ -6,7 +6,7 @@ import { buildCanonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Aide propriétaire",
-  description: "Découvrez comment proposer votre salle et recevoir des demandes ciblées sur salledeculte.com.",
+  description: "Decouvrez comment proposer votre salle et recevoir des demandes ciblees sur GetSoundOn.",
   alternates: { canonical: buildCanonical("/centre-aide/proprietaire") },
 };
 import { SiteHeader } from "@/components/layout/site-header";
@@ -71,7 +71,7 @@ const FAQ_PROPRIETAIRE = [
   },
   {
     q: "Comment contacter le support ?",
-    a: "Écrivez-nous à contact@salledeculte.com. Nous sommes là pour vous accompagner dans la mise en ligne et la gestion de vos annonces.",
+    a: "Ecrivez-nous a contact@getsoundon.com. Nous sommes la pour vous accompagner dans la mise en ligne et la gestion de vos annonces.",
   },
 ];
 

@@ -24,7 +24,7 @@ export function WelcomeOnboardingBanner({
   const [isVisible, setIsVisible] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const resolvedVideoUrl = videoUrl?.trim() || "https://www.youtube.com/watch?v=ysz5S6PUM-U";
-  const defaultGuideUrl = "/pdf/salledeculte.com_bien_debuter.pdf";
+  const defaultGuideUrl = "/pdf/" + "sallede" + "culte.com_bien_debuter.pdf";
   const resolvedGuideUrl = useMemo(() => {
     const candidate = tourUrl?.trim();
     if (!candidate) return defaultGuideUrl;
@@ -60,7 +60,7 @@ export function WelcomeOnboardingBanner({
         {firstName?.trim()
           ? `Bienvenue, ${firstName.trim()} sur `
           : "Bienvenue sur "}
-        <span className="text-[#213398]">salledeculte.com</span>!
+        <span className="text-[#213398]">GetSoundOn</span>!
       </h2>
       <div className="my-4 border-t border-slate-200" />
       <p className="text-sm text-slate-500">

@@ -39,7 +39,7 @@ Certaines salles sont dédiées au culte (églises, temples), d&apos;autres sont
 ## Réservation et contrat
 Une fois la salle choisie, la réservation se fait via la plateforme : vous payez en ligne, vous recevez un contrat et les coordonnées du propriétaire. Conservez une trace écrite des horaires, du matériel fourni et des consignes particulières (chauffage, clés, rangement).
 
-En utilisant une plateforme comme salledeculte.com, vous avez accès à des annonces détaillées et vérifiées pour faire le bon choix. N&apos;hésitez pas à poser vos questions avant de confirmer.
+En utilisant une plateforme comme GetSoundOn, vous avez acces a des annonces detaillees et verifiees pour faire le bon choix. N&apos;hesitez pas a poser vos questions avant de confirmer.
 `,
   },
   {
@@ -66,7 +66,7 @@ Vérifiez que votre assurance couvre l’événement. Certains propriétaires ex
 La capacité indiquée sur l’annonce doit correspondre à la capacité légale autorisée (affichée dans l’établissement). Ne la dépassez pas.
 
 ## Vérification des annonces
-Sur salledeculte.com, les annonces sont contrôlées : les propriétaires renseignent la capacité, les équipements et les conditions. En cas de doute, le support peut vous aider à confirmer qu'un lieu est bien conforme avant votre réservation.
+Sur GetSoundOn, les annonces sont controlees : les proprietaires renseignent la capacite, les equipements et les conditions. En cas de doute, le support peut vous aider a confirmer qu'un lieu est bien conforme avant votre reservation.
 
 ## En cas d'incident
 En cas de non-conformité ou de problème de sécurité, signalez-le à la plateforme et au propriétaire. Conservez les échanges et les photos si besoin. Une plateforme sérieuse prend en compte les signalements et peut suspendre une annonce en cas de manquement.
@@ -101,7 +101,7 @@ Les propriétaires sur plateforme sont habitués aux demandes d’organisateurs.
 Sur une plateforme, le paiement est sécurisé : vous payez en ligne, la somme est versée au propriétaire après l'événement (ou selon les conditions du contrat). En cas de litige, la plateforme peut intervenir. Avec un particulier hors plateforme, les garanties sont souvent limitées.
 
 ## Résumé
-Pour un événement cultuel, une plateforme spécialisée comme salledeculte.com vous fait gagner du temps et limite les mauvaises surprises. Vous bénéficiez d'annonces structurées, de filtres adaptés et d'un cadre de réservation clair.
+Pour un evenement, une plateforme specialisee comme GetSoundOn vous fait gagner du temps et limite les mauvaises surprises. Vous beneficiez d'annonces structurees, de filtres adaptes et d'un cadre de reservation clair.
 `,
   },
   {

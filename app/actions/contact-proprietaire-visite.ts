@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getOrCreateConversationForVisite } from "./messagerie";
 import { createClient } from "@/lib/supabase/server";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://salledeculte.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com";
 
 /** Crée ou ouvre la conversation pour une demande de visite, puis redirige vers la messagerie */
 export async function contactProprietaireVisiteAction(demandeVisiteId: string) {

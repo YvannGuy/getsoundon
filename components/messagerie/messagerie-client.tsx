@@ -215,6 +215,7 @@ type OfferItem = {
   created_at: string;
   contract_path?: string | null;
   cancellation_policy?: "strict" | "moderate" | "flexible" | null;
+  listing_snapshot?: unknown;
 };
 
 export function MessagerieClient({
@@ -354,7 +355,7 @@ export function MessagerieClient({
 
     const { data: offersData } = await supabase
       .from("offers")
-      .select("id, owner_id, salle_id, amount_cents, payment_mode, upfront_amount_cents, balance_amount_cents, balance_due_at, payment_plan_status, deposit_amount_cents, service_fee_cents, deposit_refunded_cents, deposit_status, deposit_hold_status, expires_at, status, message, event_type, date_debut, date_fin, created_at, contract_path, cancellation_policy")
+      .select("id, owner_id, salle_id, amount_cents, payment_mode, upfront_amount_cents, balance_amount_cents, balance_due_at, payment_plan_status, deposit_amount_cents, service_fee_cents, deposit_refunded_cents, deposit_status, deposit_hold_status, expires_at, status, message, event_type, date_debut, date_fin, created_at, contract_path, cancellation_policy, listing_snapshot")
       .eq("conversation_id", convId)
       .order("created_at", { ascending: true });
     setOffers((offersData ?? []) as OfferItem[]);

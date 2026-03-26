@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { AdminEvidenceViewer } from "@/components/etats-des-lieux/admin-evidence-viewer";
 import { Card, CardContent } from "@/components/ui/card";
+import { fulfillmentModeLabel, parseOfferListingSnapshot } from "@/lib/offer-listing-snapshot";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type OfferRow = {
@@ -11,6 +12,7 @@ type OfferRow = {
   seeker_id: string;
   amount_cents: number;
   created_at: string;
+  listing_snapshot?: unknown;
 };
 
 type CaseRow = {
@@ -73,7 +75,7 @@ export default async function AdminLitigesPage({
       offerIds.length > 0
         ? admin
             .from("offers")
-            .select("id, salle_id, owner_id, seeker_id, amount_cents, created_at")
+            .select("id, salle_id, owner_id, seeker_id, amount_cents, created_at, listing_snapshot")
             .in("id", offerIds)
         : Promise.resolve({ data: [] as OfferRow[] }),
       disputeRows.length > 0
@@ -252,6 +254,67 @@ export default async function AdminLitigesPage({
                 </summary>
 
                 <div className="mt-4 space-y-4">
+                  {(() => {
+                    const snap = parseOfferListingSnapshot(offer.listing_snapshot);
+                    if (!snap) return null;
+                    const gear = [snap.listing.gear_category, snap.listing.gear_brand, snap.listing.gear_model]
+                      .filter(Boolean)
+                      .join(" · ");
+                    return (
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 md:p-4">
+                        <h3 className="text-sm font-semibold text-slate-900 md:text-base">
+                          Détail figé au moment de l&apos;offre
+                        </h3>
+                        <dl className="mt-2 grid gap-1 text-xs text-slate-700 md:grid-cols-2 md:text-sm">
+                          <div>
+                            <dt className="font-medium text-slate-500">Annonce</dt>
+                            <dd>
+                              {snap.listing.title} — {snap.listing.city}
+                            </dd>
+                          </div>
+                          {gear ? (
+                            <div>
+                              <dt className="font-medium text-slate-500">Matériel</dt>
+                              <dd>{gear}</dd>
+                            </div>
+                          ) : null}
+                          <div>
+                            <dt className="font-medium text-slate-500">Période</dt>
+                            <dd>
+                              {new Date(snap.rental_period.date_debut).toLocaleDateString("fr-FR")} –{" "}
+                              {new Date(snap.rental_period.date_fin).toLocaleDateString("fr-FR")} ({snap.rental_period.event_type})
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="font-medium text-slate-500">Retrait / livraison</dt>
+                            <dd>
+                              {fulfillmentModeLabel(snap.logistics.mode)}
+                              {snap.logistics.notes.trim() ? ` — ${snap.logistics.notes}` : ""}
+                            </dd>
+                          </div>
+                          <div className="md:col-span-2">
+                            <dt className="font-medium text-slate-500">Montants figés</dt>
+                            <dd>
+                              {(snap.money.amount_cents / 100).toFixed(2)} € TTC · caution{" "}
+                              {(snap.money.deposit_cents / 100).toFixed(2)} € · {snap.money.cancellation_policy}
+                            </dd>
+                          </div>
+                          {snap.listing.feature_labels.length > 0 ? (
+                            <div className="md:col-span-2">
+                              <dt className="font-medium text-slate-500">Options / accessoires (libellés)</dt>
+                              <dd>{snap.listing.feature_labels.join(", ")}</dd>
+                            </div>
+                          ) : null}
+                          {snap.logistics.accessories_notes.trim() ? (
+                            <div className="md:col-span-2">
+                              <dt className="font-medium text-slate-500">Notes accessoires</dt>
+                              <dd className="whitespace-pre-wrap">{snap.logistics.accessories_notes}</dd>
+                            </div>
+                          ) : null}
+                        </dl>
+                      </div>
+                    );
+                  })()}
                   <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 md:p-4">
                     <h3 className="text-sm font-semibold text-amber-900 md:text-base">Dossiers litige</h3>
                     <div className="mt-3 grid gap-3 md:grid-cols-2">

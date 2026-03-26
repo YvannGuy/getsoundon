@@ -6,7 +6,7 @@ import { X } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { hasRecordedChoice } from "@/lib/consent";
 
-const STORAGE_KEY = "salledeculte-install-dismissed";
+const STORAGE_KEY = "getsoundon-install-dismissed";
 const DELAY_MS = 7000;
 
 function isMobile() {

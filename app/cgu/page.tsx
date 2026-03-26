@@ -19,15 +19,15 @@ export default function CGUPage() {
       <p className="mt-3 text-sm text-slate-500">Dernière mise à jour : 03 mars 2026 à 22:37</p>
       <p className="text-sm text-slate-500">
         Support :{" "}
-        <a href="mailto:contact@salledeculte.com" className="text-[#213398] hover:underline">
-          contact@salledeculte.com
+        <a href="mailto:contact@getsoundon.com" className="text-[#213398] hover:underline">
+          contact@getsoundon.com
         </a>
       </p>
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-black">1. Objet</h2>
         <p className="mt-3 text-slate-600">
-          Les présentes CGU définissent les règles d&apos;utilisation de salledeculte.com (la « Plateforme »), qui met en relation :
+          Les presentes CGU definissent les regles d&apos;utilisation de GetSoundOn (la « Plateforme »), qui met en relation :
         </p>
         <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
           <li>des Propriétaires qui proposent des lieux ;</li>
@@ -138,8 +138,8 @@ export default function CGUPage() {
         <h2 className="text-xl font-semibold text-black">11. Support</h2>
         <p className="mt-3 text-slate-600">
           Contact :{" "}
-          <a href="mailto:contact@salledeculte.com" className="text-[#213398] hover:underline">
-            contact@salledeculte.com
+          <a href="mailto:contact@getsoundon.com" className="text-[#213398] hover:underline">
+            contact@getsoundon.com
           </a>
         </p>
         <p className="mt-3 text-slate-600">Merci de préciser : lien de l&apos;annonce / référence réservation / captures utiles.</p>
@@ -153,7 +153,7 @@ export default function CGUPage() {
       </section>
 
       <section className="mt-14 border-t border-slate-200 pt-10">
-        <h2 className="text-2xl font-semibold text-black">2) Politique d&apos;annulation — salledeculte.com (V1)</h2>
+        <h2 className="text-2xl font-semibold text-black">2) Politique d&apos;annulation - GetSoundOn (V1)</h2>
         <p className="mt-3 text-slate-600">
           Objectif : une politique claire, standardisée, choisie par le propriétaire et acceptée par l&apos;organisateur avant paiement.
         </p>
@@ -195,7 +195,7 @@ export default function CGUPage() {
       </section>
 
       <section className="mt-14 border-t border-slate-200 pt-10">
-        <h2 className="text-2xl font-semibold text-black">3) Politique Litiges & Caution — salledeculte.com (V1)</h2>
+        <h2 className="text-2xl font-semibold text-black">3) Politique Litiges & Caution - GetSoundOn (V1)</h2>
         <h3 className="mt-5 text-lg font-semibold text-black">Délais à retenir (ponctuel)</h3>
         <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
           <li>J-7 : prélèvement du solde + caution (si acompte)</li>

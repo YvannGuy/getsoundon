@@ -5,7 +5,7 @@
 export const legalConfig = {
   /** Éditeur du site */
   editeur: {
-    nom: "Salledeculte",
+    nom: "GetSoundOn",
     siret: "799 596 176 00021",
     rcs: "RCS Paris 799 596 176",
     capitalSocial: "1 000 €",
@@ -16,7 +16,7 @@ export const legalConfig = {
       pays: "France",
     },
     tvaIntracommunautaire: "", // Non assujetti TVA
-    email: "contact@salledeculte.com",
+    email: "contact@getsoundon.com",
   },
 
   /** Directeur de la publication (obligatoire LCEN) */
@@ -30,7 +30,7 @@ export const legalConfig = {
   },
 
   /** Données personnelles - DPO si désigné */
-  dpoEmail: "contact@salledeculte.com",
+  dpoEmail: "contact@getsoundon.com",
 
   /** Médiation consommation (obligatoire avant mise en ligne B2C) */
   mediation: {

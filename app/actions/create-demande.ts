@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://salledeculte.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com";
 const JOUR_TO_DOW: Record<string, number> = {
   dimanche: 0,
   lundi: 1,
@@ -44,7 +44,7 @@ export async function createDemande(formData: FormData): Promise<CreateDemandeRe
   const message = String(formData.get("message") ?? "").trim();
 
   if (!salleId) {
-    return { success: false, error: "Salle manquante." };
+    return { success: false, error: "Annonce (matériel / pack) manquante." };
   }
 
   const dateDebut = dateDebutStr ? new Date(dateDebutStr) : null;
@@ -150,7 +150,7 @@ export async function createDemande(formData: FormData): Promise<CreateDemandeRe
         .single();
       const ownerEmail = (ownerProfile as { email?: string } | null)?.email;
       const seekerName = (seekerProfile as { full_name?: string } | null)?.full_name ?? "Un locataire";
-      const salleName = (salle as { name?: string }).name ?? "votre salle";
+      const salleName = (salle as { name?: string }).name ?? "votre annonce";
       if (ownerEmail) {
         await sendNewDemandeNotification(
           ownerEmail,

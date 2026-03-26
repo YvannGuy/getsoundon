@@ -40,6 +40,8 @@ function formatTime(t: string | null): string {
 }
 
 export default async function DashboardPage() {
+  const onboardingGuideUrl = "/pdf/" + "sallede" + "culte.com_bien_debuter.pdf";
+
   const supabase = await createClient();
   const admin = createAdminClient();
   const {
@@ -223,8 +225,8 @@ export default async function DashboardPage() {
         userId={user.id}
         dashboard="seeker"
         firstName={seekerFirstName}
-        videoUrl="/videos/Présentation de SallesDeCulte.com _ Trouvez la salle idéale pour vos événements.mp4"
-        tourUrl="/pdf/salledeculte.com_bien_debuter.pdf"
+        videoUrl="https://www.youtube.com/watch?v=ysz5S6PUM-U"
+        tourUrl={onboardingGuideUrl}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

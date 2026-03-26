@@ -12,6 +12,8 @@ export type InvoiceData = {
   ownerName: string;
   salleName: string;
   salleCity: string;
+  /** Détail figé (offre matériel / pack), affiché sous la prestation. */
+  snapshotLines?: string[];
 };
 
 const PRODUCT_LABEL: Record<string, string> = {
@@ -37,13 +39,13 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Uint8Array>
 
   let y = 792;
 
-  // En-tête : logo + salledeculte.com à gauche, FACTURE à droite
+  // En-tete : logo + GetSoundOn a gauche, FACTURE a droite
   const logoH = 38;
   const logoGap = 14;
   let logoRight = margin;
 
   try {
-    const logoPath = join(process.cwd(), "public", "logo-salleculte.png");
+    const logoPath = join(process.cwd(), "public", "images", "logosound.png");
     const logoBytes = await readFile(logoPath);
     const logo = await pdfDoc.embedPng(logoBytes);
     const logoW = logo.scale(logoH / logo.height).width;
@@ -58,7 +60,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Uint8Array>
     // Logo absent : on garde de la place pour le texte
   }
 
-  page.drawText("salledeculte.com", {
+  page.drawText("GetSoundOn", {
     x: logoRight,
     y: y - 26,
     size: 18,
@@ -91,7 +93,11 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Uint8Array>
   page.drawText(`N° paiement : ${data.paymentId}`, { x: margin, y, size: 10, font, color: SLATE_600 });
   y -= 14;
   page.drawText(`Date : ${data.paidAt}`, { x: margin, y, size: 10, font, color: SLATE_600 });
-  page.drawText(`Type : ${PRODUCT_LABEL[data.productType] ?? data.productType}`, { x: margin + 140, y, size: 10, font, color: SLATE_600 });
+  const typeLabel =
+    data.snapshotLines?.length && data.productType === "reservation"
+      ? "Location matériel / pack"
+      : PRODUCT_LABEL[data.productType] ?? data.productType;
+  page.drawText(`Type : ${typeLabel}`, { x: margin + 140, y, size: 10, font, color: SLATE_600 });
   y -= 28;
 
   // Deux colonnes alignées : Client | Prestation (même hauteur de départ)
@@ -110,6 +116,17 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Uint8Array>
   page.drawText(data.seekerEmail, { x: margin, y, size: 10, font, color: SLATE_600 });
   page.drawText(`Fournisseur : ${data.ownerName}`, { x: col2X, y, size: 10, font, color: SLATE_600 });
   y -= 36;
+
+  if (data.snapshotLines?.length) {
+    page.drawText("Détail figé (offre)", { x: col2X, y, size: 9, font: fontBold, color: SLATE_600 });
+    y -= 12;
+    for (const line of data.snapshotLines) {
+      if (y < 200) break;
+      page.drawText(line, { x: col2X, y, size: 8, font, color: SLATE_600 });
+      y -= 10;
+    }
+    y -= 12;
+  }
 
   // Bloc Montant TTC (fond gris clair)
   const amountBoxY = y - 20;
@@ -133,7 +150,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Uint8Array>
   y -= 72;
 
   // Mentions légales
-  page.drawText("Paiement sécurisé via Stripe — Plateforme SalleCulte", {
+  page.drawText("Paiement securise via Stripe - Plateforme GetSoundOn", {
     x: margin,
     y,
     size: 9,
@@ -151,7 +168,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Uint8Array>
   y -= 28;
 
   // Footer
-  page.drawText("salledeculte.com", {
+  page.drawText("getsoundon.com", {
     x: margin,
     y: 50,
     size: 9,

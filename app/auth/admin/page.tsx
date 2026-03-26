@@ -97,7 +97,7 @@ function AdminAuthPageContent() {
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700">Email</label>
               <Input
-                placeholder="admin@salledeculte.com"
+                placeholder="admin@getsoundon.com"
                 {...form.register("email")}
                 className="h-11 border-slate-200"
               />

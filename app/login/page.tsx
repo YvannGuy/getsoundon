@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth/login-form";
 
 export const metadata: Metadata = {
-  title: "Connexion | salledeculte.com",
+  title: "Connexion | GetSoundOn",
   robots: { index: false, follow: false },
 };
 

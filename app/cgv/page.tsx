@@ -14,19 +14,19 @@ export default function CGVPage() {
   return (
     <LegalPageLayout title="Conditions générales de vente (CGV)">
       <p className="lead text-[16px] text-slate-600">
-        <strong className="text-black">CONDITIONS GÉNÉRALES DE VENTE (CGV) — salledeculte.com</strong>
+        <strong className="text-black">CONDITIONS GENERALES DE VENTE (CGV) - GetSoundOn</strong>
       </p>
       <p className="mt-3 text-sm text-slate-500">Dernière mise à jour : 03 mars 2026 à 22:37</p>
       <p className="text-sm text-slate-500">
         Contact :{" "}
-        <a href="mailto:contact@salledeculte.com" className="text-[#213398] hover:underline">
-          contact@salledeculte.com
+        <a href="mailto:contact@getsoundon.com" className="text-[#213398] hover:underline">
+          contact@getsoundon.com
         </a>
       </p>
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-black">1) Objet</h2>
-        <p className="mt-3 text-slate-600">Les présentes CGV encadrent les conditions de vente des services payants proposés par salledeculte.com (ci-après « la Plateforme »), notamment :</p>
+        <p className="mt-3 text-slate-600">Les presentes CGV encadrent les conditions de vente des services payants proposes par GetSoundOn (ci-apres « la Plateforme »), notamment :</p>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-slate-600">
           <li>l&apos;accès aux fonctionnalités de mise en relation et d&apos;outils de gestion ;</li>
           <li>le paiement en ligne optionnel des locations (acompte / solde / caution) ;</li>
@@ -60,7 +60,7 @@ export default function CGVPage() {
           Le Propriétaire peut envoyer une Offre depuis la messagerie. L&apos;Organisateur peut accepter l&apos;Offre et régler via la Plateforme (si le paiement en ligne est activé et/ou proposé).
         </p>
         <h3 className="mt-4 text-lg font-semibold text-black">3.3 Contrat standard</h3>
-        <p className="mt-3 text-slate-600">Avant tout paiement, un contrat standard salledeculte.com est affiché et doit être accepté.</p>
+        <p className="mt-3 text-slate-600">Avant tout paiement, un contrat standard GetSoundOn est affiche et doit etre accepte.</p>
       </section>
 
       <section className="mt-10">
@@ -210,8 +210,8 @@ export default function CGVPage() {
         <h2 className="text-xl font-semibold text-black">13) Support</h2>
         <p className="mt-3 text-slate-600">
           Support :{" "}
-          <a href="mailto:contact@salledeculte.com" className="text-[#213398] hover:underline">
-            contact@salledeculte.com
+          <a href="mailto:contact@getsoundon.com" className="text-[#213398] hover:underline">
+            contact@getsoundon.com
           </a>
         </p>
         <p className="mt-3 text-slate-600">Le support peut demander des éléments (captures, preuve, références d&apos;offre) pour traiter une demande.</p>

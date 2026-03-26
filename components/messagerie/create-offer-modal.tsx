@@ -28,11 +28,11 @@ const defaultExpiresAt = () => {
 const today = () => new Date().toISOString().slice(0, 10);
 const CANCELLATION_POLICY_HELP = {
   strict:
-    "Stricte : > J-90 = 100%, J-90 à J-30 = 50%, < J-30 = 0% de remboursement location.",
+    "Stricte : > J-90 = 100%, J-90 à J-30 = 50%, < J-30 = 0% de remboursement (location matériel / pack).",
   moderate:
-    "Modérée : > J-30 = 100%, J-30 à J-15 = 50%, < J-15 = 0% de remboursement location.",
+    "Modérée : > J-30 = 100%, J-30 à J-15 = 50%, < J-15 = 0% de remboursement (location matériel / pack).",
   flexible:
-    "Flexible : > J-7 = 100%, J-7 à J-2 = 50%, < J-2 = 0% de remboursement location.",
+    "Flexible : > J-7 = 100%, J-7 à J-2 = 50%, < J-2 = 0% de remboursement (location matériel / pack).",
 } as const;
 
 function PolicyInfo({ text }: { text: string }) {
@@ -74,6 +74,11 @@ export function CreateOfferModal({
   const [dateFin, setDateFin] = useState(today());
   const [expiresAt, setExpiresAt] = useState(defaultExpiresAt());
   const [message, setMessage] = useState("");
+  const [accessoriesNotes, setAccessoriesNotes] = useState("");
+  const [fulfillmentMode, setFulfillmentMode] = useState<
+    "retrait" | "livraison" | "les_deux" | "a_convenir"
+  >("retrait");
+  const [fulfillmentNotes, setFulfillmentNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -129,6 +134,9 @@ export function CreateOfferModal({
     formData.set("dateFin", dateFin);
     formData.set("expiresAt", expiresAt);
     if (message.trim()) formData.set("message", message.trim());
+    formData.set("accessoriesNotes", accessoriesNotes.trim());
+    formData.set("fulfillmentMode", fulfillmentMode);
+    formData.set("fulfillmentNotes", fulfillmentNotes.trim());
 
     const res = await createOfferAction(formData);
     setSaving(false);
@@ -146,6 +154,9 @@ export function CreateOfferModal({
       setDateFin(today());
       setExpiresAt(defaultExpiresAt());
       setMessage("");
+      setAccessoriesNotes("");
+      setFulfillmentMode("retrait");
+      setFulfillmentNotes("");
     } else {
       setError(res.error ?? "Erreur lors de l'envoi.");
     }
@@ -155,11 +166,11 @@ export function CreateOfferModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showClose={true} className="max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Créer une offre</DialogTitle>
+          <DialogTitle>Créer une offre (matériel / pack)</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-y-auto space-y-4 py-2">
           <div>
-            <label className="text-sm font-medium text-black">Type d&apos;évènement</label>
+            <label className="text-sm font-medium text-black">Type de location</label>
             <div className="mt-1.5 flex gap-4">
               <label className="flex cursor-pointer items-center gap-2">
                 <input
@@ -203,7 +214,81 @@ export function CreateOfferModal({
                 className="flex-1 min-w-[140px]"
               />
             </div>
-            <p className="mt-1 text-xs text-slate-500">Période de réservation</p>
+            <p className="mt-1 text-xs text-slate-500">Période couverte par l&apos;offre (retrait, utilisation, retour)</p>
+          </div>
+          <div>
+            <label htmlFor="offer-accessories" className="text-sm font-medium text-black">
+              Accessoires & périmètre inclus (figé dans l&apos;offre)
+            </label>
+            <textarea
+              id="offer-accessories"
+              value={accessoriesNotes}
+              onChange={(e) => setAccessoriesNotes(e.target.value)}
+              placeholder="Ex. : câbles, pieds, housse, micros filaires, notice de réglage…"
+              maxLength={1200}
+              rows={3}
+              className="mt-1.5 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#213398]"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Ce texte est enregistré tel quel dans le snapshot de l&apos;offre.
+            </p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-black">Retrait / livraison</label>
+            <div className="mt-1.5 flex flex-col gap-2">
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="fulfillmentMode"
+                  value="retrait"
+                  checked={fulfillmentMode === "retrait"}
+                  onChange={() => setFulfillmentMode("retrait")}
+                  className="h-4 w-4"
+                />
+                <span className="text-sm">Retrait sur place</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="fulfillmentMode"
+                  value="livraison"
+                  checked={fulfillmentMode === "livraison"}
+                  onChange={() => setFulfillmentMode("livraison")}
+                  className="h-4 w-4"
+                />
+                <span className="text-sm">Livraison</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="fulfillmentMode"
+                  value="les_deux"
+                  checked={fulfillmentMode === "les_deux"}
+                  onChange={() => setFulfillmentMode("les_deux")}
+                  className="h-4 w-4"
+                />
+                <span className="text-sm">L&apos;un ou l&apos;autre (à préciser)</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="fulfillmentMode"
+                  value="a_convenir"
+                  checked={fulfillmentMode === "a_convenir"}
+                  onChange={() => setFulfillmentMode("a_convenir")}
+                  className="h-4 w-4"
+                />
+                <span className="text-sm">À convenir par message</span>
+              </label>
+            </div>
+            <textarea
+              value={fulfillmentNotes}
+              onChange={(e) => setFulfillmentNotes(e.target.value)}
+              placeholder="Adresse de retrait, zone de livraison, créneaux, frais éventuels…"
+              maxLength={800}
+              rows={2}
+              className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#213398]"
+            />
           </div>
           <div>
             <label htmlFor="offer-amount" className="text-sm font-medium text-black">Montant (€)</label>
@@ -216,7 +301,7 @@ export function CreateOfferModal({
               onChange={(e) => setAmount(e.target.value)}
               className="mt-1.5"
             />
-            <p className="mt-1 text-xs text-slate-500">Prix proposé pour cette réservation</p>
+            <p className="mt-1 text-xs text-slate-500">Prix total de la location pour la période indiquée</p>
           </div>
           {eventType !== "mensuel" && (
             <div>

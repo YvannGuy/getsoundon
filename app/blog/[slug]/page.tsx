@@ -94,7 +94,7 @@ export default async function BlogPostPage({ params }: Props) {
         publisher: {
           "@type": "Organization",
           name: siteConfig.name,
-          logo: { "@type": "ImageObject", url: `${siteConfig.url}/logosdcbl.png` } satisfies ImageObject,
+          logo: { "@type": "ImageObject", url: `${siteConfig.url}/images/logosound.png` } satisfies ImageObject,
         } satisfies Organization,
       } satisfies BlogPosting,
     ],

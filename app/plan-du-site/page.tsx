@@ -2,8 +2,8 @@ import { AddSalleLink } from "@/components/links/add-salle-link";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Plan du site | salles-du-culte.com",
-  description: "Plan du site de salles-du-culte.com : aperçu de toutes les sections principales du site.",
+  title: "Plan du site | GetSoundOn",
+  description: "Plan du site de GetSoundOn : apercu de toutes les sections principales du site.",
 };
 
 export default function PlanDuSitePage() {
@@ -169,7 +169,7 @@ export default function PlanDuSitePage() {
         <div>
           <h2 className="text-lg font-semibold text-slate-900">Admin (réservé à l&apos;équipe)</h2>
           <p className="mt-2 text-xs text-slate-500">
-            Ces pages sont réservées à l&apos;équipe salles-du-culte.com et ne sont pas destinées au grand public.
+            Ces pages sont reservees a l&apos;equipe GetSoundOn et ne sont pas destinees au grand public.
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-6 text-sm text-slate-700">
             <li>

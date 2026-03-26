@@ -14,7 +14,7 @@ import {
 } from "@/lib/email";
 import { sendUserNotification } from "@/lib/user-notifications";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://salledeculte.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com";
 
 function formatTime(t: string | null): string {
   if (!t) return "";

@@ -13,9 +13,40 @@ module.exports = {
         foreground: "var(--foreground)",
         heading: "#000000",
         primary: {
-          DEFAULT: "#213398",
-          hover: "#1a2980",
+          DEFAULT: "#9a3412",
+          hover: "#7c2d12",
         },
+        gs: {
+          /** Landing — spec charte (typo + couleurs) */
+          orange: "#E86F1C",
+          beige: "#F8F4F1",
+          dark: "#222222",
+          muted: "#B0B0B0",
+          line: "#E0E0E0",
+        },
+        /** Curated Resonance — tokens CSS dans globals.css (:root --ds-*) */
+        ds: {
+          background: "var(--ds-background)",
+          "surface-low": "var(--ds-surface-container-low)",
+          "surface-lowest": "var(--ds-surface-container-lowest)",
+          "surface-highest": "var(--ds-surface-container-highest)",
+          inverse: "var(--ds-inverse-surface)",
+          primary: "var(--ds-primary)",
+          "primary-container": "var(--ds-primary-container)",
+          "accent-hover": "var(--ds-accent-orange-hover)",
+          "on-background": "var(--ds-on-background)",
+          "on-surface": "var(--ds-on-surface)",
+          "on-surface-variant": "var(--ds-on-surface-variant)",
+          secondary: "var(--ds-secondary)",
+          outline: "var(--ds-outline-variant)",
+        },
+      },
+      borderRadius: {
+        "ds-sm": "0.25rem",
+        "ds-md": "0.375rem",
+      },
+      maxWidth: {
+        landing: "1200px",
       },
       keyframes: {
         "accordion-down": {

@@ -1,4 +1,4 @@
-## Plan du site – salles-du-culte.com
+## Plan du site - GetSoundOn
 
 Ce document décrit l’arborescence principale du site, pour l’équipe produit / tech / contenu.
 

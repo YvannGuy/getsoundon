@@ -3,6 +3,7 @@ import { z } from "zod";
 import type Stripe from "stripe";
 
 import { siteConfig } from "@/config/site";
+import { parseOfferListingSnapshot } from "@/lib/offer-listing-snapshot";
 import { computePaymentProcessingFeeCents } from "@/lib/payment-processing-fee";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -62,7 +63,9 @@ export async function POST(request: Request) {
 
     const { data: offer, error: offerError } = await adminSupabase
       .from("offers")
-      .select("id, conversation_id, demande_id, owner_id, seeker_id, salle_id, amount_cents, payment_mode, upfront_amount_cents, balance_amount_cents, balance_due_at, deposit_amount_cents, service_fee_cents, expires_at, status, event_type, cancellation_policy")
+      .select(
+        "id, conversation_id, demande_id, owner_id, seeker_id, salle_id, amount_cents, payment_mode, upfront_amount_cents, balance_amount_cents, balance_due_at, deposit_amount_cents, service_fee_cents, expires_at, status, event_type, cancellation_policy, listing_snapshot"
+      )
       .eq("id", offerId)
       .single();
 
@@ -87,6 +90,7 @@ export async function POST(request: Request) {
       salle_id: string;
       event_type: string | null;
       cancellation_policy?: "strict" | "moderate" | "flexible" | null;
+      listing_snapshot?: unknown;
     };
 
     if (offerRow.seeker_id !== user.id) {
@@ -106,12 +110,16 @@ export async function POST(request: Request) {
         : offerRow.cancellation_policy === "flexible"
           ? "flexible"
           : "stricte";
+    const snap = parseOfferListingSnapshot(offerRow.listing_snapshot);
     const contractSnapshot = [
       `accept_contract=${acceptedContract ? "yes" : "no"}`,
       `accept_cgv=${acceptedCgv ? "yes" : "no"}`,
       `policy=${policyLabel}`,
       "milestones=J-7_solde,48h_incident,J+3_versement,J+7_liberation_caution",
-    ].join(";");
+      snap ? "listing_snapshot_v1=present" : "",
+    ]
+      .filter(Boolean)
+      .join(";");
     await adminSupabase
       .from("offers")
       .update({
@@ -167,6 +175,9 @@ export async function POST(request: Request) {
       .single();
 
     const salleName = (salle as { name?: string } | null)?.name ?? "Réservation";
+    const checkoutProductLabel = snap?.listing?.title?.trim()
+      ? `Location matériel / pack — ${snap.listing.title.trim()}`
+      : `Location — ${salleName}`;
 
     const { data: seekerProfile } = await adminSupabase
       .from("profiles")

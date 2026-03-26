@@ -18,6 +18,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import { computePaymentProcessingFeeCents } from "@/lib/payment-processing-fee";
+import { fulfillmentModeLabel, parseOfferListingSnapshot } from "@/lib/offer-listing-snapshot";
 import type { OfferStatus } from "@/lib/types/offer";
 
 export type OfferAcceptancePayload = {
@@ -57,6 +58,7 @@ type Offer = {
   date_fin?: string | null;
   contract_path?: string | null;
   cancellation_policy?: "strict" | "moderate" | "flexible" | null;
+  listing_snapshot?: unknown;
 };
 
 const EVENT_TYPE_LABEL: Record<string, string> = {
@@ -69,9 +71,9 @@ const CANCELLATION_POLICY_LABEL: Record<"strict" | "moderate" | "flexible", stri
   flexible: "Flexible",
 };
 const CANCELLATION_POLICY_HELP: Record<"strict" | "moderate" | "flexible", string> = {
-  strict: "Stricte : > J-90 = 100%, J-90 à J-30 = 50%, < J-30 = 0% de remboursement location.",
-  moderate: "Modérée : > J-30 = 100%, J-30 à J-15 = 50%, < J-15 = 0% de remboursement location.",
-  flexible: "Flexible : > J-7 = 100%, J-7 à J-2 = 50%, < J-2 = 0% de remboursement location.",
+  strict: "Stricte : > J-90 = 100%, J-90 à J-30 = 50%, < J-30 = 0% de remboursement (location matériel / pack).",
+  moderate: "Modérée : > J-30 = 100%, J-30 à J-15 = 50%, < J-15 = 0% de remboursement (location matériel / pack).",
+  flexible: "Flexible : > J-7 = 100%, J-7 à J-2 = 50%, < J-2 = 0% de remboursement (location matériel / pack).",
 };
 
 const STATUS_LABEL: Record<OfferStatus, string> = {
@@ -96,6 +98,7 @@ type OfferCardProps = {
   currentUserEmail?: string | null;
   contactName?: string | null;
   contactEmail?: string | null;
+  /** Titre annonce (thread) — surchargé par le snapshot s’il existe */
   venueName?: string | null;
   venueCity?: string | null;
   rulesSummary?: string | null;
@@ -209,6 +212,17 @@ export function OfferCard({
     | "moderate"
     | "flexible";
 
+  const snap = parseOfferListingSnapshot(offer.listing_snapshot);
+  const listingTitle = snap?.listing.title ?? venueName;
+  const listingCity = snap?.listing.city ?? venueCity;
+  const gearDetailParts = snap
+    ? [
+        snap.listing.gear_category && `Cat. ${snap.listing.gear_category}`,
+        snap.listing.gear_brand && `Marque ${snap.listing.gear_brand}`,
+        snap.listing.gear_model && `Réf. ${snap.listing.gear_model}`,
+      ].filter(Boolean)
+    : [];
+
   return (
     <>
       <div
@@ -218,9 +232,43 @@ export function OfferCard({
       >
         <div className="flex items-center gap-2">
           <Banknote className="h-5 w-5 text-[#213398]" />
-          <span className="font-semibold text-black">Offre de réservation</span>
+          <span className="font-semibold text-black">Offre de location (matériel / pack)</span>
         </div>
         <div className="space-y-1 text-sm">
+          {snap && (
+            <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-2 text-xs text-slate-700">
+              <p className="font-semibold text-slate-900">Détail figé au moment de l&apos;offre</p>
+              <p className="mt-1">
+                <span className="font-medium">Annonce :</span> {listingTitle ?? "—"}
+                {listingCity ? ` — ${listingCity}` : ""}
+              </p>
+              {gearDetailParts.length > 0 && <p className="mt-0.5">{gearDetailParts.join(" · ")}</p>}
+              {snap.listing.feature_labels.length > 0 && (
+                <p className="mt-0.5">
+                  <span className="font-medium">Équipements :</span>{" "}
+                  {snap.listing.feature_labels.slice(0, 8).join(", ")}
+                  {snap.listing.feature_labels.length > 8 ? "…" : ""}
+                </p>
+              )}
+              {snap.logistics.accessories_notes ? (
+                <p className="mt-0.5">
+                  <span className="font-medium">Accessoires / périmètre :</span>{" "}
+                  {snap.logistics.accessories_notes}
+                </p>
+              ) : null}
+              <p className="mt-0.5">
+                <span className="font-medium">Retrait / livraison :</span>{" "}
+                {fulfillmentModeLabel(snap.logistics.mode)}
+                {snap.logistics.notes ? ` — ${snap.logistics.notes}` : ""}
+              </p>
+              <p className="mt-0.5 tabular-nums">
+                <span className="font-medium">Montants snapshot :</span>{" "}
+                {(snap.money.amount_cents / 100).toFixed(2)} € · caution{" "}
+                {(snap.money.deposit_cents / 100).toFixed(2)} € · frais plateforme{" "}
+                {(snap.money.service_fee_cents / 100).toFixed(2)} €
+              </p>
+            </div>
+          )}
           {offer.event_type && (
             <p className="text-slate-600">
               Type : {EVENT_TYPE_LABEL[offer.event_type] ?? offer.event_type}
@@ -357,7 +405,7 @@ export function OfferCard({
           )}
         </div>
         {isOwner && offer.status === "pending" && (
-          <p className="text-xs text-slate-500">En attente de réponse du locataire</p>
+          <p className="text-xs text-slate-500">En attente de réponse de l&apos;organisateur</p>
         )}
       </div>
 
@@ -368,8 +416,9 @@ export function OfferCard({
         eventType={offer.event_type}
         startAt={offer.date_debut}
         endAt={offer.date_fin}
-        venueName={venueName}
-        venueCity={venueCity}
+        listingSnapshot={offer.listing_snapshot}
+        venueName={listingTitle ?? venueName}
+        venueCity={listingCity ?? venueCity}
         organizerName={userType === "seeker" ? currentUserFullName : contactName}
         organizerEmail={userType === "seeker" ? currentUserEmail : contactEmail}
         ownerName={userType === "seeker" ? contactName : currentUserFullName}
@@ -390,7 +439,7 @@ export function OfferCard({
             <DialogTitle>Refuser cette offre ?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-slate-600">
-            Le propriétaire pourra vous proposer une nouvelle offre.
+            Le fournisseur pourra vous proposer une nouvelle offre.
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRefuseModalOpen(false)}>

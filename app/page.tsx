@@ -5,7 +5,7 @@ import { buildCanonical } from "@/lib/seo";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
-  title: `Proposer ou louer une salle pour vos évènements cultuels et célébrations | ${siteConfig.name}`,
+  title: `Louer ou proposer du materiel son, DJ et lumiere | ${siteConfig.name}`,
   description: siteConfig.description,
   alternates: { canonical: buildCanonical("/") },
 };

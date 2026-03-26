@@ -17,7 +17,7 @@ const navLinks = [
   { href: "/#categories-evenement", label: "Catégories" },
   { href: "/blog", label: "Blog" },
   { href: "/avantages", label: "Nos avantages" },
-  { label: "Ajoutez ma salle", isAddSalle: true as const },
+  { label: "Publier mon materiel", isAddSalle: true as const },
 ];
 
 export function MobileNav({ isLoggedIn, userType, dashboardHref, addSalleHref }: MobileNavProps) {

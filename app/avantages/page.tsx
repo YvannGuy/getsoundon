@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export const metadata: Metadata = {
   title: "Pourquoi lister votre salle | Avantages propriétaires",
   description:
-    "Découvrez les avantages de proposer votre salle sur salledeculte.com. Plateforme pensée pour les propriétaires, gestion simplifiée, paiements sécurisés.",
+    "Decouvrez les avantages de proposer votre salle sur GetSoundOn. Plateforme pensee pour les proprietaires, gestion simplifiee, paiements securises.",
   alternates: { canonical: buildCanonical("/avantages") },
 };
 
@@ -79,7 +79,7 @@ const FAQ_ITEMS = [
   { q: "Comment fonctionne la plateforme ?", a: "Vous créez une annonce avec les détails de votre salle. Les organisateurs vous envoient des demandes. Vous répondez, négociez et validez les réservations. Les paiements peuvent passer par la plateforme (optionnel)." },
   { q: "Quels sont les frais ?", a: "L'inscription et la création d'annonces sont gratuites. Les frais plateforme sont fixes (15 €) et s'appliquent uniquement au moment du paiement d'une réservation." },
   { q: "Puis-je annuler une réservation ?", a: "Les conditions d'annulation sont définies avec l'organisateur. En cas de force majeure, contactez le support pour trouver une solution." },
-  { q: "Comment contacter le support ?", a: "Notre équipe est joignable par email à contact@salledeculte.com. Nous répondons sous 48h ouvrées." },
+  { q: "Comment contacter le support ?", a: "Notre equipe est joignable par email a contact@getsoundon.com. Nous repondons sous 48h ouvrees." },
 ];
 
 export default function AvantagesPage() {

@@ -86,7 +86,7 @@ export default async function CentreAidePage({
           </div>
           <p className="mt-4 text-[15px] leading-relaxed text-slate-600">
             Sélectionnez le type de demande et envoyez votre message. Notre équipe support vous répond à
-            <span className="font-medium text-[#213398]"> contact@salledeculte.com</span>.
+            <span className="font-medium text-[#213398]"> contact@getsoundon.com</span>.
           </p>
 
           {sent && (

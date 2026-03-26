@@ -9,11 +9,11 @@ type PricingPlan = {
 };
 
 export const siteConfig = {
-  name: "salledeculte.com",
-  description: "Trouvez et réservez une salle adaptée à vos événements cultuels en Île-de-France.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://salledeculte.com",
-  instagram: "https://www.instagram.com/salledeculte/",
-  facebook: "https://www.facebook.com/profile.php?id=61588281587238",
+  name: "GetSoundOn",
+  description: "Plateforme de mise en relation pour trouver, comparer et reserver des lieux d'evenements.",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com",
+  instagram: "https://instagram.com/getsoundon",
+  facebook: "https://facebook.com/getsoundon",
   /** Date de lancement pour la page Coming Soon (format ISO) */
   launchDate: process.env.NEXT_PUBLIC_LAUNCH_DATE ?? "2026-03-02T00:00:00",
 };

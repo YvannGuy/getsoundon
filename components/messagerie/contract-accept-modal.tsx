@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { FileText } from "lucide-react";
 
+import { fulfillmentModeLabel, parseOfferListingSnapshot } from "@/lib/offer-listing-snapshot";
 import { computePaymentProcessingFeeCents } from "@/lib/payment-processing-fee";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,8 @@ type ContractAcceptModalProps = {
   eventType?: string | null;
   startAt?: string | null;
   endAt?: string | null;
+  /** Snapshot JSON `offers.listing_snapshot` (v1) si présent */
+  listingSnapshot?: unknown;
   venueName?: string | null;
   venueCity?: string | null;
   organizerName?: string | null;
@@ -44,7 +47,7 @@ const POLICY_LABEL: Record<"strict" | "moderate" | "flexible", string> = {
   flexible: "Flexible",
 };
 
-const CONTRACT_VERSION = "standard-salledeculte-v1";
+const CONTRACT_VERSION = "standard-getsoundon-v1";
 
 function formatDateTimeLabel(value?: string | null): string {
   if (!value) return "Non renseigné";
@@ -63,6 +66,7 @@ export function ContractAcceptModal({
   eventType,
   startAt,
   endAt,
+  listingSnapshot,
   venueName,
   venueCity,
   organizerName,
@@ -101,7 +105,10 @@ export function ContractAcceptModal({
   const locationAmountEur = ((upfrontAmountCents + balanceAmountCents) / 100).toFixed(2);
   const processingNowEur = (processingFeeCharge1Cents / 100).toFixed(2);
   const processingSecondEur = (processingFeeCharge2Cents / 100).toFixed(2);
-  const venueLine = `${venueName?.trim() || "Salle"} — ${venueCity?.trim() || "Ville"}`;
+  const snap = parseOfferListingSnapshot(listingSnapshot);
+  const listingLine = snap
+    ? `${snap.listing.title} — ${snap.listing.city?.trim() || "—"}`
+    : `${venueName?.trim() || "Annonce matériel"} — ${venueCity?.trim() || "—"}`;
   const organizerLine = `${organizerName?.trim() || "Organisateur"} — ${organizerEmail?.trim() || "Email non renseigné"}`;
   const ownerLine = `${ownerName?.trim() || "Propriétaire"} — ${ownerEmail?.trim() || "Email non renseigné"}`;
 
@@ -111,16 +118,16 @@ export function ContractAcceptModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Contrat de réservation
+            Contrat de location (matériel / pack)
           </DialogTitle>
         </DialogHeader>
 
         <div className="max-h-[55vh] space-y-4 overflow-y-auto rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-700">
           <div className="rounded-lg border border-[#213398]/20 bg-[#213398]/5 p-4">
             <div className="flex items-center gap-3">
-              <Image src="/logosdcbl.png" alt="salledeculte.com" width={38} height={38} className="h-9 w-9 object-contain" />
+              <Image src="/images/logosound.png" alt="GetSoundOn" width={38} height={38} className="h-9 w-9 rounded-full object-cover" />
               <div>
-                <p className="text-sm font-semibold text-[#213398]">CONTRAT STANDARD SALLEDECULTE.COM</p>
+                <p className="text-sm font-semibold text-[#213398]">CONTRAT STANDARD GETSOUNDON</p>
                 <p className="text-xs text-slate-600">À accepter obligatoirement avant tout paiement</p>
               </div>
             </div>
@@ -129,7 +136,7 @@ export function ContractAcceptModal({
           <div className="grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
             <p><span className="font-semibold">Référence Offre :</span> {offerId}</p>
             <p><span className="font-semibold">Date d&apos;acceptation :</span> {acceptedAtLabel}</p>
-            <p><span className="font-semibold">Lieu :</span> {venueLine}</p>
+            <p><span className="font-semibold">Matériel / pack :</span> {listingLine}</p>
             <p><span className="font-semibold">Dates / Horaires :</span> du {startAtLabel} au {endAtLabel}</p>
             <p><span className="font-semibold">Fin d&apos;événement (référence litiges) :</span> {endAtLabel}</p>
           </div>
@@ -138,12 +145,15 @@ export function ContractAcceptModal({
           <ul className="list-disc space-y-1 pl-5">
             <li>Organisateur / Locataire : {organizerLine}</li>
             <li>Propriétaire / Loueur : {ownerLine}</li>
-            <li>Plateforme : salledeculte.com</li>
+            <li>Plateforme : GetSoundOn</li>
           </ul>
 
           <h4 className="font-semibold text-slate-900">2) Objet</h4>
           <ul className="list-disc space-y-1 pl-5">
-            <li>Location du lieu décrit dans l&apos;Offre (Annexe 1) entre Organisateur et Propriétaire.</li>
+            <li>
+              Location du matériel / pack décrit dans l&apos;Offre (Annexe 1) entre Organisateur et
+              Propriétaire (fournisseur).
+            </li>
             <li>Utilisation des services de la Plateforme (messagerie, outils, paiement, documents).</li>
           </ul>
           <p>La réservation devient effective après acceptation du contrat et paiement selon l&apos;Offre.</p>
@@ -154,7 +164,10 @@ export function ContractAcceptModal({
             <li>Outils : visite, offre, réservation, état des lieux, litiges.</li>
             <li>Paiement en ligne optionnel via Stripe Connect.</li>
           </ul>
-          <p>La Plateforme n&apos;est pas le loueur du lieu et n&apos;exécute pas la prestation matérielle.</p>
+          <p>
+            La Plateforme n&apos;est pas le loueur du matériel et n&apos;exécute pas la prestation sur site,
+            sauf mention expresse contraire entre les parties.
+          </p>
 
           <h4 className="font-semibold text-slate-900">4) Offre et conditions applicables</h4>
           <p>
@@ -164,7 +177,7 @@ export function ContractAcceptModal({
 
           <h4 className="font-semibold text-slate-900">5) Prix & frais (affichés avant paiement)</h4>
           <ul className="list-disc space-y-1 pl-5">
-            <li>Prix de location : {locationAmountEur} €</li>
+            <li>Prix de location (matériel / pack) : {locationAmountEur} €</li>
             <li>Frais de service Plateforme (fixe) : {(serviceFeeCents / 100).toFixed(2)} €</li>
             <li>Frais de traitement paiement (variable) : {processingNowEur} € (paiement actuel)</li>
           </ul>
@@ -196,10 +209,10 @@ export function ContractAcceptModal({
             </li>
           </ul>
 
-          <h4 className="font-semibold text-slate-900">8) États des lieux (photos)</h4>
+          <h4 className="font-semibold text-slate-900">8) États des lieux & constat matériel (photos)</h4>
           <p>
-            La Plateforme peut proposer un module d&apos;état des lieux (photos avant/après).
-            Les parties s&apos;engagent à fournir les éléments utiles en cas de litige.
+            La Plateforme peut proposer un module d&apos;état des lieux / constat du matériel (photos avant /
+            après). Les parties s&apos;engagent à fournir les éléments utiles en cas de litige.
           </p>
 
           <h4 className="font-semibold text-slate-900">9) Incidents & litiges (ponctuel)</h4>
@@ -231,10 +244,11 @@ export function ContractAcceptModal({
             libérés à J+3 après la fin d&apos;événement, sauf incident déclaré dans la fenêtre de 48h.
           </p>
 
-          <h4 className="font-semibold text-slate-900">12) Règles d&apos;usage du lieu</h4>
+          <h4 className="font-semibold text-slate-900">12) Règles d&apos;usage du matériel</h4>
           <p>
-            L&apos;Organisateur respecte la capacité, les horaires, les règles sonores, la sécurité,
-            la propreté, le voisinage et les conditions prévues dans l&apos;Offre.
+            L&apos;Organisateur respecte le périmètre convenu (accessoires, puissance, transport), les horaires
+            de prise en charge / retour, la sécurité, l&apos;intégrité du matériel et les conditions prévues
+            dans l&apos;Offre.
           </p>
 
           <h4 className="font-semibold text-slate-900">13) Documents</h4>
@@ -252,15 +266,33 @@ export function ContractAcceptModal({
           <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
             <p className="font-semibold text-slate-900">ANNEXE 1 — RÉCAPITULATIF DE L&apos;OFFRE</p>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-700">
-              <li>Salle : {venueLine}</li>
+              <li>Matériel / pack : {listingLine}</li>
+              {snap &&
+              (snap.listing.gear_category || snap.listing.gear_brand || snap.listing.gear_model) ? (
+                <li>
+                  Détail :{" "}
+                  {[snap.listing.gear_category, snap.listing.gear_brand, snap.listing.gear_model]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </li>
+              ) : null}
+              {snap?.logistics.accessories_notes ? (
+                <li>Accessoires & périmètre : {snap.logistics.accessories_notes}</li>
+              ) : null}
+              {snap ? (
+                <li>
+                  Retrait / livraison : {fulfillmentModeLabel(snap.logistics.mode)}
+                  {snap.logistics.notes ? ` — ${snap.logistics.notes}` : ""}
+                </li>
+              ) : null}
               <li>Type : {eventTypeLabel}</li>
-              <li>Dates : {startAtLabel} → {endAtLabel}</li>
+              <li>Période : {startAtLabel} → {endAtLabel}</li>
               <li>Prix location : {locationAmountEur} €</li>
               <li>Mode paiement : {paymentModeLabel}</li>
               <li>Caution : {(depositAmountCents / 100).toFixed(2)} €</li>
               <li>Politique d&apos;annulation : {POLICY_LABEL[cancellationPolicy]}</li>
-              <li>Règles clés : {rulesSummary?.trim() || "Voir les conditions prévues dans l’offre."}</li>
-              <li>Fin d&apos;événement : {endAtLabel} (déclenche les 48h)</li>
+              <li>Conditions complémentaires : {rulesSummary?.trim() || "Voir l’offre et les messages associés."}</li>
+              <li>Fin de période (réf. litiges / EDL) : {endAtLabel}</li>
             </ul>
           </div>
         </div>
@@ -297,7 +329,7 @@ export function ContractAcceptModal({
             className="mt-1 h-4 w-4 rounded border-slate-300"
           />
           <span className="text-sm text-slate-700">
-            J&apos;ai lu et j&apos;accepte le Contrat standard salledeculte.com, la politique
+            J&apos;ai lu et j&apos;accepte le Contrat standard GetSoundOn, la politique
             d&apos;annulation affichée, et les modalités de paiement (acompte/solde J-7) et de caution
             (capture J-7) le cas échéant.
           </span>
@@ -339,7 +371,7 @@ export function ContractAcceptModal({
           </Button>
         </DialogFooter>
         <p className="text-center text-xs text-slate-500">
-          En payant, vous acceptez le Contrat standard salledeculte.com et la politique
+          En payant, vous acceptez le Contrat standard GetSoundOn et la politique
           d&apos;annulation indiquée dans l&apos;offre.
         </p>
       </DialogContent>

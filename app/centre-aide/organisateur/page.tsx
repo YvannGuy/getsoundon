@@ -6,7 +6,7 @@ import { buildCanonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Aide organisateur",
-  description: "Tout savoir sur la recherche et la réservation d'une salle sur salledeculte.com.",
+  description: "Tout savoir sur la recherche et la reservation d'une salle sur GetSoundOn.",
   alternates: { canonical: buildCanonical("/centre-aide/organisateur") },
 };
 import { SiteHeader } from "@/components/layout/site-header";
@@ -39,7 +39,7 @@ const FAQ_ORGANISATEUR = [
   },
   {
     q: "Que faire si je n'ai pas de réponse ?",
-    a: "Si vous n'avez pas de réponse sous 72 heures, contactez-nous à contact@salledeculte.com. Vous pouvez aussi envoyer des demandes à plusieurs salles pour maximiser vos chances.",
+    a: "Si vous n'avez pas de reponse sous 72 heures, contactez-nous a contact@getsoundon.com. Vous pouvez aussi envoyer des demandes a plusieurs salles pour maximiser vos chances.",
   },
   {
     q: "Comment bien préparer ma demande ?",
@@ -71,7 +71,7 @@ const FAQ_ORGANISATEUR = [
   },
   {
     q: "Comment contacter le support ?",
-    a: "Écrivez-nous à contact@salledeculte.com. Nous répondons généralement sous 24 à 48 heures ouvrées.",
+    a: "Ecrivez-nous a contact@getsoundon.com. Nous repondons generalement sous 24 a 48 heures ouvrees.",
   },
 ];
 

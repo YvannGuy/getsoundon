@@ -15,18 +15,18 @@ const defaultOgImage = `${baseUrl}/og-image.png`;
 export const defaultMetadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: `${siteName} - Trouvez et réservez une salle pour vos événements cultuels`,
+    default: `${siteName} - Trouvez et reservez un lieu pour vos evenements`,
     template: `%s | ${siteName}`,
   },
   description:
-    "La plateforme de référence pour trouver et proposer des salles dédiées aux événements cultuels en Île-de-France. Cultes, baptêmes, conférences.",
+    "Plateforme de mise en relation pour trouver, comparer et reserver des lieux d'evenements.",
   keywords: [
-    "salle événement cultuel",
-    "location salle culte",
-    "salle baptême",
-    "salle conférence religieuse",
-    "Île-de-France",
-    "salledeculte",
+    "location salle evenement",
+    "reservation salle",
+    "evenement entreprise",
+    "evenement prive",
+    "evenementiel",
+    "getsoundon",
   ],
   authors: [{ name: siteName, url: baseUrl }],
   creator: siteName,
@@ -35,15 +35,15 @@ export const defaultMetadata: Metadata = {
     locale: "fr_FR",
     siteName,
     url: baseUrl,
-    title: `${siteName} - Trouvez et réservez une salle pour vos événements cultuels`,
+    title: `${siteName} - Trouvez et reservez un lieu pour vos evenements`,
     description:
-      "La plateforme de référence pour trouver et proposer des salles dédiées aux événements cultuels en Île-de-France.",
+      "Plateforme de mise en relation pour trouver, comparer et reserver des lieux d'evenements.",
     images: [{ url: defaultOgImage, width: 1200, height: 630, alt: siteName }],
   },
   twitter: {
     card: "summary_large_image",
-    title: `${siteName} - Salles pour événements cultuels`,
-    description: "Trouvez et réservez une salle pour vos événements cultuels en Île-de-France.",
+    title: `${siteName} - Lieux pour evenements`,
+    description: "Trouvez et reservez un lieu pour vos evenements.",
     images: [defaultOgImage],
   },
   robots: {
@@ -57,11 +57,11 @@ export const defaultMetadata: Metadata = {
   // Note: alternates.canonical doit être défini par page (generateMetadata) pour éviter le contenu dupliqué
   icons: {
     icon: [
-      { url: "/favicon/favicon.ico", sizes: "any", type: "image/x-icon" },
+      { url: "/favicon.ico", sizes: "any" },
       { url: "/favicon/favicon-16x16.png", sizes: "16x16", type: "image/png" },
       { url: "/favicon/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
-    apple: "/favicon/apple-touch-icon.png",
+    apple: [{ url: "/favicon/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   manifest: "/favicon/site.webmanifest",
 };

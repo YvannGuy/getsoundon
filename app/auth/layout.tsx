@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Connexion | salledeculte.com",
-  description: "Connectez-vous ou créez un compte sur salledeculte.com",
+  title: "Connexion | GetSoundOn",
+  description: "Connectez-vous ou creez un compte sur GetSoundOn",
   robots: { index: false, follow: false },
 };
 

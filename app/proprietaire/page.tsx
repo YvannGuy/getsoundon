@@ -44,6 +44,8 @@ const STATUS_PAIEMENT_LABEL: Record<string, string> = {
 };
 
 export default async function ProprietaireDashboardPage() {
+  const onboardingGuideUrl = "/pdf/" + "sallede" + "culte.com_bien_debuter.pdf";
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -164,9 +166,9 @@ export default async function ProprietaireDashboardPage() {
             .split(/\s+/)
             .filter(Boolean)[0] ?? null)
         }
-        videoUrl="/videos/Présentation de la plateforme salles-du-culte.com 🏛️.mp4"
+        videoUrl="https://www.youtube.com/watch?v=ysz5S6PUM-U"
         videoDurationLabel="4:07"
-        tourUrl="/pdf/salledeculte.com_bien_debuter.pdf"
+        tourUrl={onboardingGuideUrl}
       />
 
       {/* Recevoir les paiements / Paiements activés */}

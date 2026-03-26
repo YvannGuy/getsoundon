@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { SignupForm } from "@/components/auth/signup-form";
 
 export const metadata: Metadata = {
-  title: "Inscription | salledeculte.com",
+  title: "Inscription | GetSoundOn",
   robots: { index: false, follow: false },
 };
 

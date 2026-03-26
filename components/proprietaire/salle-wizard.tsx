@@ -6,11 +6,9 @@ import { addMonths, subMonths, startOfDay, addDays } from "date-fns";
 import { createSalleFromOnboarding } from "@/app/actions/create-salle";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/compress-image";
+import { FEATURE_GEAR_EDIT_LIST, INCLUSION_EDIT_LIST } from "@/lib/salle-features";
 import {
-  Accessibility,
-  Armchair,
   Bell,
-  Briefcase,
   Camera,
   CheckCircle,
   ChevronLeft,
@@ -18,21 +16,22 @@ import {
   Clock,
   Droplets,
   Eye,
-  Flame,
   LayoutGrid,
   Lightbulb,
+  Mic2,
   Moon,
   Mountain,
   Music,
-  ParkingCircle,
+  Package,
   Shield,
-  Snowflake,
-  Sun,
+  Unplug,
+  UserCircle,
   Users,
   Volume2,
   VolumeX,
   X,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,20 +42,24 @@ import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 const TOTAL_STEPS = 6;
-const ONBOARDING_DRAFT_KEY = "owner_salle_onboarding_draft_v1";
+const ONBOARDING_DRAFT_KEY = "owner_salle_onboarding_draft_v2";
 
-const FEATURES = [
-  { id: "erp", label: "ERP conforme", icon: Shield },
-  { id: "pmr", label: "Accès PMR", icon: Accessibility },
-  { id: "scene", label: "Scène / estrade", icon: LayoutGrid },
-  { id: "climatisation", label: "Climatisation", icon: Snowflake },
-  { id: "chauffage", label: "Chauffage", icon: Flame },
-  { id: "parking", label: "Parking disponible", icon: ParkingCircle },
-  { id: "mobilier", label: "Chaises / mobilier inclus", icon: Armchair },
-  { id: "bureau", label: "Bureau", icon: Briefcase },
-  { id: "son", label: "Système son", icon: Volume2 },
-  { id: "lumiere", label: "Lumière naturelle", icon: Sun },
-] as const;
+const GEAR_FEATURE_ICONS: Record<string, LucideIcon> = {
+  son_ligne: Volume2,
+  caisson_basse: Volume2,
+  table_mix: LayoutGrid,
+  micros: Mic2,
+  lumieres_led: Lightbulb,
+  flight_case: Package,
+  connectique: Unplug,
+  technicien_inclus: UserCircle,
+};
+
+const FEATURES = FEATURE_GEAR_EDIT_LIST.map((f) => ({
+  id: f.id,
+  label: f.label,
+  icon: GEAR_FEATURE_ICONS[f.id] ?? Music,
+})) as readonly { id: string; label: string; icon: LucideIcon }[];
 
 const SOUND_RESTRICTIONS = [
   { id: "none", label: "Aucune restriction", icon: Volume2 },
@@ -74,10 +77,16 @@ const ACCEPTED_EVENTS = [
   { id: "veillee_priere", label: "Veillée de prière", icon: Moon },
 ] as const;
 
-const INCLUSIONS = [
-  { id: "location", label: "Location de la salle" },
-  { id: "mobilier", label: "Mobilier et équipements" },
-  { id: "sono", label: "Système de sonorisation" },
+const INCLUSIONS = INCLUSION_EDIT_LIST.map((i) => ({ id: i.id, label: i.label }));
+
+const GEAR_CATEGORIES = [
+  { value: "son", label: "Son / ligne / DJ" },
+  { value: "lumiere", label: "Lumière & scène" },
+  { value: "dj", label: "Booth / platines" },
+  { value: "video", label: "Vidéo / projection" },
+  { value: "pack_premium", label: "Pack événementiel premium" },
+  { value: "structure", label: "Structure / mobilier événementiel" },
+  { value: "autre", label: "Autre" },
 ] as const;
 
 type HorairesJour = { debut: string; fin: string };
@@ -107,6 +116,11 @@ type WizardData = {
   restrictionSonore: string;
   evenementsAcceptes: string[];
   photos: File[];
+  listingKind: "equipment" | "pack";
+  gearCategory: string;
+  gearBrand: string;
+  gearModel: string;
+  proposeVisiteInspection: boolean;
 };
 
 const JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"] as const;
@@ -134,7 +148,26 @@ const initialData: WizardData = {
   restrictionSonore: "",
   evenementsAcceptes: [],
   photos: [],
+  listingKind: "equipment",
+  gearCategory: "",
+  gearBrand: "",
+  gearModel: "",
+  proposeVisiteInspection: false,
 };
+
+/** Valeurs par défaut pour les champs hérités « lieu » (compat écrans / colonnes legacy). */
+function getWizardCompatDefaults(): Pick<
+  WizardData,
+  "joursOuverture" | "horairesParJour" | "restrictionSonore" | "evenementsAcceptes" | "inclusions"
+> {
+  return {
+    joursOuverture: [...JOURS],
+    horairesParJour: Object.fromEntries(JOURS.map((j) => [j, { ...DEFAULT_HORAIRES }])),
+    restrictionSonore: "none",
+    evenementsAcceptes: ["concert", "conference"],
+    inclusions: ["location"],
+  };
+}
 
 function parsePositiveNumber(value: string): number | null {
   const n = Number(value);
@@ -177,7 +210,7 @@ function buildFeaturePhrase(data: WizardData): string {
     .slice(0, 4)
     .map((f) => f.label.toLowerCase());
   if (!labels.length) return "";
-  return `Le lieu propose ${joinNatural(labels)}.`;
+  return `L'offre inclut notamment ${joinNatural(labels)}.`;
 }
 
 function buildEventPhrase(data: WizardData): string {
@@ -209,13 +242,15 @@ function buildShortTarifPhrase(data: WizardData): string {
 }
 
 function generateDescriptionFromData(data: WizardData): string {
-  const nom = data.nom.trim() || "Cette salle";
+  const nom = data.nom.trim() || "Cette annonce";
   const ville = data.ville.trim();
   const capacite = parsePositiveNumber(data.capacite);
   const intro = capacite
-    ? `${ville ? `${nom} à ${ville}` : nom} accueille jusqu'à ${capacite} personnes dans un cadre soigné et chaleureux.`
-    : `${ville ? `${nom} à ${ville}` : nom} propose un cadre soigné et chaleureux pour vos événements.`;
-  const feature = buildFeaturePhrase(data) || "Le lieu offre un espace modulable, adapté aux besoins des organisateurs.";
+    ? `${ville ? `${nom} (${ville})` : nom} — matériel / pack adapté à des événements jusqu'à environ ${capacite} personnes.`
+    : `${ville ? `${nom} (${ville})` : nom} — matériel ou pack événementiel premium, prêt pour vos besoins techniques.`;
+  const feature =
+    buildFeaturePhrase(data) ||
+    "Configuration professionnelle, idéale pour renforcer votre ligne son, lumière ou DJ sur place.";
   const events = buildEventPhrase(data);
   const practical = buildPracticalPhrase(data);
   const tarif = buildTarifPhrase(data);
@@ -224,12 +259,12 @@ function generateDescriptionFromData(data: WizardData): string {
 
 function improveDescription(value: string, data: WizardData): string {
   const user = splitSentences(value).map(formatSentence).filter(Boolean);
-  const nom = data.nom.trim() || "Ce lieu";
+  const nom = data.nom.trim() || "Cette offre";
   const ville = data.ville.trim();
   const capacite = parsePositiveNumber(data.capacite);
   const accroche = capacite
-    ? `${ville ? `${nom} à ${ville}` : nom} est une salle accueillante pouvant recevoir jusqu'à ${capacite} personnes.`
-    : `${ville ? `${nom} à ${ville}` : nom} est une salle accueillante pour vos événements.`;
+    ? `${ville ? `${nom} (${ville})` : nom} est une offre matériel / pack adaptée à des événements jusqu'à environ ${capacite} personnes.`
+    : `${ville ? `${nom} (${ville})` : nom} est une offre matériel / pack pour vos événements.`;
   const pointsForts = buildFeaturePhrase(data);
   const usages = buildEventPhrase(data);
   const pratique = buildPracticalPhrase(data);
@@ -246,12 +281,12 @@ function improveDescription(value: string, data: WizardData): string {
 }
 
 function shortenDescription(value: string, data: WizardData): string {
-  const nom = data.nom.trim() || "Cette salle";
+  const nom = data.nom.trim() || "Cette annonce";
   const ville = data.ville.trim();
   const capacite = parsePositiveNumber(data.capacite);
   const intro = capacite
-    ? `${ville ? `${nom} à ${ville}` : nom}, jusqu'à ${capacite} personnes.`
-    : `${ville ? `${nom} à ${ville}` : nom}, salle disponible pour vos événements.`;
+    ? `${ville ? `${nom} (${ville})` : nom}, jusqu'à ~${capacite} personnes.`
+    : `${ville ? `${nom} (${ville})` : nom}, matériel / pack événementiel.`;
 
   const base = value.trim()
     ? splitSentences(value).map(formatSentence).filter(Boolean)[0] ?? ""
@@ -266,11 +301,17 @@ function isValidTimeRange(debut?: string, fin?: string): boolean {
 }
 
 function getWizardValidationError(data: WizardData, minPhotos: number): { step: number; message: string } | null {
-  if (!data.nom.trim() || !data.ville.trim() || !data.adresse.trim() || !data.description.trim()) {
-    return { step: 1, message: "Complétez les informations essentielles (nom, ville, adresse et description)." };
+  if (!data.nom.trim() || !data.ville.trim() || !data.description.trim()) {
+    return {
+      step: 1,
+      message: "Complétez les informations essentielles (titre, ville et description).",
+    };
   }
-  if (!parsePositiveNumber(data.capacite)) {
-    return { step: 1, message: "La capacité d'accueil doit être un nombre supérieur à 0." };
+  if (!data.gearCategory.trim()) {
+    return { step: 1, message: "Indiquez la catégorie de matériel." };
+  }
+  if (data.capacite.trim() && parsePositiveNumber(data.capacite) == null) {
+    return { step: 1, message: "Si vous renseignez une capacité, utilisez un nombre supérieur à 0." };
   }
   const hasTarif =
     !!parsePositiveNumber(data.tarifParJour) ||
@@ -281,40 +322,39 @@ function getWizardValidationError(data: WizardData, minPhotos: number): { step: 
   }
 
   if (!data.features.length) {
-    return { step: 2, message: "Sélectionnez au moins une caractéristique pour votre salle." };
-  }
-  if (data.features.includes("parking") && !parsePositiveNumber(data.placesParking)) {
-    return { step: 2, message: "Indiquez un nombre de places de parking supérieur à 0." };
+    return { step: 2, message: "Sélectionnez au moins un élément du matériel ou du pack." };
   }
 
-  if (!data.joursOuverture.length) {
-    return { step: 3, message: "Choisissez au moins un jour de location." };
-  }
   for (const jour of data.joursOuverture) {
     const h = data.horairesParJour[jour];
     if (!h || !isValidTimeRange(h.debut, h.fin)) {
-      return { step: 3, message: `Vérifiez les horaires de location pour ${jour} (heure de début < heure de fin).` };
+      return {
+        step: 3,
+        message: `Vérifiez les horaires de disponibilité pour ${jour} (heure de début < heure de fin).`,
+      };
     }
   }
   if (!data.restrictionSonore) {
-    return { step: 3, message: "Sélectionnez une option de restriction sonore." };
+    return { step: 3, message: "Sélectionnez une option de restriction sonore (ou « aucune »)." };
   }
   if (!data.evenementsAcceptes.length) {
-    return { step: 3, message: "Sélectionnez au moins un type d'événement accepté." };
+    return { step: 3, message: "Sélectionnez au moins un type d'événement cible." };
   }
 
-  if (!data.visiteDates.length) {
-    return { step: 4, message: "Ajoutez au moins une date de visite." };
-  }
-  for (const date of data.visiteDates) {
-    const h = data.visiteHorairesParDate[date];
-    if (!h || !isValidTimeRange(h.debut, h.fin)) {
-      return { step: 4, message: "Vérifiez les créneaux de visite (heure de début < heure de fin)." };
+  if (data.proposeVisiteInspection) {
+    if (!data.visiteDates.length) {
+      return { step: 4, message: "Ajoutez au moins une date de visite / prise en main." };
+    }
+    for (const date of data.visiteDates) {
+      const h = data.visiteHorairesParDate[date];
+      if (!h || !isValidTimeRange(h.debut, h.fin)) {
+        return { step: 4, message: "Vérifiez les créneaux de visite (heure de début < heure de fin)." };
+      }
     }
   }
 
   if (data.photos.length < minPhotos) {
-    return { step: 5, message: `Ajoutez au moins ${minPhotos} photos avant de soumettre votre annonce.` };
+    return { step: 5, message: `Ajoutez au moins ${minPhotos} photos de votre matériel avant de soumettre.` };
   }
 
   return null;
@@ -328,7 +368,10 @@ export type SalleWizardProps = {
 
 export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps = {}) {
   const [step, setStep] = useState(1);
-  const [data, setData] = useState<WizardData>(initialData);
+  const [data, setData] = useState<WizardData>(() => ({
+    ...initialData,
+    ...getWizardCompatDefaults(),
+  }));
   const [submitted, setSubmitted] = useState(false);
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
   const [createdStatus, setCreatedStatus] = useState<"approved" | "pending">("pending");
@@ -344,7 +387,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
   const submitErrorRef = useRef<HTMLDivElement | null>(null);
   const hasLoadedDraftRef = useRef(false);
 
-  const MIN_PHOTOS = 5;
+  const MIN_PHOTOS = 3;
   const MAX_PHOTOS = 10;
   /** 10 photos max × 50 Mo max par fichier (bucket salle-photos) = 500 Mo total pour ne jamais bloquer en prod */
   const TOTAL_PHOTOS_SIZE_LIMIT_MB = 500;
@@ -363,6 +406,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
         if (parsed.data) {
           setData({
             ...initialData,
+            ...getWizardCompatDefaults(),
             ...parsed.data,
             photos: [],
           });
@@ -407,6 +451,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
       photos: [],
     }) !== JSON.stringify({
       ...initialData,
+      ...getWizardCompatDefaults(),
       photos: [],
     });
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -558,6 +603,11 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
     formData.set("visiteHorairesParDate", JSON.stringify(data.visiteHorairesParDate));
     formData.set("restrictionSonore", data.restrictionSonore);
     formData.set("evenementsAcceptes", JSON.stringify(data.evenementsAcceptes));
+    formData.set("listingKind", data.listingKind);
+    formData.set("gearCategory", data.gearCategory);
+    formData.set("gearBrand", data.gearBrand);
+    formData.set("gearModel", data.gearModel);
+    formData.set("proposeVisite", data.proposeVisiteInspection ? "1" : "0");
 
     const supabaseClient = createClient();
     const { data: sessionData } = await supabaseClient.auth.getSession();
@@ -723,7 +773,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
                   Annonce en cours de validation
                 </h1>
                 <p className="mt-4 max-w-md text-slate-600">
-                  Merci pour votre soumission. Notre équipe vérifie actuellement les informations et les photos de votre salle.
+                  Merci pour votre soumission. Notre équipe vérifie actuellement les informations et les photos de votre annonce.
                 </p>
                 <div className="mt-5 flex items-center gap-2 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">
                   <Clock className="h-4 w-4 text-slate-400" />
@@ -953,23 +1003,25 @@ function Step1({
     (data.tarifParJour.trim() !== "" && Number(data.tarifParJour) > 0) ||
     (data.tarifMensuel.trim() !== "" && Number(data.tarifMensuel) > 0) ||
     (data.tarifHoraire.trim() !== "" && Number(data.tarifHoraire) > 0);
+  const capaciteOk = !data.capacite.trim() || parsePositiveNumber(data.capacite) != null;
   const isComplete =
     data.nom.trim() !== "" &&
     data.ville.trim() !== "" &&
-    data.capacite.trim() !== "" &&
-    data.adresse.trim() !== "" &&
+    data.gearCategory.trim() !== "" &&
     data.description.trim() !== "" &&
-    hasAtLeastOneTarif;
-  const capacityValid = parsePositiveNumber(data.capacite) != null;
-  const stepHint = !data.nom.trim() || !data.ville.trim() || !data.adresse.trim()
-    ? "Renseignez le nom, la ville et l'adresse."
-    : !capacityValid
-      ? "La capacité doit être un nombre supérieur à 0."
-      : !hasAtLeastOneTarif
-        ? "Ajoutez au moins un tarif valide."
-        : !data.description.trim()
-          ? "Ajoutez une description de la salle."
-          : null;
+    hasAtLeastOneTarif &&
+    capaciteOk;
+  const stepHint = !data.nom.trim() || !data.ville.trim()
+    ? "Renseignez le titre de l'annonce et la ville (zone d'intervention ou retrait)."
+    : !data.gearCategory.trim()
+      ? "Choisissez une catégorie de matériel."
+      : !capaciteOk
+        ? "La capacité, si renseignée, doit être un nombre supérieur à 0."
+        : !hasAtLeastOneTarif
+          ? "Ajoutez au moins un tarif valide."
+          : !data.description.trim()
+            ? "Ajoutez une description du matériel ou du pack."
+            : null;
 
   const handleDescriptionAssist = () => {
     const variants = [
@@ -1012,32 +1064,97 @@ function Step1({
 
   return (
     <>
-      <h2 className="text-2xl font-bold text-black">Parlez-nous de votre salle</h2>
-      <p className="mt-2 text-slate-600">Commencez par les informations essentielles de votre lieu</p>
+      <h2 className="text-2xl font-bold text-black">Votre matériel ou pack événementiel</h2>
+      <p className="mt-2 text-slate-600">
+        Décrivez l&apos;annonce comme un catalogue premium : ce qui est inclus, la zone et les tarifs.
+      </p>
       <div className="mt-8 space-y-5">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">Nom du lieu</label>
+          <label className="text-sm font-medium text-slate-700">Titre de l&apos;annonce</label>
           <Input
-            placeholder="Ex: Salle Saint-Paul"
+            placeholder="Ex : Pack son L-Acoustics + régie, Location caissons + micros…"
             value={data.nom}
             onChange={(e) => updateData({ nom: e.target.value })}
             className="h-11 border-slate-200"
           />
         </div>
+        <div className="space-y-2">
+          <span className="text-sm font-medium text-slate-700">Type d&apos;offre</span>
+          <div className="flex flex-wrap gap-4 pt-1">
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="radio"
+                name="listingKind"
+                checked={data.listingKind === "equipment"}
+                onChange={() => updateData({ listingKind: "equipment" })}
+                className="h-4 w-4 border-slate-300 text-[#213398] focus:ring-[#213398]"
+              />
+              <span className="text-sm text-slate-700">Matériel à la pièce</span>
+            </label>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="radio"
+                name="listingKind"
+                checked={data.listingKind === "pack"}
+                onChange={() => updateData({ listingKind: "pack" })}
+                className="h-4 w-4 border-slate-300 text-[#213398] focus:ring-[#213398]"
+              />
+              <span className="text-sm text-slate-700">Pack / formule clé en main</span>
+            </label>
+          </div>
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div className="space-y-2 sm:col-span-2">
+            <label htmlFor="gearCategory" className="text-sm font-medium text-slate-700">
+              Catégorie principale
+            </label>
+            <select
+              id="gearCategory"
+              value={data.gearCategory}
+              onChange={(e) => updateData({ gearCategory: e.target.value })}
+              className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#5b4dbf]"
+            >
+              <option value="">Sélectionnez…</option>
+              {GEAR_CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">Marque (optionnel)</label>
+            <Input
+              placeholder="Ex : dB Technologies, Pioneer…"
+              value={data.gearBrand}
+              onChange={(e) => updateData({ gearBrand: e.target.value })}
+              className="h-11 border-slate-200"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">Modèle / référence (optionnel)</label>
+            <Input
+              placeholder="Ex : ART 932-A, CDJ-3000…"
+              value={data.gearModel}
+              onChange={(e) => updateData({ gearModel: e.target.value })}
+              className="h-11 border-slate-200"
+            />
+          </div>
+        </div>
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Ville</label>
+            <label className="text-sm font-medium text-slate-700">Ville ou zone</label>
             <VilleAutocomplete
               value={data.ville}
               onChange={(v) => updateData({ ville: v, ...(v ? {} : { villeCode: undefined }) })}
               onCitySelect={(_, code) => updateData({ villeCode: code ?? undefined })}
-              placeholder="Ex: Paris, Versailles..."
+              placeholder="Ex: Paris, Lyon…"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Capacité d&apos;accueil</label>
+            <label className="text-sm font-medium text-slate-700">Capacité / public (optionnel)</label>
             <Input
-              placeholder="Ex: 150"
+              placeholder="Ex : 200 (indicatif)"
               value={data.capacite}
               onChange={(e) => updateData({ capacite: e.target.value })}
               className="h-11 border-slate-200"
@@ -1045,7 +1162,7 @@ function Step1({
           </div>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">Adresse</label>
+          <label className="text-sm font-medium text-slate-700">Adresse précise (optionnel)</label>
           <AdresseAutocomplete
             value={data.adresse}
             citycode={data.villeCode ?? undefined}
@@ -1058,14 +1175,16 @@ function Step1({
                 ...(coords && { lat: coords.lat, lng: coords.lng }),
               });
             }}
-            placeholder="Ex: 12 rue de la République, Paris"
+            placeholder="Laissez vide si retrait / livraison sans adresse fixe"
           />
-          <p className="text-xs text-slate-500">Recherche limitée à l&apos;Île-de-France</p>
+          <p className="text-xs text-slate-500">
+            Utile pour géolocaliser un point de retrait ; sinon la ville suffit pour la recherche.
+          </p>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-700">Description</label>
           <textarea
-            placeholder="Décrivez votre salle : cadre, atouts, équipements, ambiance..."
+            placeholder="État du matériel, contenu du pack, puissance, options, modalités de retrait ou livraison…"
             value={data.description}
             onChange={(e) => updateData({ description: e.target.value })}
             rows={4}
@@ -1190,19 +1309,13 @@ function Step2({
   onNext: () => void;
   onBack: () => void;
 }) {
-  const canContinue =
-    data.features.length >= 1 &&
-    (!data.features.includes("parking") || !!parsePositiveNumber(data.placesParking));
-  const stepHint =
-    data.features.length < 1
-      ? "Sélectionnez au moins une caractéristique."
-      : data.features.includes("parking") && !parsePositiveNumber(data.placesParking)
-        ? "Indiquez un nombre de places de parking supérieur à 0."
-        : null;
+  void updateData;
+  const canContinue = data.features.length >= 1;
+  const stepHint = data.features.length < 1 ? "Sélectionnez au moins un élément." : null;
   return (
     <>
-      <h2 className="text-2xl font-bold text-black">Caractéristiques principales</h2>
-      <p className="mt-2 text-slate-600">Sélectionnez les éléments correspondant à votre salle</p>
+      <h2 className="text-2xl font-bold text-black">Composition du matériel</h2>
+      <p className="mt-2 text-slate-600">Indiquez ce qui est inclus dans l&apos;annonce (modifiable ensuite)</p>
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         {FEATURES.map(({ id, label, icon: Icon }) => (
           <button
@@ -1227,22 +1340,9 @@ function Step2({
           </button>
         ))}
       </div>
-      {data.features.includes("parking") && (
-        <div className="mt-4 space-y-2">
-          <label className="text-sm font-medium text-slate-700">Nombre de places de parking</label>
-          <Input
-            type="number"
-            placeholder="Ex: 30"
-            value={data.placesParking}
-            onChange={(e) => updateData({ placesParking: e.target.value })}
-            min={0}
-            className="h-11 w-40 border-slate-200"
-          />
-        </div>
-      )}
       <div className="mt-6 flex items-center gap-2 rounded-lg bg-[#5b4dbf]/10 p-3 text-sm text-[#5b4dbf]">
         <span className="text-base">i</span>
-        Ces informations aident les organisateurs à mieux comprendre votre lieu
+        Une annonce précise réduit les allers-retours et les malentendus techniques
       </div>
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <Button variant="outline" onClick={onBack} className="h-11 flex-1 border-slate-300">
@@ -1280,26 +1380,32 @@ function Step3({
   onNext: () => void;
   onBack: () => void;
 }) {
+  const horairesJoursOk =
+    data.joursOuverture.length === 0 ||
+    data.joursOuverture.every((jour) => {
+      const h = data.horairesParJour[jour];
+      return h && isValidTimeRange(h.debut, h.fin);
+    });
   const canContinue =
-    data.joursOuverture.length >= 1 &&
-    data.restrictionSonore !== "" &&
-    data.evenementsAcceptes.length >= 1;
-  const stepHint =
-    data.joursOuverture.length < 1
-      ? "Sélectionnez au moins un jour de location."
-      : data.restrictionSonore === ""
-        ? "Choisissez une option de restriction sonore."
-        : data.evenementsAcceptes.length < 1
-          ? "Sélectionnez au moins un événement accepté."
-          : null;
+    horairesJoursOk && data.restrictionSonore !== "" && data.evenementsAcceptes.length >= 1;
+  const stepHint = !horairesJoursOk
+    ? "Vérifiez les horaires pour chaque jour sélectionné (début avant fin)."
+    : data.restrictionSonore === ""
+      ? "Choisissez une option de restriction sonore."
+      : data.evenementsAcceptes.length < 1
+        ? "Sélectionnez au moins un type d'événement cible."
+        : null;
   return (
     <>
-      <h2 className="text-2xl font-bold text-black">Conditions d&apos;accueil</h2>
-      <p className="mt-2 text-slate-600">Précisez les règles et contraintes de votre salle</p>
+      <h2 className="text-2xl font-bold text-black">Disponibilité & conditions</h2>
+      <p className="mt-2 text-slate-600">
+        Champs hérités du moteur actuel : utiles pour retrait, livraison et filtres. Laissez toute la semaine si vous
+        êtes flexible — vous pouvez aussi tout désélectionner (valeurs par défaut côté serveur).
+      </p>
 
       <div className="mt-8 space-y-8">
         <div>
-          <label className="text-sm font-medium text-slate-700">Jours de location</label>
+          <label className="text-sm font-medium text-slate-700">Jours de disponibilité</label>
           <div className="mt-3 flex flex-wrap gap-2">
             {JOURS.map((jour) => (
               <button
@@ -1317,15 +1423,13 @@ function Step3({
               </button>
             ))}
           </div>
-          <p className="mt-1.5 text-xs text-slate-500">Sélectionnez les jours de location possibles</p>
+          <p className="mt-1.5 text-xs text-slate-500">Retrait, livraison ou mise à disposition</p>
         </div>
 
         {data.joursOuverture.length > 0 && (
           <div>
-            <label className="text-sm font-medium text-slate-700">Horaires par jour de location</label>
-            <p className="mt-1 text-xs text-slate-500">
-              Indiquez les plages horaires pour chaque jour de location
-            </p>
+            <label className="text-sm font-medium text-slate-700">Horaires par jour</label>
+            <p className="mt-1 text-xs text-slate-500">Plages indicatives pour chaque jour sélectionné</p>
             <div className="mt-3 space-y-4">
               {data.joursOuverture.map((jour) => {
                 const h = data.horairesParJour[jour] ?? DEFAULT_HORAIRES;
@@ -1378,11 +1482,11 @@ function Step3({
               </button>
             ))}
           </div>
-          <p className="mt-1.5 text-xs text-slate-500">Ces informations évitent les demandes inadaptées</p>
+          <p className="mt-1.5 text-xs text-slate-500">Pour cadrer les usages les plus adaptés à votre offre</p>
         </div>
 
         <div>
-          <label className="text-sm font-medium text-slate-700">Événements acceptés</label>
+          <label className="text-sm font-medium text-slate-700">Événements cibles</label>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {ACCEPTED_EVENTS.map(({ id, label, icon: Icon }) => (
               <button
@@ -1507,7 +1611,7 @@ function Step4JoursVisite({
     allFutureDatesInRange.every((d) => data.visiteDates.includes(d));
 
   const defaultHoraires: HorairesJour = { debut: "14:00", fin: "18:00" };
-  const canContinue = data.visiteDates.length > 0;
+  const canContinue = !data.proposeVisiteInspection || data.visiteDates.length > 0;
 
   const toggleAll = () => {
     if (isAllSelected) {
@@ -1524,12 +1628,35 @@ function Step4JoursVisite({
 
   return (
     <>
-      <h2 className="text-2xl font-bold text-black">Jours de visite</h2>
+      <h2 className="text-2xl font-bold text-black">Visite ou prise en main</h2>
       <p className="mt-2 text-slate-600">
-        Sélectionnez les dates où les locataires peuvent organiser une visite, puis indiquez les horaires
+        Proposez des créneaux pour présenter le matériel, ou passez cette étape et concluez par messagerie.
       </p>
 
+      <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50/80 p-4">
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={data.proposeVisiteInspection}
+            onChange={(e) =>
+              updateData({
+                proposeVisiteInspection: e.target.checked,
+                ...(e.target.checked ? {} : { visiteDates: [], visiteHorairesParDate: {} }),
+              })
+            }
+            className="mt-1 h-4 w-4 rounded border-slate-300 text-[#5b4dbf] focus:ring-[#5b4dbf]"
+          />
+          <span>
+            <span className="font-medium text-black">Je propose une visite ou une prise en main du matériel</span>
+            <span className="mt-1 block text-sm text-slate-600">
+              Si vous décochez, aucune date n&apos;est obligatoire — échange par message pour convenir des modalités.
+            </span>
+          </span>
+        </label>
+      </div>
+
       <div className="mt-8 space-y-6">
+        {data.proposeVisiteInspection && (
         <div>
           <label className="text-sm font-medium text-slate-700">Calendrier des visites</label>
           <p className="mt-1 text-xs text-slate-500">
@@ -1610,8 +1737,9 @@ function Step4JoursVisite({
             )}
           </div>
         </div>
+        )}
 
-        {data.visiteDates.length > 0 && (
+        {data.proposeVisiteInspection && data.visiteDates.length > 0 && (
           <div>
             <label className="text-sm font-medium text-slate-700">Créneaux par date</label>
             <p className="mt-1 text-xs text-slate-500">
@@ -1681,7 +1809,12 @@ function Step4JoursVisite({
           Continuer
         </Button>
       </div>
-      {!canContinue && <p className="mt-2 text-sm text-amber-700">Ajoutez au moins une date de visite.</p>}
+      {!data.proposeVisiteInspection && (
+        <p className="mt-2 text-sm text-slate-600">Aucune visite obligatoire — vous pouvez continuer.</p>
+      )}
+      {data.proposeVisiteInspection && !canContinue && (
+        <p className="mt-2 text-sm text-amber-700">Ajoutez au moins une date de visite ou décochez l&apos;option ci-dessus.</p>
+      )}
     </>
   );
 }
@@ -1714,9 +1847,9 @@ function Step5({
 
   return (
     <>
-      <h2 className="text-2xl font-bold text-black">Ajoutez des photos</h2>
+      <h2 className="text-2xl font-bold text-black">Photos du matériel</h2>
       <p className="mt-2 text-slate-600">
-        Montrez votre salle sous son meilleur jour (minimum {minPhotos}, maximum {maxPhotos} photos)
+        État, détails, accessoires et configuration (minimum {minPhotos}, maximum {maxPhotos} photos)
       </p>
       {data.photos.length > 0 && (
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -1870,19 +2003,51 @@ function Step6({
       )}
       <div className="mt-8 space-y-4 rounded-xl border border-slate-200 bg-slate-50/50 p-6">
         <div>
-          <p className="text-xs font-medium text-slate-500">Lieu</p>
+          <p className="text-xs font-medium text-slate-500">Titre de l&apos;annonce</p>
           <p className="mt-1 font-medium text-black">{data.nom || "—"}</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <p className="text-xs font-medium text-slate-500">Ville</p>
+            <p className="text-xs font-medium text-slate-500">Type d&apos;offre</p>
+            <p className="mt-1 font-medium text-black">
+              {data.listingKind === "pack" ? "Pack / formule" : "Matériel à la pièce"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-slate-500">Catégorie</p>
+            <p className="mt-1 font-medium text-black">
+              {(GEAR_CATEGORIES.find((c) => c.value === data.gearCategory)?.label ??
+                data.gearCategory) ||
+                "—"}
+            </p>
+          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className="text-xs font-medium text-slate-500">Marque</p>
+            <p className="mt-1 font-medium text-black">{data.gearBrand.trim() || "—"}</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-slate-500">Modèle / réf.</p>
+            <p className="mt-1 font-medium text-black">{data.gearModel.trim() || "—"}</p>
+          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className="text-xs font-medium text-slate-500">Ville / zone</p>
             <p className="mt-1 font-medium text-black">{data.ville || "—"}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500">Capacité</p>
-            <p className="mt-1 font-medium text-black">{data.capacite || "—"}</p>
+            <p className="text-xs font-medium text-slate-500">Capacité (optionnel)</p>
+            <p className="mt-1 font-medium text-black">{data.capacite.trim() ? data.capacite : "—"}</p>
           </div>
         </div>
+        {data.adresse.trim() ? (
+          <div>
+            <p className="text-xs font-medium text-slate-500">Adresse</p>
+            <p className="mt-1 text-sm text-black">{data.adresse}</p>
+          </div>
+        ) : null}
         <div>
           <p className="text-xs font-medium text-slate-500">Description</p>
           <p className="mt-1 text-sm text-black">{data.description || "—"}</p>
@@ -1930,9 +2095,11 @@ function Step6({
           </div>
         </div>
         <div>
-          <p className="text-xs font-medium text-slate-500">Jours de visite</p>
+          <p className="text-xs font-medium text-slate-500">Visites / prise en main</p>
           <div className="mt-2 space-y-1">
-            {data.visiteDates.length ? (
+            {!data.proposeVisiteInspection ? (
+              <p className="text-sm text-black">Non proposée — prise de contact par messagerie</p>
+            ) : data.visiteDates.length ? (
               data.visiteDates.map((dateStr) => {
                 const h = data.visiteHorairesParDate?.[dateStr];
                 const d = new Date(dateStr + "T12:00:00");
@@ -1948,7 +2115,7 @@ function Step6({
                 );
               })
             ) : (
-              <p className="text-sm text-black">—</p>
+              <p className="text-sm text-amber-800">Option cochée — ajoutez au moins une date à l&apos;étape précédente</p>
             )}
           </div>
         </div>

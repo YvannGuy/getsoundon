@@ -1,6 +1,9 @@
 /**
- * Type Salle utilisé partout (DB, affichage, recherche).
+ * Type « annonce » — la table Postgres reste `public.salles` (catalogue matériel / pack en v1 GetSoundOn).
+ * Les champs optionnels gear_* / listing_kind supposent la migration `scripts/supabase-salles-gear-listing.sql`.
  */
+export type ListingKind = "equipment" | "pack" | "service" | "venue";
+
 export type Salle = {
   id: string;
   ownerId?: string;
@@ -11,6 +14,7 @@ export type Salle = {
   contactPhone?: string | null;
   displayContactPhone?: boolean;
   cautionRequise?: boolean;
+  /** Public / charge utile indicative (optionnel pour le matériel — peut être 0). */
   capacity: number;
   pricePerDay: number;
   pricePerMonth?: number | null;
@@ -23,7 +27,7 @@ export type Salle = {
   pricingInclusions: string[];
   lat?: number;
   lng?: number;
-  /** Pour générer les créneaux de visite (horaires par jour) */
+  /** Horaires de disponibilité (location / retrait), pas uniquement « lieu ». */
   horairesParJour?: Record<string, { debut: string; fin: string }>;
   joursOuverture?: string[];
   joursVisite?: string[] | null;
@@ -31,7 +35,12 @@ export type Salle = {
   visiteHeureDebut?: string | null;
   visiteHeureFin?: string | null;
   visiteHorairesParDate?: Record<string, { debut: string; fin: string }> | null;
-}
+  /** Métadonnées matériel (migration SQL optionnelle). */
+  listingKind?: ListingKind | null;
+  gearCategory?: string | null;
+  gearBrand?: string | null;
+  gearModel?: string | null;
+};
 
 export type SalleRow = {
   id: string;
@@ -65,15 +74,18 @@ export type SalleRow = {
   status: string;
   created_at: string;
   updated_at: string;
+  listing_kind?: string | null;
+  gear_category?: string | null;
+  gear_brand?: string | null;
+  gear_model?: string | null;
 };
 
-/** Retourne les libellés tarifs (ex: "800 € / jour · 90 € / heure · 879 € / mois") - tarif horaire avant mensuel */
+/** Retourne les libellés tarifs (ex: "800 € / jour · 90 € / heure · 879 € / mois") */
 export function formatSalleTarifs(salle: Salle): string {
   const parts = getSalleTarifParts(salle);
   return parts.length > 0 ? parts.map((p) => `${p.value} € ${p.label}`).join(" · ") : "Sur demande";
 }
 
-/** Retourne les tarifs sous forme de parts pour affichage séparé (ordre: jour, heure, mois) */
 export function getSalleTarifParts(salle: Salle): { value: number; label: string }[] {
   const parts: { value: number; label: string }[] = [];
   if (salle.pricePerDay > 0) parts.push({ value: salle.pricePerDay, label: "/ jour" });
@@ -82,11 +94,16 @@ export function getSalleTarifParts(salle: Salle): { value: number; label: string
   return parts;
 }
 
-/** Premier tarif affichable pour "À partir de" - horaire avant mensuel */
 export function getSallePriceFrom(salle: Salle): { label: string; value: number } | null {
   if (salle.pricePerDay > 0) return { label: "/ jour", value: salle.pricePerDay };
   if (salle.pricePerHour && salle.pricePerHour > 0) return { label: "/ heure", value: salle.pricePerHour };
   if (salle.pricePerMonth && salle.pricePerMonth > 0) return { label: "/ mois", value: salle.pricePerMonth };
+  return null;
+}
+
+function parseListingKind(raw: string | null | undefined): ListingKind | null {
+  if (!raw) return null;
+  if (raw === "equipment" || raw === "pack" || raw === "service" || raw === "venue") return raw;
   return null;
 }
 
@@ -131,5 +148,9 @@ export function rowToSalle(row: SalleRow): Salle {
       !Array.isArray(row.visite_horaires_par_date)
         ? (row.visite_horaires_par_date as Record<string, { debut: string; fin: string }>)
         : undefined,
+    listingKind: parseListingKind(row.listing_kind ?? undefined),
+    gearCategory: row.gear_category ?? null,
+    gearBrand: row.gear_brand ?? null,
+    gearModel: row.gear_model ?? null,
   };
 }

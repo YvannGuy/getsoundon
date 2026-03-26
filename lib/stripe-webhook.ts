@@ -8,13 +8,36 @@ import {
   sendReservationConfirmedSeekerEmail,
 } from "@/lib/email";
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
+import { snapshotLinesForPdf } from "@/lib/offer-listing-snapshot";
 import { computePaymentProcessingFeeCents } from "@/lib/payment-processing-fee";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { handleGsBookingCheckoutCompleted } from "@/lib/stripe-webhook-gs-booking";
 import { sendAdminPaymentTelegramNotification } from "@/lib/telegram";
 import { sendUserNotification } from "@/lib/user-notifications";
 
+const processedEventIds = new Map<string, number>();
+const WEBHOOK_EVENT_TTL_MS = 1000 * 60 * 60 * 24;
+
+function shouldProcessEvent(eventId: string): boolean {
+  const now = Date.now();
+  for (const [id, ts] of processedEventIds) {
+    if (now - ts > WEBHOOK_EVENT_TTL_MS) {
+      processedEventIds.delete(id);
+    }
+  }
+  if (processedEventIds.has(eventId)) {
+    return false;
+  }
+  processedEventIds.set(eventId, now);
+  return true;
+}
+
 export async function handleStripeWebhook(event: Stripe.Event) {
+  if (!shouldProcessEvent(event.id)) {
+    return { type: event.type, ignored: true, reason: "duplicate_event" };
+  }
+
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -22,6 +45,15 @@ export async function handleStripeWebhook(event: Stripe.Event) {
       const productType = metadata?.product_type;
       let reservationJustProcessed = false;
       let shouldSendAdminPaymentTelegram = false;
+
+      if (productType === "gs_booking" && metadata?.booking_id && metadata?.user_id) {
+        await handleGsBookingCheckoutCompleted(session, metadata);
+        return {
+          type: event.type,
+          customerEmail: session.customer_details?.email ?? null,
+          sessionId: session.id,
+        };
+      }
 
       if (!productType || productType !== "reservation") {
         console.log("[webhook] checkout.session.completed ignoré (metadata):", { productType, offer_id: metadata?.offer_id, user_id: metadata?.user_id });
@@ -270,7 +302,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
           try {
             const { data: offerFull } = await supabase
               .from("offers")
-              .select("id, amount_cents, date_debut, date_fin, event_type, salle_id, owner_id, seeker_id")
+              .select("id, amount_cents, date_debut, date_fin, event_type, salle_id, owner_id, seeker_id, listing_snapshot")
               .eq("id", offerId)
               .single();
             const salleId = (offerFull as { salle_id?: string })?.salle_id;
@@ -293,6 +325,9 @@ export async function handleStripeWebhook(event: Stripe.Event) {
             const t = template as { raison_sociale?: string | null; adresse?: string | null; code_postal?: string | null; ville?: string | null; siret?: string | null; conditions_particulieres?: string | null } | null;
 
             if (offerFull && salle && ownerProfile && seekerProfile) {
+              const snapLines = snapshotLinesForPdf(
+                (offerFull as { listing_snapshot?: unknown }).listing_snapshot
+              );
               const contractPath = `${offerId}/contrat.pdf`;
               let uploaded = false;
 
@@ -328,6 +363,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
                   seekerEmail: seekerProfile.email ?? "",
                   paidAt: new Date().toLocaleDateString("fr-FR"),
                   template: t ? { raisonSociale: t.raison_sociale, adresse: t.adresse, codePostal: t.code_postal, ville: t.ville, siret: t.siret, conditionsParticulieres: t.conditions_particulieres } : undefined,
+                  snapshotLines: snapLines.length ? snapLines : undefined,
                 };
                 const contractPdf = await generateContractPdf(contractData);
                 const pdfBuffer = Buffer.from(contractPdf);
@@ -359,6 +395,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
                   ownerName: ownerProfile.full_name ?? "Propriétaire",
                   salleName: (salle as { name?: string }).name ?? "Salle",
                   salleCity: (salle as { city?: string }).city ?? "",
+                  snapshotLines: snapLines.length ? snapLines : undefined,
                 });
                 const invoicePath = `factures/${paymentId}.pdf`;
                 const { error: uploadInvErr } = await supabase.storage
@@ -391,7 +428,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
         const seekerId = metadata.user_id;
         const paidCents = session.amount_total ?? Number(metadata?.amount_cents ?? "0");
         const amountForEmail = (paidCents / 100).toFixed(2);
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://salledeculte.com";
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com";
 
         const { data: offerNotif } = await supabase
           .from("offers")
@@ -486,7 +523,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
       const productType = metadata.product_type;
       if (productType === "reservation" && metadata.offer_id) {
         const supabase = createAdminClient();
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://salledeculte.com";
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com";
         const seekerId = metadata.seeker_id ?? metadata.user_id ?? "";
         const ownerId = metadata.owner_id ?? "";
         const offerId = metadata.offer_id;

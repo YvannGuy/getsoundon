@@ -372,7 +372,7 @@ export function DashboardSidebar({
           <Menu className="h-6 w-6" />
         </Button>
         <Link href="/dashboard" className={cn("text-lg font-semibold text-[#213398]", isHydrated && "flex items-center")}>
-          {isHydrated && <Image src="/logopleinsdc.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 object-contain" />}
+          {isHydrated && <Image src="/images/logosound.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 rounded-full object-cover" />}
           {siteConfig.name}
         </Link>
         <div className="w-10" />
@@ -415,7 +415,7 @@ export function DashboardSidebar({
               className={cn("text-lg font-semibold text-[#213398]", isHydrated && "flex items-center")}
               onClick={() => setMobileOpen(false)}
             >
-              {isHydrated && <Image src="/logopleinsdc.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 object-contain" />}
+              {isHydrated && <Image src="/images/logosound.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 rounded-full object-cover" />}
               {siteConfig.name}
             </Link>
           </div>
@@ -458,7 +458,7 @@ export function DashboardSidebar({
         >
           {!collapsed && (
             <Link href="/dashboard" className={cn("text-lg font-semibold text-[#213398]", isHydrated && "flex items-center")}>
-              {isHydrated && <Image src="/logopleinsdc.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 object-contain" />}
+              {isHydrated && <Image src="/images/logosound.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 rounded-full object-cover" />}
               {siteConfig.name}
             </Link>
           )}

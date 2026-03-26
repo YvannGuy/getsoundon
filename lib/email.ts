@@ -1,15 +1,25 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend: Pick<Resend, "emails"> = resendApiKey
+  ? new Resend(resendApiKey)
+  : ({
+      emails: {
+        send: async () => {
+          console.warn("[email] RESEND_API_KEY absente, email non envoye.");
+          return { error: null };
+        },
+      },
+    } as unknown as Pick<Resend, "emails">);
 const from =
-  process.env.RESEND_FROM_EMAIL ?? "salledeculte.com <onboarding@resend.dev>";
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://salledeculte.com";
-const contactEmail = "contact@salledeculte.com";
-const instagramUrl = "https://www.instagram.com/salledeculte/";
-const facebookUrl = "https://www.facebook.com/profile.php?id=61588281587238";
-const demoVideoUrl = "https://youtu.be/demo-salledeculte";
+  process.env.RESEND_FROM_EMAIL ?? "GetSoundOn <onboarding@resend.dev>";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com";
+const contactEmail = "contact@getsoundon.com";
+const instagramUrl = "https://instagram.com/getsoundon";
+const facebookUrl = "https://facebook.com/getsoundon";
+const demoVideoUrl = "https://youtu.be/demo-getsoundon";
 const seekerWelcomeVideoUrl = "https://vimeo.com/1169991938";
-const seekerWelcomeGuideUrl = `${siteUrl}/pdf/salledeculte.com_bien_debuter.pdf`;
+const seekerWelcomeGuideUrl = `${siteUrl}/pdf/welcome-guide.pdf`;
 const ownerWelcomeVideoUrl = "https://vimeo.com/1170020143";
 
 function renderEmailLayout({
@@ -19,7 +29,7 @@ function renderEmailLayout({
   ctaLabel,
   ctaUrl,
   ctaTitle = "Commencez maintenant",
-  ctaText = "Accédez à votre espace pour continuer sur salledeculte.com.",
+  ctaText = "Accedez a votre espace pour continuer sur GetSoundOn.",
   includeDemoCta = false,
 }: {
   title: string;
@@ -31,7 +41,7 @@ function renderEmailLayout({
   ctaText?: string;
   includeDemoCta?: boolean;
 }) {
-  const logoUrl = `${siteUrl}/logopleinsdc.png`;
+  const logoUrl = `${siteUrl}/images/logosound.png`;
   const ctaBlock = ctaLabel && ctaUrl
     ? `<div class="cta-block">
          <h3>${ctaTitle}</h3>
@@ -79,8 +89,8 @@ li{margin:6px 0;}
   <div class="email-card">
     <div class="header">
       <div class="logo">
-        <img src="${logoUrl}" alt="salledeculte.com" />
-        <span>salledeculte.com</span>
+        <img src="${logoUrl}" alt="GetSoundOn" />
+        <span>GetSoundOn</span>
       </div>
     </div>
     <div class="content">
@@ -93,7 +103,7 @@ li{margin:6px 0;}
         <p><a href="${instagramUrl}">Instagram</a> · <a href="${facebookUrl}">Facebook</a></p>
         <p>Contact support : <a href="mailto:${contactEmail}">${contactEmail}</a></p>
       </div>
-      <p class="signature">À très bientôt,<br>L'équipe salledeculte.com</p>
+      <p class="signature">A tres bientot,<br>L'equipe GetSoundOn</p>
     </div>
   </div>
 </body>
@@ -109,9 +119,9 @@ export async function sendWelcomeSeekerEmail(to: string, fullName: string) {
   const { error } = await resend.emails.send({
     from,
     to,
-    subject: "Bienvenue sur salledeculte.com",
+    subject: "Bienvenue sur GetSoundOn",
     html: renderEmailLayout({
-      title: `Bienvenue ${firstName} sur Salledeculte`,
+      title: `Bienvenue ${firstName} sur GetSoundOn`,
       intro:
         "Vous venez de rejoindre une plateforme pensée pour connecter les propriétaires de salles chrétiennes et les utilisateurs en recherche d’un lieu adapté à leurs besoins.",
       sections: [
@@ -149,14 +159,14 @@ export async function sendWelcomeOwnerEmail(to: string, _fullName: string) {
   const { error } = await resend.emails.send({
     from,
     to,
-    subject: "Bienvenue sur salledeculte.com",
+    subject: "Bienvenue sur GetSoundOn",
     html: renderEmailLayout({
-      title: "Bienvenue sur salledeculte.com",
+      title: "Bienvenue sur GetSoundOn",
       intro:
         "Merci d’avoir rejoint la plateforme en tant que propriétaire. Vous faites désormais partie d’un réseau dédié à la location de salles chrétiennes.",
       sections: [
         `<h2>Un outil conçu pour vous faire gagner du temps</h2>
-         <p>Salledeculte vous permet de publier votre salle, recevoir des demandes ciblées, échanger simplement avec les utilisateurs et sécuriser vos paiements.</p>`,
+         <p>GetSoundOn vous permet de publier votre salle, recevoir des demandes ciblees, echanger simplement avec les utilisateurs et securiser vos paiements.</p>`,
         `<h2>Ce que vous pouvez faire dès maintenant</h2>
          <ul>
            <li>Ajouter ou modifier vos annonces</li>
@@ -193,7 +203,7 @@ export async function sendNewMessageNotification(
   const { error } = await resend.emails.send({
     from,
     to,
-    subject: `Nouveau message de ${senderName} sur salledeculte.com`,
+    subject: `Nouveau message de ${senderName} sur GetSoundOn`,
     html: renderEmailLayout({
       title: "Nouveau message",
       intro: `<strong>${escapeHtml(senderName)}</strong> vous a envoyé un message :`,
@@ -220,7 +230,7 @@ export async function sendNewDemandeNotification(
   const { error } = await resend.emails.send({
     from,
     to,
-    subject: `Nouvelle demande pour ${salleName} sur salledeculte.com`,
+    subject: `Nouvelle demande pour ${salleName} sur GetSoundOn`,
     html: renderEmailLayout({
       title: "Nouvelle demande de réservation",
       intro: `<strong>${escapeHtml(seekerName)}</strong> vous a envoyé une demande pour la salle <strong>${escapeHtml(salleName)}</strong>.`,
@@ -278,7 +288,7 @@ export async function sendVisiteAcceptedNotification(
   const { error } = await resend.emails.send({
     from,
     to,
-    subject: `Visite acceptée pour ${salleName} — salledeculte.com`,
+    subject: `Visite acceptee pour ${salleName} - GetSoundOn`,
     html: renderEmailLayout({
       title: "Votre visite a été acceptée",
       intro: `Le propriétaire de <strong>${escapeHtml(salleName)}</strong> a accepté votre demande de visite.`,
@@ -305,7 +315,7 @@ export async function sendVisiteRefusedNotification(
   const { error } = await resend.emails.send({
     from,
     to,
-    subject: `Créneau indisponible pour ${salleName} — salledeculte.com`,
+    subject: `Creneau indisponible pour ${salleName} - GetSoundOn`,
     html: renderEmailLayout({
       title: "Votre demande de visite n'a pas pu être confirmée",
       intro: `Le propriétaire de <strong>${escapeHtml(salleName)}</strong> n'est pas disponible sur ce créneau.`,
@@ -333,7 +343,7 @@ export async function sendVisiteRescheduleNotification(
   const { error } = await resend.emails.send({
     from,
     to,
-    subject: `Nouveau créneau proposé pour ${salleName} — salledeculte.com`,
+    subject: `Nouveau creneau propose pour ${salleName} - GetSoundOn`,
     html: renderEmailLayout({
       title: "Un nouveau créneau vous est proposé",
       intro: `Le propriétaire de <strong>${escapeHtml(salleName)}</strong> vous propose une nouvelle date de visite.`,
@@ -366,7 +376,7 @@ export async function sendNewSallePendingAdminNotification(
   const { error } = await resend.emails.send({
     from,
     to,
-    subject: `[salledeculte.com] Nouvelle annonce à valider : ${salleName}`,
+    subject: `[GetSoundOn] Nouvelle annonce a valider : ${salleName}`,
     html: renderEmailLayout({
       title: "Nouvelle annonce à valider",
       intro:
@@ -399,7 +409,7 @@ export async function sendNewSallePublishedAdminNotification(
   const { error } = await resend.emails.send({
     from,
     to,
-    subject: `[salledeculte.com] Nouvelle annonce publiée : ${salleName}`,
+    subject: `[GetSoundOn] Nouvelle annonce publiee : ${salleName}`,
     html: renderEmailLayout({
       title: "Nouvelle annonce publiée",
       intro:
@@ -518,7 +528,7 @@ export async function sendConciergeConfirmationEmail(to: string) {
   const { error } = await resend.emails.send({
     from,
     to,
-    subject: "Demande enregistrée — Conciergerie salledeculte.com",
+    subject: "Demande enregistree - Conciergerie GetSoundOn",
     html: renderEmailLayout({
       title: "Votre demande a bien été enregistrée",
       intro:

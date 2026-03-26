@@ -16,7 +16,7 @@ export function ConciergeSection() {
           <div className="grid items-center gap-8 md:grid-cols-[0.95fr_1.05fr] lg:grid-cols-[0.92fr_1.08fr]">
             <div className="relative z-10 px-6 py-6 sm:px-8 lg:px-6">
               <p className="text-center text-[18px] font-semibold leading-none text-[#213398] sm:text-[22px] lg:text-[24px]">
-                Conciergerie Salledeculte
+                Conciergerie GetSoundOn
               </p>
               <h2 className="mt-2 text-center text-[38px] font-semibold leading-[1.06] tracking-[-0.02em] text-[#06163f] sm:text-[42px] md:text-[46px]">
                 De la recherche

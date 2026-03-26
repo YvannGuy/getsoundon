@@ -21,6 +21,8 @@ export type ContractData = {
     siret?: string | null;
     conditionsParticulieres?: string | null;
   };
+  /** Détail figé (offre matériel / pack), une ligne = un drawText. */
+  snapshotLines?: string[];
 };
 
 const EVENT_TYPE_LABEL: Record<string, string> = {
@@ -52,7 +54,10 @@ export async function generateContractPdf(data: ContractData): Promise<Uint8Arra
     y -= 8;
   };
 
-  drawText("CONTRAT DE RÉSERVATION DE SALLE", { size: 16, bold: true });
+  drawText(
+    data.snapshotLines?.length ? "CONTRAT DE LOCATION (MATÉRIEL / PACK)" : "CONTRAT DE RÉSERVATION DE SALLE",
+    { size: 16, bold: true }
+  );
   drawLine();
 
   drawText(`N° d'offre : ${data.offerId}`);
@@ -69,8 +74,13 @@ export async function generateContractPdf(data: ContractData): Promise<Uint8Arra
 
   drawText("OBJET :", { bold: true });
   const eventLabel = data.eventType ? EVENT_TYPE_LABEL[data.eventType] ?? data.eventType : "cultuel";
-  drawText(`Location de la salle « ${data.salleName} » située à ${data.salleCity}.`);
-  drawText(`Usage : événement ${eventLabel}.`, { indent: 10 });
+  if (data.snapshotLines?.length) {
+    drawText(`Location du matériel / pack « ${data.salleName} » (annonce — ${data.salleCity}).`);
+    drawText(`Usage : événement ${eventLabel}.`, { indent: 10 });
+  } else {
+    drawText(`Location de la salle « ${data.salleName} » située à ${data.salleCity}.`);
+    drawText(`Usage : événement ${eventLabel}.`, { indent: 10 });
+  }
   drawLine();
 
   drawText("PÉRIODE :", { bold: true });
@@ -92,7 +102,9 @@ export async function generateContractPdf(data: ContractData): Promise<Uint8Arra
     { indent: 10 }
   );
   drawText(
-    "• Le loueur s'engage à mettre la salle à disposition aux dates convenues.",
+    data.snapshotLines?.length
+      ? "• Le loueur s'engage à mettre le matériel / pack à disposition aux dates convenues."
+      : "• Le loueur s'engage à mettre la salle à disposition aux dates convenues.",
     { indent: 10 }
   );
   drawText(
@@ -111,6 +123,27 @@ export async function generateContractPdf(data: ContractData): Promise<Uint8Arra
   drawText(
     "Chaque partie reconnaît avoir pris connaissance des conditions et les accepter."
   );
+
+  if (data.snapshotLines?.length) {
+    const annex = pdfDoc.addPage([595, 842]);
+    let ay = 792;
+    const drawAnnex = (
+      text: string,
+      options: { size?: number; bold?: boolean; indent?: number } = {}
+    ) => {
+      const size = options.size ?? 10;
+      const f = options.bold ? fontBold : font;
+      const x = margin + (options.indent ?? 0);
+      annex.drawText(text, { x, y: ay, size, font: f });
+      ay -= size + 3;
+    };
+    drawAnnex("ANNEXE - DÉTAIL FIGÉ AU MOMENT DE L'OFFRE", { size: 12, bold: true });
+    ay -= 4;
+    for (const line of data.snapshotLines) {
+      if (ay < 72) break;
+      drawAnnex(line, { indent: 10 });
+    }
+  }
 
   return pdfDoc.save();
 }

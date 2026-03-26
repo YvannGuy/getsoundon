@@ -45,6 +45,8 @@ export type Offer = {
   contract_accepted_at: string | null;
   contract_acceptance_version: string | null;
   contract_terms_snapshot: string | null;
+  /** Figé à la création de l’offre — voir `lib/offer-listing-snapshot.ts` */
+  listing_snapshot?: unknown;
   event_end_at: string | null;
   incident_deadline_at: string | null;
   owner_payout_due_at: string | null;
@@ -104,6 +106,8 @@ export type OfferRow = {
   contract_accepted_at: string | null;
   contract_acceptance_version: string | null;
   contract_terms_snapshot: string | null;
+  /** Figé à la création de l’offre — voir `lib/offer-listing-snapshot.ts` */
+  listing_snapshot?: unknown;
   event_end_at: string | null;
   incident_deadline_at: string | null;
   owner_payout_due_at: string | null;

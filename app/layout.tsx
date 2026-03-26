@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope } from "next/font/google";
+import { Inter, Manrope, Montserrat } from "next/font/google";
 import Script from "next/script";
 import type { Graph, Organization, WebSite, ContactPoint, SearchAction } from "schema-dts";
 
@@ -9,6 +9,7 @@ import { siteConfig } from "@/config/site";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { defaultMetadata } from "@/lib/seo";
 import "./globals.css";
+import "@/components/landing/landing.css";
 import "@/styles/animations.css";
 
 const manrope = Manrope({
@@ -16,12 +17,25 @@ const manrope = Manrope({
   variable: "--font-manrope",
 });
 
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  variable: "--font-landing-montserrat",
+  weight: ["400", "600", "700", "800", "900"],
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-landing-inter",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   ...defaultMetadata,
 };
 
 export const viewport: Viewport = {
-  themeColor: "#213398",
+  themeColor: "#9a3412",
 };
 
 const structuredData: Graph = {
@@ -33,7 +47,7 @@ const structuredData: Graph = {
       name: siteConfig.name,
       url: siteConfig.url,
       description: siteConfig.description,
-      logo: `${siteConfig.url}/logosdcbl.png`,
+      logo: `${siteConfig.url}/images/logosound.png`,
       sameAs: [siteConfig.instagram, siteConfig.facebook],
       contactPoint: {
         "@type": "ContactPoint",
@@ -59,6 +73,9 @@ const structuredData: Graph = {
   ],
 };
 
+const googleAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
+const crispWebsiteId = process.env.NEXT_PUBLIC_CRISP_WEBSITE_ID;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -66,26 +83,35 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body className={`${manrope.variable} font-sans antialiased`} suppressHydrationWarning>
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=AW-17978481756"
-          strategy="afterInteractive"
-        />
-        <Script id="gtag-init" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'AW-17978481756');
-          `}
-        </Script>
+      <body
+        className={`${manrope.variable} ${montserrat.variable} ${inter.variable} font-sans antialiased`}
+        suppressHydrationWarning
+      >
+        {googleAdsId ? (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${googleAdsId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="gtag-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${googleAdsId}');
+              `}
+            </Script>
+          </>
+        ) : null}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
-        <Script id="crisp-chat" strategy="afterInteractive">
-          {`window.$crisp=[];window.CRISP_WEBSITE_ID="62bde919-94c1-4b2e-8a44-990fb6533f17";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();`}
-        </Script>
+        {crispWebsiteId ? (
+          <Script id="crisp-chat" strategy="afterInteractive">
+            {`window.$crisp=[];window.CRISP_WEBSITE_ID="${crispWebsiteId}";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();`}
+          </Script>
+        ) : null}
         <CookieProvider>
           {children}
           <ScrollToTop />

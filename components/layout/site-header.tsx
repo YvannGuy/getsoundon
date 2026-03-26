@@ -27,7 +27,7 @@ export async function SiteHeader() {
     <header className="border-y border-slate-300 bg-[#f1f3f5]">
       <div className="container flex h-14 max-w-[1120px] items-center justify-between">
         <Link href="/" className="flex items-center text-xl font-semibold leading-none text-[#213398] hover:text-[#1a2980]">
-          <Image src="/logopleinsdc.png" alt="" width={60} height={60} className="h-[60px] w-[60px] shrink-0 object-contain -mr-3" />
+          <Image src="/images/logosound.png" alt="" width={60} height={60} className="h-[60px] w-[60px] shrink-0 rounded-full object-cover -mr-3" />
           {siteConfig.name}
         </Link>
         <nav className="hidden items-center gap-8 text-[14px] font-semibold text-slate-500 md:flex">
@@ -44,7 +44,7 @@ export async function SiteHeader() {
             href={isLoggedIn ? "/onboarding/salle" : "/auth?tab=signup&userType=owner"}
             className="hover:text-black"
           >
-            Ajoutez ma salle
+            Publier mon materiel
           </Link>
         </nav>
         <div className="flex items-center gap-3">
