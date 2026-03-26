@@ -146,7 +146,7 @@ export default async function AdminDemandesPage({
                 href={href}
                 className={`flex h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-[#213398] text-white"
+                    ? "bg-gs-orange text-white"
                     : "text-slate-600 hover:bg-slate-100 hover:text-black"
                 }`}
               >

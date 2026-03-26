@@ -26,7 +26,10 @@ export async function SiteHeader() {
   return (
     <header className="border-y border-slate-300 bg-[#f1f3f5]">
       <div className="container flex h-14 max-w-[1120px] items-center justify-between">
-        <Link href="/" className="flex items-center text-xl font-semibold leading-none text-[#213398] hover:text-[#1a2980]">
+        <Link
+          href="/"
+          className="flex items-center text-xl font-semibold leading-none text-gs-orange hover:text-orange-950"
+        >
           <Image src="/images/logosound.png" alt="" width={60} height={60} className="h-[60px] w-[60px] shrink-0 rounded-full object-cover -mr-3" />
           {siteConfig.name}
         </Link>

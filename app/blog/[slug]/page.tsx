@@ -130,7 +130,7 @@ export default async function BlogPostPage({ params }: Props) {
               <ReactMarkdown components={markdownComponents}>{post.content.trim()}</ReactMarkdown>
             </div>
             <div className="mt-10 flex justify-center border-t border-slate-200 pt-10">
-              <AddSalleLink className="inline-flex items-center justify-center rounded-lg bg-[#213398] px-8 py-3 text-[15px] font-semibold text-white transition hover:bg-[#1a2980]">
+              <AddSalleLink className="inline-flex items-center justify-center rounded-lg bg-gs-orange px-8 py-3 text-[15px] font-semibold text-white transition hover:brightness-95">
                 Ajouter ma salle
               </AddSalleLink>
             </div>

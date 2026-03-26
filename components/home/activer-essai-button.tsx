@@ -20,7 +20,8 @@ type ActiverEssaiButtonProps = {
   className?: string;
 };
 
-const gradientClasses = "h-10 rounded-md bg-gradient-to-r from-[#213398] to-[#2d4ab8] px-7 text-[14px] text-white hover:from-[#1a2980] hover:to-[#213398]";
+const gradientClasses =
+  "h-10 rounded-md bg-gradient-to-r from-gs-orange to-orange-700 px-7 text-[14px] text-white hover:from-orange-800 hover:to-orange-900";
 
 export function ActiverEssaiButton(props: ActiverEssaiButtonProps) {
   const {
@@ -45,7 +46,7 @@ export function ActiverEssaiButton(props: ActiverEssaiButtonProps) {
     );
   }
 
-  const baseClass = variant === "gradient" ? gradientClasses : "h-10 rounded-md bg-[#213398] px-7 text-[14px] hover:bg-[#1a2980]";
+  const baseClass = variant === "gradient" ? gradientClasses : "h-10 rounded-md bg-gs-orange px-7 text-[14px] hover:brightness-95";
   const activeClass = [baseClass, className].filter(Boolean).join(" ");
 
   if (isLoggedIn) {
@@ -77,7 +78,7 @@ export function ActiverEssaiButton(props: ActiverEssaiButtonProps) {
           </DialogHeader>
           <div className="mt-6 flex flex-col gap-3">
             <Link href={authUrl("login")} onClick={() => setModalOpen(false)}>
-              <Button className="h-11 w-full bg-[#213398] hover:bg-[#1a2980]">
+              <Button className="h-11 w-full bg-gs-orange hover:brightness-95">
                 Se connecter
               </Button>
             </Link>

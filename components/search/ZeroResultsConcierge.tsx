@@ -44,7 +44,7 @@ export function ZeroResultsConcierge({
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Link
           href={conciergeUrl}
-          className="inline-flex h-11 items-center justify-center rounded-md bg-[#213398] px-5 text-sm font-medium text-white transition hover:bg-[#1a2980]"
+          className="inline-flex h-11 items-center justify-center rounded-md bg-gs-orange px-5 text-sm font-medium text-white transition hover:brightness-95"
         >
           Confier ma recherche
         </Link>

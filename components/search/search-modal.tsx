@@ -113,7 +113,7 @@ export function SearchModal({
           </div>
           <Button
             type="submit"
-            className="mt-4 h-12 w-full rounded-lg bg-[#213398] text-[15px] font-medium hover:bg-[#1a2980]"
+            className="mt-4 h-12 w-full rounded-lg bg-gs-orange text-[15px] font-medium hover:brightness-95"
           >
             Voir les salles
           </Button>

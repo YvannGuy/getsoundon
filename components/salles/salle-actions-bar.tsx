@@ -245,7 +245,7 @@ export function SalleActionsBar({
                 {REPORT_REASONS.map((r) => (
                   <label
                     key={r.id}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 transition has-[:checked]:border-[#213398] has-[:checked]:bg-[#213398]/10"
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 transition has-[:checked]:border-gs-orange has-[:checked]:bg-gs-orange/10"
                   >
                     <input
                       type="radio"

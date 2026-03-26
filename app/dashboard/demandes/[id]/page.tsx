@@ -20,8 +20,8 @@ const STATUT_LABEL: Record<string, string> = {
 const STATUT_BADGE: Record<string, string> = {
   sent: "bg-emerald-100 text-emerald-700",
   viewed: "bg-amber-100 text-amber-700",
-  replied: "bg-[#213398]/10 text-black",
-  accepted: "bg-[#213398]/10 text-black",
+  replied: "bg-gs-orange/10 text-black",
+  accepted: "bg-gs-orange/10 text-black",
   rejected: "bg-red-100 text-red-700",
 };
 

@@ -149,12 +149,12 @@ export default function PlanDuSitePage() {
           <h2 className="text-lg font-semibold text-slate-900">Accès et authentification</h2>
           <ul className="mt-3 list-disc space-y-1 pl-6 text-sm text-slate-700">
             <li>
-              <Link href="/login" className="text-blue-700 hover:underline">
+              <Link href="/auth" className="text-blue-700 hover:underline">
                 Connexion
               </Link>
             </li>
             <li>
-              <Link href="/signup" className="text-blue-700 hover:underline">
+              <Link href="/auth?tab=signup" className="text-blue-700 hover:underline">
                 Inscription
               </Link>
             </li>

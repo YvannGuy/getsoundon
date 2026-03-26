@@ -211,7 +211,7 @@ export default async function SalleDetailPage({
                     <MapPin className="h-4 w-4" />
                     {salle.city}
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#213398]/10 px-3 py-1 text-[13px] font-medium text-black">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-gs-orange/10 px-3 py-1 text-[13px] font-medium text-black">
                     <Users className="h-4 w-4" />
                     Jusqu&apos;à {salle.capacity} personnes
                   </span>
@@ -228,7 +228,7 @@ export default async function SalleDetailPage({
                     <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
                       Décision rapide
                     </p>
-                    <p className="mt-1 text-2xl font-bold text-[#213398]">
+                    <p className="mt-1 text-2xl font-bold text-gs-orange">
                       {decisionRapideTopTarif
                         ? `${decisionRapideTopTarif.value} € ${decisionRapideTopTarif.label}`
                         : "Tarifs sur demande"}
@@ -250,14 +250,14 @@ export default async function SalleDetailPage({
                   <div className="w-full sm:w-[240px]">
                     {isOwnSalle ? (
                       <Link href="/proprietaire/annonces">
-                        <Button className="h-11 w-full rounded-lg bg-[#213398] font-semibold hover:bg-[#1a2980]">
+                        <Button className="h-11 w-full rounded-lg bg-gs-orange font-semibold hover:brightness-95">
                           Gérer mon annonce
                         </Button>
                       </Link>
                     ) : canContact ? (
                       <>
                         <Link href={`/salles/${salle.slug}/disponibilite`}>
-                          <Button className="h-11 w-full rounded-lg bg-[#213398] font-semibold hover:bg-[#1a2980]">
+                          <Button className="h-11 w-full rounded-lg bg-gs-orange font-semibold hover:brightness-95">
                             Organiser une visite
                           </Button>
                         </Link>
@@ -274,14 +274,14 @@ export default async function SalleDetailPage({
                     ) : !isLoggedIn ? (
                       <>
                         <Link href={`/salles/${salle.slug}/disponibilite`}>
-                          <Button className="h-11 w-full rounded-lg bg-[#213398] font-semibold hover:bg-[#1a2980]">
+                          <Button className="h-11 w-full rounded-lg bg-gs-orange font-semibold hover:brightness-95">
                             Voir les disponibilités
                           </Button>
                         </Link>
                       </>
                     ) : (
                       <Link href="/pricing">
-                        <Button className="h-11 w-full rounded-lg bg-[#213398] font-semibold hover:bg-[#1a2980]">
+                        <Button className="h-11 w-full rounded-lg bg-gs-orange font-semibold hover:brightness-95">
                           Débloquer l&apos;accès
                         </Button>
                       </Link>
@@ -300,7 +300,7 @@ export default async function SalleDetailPage({
                           key={p.label}
                           className={
                             index === 0
-                              ? "text-xl font-bold text-[#213398]"
+                              ? "text-xl font-bold text-gs-orange"
                               : "text-lg font-medium text-slate-700"
                           }
                         >
@@ -308,7 +308,7 @@ export default async function SalleDetailPage({
                         </p>
                       ))
                     ) : (
-                      <p className="text-xl font-bold text-[#213398]">Sur demande</p>
+                      <p className="text-xl font-bold text-gs-orange">Sur demande</p>
                     )}
                   </div>
                   {salle.pricingInclusions.length > 0 && (
@@ -317,7 +317,7 @@ export default async function SalleDetailPage({
                       <ul className="mt-2 space-y-2.5">
                         {salle.pricingInclusions.map((inc, i) => (
                           <li key={i} className="flex items-center gap-3 text-sm text-slate-700">
-                            <CheckCircle2 className="h-4 w-4 shrink-0 text-[#213398]" />
+                            <CheckCircle2 className="h-4 w-4 shrink-0 text-gs-orange" />
                             {inc}
                           </li>
                         ))}
@@ -429,7 +429,7 @@ export default async function SalleDetailPage({
                   Gérez et modifiez votre annonce depuis votre espace propriétaire.
                 </p>
                 <Link href="/proprietaire/annonces">
-                  <Button className="mt-4 h-12 w-full rounded-lg bg-[#213398] font-semibold hover:bg-[#1a2980]">
+                  <Button className="mt-4 h-12 w-full rounded-lg bg-gs-orange font-semibold hover:brightness-95">
                     Gérer mes annonces
                   </Button>
                 </Link>
@@ -441,7 +441,7 @@ export default async function SalleDetailPage({
                   Organisez une visite pour la découvrir sur place.
                 </p>
                 <Link href={`/salles/${salle.slug}/disponibilite`}>
-                  <Button className="mt-4 h-12 w-full rounded-lg bg-[#213398] font-semibold hover:bg-[#1a2980]">
+                  <Button className="mt-4 h-12 w-full rounded-lg bg-gs-orange font-semibold hover:brightness-95">
                     Organiser une visite
                   </Button>
                 </Link>
@@ -468,8 +468,8 @@ export default async function SalleDetailPage({
             ) : !isLoggedIn ? (
               <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="flex justify-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#213398]/10">
-                    <Lock className="h-6 w-6 text-[#213398]" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gs-orange/10">
+                    <Lock className="h-6 w-6 text-gs-orange" />
                   </div>
                 </div>
                 <h3 className="mt-4 text-center text-lg font-semibold text-black">
@@ -479,7 +479,7 @@ export default async function SalleDetailPage({
                   Choisissez un créneau libre. Connexion demandée uniquement à l&apos;envoi.
                 </p>
                 <Link href={`/salles/${salle.slug}/disponibilite`}>
-                  <Button className="mt-4 h-12 w-full rounded-lg bg-[#213398] font-semibold hover:bg-[#1a2980]">
+                  <Button className="mt-4 h-12 w-full rounded-lg bg-gs-orange font-semibold hover:brightness-95">
                     Voir les disponibilités
                   </Button>
                 </Link>
@@ -487,8 +487,8 @@ export default async function SalleDetailPage({
             ) : (
               <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="flex justify-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#213398]/10">
-                    <Lock className="h-6 w-6 text-[#213398]" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gs-orange/10">
+                    <Lock className="h-6 w-6 text-gs-orange" />
                   </div>
                 </div>
                 <h3 className="mt-4 text-center text-lg font-semibold text-black">
@@ -530,7 +530,7 @@ export default async function SalleDetailPage({
                 </p>
               </div>
               <Link href={`/salles/${salle.slug}/disponibilite`} className="shrink-0">
-                <Button className="h-10 rounded-lg bg-[#213398] px-4 font-semibold hover:bg-[#1a2980]">
+                <Button className="h-10 rounded-lg bg-gs-orange px-4 font-semibold hover:brightness-95">
                   {canContact ? "Organiser une visite" : "Voir les disponibilités"}
                 </Button>
               </Link>

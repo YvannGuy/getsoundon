@@ -80,7 +80,7 @@ export function CookiePreferencesModal({
               type="checkbox"
               checked={state.analytics}
               onChange={(e) => setState((s) => ({ ...s, analytics: e.target.checked }))}
-              className="h-4 w-4 rounded border-slate-300 text-[#213398]"
+              className="h-4 w-4 rounded border-slate-300 text-gs-orange"
             />
           </div>
           <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
@@ -94,7 +94,7 @@ export function CookiePreferencesModal({
               type="checkbox"
               checked={state.marketing}
               onChange={(e) => setState((s) => ({ ...s, marketing: e.target.checked }))}
-              className="h-4 w-4 rounded border-slate-300 text-[#213398]"
+              className="h-4 w-4 rounded border-slate-300 text-gs-orange"
             />
           </div>
         </div>

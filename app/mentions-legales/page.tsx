@@ -43,7 +43,7 @@ export default function MentionsLegalesPage() {
             ? `TVA intracommunautaire : ${editeur.tvaIntracommunautaire}`
             : "TVA : non assujetti"}
           <br />
-          <a href={`mailto:${editeur.email}`} className="text-[#213398] hover:underline">
+          <a href={`mailto:${editeur.email}`} className="text-gs-orange hover:underline">
             {editeur.email}
           </a>
         </address>
@@ -66,7 +66,7 @@ export default function MentionsLegalesPage() {
           <br />
           {hebergeur.adresse}
           <br />
-          <a href={hebergeur.site} target="_blank" rel="noopener noreferrer" className="text-[#213398] hover:underline">
+          <a href={hebergeur.site} target="_blank" rel="noopener noreferrer" className="text-gs-orange hover:underline">
             {hebergeur.site}
           </a>
         </address>
@@ -100,7 +100,7 @@ export default function MentionsLegalesPage() {
         <h2 className="text-xl font-semibold text-black">6. Contact</h2>
         <p className="mt-3 text-slate-600">
           Pour toute question relative aux mentions légales, vous pouvez nous contacter à :{" "}
-          <a href={`mailto:${editeur.email}`} className="text-[#213398] hover:underline">
+          <a href={`mailto:${editeur.email}`} className="text-gs-orange hover:underline">
             {editeur.email}
           </a>
         </p>

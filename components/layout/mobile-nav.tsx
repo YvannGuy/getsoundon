@@ -78,7 +78,7 @@ export function MobileNav({ isLoggedIn, userType, dashboardHref, addSalleHref }:
                           : "/dashboard"
                     }
                     onClick={handleClose}
-                    className="flex w-full items-center justify-center rounded-md bg-[#213398] py-3 text-[14px] font-medium text-white hover:bg-[#1a2980]"
+                    className="flex w-full items-center justify-center rounded-md bg-gs-orange py-3 text-[14px] font-medium text-white hover:brightness-95"
                   >
                     Tableau de bord
                   </Link>
@@ -87,7 +87,7 @@ export function MobileNav({ isLoggedIn, userType, dashboardHref, addSalleHref }:
                     <Link
                       href="/auth?tab=signup"
                       onClick={handleClose}
-                      className="flex w-full items-center justify-center rounded-md bg-[#213398] py-3 text-[14px] font-medium text-white hover:bg-[#1a2980]"
+                      className="flex w-full items-center justify-center rounded-md bg-gs-orange py-3 text-[14px] font-medium text-white hover:brightness-95"
                     >
                       Inscription
                     </Link>

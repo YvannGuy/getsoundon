@@ -51,7 +51,7 @@ export function TrialActivatedPopup({ show, freeTotal, userType, basePath }: Pro
             <p className="mt-2 text-slate-600">{message}</p>
           </DialogDescription>
         </DialogHeader>
-        <Button onClick={handleClose} className="mt-4 w-full bg-[#213398] hover:bg-[#1a2980]">
+        <Button onClick={handleClose} className="mt-4 w-full bg-gs-orange hover:brightness-95">
           Parfait
         </Button>
       </DialogContent>

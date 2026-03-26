@@ -82,7 +82,7 @@ export default async function VisitesPage({
       <div className="p-4 sm:p-6 lg:p-8">
         <h1 className="text-2xl font-bold text-black">Demandes de visites</h1>
         <p className="mt-4 text-slate-600">Aucune annonce. Les demandes de visite apparaîtront ici.</p>
-        <Link href="/onboarding/salle" className="mt-4 inline-block text-[#213398] hover:underline">
+        <Link href="/onboarding/salle" className="mt-4 inline-block text-gs-orange hover:underline">
           Ajouter une salle →
         </Link>
       </div>
@@ -175,7 +175,7 @@ export default async function VisitesPage({
         <Link
           href="/proprietaire/visites"
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            tab === "requests" ? "bg-[#213398] text-white" : "text-slate-600 hover:bg-slate-100 hover:text-black"
+            tab === "requests" ? "bg-gs-orange text-white" : "text-slate-600 hover:bg-slate-100 hover:text-black"
           }`}
         >
           Demandes
@@ -183,7 +183,7 @@ export default async function VisitesPage({
         <Link
           href="/proprietaire/visites?tab=calendar"
           className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            tab === "calendar" ? "bg-[#213398] text-white" : "text-slate-600 hover:bg-slate-100 hover:text-black"
+            tab === "calendar" ? "bg-gs-orange text-white" : "text-slate-600 hover:bg-slate-100 hover:text-black"
           }`}
         >
           <CalendarDays className="h-4 w-4" />
@@ -243,7 +243,7 @@ export default async function VisitesPage({
               href={href}
               className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-[#213398] text-white"
+                  ? "bg-gs-orange text-white"
                   : "text-slate-600 hover:bg-slate-100 hover:text-black"
               }`}
             >

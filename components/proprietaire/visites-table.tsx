@@ -72,7 +72,7 @@ export function VisitesTable({ list }: { list: Item[] }) {
                     {item.salleSlug && (
                       <Link
                         href={`/salles/${item.salleSlug}`}
-                        className="text-xs text-[#213398] hover:underline"
+                        className="text-xs text-gs-orange hover:underline"
                       >
                         Voir
                       </Link>

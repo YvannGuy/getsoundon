@@ -68,7 +68,7 @@ function AdminAuthPageContent() {
             Retour à l&apos;accueil
           </Link>
           <p className="mt-6 text-lg font-semibold text-black">{siteConfig.name}</p>
-          <div className="mt-1 h-0.5 w-12 bg-[#213398]" />
+          <div className="mt-1 h-0.5 w-12 bg-gs-orange" />
           <h2 className="mt-6 flex items-center gap-2 text-2xl font-bold text-black">
             <Shield className="h-7 w-7" />
             Espace administrateur
@@ -130,7 +130,7 @@ function AdminAuthPageContent() {
           {state.error && <p className="mt-3 text-sm text-red-600">{state.error}</p>}
           <Button
             type="submit"
-            className="mt-5 h-11 w-full bg-[#213398] hover:bg-[#1a2980]"
+            className="mt-5 h-11 w-full bg-gs-orange hover:brightness-95"
             disabled={isPending}
           >
             {isPending ? "Connexion..." : "Se connecter"}

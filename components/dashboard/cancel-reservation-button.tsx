@@ -177,7 +177,7 @@ export function CancelReservationButton({
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Ex : changement de planning, événement reporté..."
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#213398]"
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gs-orange"
                 rows={4}
                 maxLength={500}
               />

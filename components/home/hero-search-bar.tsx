@@ -65,7 +65,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
               }}
               placeholder="Paris, Lyon, Marseille..."
               className={cn(
-                "mt-2 h-11 rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none placeholder:text-slate-400 focus-visible:border-[#213398] focus-visible:ring-[#213398]/15",
+                "mt-2 h-11 rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none placeholder:text-slate-400 focus-visible:border-gs-orange focus-visible:ring-gs-orange/15",
                 errors.location && "text-rose-600 placeholder:text-rose-300"
               )}
             />
@@ -97,7 +97,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
               <SelectTrigger
                 id="hero-category"
                 className={cn(
-                  "mt-2 h-11 w-full rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none focus:border-[#213398] focus:ring-[#213398]/15",
+                  "mt-2 h-11 w-full rounded-full border border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-950 shadow-none focus:border-gs-orange focus:ring-gs-orange/15",
                   errors.category && "border-rose-500 text-rose-600"
                 )}
               >
@@ -116,7 +116,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
           <div className="pt-1 sm:col-span-2 lg:col-span-1 lg:pl-2 lg:pt-0">
             <Button
               type="submit"
-              className="h-11 w-full rounded-full bg-[#213398] px-5 text-[14px] font-semibold text-white shadow-[0_10px_24px_rgba(33,51,152,0.24)] transition hover:bg-[#1a2980]"
+              className="h-11 w-full rounded-full bg-gs-orange px-5 text-[14px] font-semibold text-white shadow-[0_10px_24px_rgba(33,51,152,0.24)] transition hover:brightness-95"
             >
               Rechercher
               <span className="ml-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/15">

@@ -28,7 +28,7 @@ export function AdminHeader({ title, subtitle }: AdminHeaderProps) {
       <div>
         <Link
           href="/"
-          className="mb-1 inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 transition hover:text-[#213398]"
+          className="mb-1 inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 transition hover:text-gs-orange"
         >
           <ArrowLeft className="h-4 w-4" />
           Retour vers le site

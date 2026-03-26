@@ -7,12 +7,13 @@ import { useActionState, useTransition, useState, Suspense, useEffect } from "re
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CheckCircle2, Eye, EyeOff, Search, Building2, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Package, Warehouse, ArrowLeft } from "lucide-react";
 
 import { loginAction, signupAction, type AuthFormState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { siteConfig } from "@/config/site";
+import { LANDING_HERO_IMAGE_URL } from "@/lib/landing-assets";
 import { cn } from "@/lib/utils";
 
 const loginSchema = z.object({
@@ -36,9 +37,9 @@ type SignupSchema = z.infer<typeof signupSchema>;
 const initialState: AuthFormState = {};
 
 const features = [
-  "Annonces vérifiées",
-  "Informations claires",
-  "Demandes rapides",
+  "Matériel entre particuliers et pros",
+  "Paiements et caution encadrés",
+  "Réservation simple, en ligne",
 ];
 
 function AuthPageContent() {
@@ -55,54 +56,57 @@ function AuthPageContent() {
 
   return (
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-[0.95fr_1.05fr]">
-      <div className="relative flex flex-col justify-start gap-8 bg-slate-100 p-8 md:p-10">
-        <div className="absolute inset-0 overflow-hidden">
+      <div className="relative flex min-h-[280px] flex-col justify-start gap-8 overflow-hidden bg-gs-beige p-8 md:min-h-0 md:p-10">
+        <div className="absolute inset-0">
           <Image
-            src="/img.png"
+            src={LANDING_HERO_IMAGE_URL}
             alt=""
             fill
-            className="object-cover opacity-20"
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority
           />
         </div>
+        <div className="landing-hero-overlay absolute inset-0" aria-hidden />
         <div className="relative z-10">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-black"
+            className="font-landing-nav inline-flex items-center gap-2 text-sm font-medium text-white/90 transition hover:text-white"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 shrink-0" />
             Retour à l&apos;accueil
           </Link>
-          <h2 className="mt-6 flex items-center gap-0 whitespace-nowrap text-xl font-bold text-black sm:text-2xl">
-            <span>Bienvenue sur</span>
+          <h2 className="font-landing-heading mt-6 flex flex-wrap items-center gap-x-2 text-xl font-bold text-white sm:text-2xl">
+            <span className="shrink-0">Bienvenue sur</span>
             <Link
               href="/"
-              className="-ml-1 inline-flex items-center leading-none text-[#213398] hover:text-[#1a2980]"
+              className="inline-flex min-w-0 items-center gap-1 leading-none transition hover:opacity-95"
             >
               <Image
                 src="/images/logosound.png"
                 alt=""
-                width={60}
-                height={60}
-                className="h-[44px] w-[44px] shrink-0 rounded-full object-cover -mr-2 sm:h-[60px] sm:w-[60px] sm:-mr-3"
+                width={48}
+                height={48}
+                className="h-10 w-10 shrink-0 rounded-full object-cover sm:h-12 sm:w-12"
               />
-              {siteConfig.name}
+              <span className="font-landing-logo-mark text-gs-orange">{siteConfig.name.toUpperCase()}</span>
             </Link>
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-slate-600">
-            Trouvez et réservez des salles adaptées à vos événements cultuels.
+          <p className="font-landing-body mt-3 max-w-md text-sm leading-relaxed text-white/90">
+            {siteConfig.description}
           </p>
         </div>
         <ul className="relative z-10 space-y-3">
           {features.map((f) => (
-            <li key={f} className="flex items-center gap-2 text-sm text-slate-700">
-              <CheckCircle2 className="h-4 w-4 text-[#3b82f6]" />
+            <li key={f} className="font-landing-body flex items-center gap-2 text-sm text-white/95">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-gs-orange" aria-hidden />
               {f}
             </li>
           ))}
         </ul>
       </div>
 
-      <div className="relative flex flex-col bg-white p-6 md:p-10">
+      <div className="relative flex flex-col bg-gs-beige p-6 md:p-10">
         {resetSuccess && (
           <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
             Votre mot de passe a été modifié. Vous pouvez maintenant vous connecter.
@@ -113,15 +117,15 @@ function AuthPageContent() {
             Votre compte a été suspendu. Contactez l&apos;administrateur pour plus d&apos;informations.
           </div>
         )}
-        <div className="flex gap-6 border-b border-slate-200">
+        <div className="flex gap-6 border-b border-gs-line">
           <button
             type="button"
             onClick={() => setActiveTab("login")}
             className={cn(
-              "pb-3 text-sm font-semibold",
+              "font-landing-nav pb-3 text-sm font-semibold",
               activeTab === "login"
-                ? "border-b-2 border-[#213398] text-black"
-                : "text-slate-500 hover:text-slate-700"
+                ? "border-b-2 border-gs-orange text-gs-dark"
+                : "text-gs-muted hover:text-gs-dark"
             )}
           >
             Connexion
@@ -130,10 +134,10 @@ function AuthPageContent() {
             type="button"
             onClick={() => setActiveTab("signup")}
             className={cn(
-              "pb-3 text-sm font-semibold",
+              "font-landing-nav pb-3 text-sm font-semibold",
               activeTab === "signup"
-                ? "border-b-2 border-[#213398] text-black"
-                : "text-slate-500 hover:text-slate-700"
+                ? "border-b-2 border-gs-orange text-gs-dark"
+                : "text-gs-muted hover:text-gs-dark"
             )}
           >
             Créer un compte
@@ -170,14 +174,14 @@ function LoginFormContent({ redirectedFrom, onSwitchToSignup }: { redirectedFrom
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 flex max-w-md flex-col">
-      <h3 className="text-xl font-bold text-black">Connexion</h3>
+      <h3 className="font-landing-heading text-xl font-bold text-gs-dark sm:text-2xl">Connexion</h3>
       <div className="mt-5 space-y-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">Email</label>
+          <label className="font-landing-nav text-sm font-medium text-gs-dark">Email</label>
           <Input
             placeholder="votre@email.com"
             {...form.register("email")}
-            className="h-11 border-slate-200"
+            className="h-11 border-gs-line bg-white"
           />
           {form.formState.errors.email && (
             <p className="text-xs text-red-600">{form.formState.errors.email.message}</p>
@@ -185,8 +189,11 @@ function LoginFormContent({ redirectedFrom, onSwitchToSignup }: { redirectedFrom
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-slate-700">Mot de passe</label>
-            <Link href="/auth/mot-de-passe-oublie" className="text-xs font-medium text-black hover:underline">
+            <label className="font-landing-nav text-sm font-medium text-gs-dark">Mot de passe</label>
+            <Link
+              href="/auth/mot-de-passe-oublie"
+              className="font-landing-nav text-xs font-medium text-gs-orange hover:underline"
+            >
               Mot de passe oublié ?
             </Link>
           </div>
@@ -195,7 +202,7 @@ function LoginFormContent({ redirectedFrom, onSwitchToSignup }: { redirectedFrom
               type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               {...form.register("password")}
-              className="h-11 pr-10 border-slate-200"
+              className="h-11 border-gs-line bg-white pr-10"
             />
             <button
               type="button"
@@ -213,17 +220,17 @@ function LoginFormContent({ redirectedFrom, onSwitchToSignup }: { redirectedFrom
       {state.error && <p className="mt-3 text-sm text-red-600">{state.error}</p>}
       <Button
         type="submit"
-        className="mt-5 h-11 w-full bg-[#213398] hover:bg-[#1a2980]"
+        className="font-landing-btn mt-5 h-11 w-full bg-gs-orange text-white transition hover:brightness-105"
         disabled={isPending}
       >
         {isPending ? "Connexion..." : "Se connecter"}
       </Button>
-      <p className="mt-6 text-center text-sm text-slate-500">
+      <p className="font-landing-body mt-6 text-center text-sm text-gs-muted">
         Vous n&apos;avez pas de compte ?{" "}
         <button
           type="button"
           onClick={onSwitchToSignup}
-          className="font-semibold text-black hover:underline"
+          className="font-semibold text-gs-orange hover:underline"
         >
           Créer un compte
         </button>
@@ -269,38 +276,42 @@ function SignupFormContent({ redirectedFrom, onSwitchToLogin, initialUserType }:
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 flex max-w-md flex-col">
-      <h3 className="text-xl font-bold text-black">Créer un compte</h3>
+      <h3 className="font-landing-heading text-xl font-bold text-gs-dark sm:text-2xl">Créer un compte</h3>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">Prénom</label>
-          <Input placeholder="Votre prénom" {...form.register("firstName")} className="h-11 border-slate-200" />
+          <label className="font-landing-nav text-sm font-medium text-gs-dark">Prénom</label>
+          <Input
+            placeholder="Votre prénom"
+            {...form.register("firstName")}
+            className="h-11 border-gs-line bg-white"
+          />
           {form.formState.errors.firstName && (
             <p className="text-xs text-red-600">{form.formState.errors.firstName.message}</p>
           )}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">Nom</label>
-          <Input placeholder="Votre nom" {...form.register("lastName")} className="h-11 border-slate-200" />
+          <label className="font-landing-nav text-sm font-medium text-gs-dark">Nom</label>
+          <Input placeholder="Votre nom" {...form.register("lastName")} className="h-11 border-gs-line bg-white" />
           {form.formState.errors.lastName && (
             <p className="text-xs text-red-600">{form.formState.errors.lastName.message}</p>
           )}
         </div>
       </div>
       <div className="mt-4 space-y-2">
-        <label className="text-sm font-medium text-slate-700">Email</label>
-        <Input placeholder="votre@email.com" {...form.register("email")} className="h-11 border-slate-200" />
+        <label className="font-landing-nav text-sm font-medium text-gs-dark">Email</label>
+        <Input placeholder="votre@email.com" {...form.register("email")} className="h-11 border-gs-line bg-white" />
         {form.formState.errors.email && (
           <p className="text-xs text-red-600">{form.formState.errors.email.message}</p>
         )}
       </div>
       <div className="mt-4 space-y-2">
-        <label className="text-sm font-medium text-slate-700">Mot de passe</label>
+        <label className="font-landing-nav text-sm font-medium text-gs-dark">Mot de passe</label>
         <div className="relative">
           <Input
             type={showPassword ? "text" : "password"}
             placeholder="••••••••"
             {...form.register("password")}
-            className="h-11 pr-10 border-slate-200"
+            className="h-11 border-gs-line bg-white pr-10"
           />
           <button
             type="button"
@@ -315,13 +326,13 @@ function SignupFormContent({ redirectedFrom, onSwitchToLogin, initialUserType }:
         )}
       </div>
       <div className="mt-4 space-y-2">
-        <label className="text-sm font-medium text-slate-700">Confirmer le mot de passe</label>
+        <label className="font-landing-nav text-sm font-medium text-gs-dark">Confirmer le mot de passe</label>
         <div className="relative">
           <Input
             type={showConfirmPassword ? "text" : "password"}
             placeholder="••••••••"
             {...form.register("confirmPassword")}
-            className="h-11 pr-10 border-slate-200"
+            className="h-11 border-gs-line bg-white pr-10"
           />
           <button
             type="button"
@@ -336,18 +347,18 @@ function SignupFormContent({ redirectedFrom, onSwitchToLogin, initialUserType }:
         )}
       </div>
       <div className="mt-4 space-y-3">
-        <label className="text-sm font-medium text-slate-700">Vous êtes :</label>
-        <div className="flex gap-6">
+        <label className="font-landing-nav text-sm font-medium text-gs-dark">Vous êtes :</label>
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-6">
           <label className="flex cursor-pointer items-center gap-2">
             <input
               type="radio"
               name="userType"
               checked={userType === "seeker"}
               onChange={() => setUserType("seeker")}
-              className="h-4 w-4 border-slate-300 text-black focus:ring-[#213398]"
+              className="h-4 w-4 border-gs-line accent-gs-orange focus:outline-none focus:ring-2 focus:ring-gs-orange/40"
             />
-            <Search className="h-4 w-4 text-slate-500" />
-            <span className="text-sm">Je cherche une salle</span>
+            <Package className="h-4 w-4 shrink-0 text-gs-muted" aria-hidden />
+            <span className="font-landing-body text-sm text-gs-dark">Je loue du matériel</span>
           </label>
           <label className="flex cursor-pointer items-center gap-2">
             <input
@@ -355,22 +366,26 @@ function SignupFormContent({ redirectedFrom, onSwitchToLogin, initialUserType }:
               name="userType"
               checked={userType === "owner"}
               onChange={() => setUserType("owner")}
-              className="h-4 w-4 border-slate-300 text-black focus:ring-[#213398]"
+              className="h-4 w-4 border-gs-line accent-gs-orange focus:outline-none focus:ring-2 focus:ring-gs-orange/40"
             />
-            <Building2 className="h-4 w-4 text-slate-500" />
-            <span className="text-sm">Je possède une salle</span>
+            <Warehouse className="h-4 w-4 shrink-0 text-gs-muted" aria-hidden />
+            <span className="font-landing-body text-sm text-gs-dark">Je possède du matériel</span>
           </label>
         </div>
       </div>
       {state.error && <p className="mt-3 text-sm text-red-600">{state.error}</p>}
       {state.success && <p className="mt-3 text-sm text-emerald-600">{state.success}</p>}
-      <Button type="submit" className="mt-5 h-11 w-full bg-[#213398] hover:bg-[#1a2980]" disabled={isPending}>
+      <Button
+        type="submit"
+        className="font-landing-btn mt-5 h-11 w-full bg-gs-orange text-white transition hover:brightness-105"
+        disabled={isPending}
+      >
         {isPending ? "Création..." : "Créer mon compte"}
       </Button>
-      <p className="mt-4 text-center text-xs text-slate-500">Création de compte gratuite</p>
-      <p className="mt-6 text-center text-sm text-slate-500">
+      <p className="font-landing-body mt-4 text-center text-xs text-gs-muted">Création de compte gratuite</p>
+      <p className="font-landing-body mt-6 text-center text-sm text-gs-muted">
         Déjà inscrit ?{" "}
-        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-black hover:underline">
+        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-gs-orange hover:underline">
           Se connecter
         </button>
       </p>
@@ -380,7 +395,7 @@ function SignupFormContent({ redirectedFrom, onSwitchToLogin, initialUserType }:
 
 export default function AuthPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gs-beige">
       <Suspense fallback={<div className="flex min-h-[50vh] items-center justify-center">Chargement...</div>}>
         <AuthPageContent />
       </Suspense>

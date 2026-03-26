@@ -92,7 +92,7 @@ export default async function AdminConciergeriePage({
             href={tab.key === "all" ? "/admin/conciergerie" : `/admin/conciergerie?status=${tab.key}`}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
               statusFilter === tab.key
-                ? "bg-[#213398] text-white"
+                ? "bg-gs-orange text-white"
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
@@ -124,7 +124,7 @@ export default async function AdminConciergeriePage({
                     <td className="px-4 py-3 text-slate-600">
                       <Link
                         href={`/admin/conciergerie/${req.id}`}
-                        className="text-[#213398] font-medium hover:underline"
+                        className="text-gs-orange font-medium hover:underline"
                       >
                         {format(new Date(req.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
                       </Link>

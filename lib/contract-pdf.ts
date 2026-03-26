@@ -93,7 +93,7 @@ export async function generateContractPdf(data: ContractData): Promise<Uint8Arra
 
   drawText("MONTANT :", { bold: true });
   drawText(`${data.amountEur} € (TTC)`, { indent: 10 });
-  drawText("Paiement effectué via la plateforme SalleCulte.", { indent: 10 });
+  drawText("Paiement effectué via la plateforme GetSoundOn.", { indent: 10 });
   drawLine();
 
   drawText("CONDITIONS :", { bold: true });
@@ -119,7 +119,7 @@ export async function generateContractPdf(data: ContractData): Promise<Uint8Arra
   }
   drawLine();
 
-  drawText("Le présent contrat est établi électroniquement suite au paiement de l'offre sur la plateforme SalleCulte.");
+  drawText("Le présent contrat est établi électroniquement suite au paiement de l'offre sur la plateforme GetSoundOn.");
   drawText(
     "Chaque partie reconnaît avoir pris connaissance des conditions et les accepter."
   );

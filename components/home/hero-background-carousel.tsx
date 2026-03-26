@@ -43,7 +43,7 @@ export function HeroBackgroundCarousel() {
         </div>
       ))}
       <div
-        className="absolute inset-0 z-10 bg-[#213398] opacity-60"
+        className="absolute inset-0 z-10 bg-gs-orange opacity-60"
         aria-hidden
       />
     </div>

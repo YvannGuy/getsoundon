@@ -119,7 +119,7 @@ export default function CustomerMessagesPage() {
             <button
               type="button"
               onClick={() => setActiveBookingId(bookingIdInput.trim())}
-              className="h-10 rounded-md bg-[#213398] px-4 text-sm font-medium text-white hover:bg-[#1a2980]"
+              className="h-10 rounded-md bg-gs-orange px-4 text-sm font-medium text-white hover:brightness-95"
             >
               Ouvrir
             </button>
@@ -163,7 +163,7 @@ export default function CustomerMessagesPage() {
             type="button"
             onClick={onSubmitMessage}
             disabled={!activeBookingId.trim() || !content.trim() || sending}
-            className="h-10 rounded-md bg-[#213398] px-4 text-sm font-medium text-white hover:bg-[#1a2980] disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-10 rounded-md bg-gs-orange px-4 text-sm font-medium text-white hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {sending ? "Envoi..." : "Envoyer"}
           </button>

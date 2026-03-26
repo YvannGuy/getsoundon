@@ -33,7 +33,7 @@ export default function ConfidentialitePage() {
           {editeur.siegeSocial.adresse}, {editeur.siegeSocial.codePostal} {editeur.siegeSocial.ville}
           <br />
           Email :{" "}
-          <a href={`mailto:${dpoEmail}`} className="text-[#213398] hover:underline">
+          <a href={`mailto:${dpoEmail}`} className="text-gs-orange hover:underline">
             {dpoEmail}
           </a>
         </p>
@@ -128,7 +128,7 @@ export default function ConfidentialitePage() {
           </li>
           <li>Données de paiement : selon les obligations légales (10 ans pour les pièces comptables)</li>
           <li>Cookies : voir la{" "}
-            <a href="/cookies" className="text-[#213398] hover:underline">
+            <a href="/cookies" className="text-gs-orange hover:underline">
               politique Cookies
             </a>
           </li>
@@ -190,7 +190,7 @@ export default function ConfidentialitePage() {
         </ul>
         <p className="mt-3 text-slate-600">
           Pour exercer ces droits, contactez-nous à{" "}
-          <a href={`mailto:${dpoEmail}`} className="text-[#213398] hover:underline">
+          <a href={`mailto:${dpoEmail}`} className="text-gs-orange hover:underline">
             {dpoEmail}
           </a>
           . Vous disposez également du droit d&apos;introduire une réclamation auprès de la CNIL (
@@ -198,7 +198,7 @@ export default function ConfidentialitePage() {
             href="https://www.cnil.fr"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#213398] hover:underline"
+            className="text-gs-orange hover:underline"
           >
             www.cnil.fr
           </a>
@@ -228,7 +228,7 @@ export default function ConfidentialitePage() {
         <h2 className="text-xl font-semibold text-black">10. Contact</h2>
         <p className="mt-3 text-slate-600">
           Pour toute question sur cette politique ou vos données personnelles :{" "}
-          <a href={`mailto:${dpoEmail}`} className="text-[#213398] hover:underline">
+          <a href={`mailto:${dpoEmail}`} className="text-gs-orange hover:underline">
             {dpoEmail}
           </a>
         </p>

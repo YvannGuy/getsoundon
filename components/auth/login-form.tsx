@@ -72,7 +72,7 @@ export function LoginForm() {
 
           <p className="text-sm text-slate-600">
             Pas encore de compte ?{" "}
-            <Link href="/signup" className="font-medium text-black underline-offset-4 hover:underline">
+            <Link href="/auth?tab=signup" className="font-medium text-black underline-offset-4 hover:underline">
               Créer un compte
             </Link>
           </p>

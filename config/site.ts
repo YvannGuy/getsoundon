@@ -10,7 +10,8 @@ type PricingPlan = {
 
 export const siteConfig = {
   name: "GetSoundOn",
-  description: "Plateforme de mise en relation pour trouver, comparer et reserver des lieux d'evenements.",
+  description:
+    "Louez et proposez du matériel événementiel (sono, DJ, lumières) entre particuliers et pros sur GetSoundOn.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com",
   instagram: "https://instagram.com/getsoundon",
   facebook: "https://facebook.com/getsoundon",

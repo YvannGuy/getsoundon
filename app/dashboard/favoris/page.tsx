@@ -93,7 +93,7 @@ export default async function FavorisPage({
               href="/dashboard/favoris?sort=ville"
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 sort === "ville"
-                  ? "bg-[#213398] text-white"
+                  ? "bg-gs-orange text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -103,7 +103,7 @@ export default async function FavorisPage({
               href="/dashboard/favoris?sort=capacite"
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 sort === "capacite"
-                  ? "bg-[#213398] text-white"
+                  ? "bg-gs-orange text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -113,7 +113,7 @@ export default async function FavorisPage({
               href="/dashboard/favoris?sort=budget"
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 sort === "budget"
-                  ? "bg-[#213398] text-white"
+                  ? "bg-gs-orange text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -170,7 +170,7 @@ export default async function FavorisPage({
                     {salle.price_per_day} € / jour
                   </p>
                   <Link href={`/salles/${salle.slug}`} className="mt-4 block">
-                    <Button className="w-full bg-[#213398] hover:bg-[#1a2980]">
+                    <Button className="w-full bg-gs-orange hover:brightness-95">
                       Voir la salle
                     </Button>
                   </Link>

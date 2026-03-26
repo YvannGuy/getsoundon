@@ -95,13 +95,13 @@ export default function AvantagesPage() {
                 Mettez votre salle
                 <br />
                 en location.
-                <span className="block text-[#213398]">On s&apos;occupe du cadre.</span>
+                <span className="block text-gs-orange">On s&apos;occupe du cadre.</span>
               </h1>
               <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-slate-600">
                 Publiez votre salle et recevez des demandes qualifiées. Un parcours clair pour gérer vos échanges, vos offres et vos réservations.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
-                <AddSalleLink className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#213398] px-6 text-[15px] font-semibold text-white transition hover:bg-[#1a2980]">
+                <AddSalleLink className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-gs-orange px-6 text-[15px] font-semibold text-white transition hover:brightness-95">
                   Ajouter ma salle
                   <ChevronRight className="h-5 w-5" />
                 </AddSalleLink>
@@ -152,7 +152,7 @@ export default function AvantagesPage() {
             {PLATEFORME_CARDS.map((item) => (
               <Card key={item.title} className="border-slate-200">
                 <CardContent className="flex flex-col items-center p-8 text-center">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#eaf0ff] text-sm font-bold text-[#213398]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-sm font-bold text-gs-orange">
                     {item.number}
                   </div>
                   <h3 className="mt-4 text-[18px] font-semibold text-black">{item.title}</h3>
@@ -192,7 +192,7 @@ export default function AvantagesPage() {
               <ul className="mt-8 space-y-3">
                 {ANNONCES_TIPS.map((text) => (
                   <li key={text} className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#213398]" />
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-gs-orange" />
                     <span className="text-[15px] leading-relaxed text-slate-700">{text}</span>
                   </li>
                 ))}
@@ -223,7 +223,7 @@ export default function AvantagesPage() {
             {ETAPES.map((item) => (
               <Card key={item.step} className="border-slate-200 bg-white">
                 <CardContent className="p-6 text-center">
-                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#eaf0ff] text-sm font-bold text-[#213398]">
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-sm font-bold text-gs-orange">
                     {item.step}
                   </div>
                   <h3 className="mt-4 text-[16px] font-semibold text-black">{item.title}</h3>
@@ -296,7 +296,7 @@ export default function AvantagesPage() {
         </div>
       </section>
 
-      <section className="bg-[#eaf0ff] py-16">
+      <section className="bg-orange-50 py-16">
         <div className="container max-w-[1120px] text-center">
           <h2 className="text-[28px] font-bold text-black sm:text-[32px]">
             Prêt à proposer votre salle ?
@@ -305,7 +305,7 @@ export default function AvantagesPage() {
             Testez gratuitement et activez ensuite les options selon vos besoins.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <AddSalleLink className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#213398] px-8 text-[15px] font-semibold text-white transition hover:bg-[#1a2980]">
+            <AddSalleLink className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-gs-orange px-8 text-[15px] font-semibold text-white transition hover:brightness-95">
               Ajouter ma salle
             </AddSalleLink>
             <Link

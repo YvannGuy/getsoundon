@@ -6,8 +6,7 @@ import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 
-const HERO_IMG =
-  "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1920&q=85&auto=format&fit=crop";
+import { LANDING_HERO_IMAGE_URL } from "@/lib/landing-assets";
 
 /** Options affichées comme « type » matériel / usage — valeur = filtre `type` rechercher */
 const TYPE_OPTIONS: { label: string; value: string }[] = [
@@ -54,7 +53,7 @@ export function LandingHero() {
     <section ref={root} className="relative min-h-[520px] overflow-hidden md:min-h-[600px] lg:min-h-[640px]">
       <div ref={bgWrap} className="absolute inset-0 origin-center">
         <Image
-          src={HERO_IMG}
+          src={LANDING_HERO_IMAGE_URL}
           alt=""
           fill
           priority

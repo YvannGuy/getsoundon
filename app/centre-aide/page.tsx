@@ -65,8 +65,8 @@ export default async function CentreAidePage({
               <Link key={cat.href} href={cat.href}>
                 <Card className="h-full rounded-xl border-slate-200 bg-white transition hover:border-slate-300 hover:shadow-md">
                   <CardContent className="flex flex-col p-6">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#213398]/10">
-                      <Icon className="h-5 w-5 text-[#213398]" />
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gs-orange/10">
+                      <Icon className="h-5 w-5 text-gs-orange" />
                     </div>
                     <h2 className="mt-4 font-semibold text-black">{cat.title}</h2>
                     <p className="mt-2 text-sm leading-relaxed text-slate-600">{cat.desc.replace("{site}", siteConfig.name)}</p>
@@ -79,14 +79,14 @@ export default async function CentreAidePage({
 
         <div className="mt-16 rounded-xl border border-slate-200 bg-white p-8">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#213398]/10">
-              <HelpCircle className="h-6 w-6 text-[#213398]" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gs-orange/10">
+              <HelpCircle className="h-6 w-6 text-gs-orange" />
             </div>
             <h2 className="text-xl font-semibold text-black">Nous contacter</h2>
           </div>
           <p className="mt-4 text-[15px] leading-relaxed text-slate-600">
             Sélectionnez le type de demande et envoyez votre message. Notre équipe support vous répond à
-            <span className="font-medium text-[#213398]"> contact@getsoundon.com</span>.
+            <span className="font-medium text-gs-orange"> contact@getsoundon.com</span>.
           </p>
 
           {sent && (
@@ -112,7 +112,7 @@ export default async function CentreAidePage({
                 <input
                   name="name"
                   required
-                  className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none transition focus:border-[#213398]"
+                  className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none transition focus:border-gs-orange"
                   placeholder="Votre nom"
                 />
               </label>
@@ -122,7 +122,7 @@ export default async function CentreAidePage({
                   name="email"
                   type="email"
                   required
-                  className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none transition focus:border-[#213398]"
+                  className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none transition focus:border-gs-orange"
                   placeholder="vous@email.com"
                 />
               </label>
@@ -134,7 +134,7 @@ export default async function CentreAidePage({
                 name="helpType"
                 required
                 defaultValue=""
-                className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-[#213398]"
+                className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-gs-orange"
               >
                 <option value="" disabled>
                   Sélectionnez votre demande
@@ -153,14 +153,14 @@ export default async function CentreAidePage({
                 name="message"
                 required
                 rows={5}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-[#213398]"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-gs-orange"
                 placeholder="Décrivez votre besoin pour que nous puissions vous aider rapidement."
               />
             </label>
 
             <button
               type="submit"
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-[#213398] px-5 text-sm font-semibold text-white transition hover:bg-[#1a2980]"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-gs-orange px-5 text-sm font-semibold text-white transition hover:brightness-95"
             >
               Envoyer ma demande
             </button>

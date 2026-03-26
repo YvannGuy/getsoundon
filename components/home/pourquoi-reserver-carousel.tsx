@@ -59,7 +59,7 @@ export function PourquoiReserverCarousel() {
       <div className="container max-w-[1120px]">
         <h2 className="text-center text-[38px] font-semibold tracking-[-0.02em] text-black sm:text-[42px] md:text-[46px]">
           Pourquoi réserver avec{" "}
-          <span className="font-bold text-[#213398]">{siteConfig.name}</span>
+          <span className="font-bold text-gs-orange">{siteConfig.name}</span>
         </h2>
 
         <div
@@ -70,7 +70,7 @@ export function PourquoiReserverCarousel() {
           {/* Bloc texte + contrôles */}
           <div className="flex flex-col">
             <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#213398]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gs-orange">
                 <Info className="h-6 w-6 text-white" />
               </div>
               <h3 className="mt-4 text-xl font-bold text-black">{bloc.title}</h3>
@@ -96,7 +96,7 @@ export function PourquoiReserverCarousel() {
                     onClick={() => setIndex(i)}
                     className={cn(
                       "h-2.5 w-2.5 rounded-full transition",
-                      i === index ? "bg-[#213398]" : "bg-slate-300 hover:bg-slate-400"
+                      i === index ? "bg-gs-orange" : "bg-slate-300 hover:bg-slate-400"
                     )}
                     aria-label={`Slide ${i + 1}`}
                   />

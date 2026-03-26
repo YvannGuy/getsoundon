@@ -285,7 +285,7 @@ export default async function OwnerReservationsPage({
           </Link>
           <Link
             href="/proprietaire/cautions"
-            className="inline-flex h-11 items-center justify-center rounded-lg bg-[#213398] text-sm font-medium text-white"
+            className="inline-flex h-11 items-center justify-center rounded-lg bg-gs-orange text-sm font-medium text-white"
           >
             Voir caution
           </Link>

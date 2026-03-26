@@ -226,12 +226,12 @@ export function OfferCard({
   return (
     <>
       <div
-        className={`flex max-w-[85%] flex-col gap-3 rounded-2xl border-2 border-[#213398]/20 bg-white px-4 py-3 shadow-sm ${
+        className={`flex max-w-[85%] flex-col gap-3 rounded-2xl border-2 border-gs-orange/20 bg-white px-4 py-3 shadow-sm ${
           isFromMe ? "ml-auto" : ""
         }`}
       >
         <div className="flex items-center gap-2">
-          <Banknote className="h-5 w-5 text-[#213398]" />
+          <Banknote className="h-5 w-5 text-gs-orange" />
           <span className="font-semibold text-black">Offre de location (matériel / pack)</span>
         </div>
         <div className="space-y-1 text-sm">
@@ -371,7 +371,7 @@ export function OfferCard({
             {STATUS_LABEL[effectiveStatus]}
           </span>
           {canAccept && (
-            <Button size="sm" onClick={handleAccept} className="bg-[#213398] hover:bg-[#1a2980]">
+            <Button size="sm" onClick={handleAccept} className="bg-gs-orange hover:brightness-95">
               {paymentMode === "split" ? "Voir le contrat et payer l'acompte" : "Voir le contrat et payer"}
             </Button>
           )}

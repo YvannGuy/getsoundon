@@ -682,7 +682,7 @@ export function MessagerieClient({
   const otherInitials = getInitials(otherName) || "?";
   const statusTag = STATUS_TAG[selected?.demandeStatus ?? "sent"] ?? STATUS_TAG.sent;
   const offerCtaClassName =
-    "h-9 border-[#213398]/50 text-[#213398] hover:bg-[#213398]/5";
+    "h-9 border-gs-orange/50 text-gs-orange hover:bg-gs-orange/5";
 
   const listPanel = (
     <div className="flex min-h-0 w-full flex-1 flex-col border-r-0 border-slate-200 bg-white md:w-[380px] md:border-r-2 md:border-slate-300 md:shrink-0">
@@ -706,9 +706,9 @@ export function MessagerieClient({
               key={key}
               type="button"
               onClick={() => setFilterTab(key)}
-              className={`h-11 rounded-full px-4 text-[13px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#213398]/40 ${
+              className={`h-11 rounded-full px-4 text-[13px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gs-orange/40 ${
                 filterTab === key
-                  ? "bg-[#213398] text-white"
+                  ? "bg-gs-orange text-white"
                   : "bg-white text-slate-600 hover:bg-slate-50"
               }`}
             >
@@ -726,8 +726,8 @@ export function MessagerieClient({
         )}
         {threadsForList.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#213398]/10">
-              <MessageCircle className="h-10 w-10 text-[#213398]" />
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gs-orange/10">
+              <MessageCircle className="h-10 w-10 text-gs-orange" />
             </div>
             <h2 className="mt-6 text-xl font-bold text-black">Aucune conversation</h2>
             <p className="mt-2 max-w-sm text-slate-600">
@@ -736,14 +736,14 @@ export function MessagerieClient({
             <div className="mt-6 flex flex-col items-center gap-3">
               {userType === "owner" && (
                 <AddSalleButton
-                  className="inline-flex items-center gap-2 rounded-lg bg-[#213398] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#1a2980]"
+                  className="inline-flex items-center gap-2 rounded-lg bg-gs-orange px-5 py-2.5 text-sm font-semibold text-white hover:brightness-95"
                 >
                   + Ajouter une annonce
                 </AddSalleButton>
               )}
               {userType === "seeker" && (
                 <p className="text-sm text-slate-500">
-                  <SearchModalButton className="font-medium text-[#213398] hover:underline cursor-pointer">
+                  <SearchModalButton className="font-medium text-gs-orange hover:underline cursor-pointer">
                     Parcourez les salles disponibles
                   </SearchModalButton>
                 </p>
@@ -797,7 +797,7 @@ export function MessagerieClient({
               <div
                 key={t.demandeId}
                 className={`group flex w-full items-start gap-4 border-b border-slate-100 p-4 transition hover:bg-slate-50 ${
-                  isSelected ? "bg-[#213398]/5" : ""
+                  isSelected ? "bg-gs-orange/5" : ""
                 }`}
               >
                 <button
@@ -806,7 +806,7 @@ export function MessagerieClient({
                     setSelected(t);
                     setMobileShowChat(true);
                   }}
-                  className="flex min-w-0 flex-1 items-start gap-4 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#213398]/40"
+                  className="flex min-w-0 flex-1 items-start gap-4 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gs-orange/40"
                 >
                   <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-200">
                     <Image src={t.salleImage ?? "/img.png"} alt="" fill className="object-cover" sizes="56px" />
@@ -816,7 +816,7 @@ export function MessagerieClient({
                       <p className="truncate font-semibold text-black">{t.salleName}</p>
                       <div className="flex shrink-0 items-center gap-2">
                         {t.unreadCount > 0 && (
-                          <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#213398] px-1.5 text-[11px] font-semibold text-white">
+                          <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gs-orange px-1.5 text-[11px] font-semibold text-white">
                             {t.unreadCount > 99 ? "99+" : t.unreadCount}
                           </span>
                         )}
@@ -841,7 +841,7 @@ export function MessagerieClient({
                       <button
                         type="button"
                         onClick={(e) => e.stopPropagation()}
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-200 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#213398]/40"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-200 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gs-orange/40"
                         aria-label="Options de la conversation"
                       >
                         <MoreVertical className="h-5 w-5" />
@@ -980,7 +980,7 @@ export function MessagerieClient({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-[#213398] border-[#213398]/40 hover:bg-[#213398]/5"
+                className="text-gs-orange border-gs-orange/40 hover:bg-gs-orange/5"
                 onClick={() => {
                   if (typeof window !== "undefined") {
                     localStorage.removeItem("messagerie_details_closed");
@@ -998,7 +998,7 @@ export function MessagerieClient({
           {/* Détails de la demande (propriétaire) */}
           {userType === "owner" && !detailsClosedDefinitively && (
             <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-3 md:px-6">
-              <div className="rounded-xl border-2 border-[#213398]/30 bg-white p-4">
+              <div className="rounded-xl border-2 border-gs-orange/30 bg-white p-4">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -1012,7 +1012,7 @@ export function MessagerieClient({
                     className="flex min-w-0 flex-1 items-center justify-between text-left"
                   >
                     <span className="flex items-center gap-2 font-semibold text-black">
-                      <Paperclip className="h-4 w-4 text-[#213398]" />
+                      <Paperclip className="h-4 w-4 text-gs-orange" />
                       Détails de la demande
                     </span>
                     <ChevronDown className={`h-5 w-5 shrink-0 text-slate-500 transition ${detailsOpen ? "rotate-180" : ""}`} />
@@ -1077,7 +1077,7 @@ export function MessagerieClient({
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-[#213398]/50 text-[#213398] hover:bg-[#213398]/5"
+                      className="border-gs-orange/50 text-gs-orange hover:bg-gs-orange/5"
                       disabled={!!statusUpdating}
                       onClick={() => handleStatusUpdate("replied")}
                     >
@@ -1155,7 +1155,7 @@ export function MessagerieClient({
                     </div>
                     <div
                       className={`group relative max-w-[85%] rounded-2xl px-4 py-2 ${
-                        isMe ? "bg-[#213398] text-white" : "bg-white text-black shadow-sm"
+                        isMe ? "bg-gs-orange text-white" : "bg-white text-black shadow-sm"
                       }`}
                     >
                       {isMe && (
@@ -1285,7 +1285,7 @@ export function MessagerieClient({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#213398]/40"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gs-orange/40"
                   title="Ajouter une pièce jointe"
                   aria-label="Ajouter une pièce jointe"
                 >
@@ -1300,7 +1300,7 @@ export function MessagerieClient({
                 <Button
                   type="submit"
                   disabled={sending || (!input.trim() && selectedFiles.length === 0)}
-                  className="h-11 shrink-0 bg-[#213398] hover:bg-[#1a2980]"
+                  className="h-11 shrink-0 bg-gs-orange hover:brightness-95"
                   aria-label="Envoyer le message"
                 >
                   <Send className="h-4 w-4" />
@@ -1411,7 +1411,7 @@ export function MessagerieClient({
                 <Button
                   onClick={handleEditMessage}
                   disabled={editSaving || !editContent.trim()}
-                  className="bg-[#213398] hover:bg-[#1a2980]"
+                  className="bg-gs-orange hover:brightness-95"
                 >
                   {editSaving ? "Enregistrement…" : "Enregistrer"}
                 </Button>
@@ -1449,7 +1449,7 @@ export function MessagerieClient({
                 type="button"
                 onClick={() => setFilterTab(key)}
                 className={`h-11 rounded-full px-4 text-[13px] font-medium transition ${
-                  filterTab === key ? "bg-[#213398] text-white" : "bg-white text-slate-600 hover:bg-slate-50"
+                  filterTab === key ? "bg-gs-orange text-white" : "bg-white text-slate-600 hover:bg-slate-50"
                 }`}
               >
                 {FILTER_TAB_LABELS[key]}
@@ -1459,8 +1459,8 @@ export function MessagerieClient({
           </div>
         </div>
         <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto p-8">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#213398]/10">
-            <MessageCircle className="h-10 w-10 text-[#213398]" />
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gs-orange/10">
+            <MessageCircle className="h-10 w-10 text-gs-orange" />
           </div>
           <h2 className="mt-6 text-xl font-bold text-black">Aucune conversation</h2>
           <p className="mt-2 max-w-sm text-center text-slate-600">
@@ -1469,14 +1469,14 @@ export function MessagerieClient({
           <div className="mt-6 flex flex-col items-center gap-3">
             {userType === "owner" && (
               <AddSalleButton
-                className="inline-flex items-center gap-2 rounded-lg bg-[#213398] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#1a2980]"
+                className="inline-flex items-center gap-2 rounded-lg bg-gs-orange px-5 py-2.5 text-sm font-semibold text-white hover:brightness-95"
               >
                 + Ajouter une annonce
               </AddSalleButton>
             )}
             {userType === "seeker" && (
               <p className="text-sm text-slate-500">
-                <SearchModalButton className="font-medium text-[#213398] hover:underline cursor-pointer">
+                <SearchModalButton className="font-medium text-gs-orange hover:underline cursor-pointer">
                   Parcourez les salles disponibles
                 </SearchModalButton>
               </p>

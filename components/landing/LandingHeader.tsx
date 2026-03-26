@@ -44,11 +44,11 @@ export function LandingHeader() {
         </nav>
 
         <div className="relative z-10 flex max-w-[42%] shrink-0 items-center gap-2 bg-transparent sm:max-w-none sm:gap-4">
-          <Link href="/signup" className={`${navLinkClass} shrink-0`}>
+          <Link href="/auth?tab=signup" className={`${navLinkClass} shrink-0`}>
             Inscription
           </Link>
           <Link
-            href="/login"
+            href="/auth"
             className="font-landing-btn inline-flex max-w-[100%] shrink-0 rounded-md bg-gs-orange px-3 py-2 text-white transition hover:brightness-105 sm:px-7 sm:py-3"
           >
             Connexion

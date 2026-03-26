@@ -19,7 +19,7 @@ export default function CGUPage() {
       <p className="mt-3 text-sm text-slate-500">Dernière mise à jour : 03 mars 2026 à 22:37</p>
       <p className="text-sm text-slate-500">
         Support :{" "}
-        <a href="mailto:contact@getsoundon.com" className="text-[#213398] hover:underline">
+        <a href="mailto:contact@getsoundon.com" className="text-gs-orange hover:underline">
           contact@getsoundon.com
         </a>
       </p>
@@ -138,7 +138,7 @@ export default function CGUPage() {
         <h2 className="text-xl font-semibold text-black">11. Support</h2>
         <p className="mt-3 text-slate-600">
           Contact :{" "}
-          <a href="mailto:contact@getsoundon.com" className="text-[#213398] hover:underline">
+          <a href="mailto:contact@getsoundon.com" className="text-gs-orange hover:underline">
             contact@getsoundon.com
           </a>
         </p>
@@ -267,11 +267,11 @@ export default function CGUPage() {
         <h2 className="text-xl font-semibold text-black">Liens utiles</h2>
         <p className="mt-3 text-slate-600">
           Les conditions financières détaillées restent définies dans les{" "}
-          <a href="/cgv" className="text-[#213398] hover:underline">
+          <a href="/cgv" className="text-gs-orange hover:underline">
             CGV
           </a>
           . La politique de confidentialité est disponible sur{" "}
-          <a href="/confidentialite" className="text-[#213398] hover:underline">
+          <a href="/confidentialite" className="text-gs-orange hover:underline">
             /confidentialite
           </a>
           .

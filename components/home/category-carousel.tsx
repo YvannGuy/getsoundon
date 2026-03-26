@@ -67,7 +67,7 @@ const CATEGORIES: CategoryCard[] = [
 ];
 
 const COLOR_CLASSES: Record<string, string> = {
-  indigo: "bg-[#213398] text-black",
+  indigo: "bg-gs-orange text-black",
   sky: "bg-sky-600 text-sky-600",
   teal: "bg-teal-600 text-teal-600",
   amber: "bg-amber-600 text-amber-600",

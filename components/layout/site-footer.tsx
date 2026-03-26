@@ -8,7 +8,7 @@ import { siteConfig } from "@/config/site";
 
 export function SiteFooter() {
   return (
-    <footer className="bg-[#213398] py-12 text-slate-300">
+    <footer className="bg-gs-orange py-12 text-slate-300">
       <div className="container max-w-[1120px]">
         <div className="grid gap-8 md:grid-cols-4 md:items-start">
           <div>

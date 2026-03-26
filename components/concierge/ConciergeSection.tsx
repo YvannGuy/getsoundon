@@ -15,19 +15,19 @@ export function ConciergeSection() {
         <div className="overflow-hidden rounded-[30px]">
           <div className="grid items-center gap-8 md:grid-cols-[0.95fr_1.05fr] lg:grid-cols-[0.92fr_1.08fr]">
             <div className="relative z-10 px-6 py-6 sm:px-8 lg:px-6">
-              <p className="text-center text-[18px] font-semibold leading-none text-[#213398] sm:text-[22px] lg:text-[24px]">
+              <p className="text-center text-[18px] font-semibold leading-none text-gs-orange sm:text-[22px] lg:text-[24px]">
                 Conciergerie GetSoundOn
               </p>
               <h2 className="mt-2 text-center text-[38px] font-semibold leading-[1.06] tracking-[-0.02em] text-[#06163f] sm:text-[42px] md:text-[46px]">
                 De la recherche
                 <br />à la{" "}
-                <span className="text-[#213398] underline decoration-2 underline-offset-[8px]">
+                <span className="text-gs-orange underline decoration-2 underline-offset-[8px]">
                   visite
                 </span>
               </h2>
               <p className="mx-auto mt-4 max-w-[560px] text-center text-[18px] leading-[1.34] text-[#2f4773] sm:text-[20px] lg:text-[22px]">
                 Vous n&apos;avez pas le temps de chercher ? Décrivez votre besoin,{" "}
-                <span className="font-semibold text-[#213398]">on s&apos;occupe de tout.</span>
+                <span className="font-semibold text-gs-orange">on s&apos;occupe de tout.</span>
               </p>
 
               <ul className="mx-auto mt-5 max-w-[540px] space-y-3">
@@ -54,14 +54,14 @@ export function ConciergeSection() {
               <div className="mt-7 flex flex-wrap justify-center gap-3">
                 <Link
                   href="/conciergerie"
-                  className="inline-flex h-12 min-w-[250px] shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#213398] bg-[#213398] px-7 text-base font-semibold text-white shadow-[0_10px_22px_rgba(33,51,152,0.28)] transition hover:bg-[#1a2980]"
+                  className="inline-flex h-12 min-w-[250px] shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-gs-orange bg-gs-orange px-7 text-base font-semibold text-white shadow-[0_10px_22px_rgba(33,51,152,0.28)] transition hover:brightness-95"
                 >
                   <ArrowRight className="h-4 w-4" />
                   Confier ma recherche
                 </Link>
                 <Link
                   href="/conciergerie#comment-ca-marche"
-                  className="inline-flex h-12 min-w-[200px] shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#213398]/40 bg-transparent px-7 text-base font-semibold text-[#213398] transition hover:bg-[#213398]/5"
+                  className="inline-flex h-12 min-w-[200px] shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-gs-orange/40 bg-transparent px-7 text-base font-semibold text-gs-orange transition hover:bg-gs-orange/5"
                 >
                   En savoir plus
                   <ArrowRight className="h-4 w-4" />

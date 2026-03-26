@@ -139,7 +139,7 @@ export function EdlMiniWizard({
           <Button
             type="button"
             size="sm"
-            className="w-full bg-[#213398] text-xs hover:bg-[#1a2b80] sm:w-auto sm:text-sm"
+            className="w-full bg-gs-orange text-xs hover:brightness-95 sm:w-auto sm:text-sm"
             disabled={!canStartNow}
             onClick={() => openWizard(1)}
           >

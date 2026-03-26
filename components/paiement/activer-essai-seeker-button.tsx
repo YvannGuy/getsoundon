@@ -69,7 +69,7 @@ export function ActiverEssaiSeekerButton({ freeTotal, freeUsed = 0, className }:
               </div>
             </DialogDescription>
           </DialogHeader>
-          <Button onClick={handleCloseSuccess} className="mt-4 w-full bg-[#213398] hover:bg-[#1a2980]">
+          <Button onClick={handleCloseSuccess} className="mt-4 w-full bg-gs-orange hover:brightness-95">
             Parfait
           </Button>
         </DialogContent>

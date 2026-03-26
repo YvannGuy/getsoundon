@@ -19,7 +19,7 @@ export function ContactLocataireDemandeButton({ demandeId }: { demandeId: string
         }
       }}
     >
-      <Button type="submit" disabled={loading} size="sm" className="bg-[#213398] hover:bg-[#1a2980]">
+      <Button type="submit" disabled={loading} size="sm" className="bg-gs-orange hover:brightness-95">
         <MessageCircle className="mr-2 h-4 w-4" />
         {loading ? "Ouverture…" : "Contacter le locataire"}
       </Button>

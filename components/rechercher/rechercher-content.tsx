@@ -223,7 +223,7 @@ export function RechercherContent({
               </SelectContent>
             </Select>
           </div>
-          <Button type="submit" size="sm" className="h-10 shrink-0 gap-2 bg-[#213398] px-4 hover:bg-[#1a2980]">
+          <Button type="submit" size="sm" className="h-10 shrink-0 gap-2 bg-gs-orange px-4 hover:brightness-95">
             <Search className="h-4 w-4" />
             Rechercher
           </Button>
@@ -263,7 +263,7 @@ export function RechercherContent({
                 <Filter className="h-4 w-4" />
                 Filtres
                 {(prixMin || prixMax) && (
-                  <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#213398]/10 px-1.5 text-xs font-medium text-black">
+                  <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gs-orange/10 px-1.5 text-xs font-medium text-black">
                     1
                   </span>
                 )}
@@ -351,7 +351,7 @@ export function RechercherContent({
                   cardRefs.current[salle.id] = el;
                 }}
                 className={`flex gap-4 rounded-xl border-2 bg-white p-4 shadow-sm transition ${
-                  isHighlighted ? "border-[#213398] ring-2 ring-[#213398]/20" : "border-slate-200 hover:border-[#213398]"
+                  isHighlighted ? "border-gs-orange ring-2 ring-gs-orange/20" : "border-slate-200 hover:border-gs-orange"
                 }`}
                 onMouseEnter={() => setHoveredSalleId(salle.id)}
                 onMouseLeave={() => setHoveredSalleId(null)}
@@ -403,7 +403,7 @@ export function RechercherContent({
                       })()}
                     </p>
                     <Link href={`/salles/${salle.slug}`}>
-                      <Button size="sm" className="h-8 bg-[#213398] text-[13px] hover:bg-[#1a2980]">
+                      <Button size="sm" className="h-8 bg-gs-orange text-[13px] hover:brightness-95">
                         Voir la salle
                       </Button>
                     </Link>

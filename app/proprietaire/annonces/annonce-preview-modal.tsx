@@ -48,7 +48,7 @@ export function AnnoncePreviewModal({ salle, open, onOpenChange }: Props) {
                 <MapPin className="h-4 w-4" />
                 {salle.city}
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#213398]/10 px-3 py-1 text-[13px] font-medium text-black">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-gs-orange/10 px-3 py-1 text-[13px] font-medium text-black">
                 <Users className="h-4 w-4" />
                 Jusqu&apos;à {salle.capacity} personnes
               </span>
@@ -71,7 +71,7 @@ export function AnnoncePreviewModal({ salle, open, onOpenChange }: Props) {
               Fermer
             </Button>
             <Link href={`/salles/${salle.slug}`}>
-              <Button className="bg-[#213398] hover:bg-[#1a2980]">
+              <Button className="bg-gs-orange hover:brightness-95">
                 Voir la fiche publique
               </Button>
             </Link>

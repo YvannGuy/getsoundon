@@ -73,7 +73,7 @@ export function SearchForm() {
             </div>
           </div>
           <div className="sm:col-span-2">
-            <Button type="submit" className="mt-1 h-12 w-full rounded-lg bg-[#213398] px-4 text-[15px] font-medium hover:bg-[#1a2980]">
+            <Button type="submit" className="mt-1 h-12 w-full rounded-lg bg-gs-orange px-4 text-[15px] font-medium hover:brightness-95">
               Voir les salles
             </Button>
           </div>

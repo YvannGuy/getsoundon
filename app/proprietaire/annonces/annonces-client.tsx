@@ -101,7 +101,7 @@ export function AnnoncesClient({ salles }: Props) {
                 </Button>
                 <Button
                   size="sm"
-                  className="flex-1 bg-[#213398] hover:bg-[#1a2980]"
+                  className="flex-1 bg-gs-orange hover:brightness-95"
                   onClick={() => handleModifier(s)}
                 >
                   Modifier

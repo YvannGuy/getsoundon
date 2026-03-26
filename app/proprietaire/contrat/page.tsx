@@ -69,7 +69,7 @@ export default async function ProprietaireContratPage({
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <FileText className="mb-4 h-16 w-16 text-slate-300" />
             <p className="text-slate-600">Aucune offre payée pour le moment.</p>
-            <Link href="/proprietaire/messagerie" className="mt-4 text-sm font-medium text-[#213398] hover:underline">
+            <Link href="/proprietaire/messagerie" className="mt-4 text-sm font-medium text-gs-orange hover:underline">
               Ouvrir la messagerie →
             </Link>
           </CardContent>

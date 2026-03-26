@@ -145,8 +145,8 @@ export default async function ProprietairePaiementPage({
           ) : (
             <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#213398]/10">
-                  <Banknote className="h-6 w-6 text-[#213398]" />
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gs-orange/10">
+                  <Banknote className="h-6 w-6 text-gs-orange" />
                 </div>
                 <div>
                   <p className="font-semibold text-black">Activez les paiements</p>
@@ -155,7 +155,7 @@ export default async function ProprietairePaiementPage({
                   </p>
                 </div>
               </div>
-              <ConnectOnboardingButton className="shrink-0 bg-[#213398] hover:bg-[#1a2980]">
+              <ConnectOnboardingButton className="shrink-0 bg-gs-orange hover:brightness-95">
                 Activer les paiements
               </ConnectOnboardingButton>
             </div>

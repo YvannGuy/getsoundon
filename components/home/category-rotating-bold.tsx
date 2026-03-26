@@ -32,7 +32,7 @@ export function CategoryRotatingBold() {
           key={label}
           className={cn(
             "text-lg transition-all duration-300",
-            idx === activeIndex ? "font-bold text-[#213398]" : "font-medium text-slate-700"
+            idx === activeIndex ? "font-bold text-gs-orange" : "font-medium text-slate-700"
           )}
         >
           {label}

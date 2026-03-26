@@ -24,7 +24,7 @@ export default function GlobalError({
           <button
             type="button"
             onClick={() => reset()}
-            className="mt-5 rounded-md bg-[#213398] px-4 py-2 text-sm font-medium text-white hover:bg-[#1a2980]"
+            className="mt-5 rounded-md bg-gs-orange px-4 py-2 text-sm font-medium text-white hover:brightness-95"
           >
             Réessayer
           </button>

@@ -39,7 +39,7 @@ export function ContactVisiteSeekerButton({
         type="submit"
         disabled={loading}
         size="sm"
-        className={`bg-[#213398] hover:bg-[#1a2980] ${className ?? ""}`.trim()}
+        className={`bg-gs-orange hover:brightness-95 ${className ?? ""}`.trim()}
       >
         <MessageCircle className="mr-2 h-4 w-4" />
         {loading ? "Ouverture…" : computedLabel}

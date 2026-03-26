@@ -124,7 +124,7 @@ export function ConciergeForm({ initialValues, isLoggedIn, source }: ConciergeFo
         </p>
         <a
           href="/rechercher"
-          className="mt-6 inline-flex h-11 items-center justify-center rounded-lg bg-[#213398] px-5 text-[14px] font-semibold text-white transition hover:bg-[#1a2980]"
+          className="mt-6 inline-flex h-11 items-center justify-center rounded-lg bg-gs-orange px-5 text-[14px] font-semibold text-white transition hover:brightness-95"
         >
           Retour aux salles
         </a>
@@ -308,7 +308,7 @@ export function ConciergeForm({ initialValues, isLoggedIn, source }: ConciergeFo
       <Button
         type="submit"
         disabled={loading}
-        className="h-12 w-full sm:w-auto bg-[#213398] px-8 hover:bg-[#1a2980]"
+        className="h-12 w-full sm:w-auto bg-gs-orange px-8 hover:brightness-95"
       >
         {loading ? "Envoi en cours..." : "Confier ma recherche"}
       </Button>

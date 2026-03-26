@@ -148,7 +148,7 @@ export function CalendrierVisitesManager({ salles }: { salles: SalleCalendrier[]
                       type="button"
                       className={`rounded-lg border px-3 py-2 text-sm transition ${
                         active
-                          ? "border-[#213398] bg-[#213398]/10 text-black"
+                          ? "border-gs-orange bg-gs-orange/10 text-black"
                           : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                       }`}
                       onClick={() => {
@@ -234,7 +234,7 @@ export function CalendrierVisitesManager({ salles }: { salles: SalleCalendrier[]
 
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <Button
-                className="bg-[#213398] hover:bg-[#1a2980]"
+                className="bg-gs-orange hover:brightness-95"
                 disabled={current?.saving}
                 onClick={async () => {
                   setState((prev) => ({

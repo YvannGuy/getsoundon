@@ -136,7 +136,7 @@ export default function ItemsPage() {
               </div>
               <Link
                 href={`/items/${item.id}`}
-                className="mt-4 inline-flex h-9 items-center rounded-md bg-[#213398] px-3 text-sm font-medium text-white hover:bg-[#1a2980]"
+                className="mt-4 inline-flex h-9 items-center rounded-md bg-gs-orange px-3 text-sm font-medium text-white hover:brightness-95"
               >
                 Voir le listing
               </Link>

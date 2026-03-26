@@ -220,7 +220,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex h-20 w-20 flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 text-slate-500 hover:border-[#213398] hover:text-black"
+                  className="flex h-20 w-20 flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 text-slate-500 hover:border-gs-orange hover:text-black"
                 >
                   <Plus className="h-6 w-6" />
                   <span className="text-xs">Ajouter</span>
@@ -350,7 +350,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
               {FEATURE_EDIT_LIST.map(({ id, label }) => (
                 <label
                   key={id}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm transition hover:border-slate-300 has-[:checked]:border-[#213398] has-[:checked]:bg-[#213398]/5"
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm transition hover:border-slate-300 has-[:checked]:border-gs-orange has-[:checked]:bg-gs-orange/5"
                 >
                   <input
                     type="checkbox"
@@ -372,7 +372,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
               {INCLUSION_EDIT_LIST.map(({ id, label }) => (
                 <label
                   key={id}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm transition hover:border-slate-300 has-[:checked]:border-[#213398] has-[:checked]:bg-[#213398]/5"
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm transition hover:border-slate-300 has-[:checked]:border-gs-orange has-[:checked]:bg-gs-orange/5"
                 >
                   <input
                     type="checkbox"
@@ -462,7 +462,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
             </Button>
             <Button
               type="submit"
-              className="bg-[#213398] hover:bg-[#1a2980]"
+              className="bg-gs-orange hover:brightness-95"
               disabled={isPending || (images.length === 0 && newFiles.length === 0)}
             >
               {isPending ? "Enregistrement..." : "Enregistrer"}

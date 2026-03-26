@@ -64,7 +64,7 @@ export default async function ConciergeriePage({
             Vous nous donnez vos critères. On vous propose 3 à 5 lieux compatibles et on organise les visites.
           </p>
           <a href="#form">
-            <Button className="mt-6 h-12 bg-[#213398] px-6 hover:bg-[#1a2980]">
+            <Button className="mt-6 h-12 bg-gs-orange px-6 hover:brightness-95">
               Confier ma recherche
             </Button>
           </a>
@@ -77,7 +77,7 @@ export default async function ConciergeriePage({
           <ul className="mt-8 space-y-4">
             {STEPS.map((step, idx) => (
               <li key={idx} className="flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#213398]/10 text-[14px] font-semibold text-[#213398]">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gs-orange/10 text-[14px] font-semibold text-gs-orange">
                   {idx + 1}
                 </span>
                 <span className="pt-1.5 text-[15px] font-medium text-slate-800">{step}</span>
@@ -102,7 +102,7 @@ export default async function ConciergeriePage({
         </section>
 
         <p className="mt-8 text-center">
-          <Link href="/" className="text-[14px] font-medium text-[#213398] hover:underline">
+          <Link href="/" className="text-[14px] font-medium text-gs-orange hover:underline">
             ← Retour à l&apos;accueil
           </Link>
         </p>

@@ -15,11 +15,11 @@ import { SiteFooter } from "@/components/layout/site-footer";
 const FAQ_GENERAL = [
   {
     q: "Qu'est-ce que GetSoundOn ?",
-    a: `${siteConfig.name} est la plateforme de référence pour trouver et proposer des salles dédiées aux événements cultuels : cultes, baptêmes, conférences, célébrations, retraites…`,
+    a: `${siteConfig.name} est la plateforme pour louer ou proposer du matériel événementiel (sono, DJ, lumières) et, selon les offres, trouver des lieux pour vos événements.`,
   },
   {
     q: "Quels types d'événements sont accueillis ?",
-    a: "Cultes réguliers, conférences, baptêmes, célébrations, retraites et tout événement à caractère cultuel. Vous précisez le type lors de votre recherche ou dans votre annonce.",
+    a: "Concerts, conférences, réceptions, cultes, baptêmes et tout type d'événement selon les annonces disponibles. Vous précisez le type lors de votre recherche ou dans votre annonce.",
   },
   {
     q: "La consultation des annonces est-elle payante ?",
@@ -115,7 +115,7 @@ export default function CentreAideGeneralPage() {
           </div>
         </div>
 
-        <Link href="/#faq" className="mt-6 inline-block text-[14px] font-medium text-[#213398] hover:underline">
+        <Link href="/#faq" className="mt-6 inline-block text-[14px] font-medium text-gs-orange hover:underline">
           Voir la FAQ sur la page d&apos;accueil →
         </Link>
 

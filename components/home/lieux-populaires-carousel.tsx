@@ -218,7 +218,7 @@ export function LieuxPopulairesCarousel({ salles }: { salles: Salle[] }) {
               onClick={() => setActiveFilter(filter)}
               className={`whitespace-nowrap rounded-full px-5 py-2 text-sm font-medium transition ${
                 activeFilter === filter
-                  ? "border border-[#213398] bg-[#edf2ff] text-[#213398]"
+                  ? "border border-gs-orange bg-[#edf2ff] text-gs-orange"
                   : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
               }`}
             >

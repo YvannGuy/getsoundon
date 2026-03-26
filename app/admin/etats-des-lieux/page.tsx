@@ -280,7 +280,7 @@ export default async function AdminEtatsDesLieuxPage({
                 href={makeHref(option.id, selectedSort)}
                 className={
                   option.id === selectedStatus
-                    ? "rounded-full bg-[#213398] px-3 py-1.5 text-xs font-medium text-white"
+                    ? "rounded-full bg-gs-orange px-3 py-1.5 text-xs font-medium text-white"
                     : "rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200"
                 }
               >

@@ -719,7 +719,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
           </>
         )}
         <div className="mt-6 flex w-full flex-col gap-2">
-          <Button onClick={onClose} className="w-full bg-[#213398] hover:bg-[#1a2980]">
+          <Button onClick={onClose} className="w-full bg-gs-orange hover:brightness-95">
             Fermer
           </Button>
           <Link
@@ -779,9 +779,9 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
                   <Clock className="h-4 w-4 text-slate-400" />
                   Délai moyen de validation : 24 à 48 heures
                 </div>
-                <div className="mt-6 flex w-full flex-col gap-3 rounded-xl border border-[#213398]/20 bg-[#213398]/5 p-5 text-left">
+                <div className="mt-6 flex w-full flex-col gap-3 rounded-xl border border-gs-orange/20 bg-gs-orange/5 p-5 text-left">
                   <div className="flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#213398]/10">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gs-orange/10">
                       <Bell className="h-5 w-5 text-black" />
                     </div>
                     <p className="text-sm leading-relaxed text-black">
@@ -794,7 +794,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
             <div className="mt-8 flex w-full flex-col gap-3">
               <Link
                 href="/proprietaire"
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-sky-500 text-sm font-semibold text-white transition-colors hover:bg-[#1a2980]"
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-sky-500 text-sm font-semibold text-white transition-colors hover:brightness-95"
               >
                 Accéder à mon tableau de bord
                 <ChevronRight className="h-5 w-5" />
@@ -883,7 +883,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
               <button
                 type="button"
                 onClick={clearDraft}
-                className="text-[#213398] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#213398]/40"
+                className="text-gs-orange underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gs-orange/40"
               >
                 Réinitialiser le brouillon
               </button>
@@ -1087,7 +1087,7 @@ function Step1({
                 name="listingKind"
                 checked={data.listingKind === "equipment"}
                 onChange={() => updateData({ listingKind: "equipment" })}
-                className="h-4 w-4 border-slate-300 text-[#213398] focus:ring-[#213398]"
+                className="h-4 w-4 border-slate-300 text-gs-orange focus:ring-gs-orange"
               />
               <span className="text-sm text-slate-700">Matériel à la pièce</span>
             </label>
@@ -1097,7 +1097,7 @@ function Step1({
                 name="listingKind"
                 checked={data.listingKind === "pack"}
                 onChange={() => updateData({ listingKind: "pack" })}
-                className="h-4 w-4 border-slate-300 text-[#213398] focus:ring-[#213398]"
+                className="h-4 w-4 border-slate-300 text-gs-orange focus:ring-gs-orange"
               />
               <span className="text-sm text-slate-700">Pack / formule clé en main</span>
             </label>
@@ -1195,7 +1195,7 @@ function Step1({
             <button
               type="button"
               onClick={() => setShowDescriptionAssist((v) => !v)}
-              className="text-xs font-medium text-[#213398] underline-offset-2 hover:underline"
+              className="text-xs font-medium text-gs-orange underline-offset-2 hover:underline"
             >
               {showDescriptionAssist ? "Masquer l'aide" : "M'aider à rédiger"}
             </button>
@@ -1267,7 +1267,7 @@ function Step1({
                 name="cautionRequise"
                 checked={data.cautionRequise === true}
                 onChange={() => updateData({ cautionRequise: true })}
-                className="h-4 w-4 border-slate-300 text-[#213398] focus:ring-[#213398]"
+                className="h-4 w-4 border-slate-300 text-gs-orange focus:ring-gs-orange"
               />
               <span className="text-sm text-slate-700">Oui</span>
             </label>
@@ -1277,7 +1277,7 @@ function Step1({
                 name="cautionRequise"
                 checked={data.cautionRequise === false}
                 onChange={() => updateData({ cautionRequise: false })}
-                className="h-4 w-4 border-slate-300 text-[#213398] focus:ring-[#213398]"
+                className="h-4 w-4 border-slate-300 text-gs-orange focus:ring-gs-orange"
               />
               <span className="text-sm text-slate-700">Non</span>
             </label>
@@ -2125,15 +2125,15 @@ function Step6({
           type="checkbox"
           checked={acceptedTerms}
           onChange={(e) => setAcceptedTerms(e.target.checked)}
-          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#213398] focus:ring-[#213398]"
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-gs-orange focus:ring-gs-orange"
         />
         <span>
           J&apos;accepte les{" "}
-          <Link href="/cgu" target="_blank" rel="noopener noreferrer" className="font-medium text-[#213398] hover:underline">
+          <Link href="/cgu" target="_blank" rel="noopener noreferrer" className="font-medium text-gs-orange hover:underline">
             conditions générales d&apos;utilisation
           </Link>{" "}
           et{" "}
-          <Link href="/cgv" target="_blank" rel="noopener noreferrer" className="font-medium text-[#213398] hover:underline">
+          <Link href="/cgv" target="_blank" rel="noopener noreferrer" className="font-medium text-gs-orange hover:underline">
             conditions générales de vente
           </Link>
           .

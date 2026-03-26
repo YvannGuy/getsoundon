@@ -24,7 +24,7 @@ export function WelcomeOnboardingBanner({
   const [isVisible, setIsVisible] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const resolvedVideoUrl = videoUrl?.trim() || "https://www.youtube.com/watch?v=ysz5S6PUM-U";
-  const defaultGuideUrl = "/pdf/" + "sallede" + "culte.com_bien_debuter.pdf";
+  const defaultGuideUrl = "/pdf/getsoundon-bien-demarrer.pdf";
   const resolvedGuideUrl = useMemo(() => {
     const candidate = tourUrl?.trim();
     if (!candidate) return defaultGuideUrl;
@@ -60,7 +60,7 @@ export function WelcomeOnboardingBanner({
         {firstName?.trim()
           ? `Bienvenue, ${firstName.trim()} sur `
           : "Bienvenue sur "}
-        <span className="text-[#213398]">GetSoundOn</span>!
+        <span className="text-gs-orange">GetSoundOn</span>!
       </h2>
       <div className="my-4 border-t border-slate-200" />
       <p className="text-sm text-slate-500">
@@ -70,7 +70,7 @@ export function WelcomeOnboardingBanner({
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <button
           type="button"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#213398] px-5 text-sm font-medium text-white hover:bg-[#1a2980]"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gs-orange px-5 text-sm font-medium text-white hover:brightness-95"
           onClick={() => setVideoOpen(true)}
         >
           <Play className="h-5 w-5" />
@@ -89,7 +89,7 @@ export function WelcomeOnboardingBanner({
       <div className="mt-3 flex justify-end">
         <button
           type="button"
-          className="text-sm text-[#213398] underline hover:text-[#1a2980]"
+          className="text-sm text-gs-orange underline hover:text-orange-950"
           onClick={() => {
             try {
               window.localStorage.setItem(storageKey, "1");

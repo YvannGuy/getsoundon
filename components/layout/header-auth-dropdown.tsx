@@ -31,11 +31,11 @@ export function HeaderAuthDropdown({
   };
 
   return (
-    <div className={`flex overflow-hidden rounded-md bg-[#213398] ${fullWidth ? "w-full" : "inline-flex"}`}>
+    <div className={`flex overflow-hidden rounded-md bg-gs-orange ${fullWidth ? "w-full" : "inline-flex"}`}>
       <Link
         href={dashboardHref}
         onClick={onNavigate}
-        className={`flex h-9 flex-1 items-center justify-center px-5 text-[14px] font-medium text-white transition-colors hover:bg-[#1a2980] ${fullWidth ? "min-w-0" : ""}`}
+        className={`flex h-9 flex-1 items-center justify-center px-5 text-[14px] font-medium text-white transition-colors hover:brightness-95 ${fullWidth ? "min-w-0" : ""}`}
       >
         Tableau de bord
       </Link>
@@ -43,7 +43,7 @@ export function HeaderAuthDropdown({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex h-9 shrink-0 items-center justify-center border-l border-white/20 px-2 text-white transition-colors hover:bg-[#1a2980]"
+            className="flex h-9 shrink-0 items-center justify-center border-l border-white/20 px-2 text-white transition-colors hover:brightness-95"
             aria-label="Menu"
           >
             <ChevronDown className="h-4 w-4" />

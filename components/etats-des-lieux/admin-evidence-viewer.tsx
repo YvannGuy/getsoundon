@@ -32,7 +32,7 @@ export function AdminEvidenceViewer({
         disabled={!hasPhotos}
         className={
           hasPhotos
-            ? "h-8 border-[#213398]/40 text-[#213398] hover:bg-[#213398]/5"
+            ? "h-8 border-gs-orange/40 text-gs-orange hover:bg-gs-orange/5"
             : "h-8 border-slate-200 bg-slate-100 text-slate-400"
         }
         onClick={() => {

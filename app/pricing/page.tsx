@@ -53,7 +53,7 @@ export default function PricingPage() {
               </li>
             </ul>
             <Link href="/rechercher" className="mt-6 block">
-              <Button className="w-full bg-[#213398] hover:bg-[#1a2980]">
+              <Button className="w-full bg-gs-orange hover:brightness-95">
                 Rechercher une salle
               </Button>
             </Link>

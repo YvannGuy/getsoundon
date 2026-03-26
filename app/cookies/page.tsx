@@ -102,7 +102,7 @@ export default function CookiesPage() {
             href="https://stripe.com/fr/privacy"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#213398] hover:underline"
+            className="text-gs-orange hover:underline"
           >
             stripe.com/fr/privacy
           </a>
@@ -178,7 +178,7 @@ export default function CookiesPage() {
         <p className="mt-3 text-slate-600">
           Conformément au RGPD, vous disposez d&apos;un droit d&apos;accès, de rectification et d&apos;effacement des
           données collectées via les cookies. Pour exercer ces droits ou poser des questions :{" "}
-          <a href={`mailto:${editeur.email}`} className="text-[#213398] hover:underline">
+          <a href={`mailto:${editeur.email}`} className="text-gs-orange hover:underline">
             {editeur.email}
           </a>
         </p>
@@ -188,7 +188,7 @@ export default function CookiesPage() {
             href="https://www.cnil.fr"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#213398] hover:underline"
+            className="text-gs-orange hover:underline"
           >
             CNIL
           </a>
@@ -208,11 +208,11 @@ export default function CookiesPage() {
         <h2 className="text-xl font-semibold text-black">9. Contact et politique de confidentialité</h2>
         <p className="mt-3 text-slate-600">
           Pour toute question :{" "}
-          <a href={`mailto:${editeur.email}`} className="text-[#213398] hover:underline">
+          <a href={`mailto:${editeur.email}`} className="text-gs-orange hover:underline">
             {editeur.email}
           </a>
           . Consultez notre{" "}
-          <Link href="/confidentialite" className="text-[#213398] hover:underline">
+          <Link href="/confidentialite" className="text-gs-orange hover:underline">
             politique de confidentialité
           </Link>
           .

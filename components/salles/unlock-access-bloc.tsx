@@ -23,7 +23,7 @@ export function UnlockAccessBloc({ isLoggedIn, paiementUrl = "/dashboard" }: Unl
   if (isLoggedIn) {
     return (
       <Link href={paiementUrl}>
-        <Button className="h-12 w-full rounded-lg bg-[#213398] font-semibold hover:bg-[#1a2980]">
+        <Button className="h-12 w-full rounded-lg bg-gs-orange font-semibold hover:brightness-95">
           Accéder à mon espace
         </Button>
       </Link>
@@ -38,7 +38,7 @@ export function UnlockAccessBloc({ isLoggedIn, paiementUrl = "/dashboard" }: Unl
       <Button
         type="button"
         onClick={() => setModalOpen(true)}
-        className="h-12 w-full rounded-lg bg-[#213398] font-semibold hover:bg-[#1a2980]"
+        className="h-12 w-full rounded-lg bg-gs-orange font-semibold hover:brightness-95"
       >
         Se connecter
       </Button>
@@ -52,7 +52,7 @@ export function UnlockAccessBloc({ isLoggedIn, paiementUrl = "/dashboard" }: Unl
           </DialogHeader>
           <div className="mt-6 flex flex-col gap-3">
             <Link href={authUrl("login")} onClick={() => setModalOpen(false)}>
-              <Button className="h-11 w-full bg-[#213398] hover:bg-[#1a2980]">
+              <Button className="h-11 w-full bg-gs-orange hover:brightness-95">
                 Se connecter
               </Button>
             </Link>

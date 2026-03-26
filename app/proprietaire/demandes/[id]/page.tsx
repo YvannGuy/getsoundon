@@ -178,7 +178,7 @@ export default async function DemandeDetailPage({
                   ? "bg-amber-100 text-amber-700"
                   : demande.status === "rejected"
                     ? "bg-red-100 text-red-700"
-                    : "bg-[#213398]/10 text-black"
+                    : "bg-gs-orange/10 text-black"
             }`}
           >
             {STATUT_LABEL[demande.status] ?? demande.status}
@@ -189,9 +189,9 @@ export default async function DemandeDetailPage({
 
       {/* Bannière réactivité */}
       {!["replied", "accepted", "rejected"].includes(demande.status) && (
-        <div className="mb-6 flex items-center gap-3 rounded-xl border border-[#213398]/30 bg-[#213398]/5 px-4 py-3">
+        <div className="mb-6 flex items-center gap-3 rounded-xl border border-gs-orange/30 bg-gs-orange/5 px-4 py-3">
           <Zap className="h-5 w-5 text-black" />
-          <p className="text-sm font-medium text-[#1a2980]">
+          <p className="text-sm font-medium text-orange-950">
             Répondre rapidement augmente vos chances de réservation
           </p>
         </div>
@@ -313,7 +313,7 @@ export default async function DemandeDetailPage({
               )}
               <Link
                 href={`/proprietaire/messagerie?demandeId=${demande.id}`}
-                className="mt-3 inline-flex items-center text-sm font-medium text-[#213398] hover:underline"
+                className="mt-3 inline-flex items-center text-sm font-medium text-gs-orange hover:underline"
               >
                 <MessageSquareText className="mr-1.5 h-4 w-4" />
                 Voir la conversation

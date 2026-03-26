@@ -34,7 +34,7 @@ function createPriceMarkerIcon(price: number | null) {
     '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
   const label = price != null && price > 0 ? `${price}€` : "—";
   return L.divIcon({
-    html: `<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:#213398;color:white;font-weight:600;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer">${svg}<span>${label}</span></div>`,
+    html: `<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:#E86F1C;color:white;font-weight:600;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer">${svg}<span>${label}</span></div>`,
     className: "price-marker",
     iconSize: [80, 36],
     iconAnchor: [40, 36],
@@ -287,8 +287,8 @@ function MapInnerComponent({
               center={[coords.lat, coords.lng]}
               radius={ZONE_RADIUS_M}
               pathOptions={{
-                color: "#213398",
-                fillColor: "#213398",
+                color: "#E86F1C",
+                fillColor: "#E86F1C",
                 fillOpacity: 0.08,
                 weight: 1,
               }}
@@ -360,7 +360,7 @@ function MapInnerComponent({
                   </Link>
                   {/* Marqueur bleu en bas : maison + prix (tip visuel vers le point sur la carte) */}
                   <div
-                    className="flex cursor-default items-center justify-center gap-2 rounded-b-xl border border-t-0 border-slate-200 bg-[#213398] px-4 py-2 text-white shadow-md"
+                    className="flex cursor-default items-center justify-center gap-2 rounded-b-xl border border-t-0 border-slate-200 bg-gs-orange px-4 py-2 text-white shadow-md"
                     style={{ pointerEvents: "none" }}
                   >
                     <Home size={20} strokeWidth={2} className="shrink-0" />

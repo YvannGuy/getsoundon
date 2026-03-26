@@ -144,7 +144,7 @@ export default async function DashboardPage() {
 
   const now = new Date();
   const overviewCards = [
-    { label: "Demandes de visite envoyées (30j)", value: String(visitesEnvoyees30), icon: FileText, color: "text-black", bgColor: "bg-[#213398]/10" },
+    { label: "Demandes de visite envoyées (30j)", value: String(visitesEnvoyees30), icon: FileText, color: "text-black", bgColor: "bg-gs-orange/10" },
     { label: "Demandes avec réponse (30j)", value: `${tauxReponseVisites30}%`, icon: MessageCircle, color: "text-emerald-600", bgColor: "bg-emerald-100" },
     { label: "Visites acceptées (30j)", value: String(visitesAcceptees30), icon: CheckCircle2, color: "text-sky-600", bgColor: "bg-sky-100" },
     { label: "Réservations confirmées (30j)", value: String(reservationsConfirmees30), icon: Heart, color: "text-amber-500", bgColor: "bg-amber-100" },
@@ -261,7 +261,7 @@ export default async function DashboardPage() {
               <Inbox className="mb-3 h-12 w-12 text-slate-300" />
               <p className="text-slate-500">Aucune demande de visite</p>
               <SearchModalButton className="mt-3 inline-flex">
-                <Button className="bg-[#213398] hover:bg-[#1a2980]">
+                <Button className="bg-gs-orange hover:brightness-95">
                   Rechercher une salle
                 </Button>
               </SearchModalButton>

@@ -92,7 +92,7 @@ export function AnnoncePreviewModal({ salle, open, onOpenChange }: Props) {
                     type="button"
                     onClick={() => setImgIndex(i)}
                     className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition ${
-                      i === imgIndex ? "border-[#213398]" : "border-transparent opacity-70 hover:opacity-100"
+                      i === imgIndex ? "border-gs-orange" : "border-transparent opacity-70 hover:opacity-100"
                     }`}
                   >
                     <Image src={img} alt="" fill className="object-cover" sizes="56px" />
@@ -131,7 +131,7 @@ export function AnnoncePreviewModal({ salle, open, onOpenChange }: Props) {
               {salle.address}, {salle.city}
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#213398]/10 px-3 py-1 text-[13px] font-medium text-black">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-gs-orange/10 px-3 py-1 text-[13px] font-medium text-black">
                 <Users className="h-4 w-4" />
                 Jusqu&apos;à {salle.capacity} personnes
               </span>

@@ -14,7 +14,7 @@ export function DepositHoldActions({
       </p>
       <Link
         href={`/proprietaire/etats-des-lieux?offerId=${offerId}`}
-        className="inline-flex text-xs font-medium text-[#213398] hover:underline"
+        className="inline-flex text-xs font-medium text-gs-orange hover:underline"
       >
         Aller à l&apos;état des lieux
       </Link>

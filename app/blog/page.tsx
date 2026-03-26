@@ -34,7 +34,7 @@ export default function BlogPage() {
             réservation et bien préparer votre événement. Que vous soyez responsable d&apos;une communauté, coordinateur ou
             bénévole, vous y trouverez des check-lists, des repères juridiques et des bonnes pratiques pour réserver en toute
             sérénité en Île-de-France. Pour des questions plus précises, consultez aussi notre{" "}
-            <Link href="/centre-aide" className="font-medium text-[#213398] hover:underline">
+            <Link href="/centre-aide" className="font-medium text-gs-orange hover:underline">
               centre d&apos;aide
             </Link>
             .
@@ -60,7 +60,7 @@ export default function BlogPage() {
                   <p className="line-clamp-2 flex-1 text-[14px] leading-[1.45] text-slate-600">
                     {post.excerpt}
                   </p>
-                  <span className="mt-auto flex items-center gap-1 text-[13px] font-medium text-[#213398]">
+                  <span className="mt-auto flex items-center gap-1 text-[13px] font-medium text-gs-orange">
                     Lire l&apos;article
                     <ChevronRight className="h-4 w-4" />
                   </span>

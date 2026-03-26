@@ -280,7 +280,7 @@ export default async function DashboardReservationsPage({
           </Link>
           <Link
             href="/dashboard/messagerie"
-            className="inline-flex h-11 items-center justify-center rounded-lg bg-[#213398] text-sm font-medium text-white"
+            className="inline-flex h-11 items-center justify-center rounded-lg bg-gs-orange text-sm font-medium text-white"
           >
             Contacter
           </Link>

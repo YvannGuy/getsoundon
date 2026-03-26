@@ -23,23 +23,23 @@ export function LegalPageLayout({
         <h1 className="mt-6 text-[32px] font-bold tracking-tight text-black">
           {title}
         </h1>
-        <div className="mt-8 prose prose-slate max-w-none prose-headings:font-semibold prose-headings:text-black prose-p:text-slate-600 prose-li:text-slate-600 prose-a:text-[#213398] prose-a:no-underline hover:prose-a:underline">
+        <div className="mt-8 prose prose-slate max-w-none prose-headings:font-semibold prose-headings:text-black prose-p:text-slate-600 prose-li:text-slate-600 prose-a:text-gs-orange prose-a:no-underline hover:prose-a:underline">
           {children}
         </div>
         <div className="mt-12 flex flex-wrap gap-4 text-sm">
-          <Link href="/mentions-legales" className="font-medium text-[#213398] hover:underline">
+          <Link href="/mentions-legales" className="font-medium text-gs-orange hover:underline">
             Mentions légales
           </Link>
           <span className="text-slate-400">|</span>
-          <Link href="/cgu" className="font-medium text-[#213398] hover:underline">
+          <Link href="/cgu" className="font-medium text-gs-orange hover:underline">
             CGU
           </Link>
           <span className="text-slate-400">|</span>
-          <Link href="/confidentialite" className="font-medium text-[#213398] hover:underline">
+          <Link href="/confidentialite" className="font-medium text-gs-orange hover:underline">
             Confidentialité
           </Link>
           <span className="text-slate-400">|</span>
-          <Link href="/cookies" className="font-medium text-[#213398] hover:underline">
+          <Link href="/cookies" className="font-medium text-gs-orange hover:underline">
             Cookies
           </Link>
         </div>

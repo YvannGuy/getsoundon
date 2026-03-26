@@ -123,11 +123,11 @@ export function ContractAcceptModal({
         </DialogHeader>
 
         <div className="max-h-[55vh] space-y-4 overflow-y-auto rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-700">
-          <div className="rounded-lg border border-[#213398]/20 bg-[#213398]/5 p-4">
+          <div className="rounded-lg border border-gs-orange/20 bg-gs-orange/5 p-4">
             <div className="flex items-center gap-3">
               <Image src="/images/logosound.png" alt="GetSoundOn" width={38} height={38} className="h-9 w-9 rounded-full object-cover" />
               <div>
-                <p className="text-sm font-semibold text-[#213398]">CONTRAT STANDARD GETSOUNDON</p>
+                <p className="text-sm font-semibold text-gs-orange">CONTRAT STANDARD GETSOUNDON</p>
                 <p className="text-xs text-slate-600">À accepter obligatoirement avant tout paiement</p>
               </div>
             </div>
@@ -344,7 +344,7 @@ export function ContractAcceptModal({
           />
           <span className="text-sm text-slate-700">
             J&apos;ai lu et j&apos;accepte les{" "}
-            <a href="/cgv" target="_blank" rel="noopener noreferrer" className="text-[#213398] underline">
+            <a href="/cgv" target="_blank" rel="noopener noreferrer" className="text-gs-orange underline">
               CGV
             </a>
             . Le paiement vaut validation définitive.
@@ -365,7 +365,7 @@ export function ContractAcceptModal({
               })
             }
             disabled={!canPay}
-            className="bg-[#213398] hover:bg-[#1a2980]"
+            className="bg-gs-orange hover:brightness-95"
           >
             Payer et valider
           </Button>

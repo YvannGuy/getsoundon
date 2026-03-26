@@ -227,7 +227,7 @@ export function CreateOfferModal({
               placeholder="Ex. : câbles, pieds, housse, micros filaires, notice de réglage…"
               maxLength={1200}
               rows={3}
-              className="mt-1.5 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#213398]"
+              className="mt-1.5 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gs-orange"
             />
             <p className="mt-1 text-xs text-slate-500">
               Ce texte est enregistré tel quel dans le snapshot de l&apos;offre.
@@ -287,7 +287,7 @@ export function CreateOfferModal({
               placeholder="Adresse de retrait, zone de livraison, créneaux, frais éventuels…"
               maxLength={800}
               rows={2}
-              className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#213398]"
+              className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gs-orange"
             />
           </div>
           <div>
@@ -438,7 +438,7 @@ export function CreateOfferModal({
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Ajoutez un message au locataire"
               maxLength={500}
-              className="mt-1.5 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#213398]"
+              className="mt-1.5 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gs-orange"
               rows={3}
             />
           </div>

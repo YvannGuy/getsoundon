@@ -130,7 +130,7 @@ export function DateRangePicker({
         type="button"
         onClick={() => setOpen((current) => !current)}
         className={cn(
-          "relative flex w-full cursor-pointer flex-nowrap items-center gap-2.5 overflow-hidden rounded-lg border bg-white p-2.5 pr-10 text-left transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#213398]/20",
+          "relative flex w-full cursor-pointer flex-nowrap items-center gap-2.5 overflow-hidden rounded-lg border bg-white p-2.5 pr-10 text-left transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-gs-orange/20",
           error ? "border-rose-500" : "border-slate-200",
           inputClassName
         )}

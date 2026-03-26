@@ -253,7 +253,7 @@ function NavContent({
                       "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                       collapsed ? "justify-center px-2" : "",
                       isActive
-                        ? "bg-[#213398] text-white"
+                        ? "bg-gs-orange text-white"
                         : "text-slate-600 hover:bg-slate-100 hover:text-black"
                     )}
                     title={collapsed ? item.label : undefined}
@@ -399,7 +399,7 @@ function NavContent({
               collapsed && "justify-center px-0"
             )}
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#213398] text-white">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gs-orange text-white">
               <User className="h-5 w-5" />
             </div>
             {!collapsed && (
@@ -498,7 +498,7 @@ export function OwnerSidebar({
         >
           <Menu className="h-6 w-6" />
         </Button>
-        <Link href="/proprietaire" className={cn("text-lg font-semibold text-[#213398]", isHydrated && "flex items-center")}>
+        <Link href="/proprietaire" className={cn("text-lg font-semibold text-gs-orange", isHydrated && "flex items-center")}>
           {isHydrated && <Image src="/images/logosound.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 rounded-full object-cover" />}
           {siteConfig.name}
         </Link>
@@ -539,7 +539,7 @@ export function OwnerSidebar({
           <div className="flex h-14 items-center border-b border-slate-200 px-4">
             <Link
               href="/proprietaire"
-              className={cn("text-lg font-semibold text-[#213398]", isHydrated && "flex items-center")}
+              className={cn("text-lg font-semibold text-gs-orange", isHydrated && "flex items-center")}
               onClick={() => setMobileOpen(false)}
             >
               {isHydrated && <Image src="/images/logosound.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 rounded-full object-cover" />}
@@ -580,7 +580,7 @@ export function OwnerSidebar({
           )}
         >
           {!collapsed && (
-            <Link href="/proprietaire" className={cn("text-lg font-semibold text-[#213398]", isHydrated && "flex items-center")}>
+            <Link href="/proprietaire" className={cn("text-lg font-semibold text-gs-orange", isHydrated && "flex items-center")}>
               {isHydrated && <Image src="/images/logosound.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 rounded-full object-cover" />}
               {siteConfig.name}
             </Link>

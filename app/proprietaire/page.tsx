@@ -143,7 +143,7 @@ export default async function ProprietaireDashboardPage() {
     demandesRecues30 > 0 ? Math.round((visitesRepondues30 / demandesRecues30) * 100) : 0;
 
   const metrics = [
-    { label: "Demandes reçues (30j)", value: String(demandesRecues30), icon: Inbox, color: "text-black", bgColor: "bg-[#213398]/10" },
+    { label: "Demandes reçues (30j)", value: String(demandesRecues30), icon: Inbox, color: "text-black", bgColor: "bg-gs-orange/10" },
     { label: "Taux de réponse (30j)", value: `${tauxReponse30}%`, icon: Star, color: "text-sky-500", bgColor: "bg-sky-100" },
     { label: "Visites acceptées (30j)", value: String(visitesAcceptees30), icon: CheckCircle, color: "text-emerald-600", bgColor: "bg-emerald-100" },
     { label: "Revenu encaissé (30j)", value: `${(revenuEncaisse30 / 100).toFixed(0)} €`, icon: Banknote, color: "text-amber-700", bgColor: "bg-amber-100" },
@@ -194,8 +194,8 @@ export default async function ProprietaireDashboardPage() {
           ) : (
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#213398]/10">
-                  <Banknote className="h-6 w-6 text-[#213398]" />
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gs-orange/10">
+                  <Banknote className="h-6 w-6 text-gs-orange" />
                 </div>
                 <div>
                   <p className="font-semibold text-black">Recevoir les paiements</p>
@@ -204,7 +204,7 @@ export default async function ProprietaireDashboardPage() {
                   </p>
                 </div>
               </div>
-              <ConnectOnboardingButton className="shrink-0 bg-[#213398] hover:bg-[#1a2980]">
+              <ConnectOnboardingButton className="shrink-0 bg-gs-orange hover:brightness-95">
                 Activer les paiements
               </ConnectOnboardingButton>
             </div>
@@ -244,7 +244,7 @@ export default async function ProprietaireDashboardPage() {
               <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-12 text-center">
                 <Inbox className="mb-3 h-12 w-12 text-slate-300" />
                 <p className="text-slate-500">Aucune annonce pour le moment</p>
-                <AddSalleButton size="sm" className="mt-3 bg-[#213398] hover:bg-[#1a2980]">
+                <AddSalleButton size="sm" className="mt-3 bg-gs-orange hover:brightness-95">
                   Créer une annonce
                 </AddSalleButton>
               </div>
@@ -276,7 +276,7 @@ export default async function ProprietaireDashboardPage() {
                           </Button>
                         </Link>
                         <Link href={`/proprietaire/annonces?edit=${s.id}`}>
-                          <Button size="sm" className="flex-1 bg-[#213398] hover:bg-[#1a2980]">
+                          <Button size="sm" className="flex-1 bg-gs-orange hover:brightness-95">
                             Modifier
                           </Button>
                         </Link>
@@ -302,7 +302,7 @@ export default async function ProprietaireDashboardPage() {
                 <Banknote className="mb-3 h-12 w-12 text-slate-300" />
                 <p className="text-slate-500">Aucun paiement pour le moment</p>
                 <Link href="/proprietaire/paiement" className="mt-3">
-                  <Button size="sm" className="bg-[#213398] hover:bg-[#1a2980]">
+                  <Button size="sm" className="bg-gs-orange hover:brightness-95">
                     Accéder à l&apos;espace paiement
                   </Button>
                 </Link>
@@ -332,7 +332,7 @@ export default async function ProprietaireDashboardPage() {
                     </div>
                   </div>
                 ))}
-                <Link href="/proprietaire/paiement" className="mt-2 block text-center text-sm font-medium text-[#213398] hover:underline">
+                <Link href="/proprietaire/paiement" className="mt-2 block text-center text-sm font-medium text-gs-orange hover:underline">
                   Voir tout l&apos;historique →
                 </Link>
               </div>

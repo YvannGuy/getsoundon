@@ -128,10 +128,10 @@ export function ContractTemplateForm({ salleId, initialData }: Props) {
           onChange={(e) => setConditionsParticulieres(e.target.value)}
           placeholder="Règles spécifiques à votre salle : horaires, accès, consignes..."
           rows={4}
-          className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#213398] focus:outline-none focus:ring-1 focus:ring-[#213398]"
+          className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-gs-orange focus:outline-none focus:ring-1 focus:ring-gs-orange"
         />
       </div>
-      <Button type="submit" disabled={saving} className="bg-[#213398] hover:bg-[#1a2980]">
+      <Button type="submit" disabled={saving} className="bg-gs-orange hover:brightness-95">
         {saving ? "Enregistrement..." : "Enregistrer"}
       </Button>
     </form>

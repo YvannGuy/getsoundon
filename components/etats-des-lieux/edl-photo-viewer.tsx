@@ -74,7 +74,7 @@ export function EdlPhotoViewer({ actorLabel, phases }: Props) {
         variant="outline"
         className={`h-8 w-full justify-center sm:w-auto ${
           hasPhotos
-            ? "border-[#213398]/40 text-[#213398] hover:bg-[#213398]/5"
+            ? "border-gs-orange/40 text-gs-orange hover:bg-gs-orange/5"
             : "border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed"
         }`}
         disabled={!hasPhotos}
@@ -102,7 +102,7 @@ export function EdlPhotoViewer({ actorLabel, phases }: Props) {
                   onClick={() => setActivePhase(phase.phase)}
                   className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                     activePhase === phase.phase
-                      ? "border-[#213398] bg-[#213398] text-white"
+                      ? "border-gs-orange bg-gs-orange text-white"
                       : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                   }`}
                 >

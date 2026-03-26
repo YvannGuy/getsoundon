@@ -233,7 +233,7 @@ export default function ItemDetailPage() {
               type="button"
               onClick={submitBooking}
               disabled={bookingLoading || !startDate || !endDate}
-              className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-md bg-[#213398] px-4 text-sm font-medium text-white hover:bg-[#1a2980] disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-md bg-gs-orange px-4 text-sm font-medium text-white hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {bookingLoading ? "Creation..." : "Creer une reservation"}
             </button>
@@ -242,13 +242,13 @@ export default function ItemDetailPage() {
                 type="button"
                 onClick={payBooking}
                 disabled={payLoading}
-                className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-md border border-[#213398] bg-white px-4 text-sm font-medium text-[#213398] hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-md border border-gs-orange bg-white px-4 text-sm font-medium text-gs-orange hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {payLoading ? "Redirection..." : "Payer avec Stripe"}
               </button>
             ) : null}
             {bookingFeedback ? <p className="mt-3 text-sm text-slate-700">{bookingFeedback}</p> : null}
-            <Link href="/customer/messages" className="mt-3 inline-block text-xs text-[#213398] hover:underline">
+            <Link href="/customer/messages" className="mt-3 inline-block text-xs text-gs-orange hover:underline">
               Ouvrir la messagerie (polling)
             </Link>
           </aside>

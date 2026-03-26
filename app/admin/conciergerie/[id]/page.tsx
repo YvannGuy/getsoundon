@@ -46,7 +46,7 @@ export default async function AdminConciergerieDetailPage({
       <div className="flex items-center gap-4">
         <Link
           href="/admin/conciergerie"
-          className="inline-flex items-center gap-2 text-sm font-medium text-[#213398] hover:underline"
+          className="inline-flex items-center gap-2 text-sm font-medium text-gs-orange hover:underline"
         >
           <ArrowLeft className="h-4 w-4" />
           Retour aux demandes

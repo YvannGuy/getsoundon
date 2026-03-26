@@ -64,20 +64,20 @@ function renderEmailLayout({
 <style>
 body{font-family:system-ui,sans-serif;line-height:1.65;color:#334155;margin:0;padding:22px;font-size:15px;background:#f8fafc;}
 h1{color:#0f172a;font-size:24px;font-weight:700;margin:0 0 18px;}
-h2{color:#213398;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:26px 0 12px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;}
-a{color:#213398;text-decoration:none;}
+h2{color:#E86F1C;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:26px 0 12px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;}
+a{color:#E86F1C;text-decoration:none;}
 a:hover{text-decoration:underline;}
 .email-card{max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;}
-.header{padding:20px 24px;border-bottom:1px solid #e2e8f0;background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);}
+.header{padding:20px 24px;border-bottom:1px solid #e2e8f0;background:linear-gradient(180deg,#ffffff 0%,#F8F4F1 100%);}
 .logo{display:inline-flex;align-items:center;gap:10px;color:#0f172a;font-weight:700;font-size:16px;}
 .logo img{height:40px;width:auto;display:block;}
 .content{padding:24px;}
-.btn{display:inline-block;background:#213398;color:#fff!important;padding:12px 24px;border-radius:8px;margin:14px 0 6px;font-weight:600;}
+.btn{display:inline-block;background:#E86F1C;color:#fff!important;padding:12px 24px;border-radius:8px;margin:14px 0 6px;font-weight:600;}
 p{margin:0 0 12px;}
 ul{margin:12px 0;padding-left:20px;}
 li{margin:6px 0;}
-.tip{margin:12px 0;padding:12px;background:#f8fafc;border-left:3px solid #213398;font-size:14px;}
-.cta-block{margin-top:22px;padding:16px;border:1px solid #dbe4ff;background:#f7f9ff;border-radius:12px;}
+.tip{margin:12px 0;padding:12px;background:#f8fafc;border-left:3px solid #E86F1C;font-size:14px;}
+.cta-block{margin-top:22px;padding:16px;border:1px solid #fde8d9;background:#F8F4F1;border-radius:12px;}
 .cta-block h3{margin:0 0 8px;color:#0f172a;font-size:16px;}
 .cta-block p{margin:0 0 8px;}
 .cta-secondary{font-size:13px;color:#64748b;}
