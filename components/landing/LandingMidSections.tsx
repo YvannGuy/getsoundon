@@ -147,7 +147,13 @@ export function LandingPopularModels() {
               className="group overflow-hidden rounded-2xl border border-gs-line bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
             >
               <div className="relative aspect-[4/3] w-full">
-                <Image src={p.img} alt="" fill className="object-cover" sizes="(max-width:1024px) 50vw, 33vw" />
+                <Image
+                  src={p.img}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw"
+                />
                 <span className="font-landing-badge absolute left-3 top-3 rounded-full bg-gs-orange px-3 py-1 text-white">
                   {p.badge}
                 </span>

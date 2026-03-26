@@ -1,5 +1,5 @@
-import { SalleWizard } from "@/components/proprietaire/salle-wizard";
+import { GetSoundOnOnboardingWizard } from "@/components/proprietaire/getsoundon-onboarding-wizard";
 
 export default function OnboardingSallePage() {
-  return <SalleWizard />;
+  return <GetSoundOnOnboardingWizard />;
 }

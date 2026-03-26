@@ -6,21 +6,25 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
-  Building2,
-  Camera,
+  Calendar,
+  CalendarCheck,
   ChevronLeft,
   ChevronRight,
+  ClipboardCheck,
   CreditCard,
   FileText,
-  Calendar,
-  FolderOpen,
   Home,
+  LayoutGrid,
   LogOut,
   Menu,
   MessageCircle,
-  Settings,
+  Receipt,
   Scale,
+  Settings,
+  Truck,
   User,
+  Wallet,
+  type LucideIcon,
 } from "lucide-react";
 
 import { signOutAction } from "@/app/actions/auth";
@@ -30,46 +34,56 @@ import { SwitchToSeekerView } from "@/components/dashboard/dashboard-view-switch
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
-const navItems = [
+type OwnerNavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  badgeKey?: string;
+};
+
+/** Ordre = ordre d’affichage à l’intérieur de chaque section (filtrage par `navSections`). */
+const ownerNavItems: OwnerNavItem[] = [
   { href: "/proprietaire", label: "Tableau de bord", icon: Home },
-  { href: "/proprietaire/annonces", label: "Mes annonces", icon: Building2 },
-  { href: "/proprietaire/visites", label: "Demandes de visites", icon: Calendar, badgeKey: "visites" },
-  { href: "/proprietaire/reservations", label: "Réservations", icon: FileText, badgeKey: "reservations" },
-  { href: "/proprietaire/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },
-  { href: "/proprietaire/paiement", label: "Paiement", icon: CreditCard, badgeKey: "paiement" },
-  { href: "/proprietaire/etats-des-lieux", label: "États des lieux", icon: Camera, badgeKey: "etats" },
+  { href: "/proprietaire/annonces", label: "Mes annonces", icon: LayoutGrid },
+  { href: "/proprietaire/demandes", label: "Demandes", icon: FileText, badgeKey: "demandes" },
+  { href: "/proprietaire/reservations", label: "Réservations", icon: CalendarCheck, badgeKey: "reservations" },
+  { href: "/proprietaire/visites", label: "Calendrier", icon: Calendar, badgeKey: "visites" },
+  { href: "/proprietaire/logistique", label: "Livraisons & retraits", icon: Truck },
+  { href: "/proprietaire/etats-des-lieux", label: "État du matériel", icon: ClipboardCheck, badgeKey: "etats" },
+  { href: "/proprietaire/cautions", label: "Cautions", icon: Wallet, badgeKey: "cautions" },
   { href: "/proprietaire/litiges", label: "Litiges", icon: Scale },
-  { href: "/proprietaire/cautions", label: "Cautions", icon: FolderOpen, badgeKey: "cautions" },
-  { href: "/proprietaire/contrat", label: "Contrat & facture", icon: FileText },
+  { href: "/proprietaire/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },
+  { href: "/proprietaire/paiement", label: "Paiements", icon: CreditCard, badgeKey: "paiement" },
+  { href: "/proprietaire/contrat", label: "Factures", icon: Receipt, badgeKey: "contrat" },
   { href: "/proprietaire/parametres", label: "Paramètres", icon: Settings },
 ];
 
-const navSections: { title: string; itemHrefs: string[] }[] = [
+const ownerNavSections: { title: string; itemHrefs: string[] }[] = [
+  { title: "Vue d'ensemble", itemHrefs: ["/proprietaire", "/proprietaire/annonces"] },
   {
-    title: "Vue d'ensemble",
-    itemHrefs: ["/proprietaire", "/proprietaire/annonces"],
+    title: "Demandes & réservations",
+    itemHrefs: ["/proprietaire/demandes", "/proprietaire/reservations", "/proprietaire/visites"],
   },
   {
-    title: "Demandes & planning",
-    itemHrefs: ["/proprietaire/visites", "/proprietaire/reservations"],
+    title: "Logistique & suivi",
+    itemHrefs: [
+      "/proprietaire/logistique",
+      "/proprietaire/etats-des-lieux",
+      "/proprietaire/cautions",
+      "/proprietaire/litiges",
+    ],
   },
-  {
-    title: "Suivi & sécurité",
-    itemHrefs: ["/proprietaire/etats-des-lieux", "/proprietaire/cautions", "/proprietaire/litiges"],
-  },
-  {
-    title: "Communication",
-    itemHrefs: ["/proprietaire/messagerie"],
-  },
-  {
-    title: "Finances & documents",
-    itemHrefs: ["/proprietaire/paiement", "/proprietaire/contrat"],
-  },
-  {
-    title: "Compte",
-    itemHrefs: ["/proprietaire/parametres"],
-  },
+  { title: "Communication", itemHrefs: ["/proprietaire/messagerie"] },
+  { title: "Finances & documents", itemHrefs: ["/proprietaire/paiement", "/proprietaire/contrat"] },
+  { title: "Compte", itemHrefs: ["/proprietaire/parametres"] },
 ];
+
+const OWNER_ROOT = "/proprietaire";
+
+function isOwnerNavActive(pathname: string, href: string): boolean {
+  if (href === OWNER_ROOT) return pathname === href;
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 const OWNER_BADGE_STORAGE_KEY = "owner_nav_seen_badges_v1";
 
@@ -160,7 +174,7 @@ function NavContent({
   };
 
   useEffect(() => {
-    const activeItem = navItems.find((item) => item.href === pathname && item.badgeKey);
+    const activeItem = ownerNavItems.find((item) => isOwnerNavActive(pathname, item.href) && item.badgeKey);
     if (!activeItem?.badgeKey) return;
     const rawValue =
       activeItem.badgeKey === "demandes"
@@ -206,8 +220,8 @@ function NavContent({
         </Link>
         {canAccessSeeker && !tourLock && <SwitchToSeekerView collapsed={collapsed} />}
         <div className="my-2 border-t border-slate-100" />
-        {navSections.map((section) => {
-          const sectionItems = navItems.filter((item) => section.itemHrefs.includes(item.href));
+        {ownerNavSections.map((section) => {
+          const sectionItems = ownerNavItems.filter((item) => section.itemHrefs.includes(item.href));
           if (sectionItems.length === 0) return null;
           return (
             <div key={section.title} className="mt-1 first:mt-0">
@@ -217,7 +231,7 @@ function NavContent({
                 </p>
               )}
               {sectionItems.map((item) => {
-                const isActive = pathname === item.href;
+                const isActive = isOwnerNavActive(pathname, item.href);
                 const Icon = item.icon;
                 const displayCount = getDisplayCount(item.badgeKey, isActive);
                 return (
@@ -498,9 +512,20 @@ export function OwnerSidebar({
         >
           <Menu className="h-6 w-6" />
         </Button>
-        <Link href="/proprietaire" className={cn("text-lg font-semibold text-gs-orange", isHydrated && "flex items-center")}>
-          {isHydrated && <Image src="/images/logosound.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 rounded-full object-cover" />}
-          {siteConfig.name}
+        <Link
+          href="/proprietaire"
+          className={cn("font-landing-logo-mark flex items-center gap-1.5 text-lg text-gs-orange")}
+        >
+          {isHydrated && (
+            <Image
+              src="/images/logosound.png"
+              alt={siteConfig.name}
+              width={28}
+              height={28}
+              className="h-7 w-7 shrink-0 rounded-full object-cover"
+            />
+          )}
+          {siteConfig.name.toUpperCase()}
         </Link>
         <div className="w-10" />
       </header>
@@ -539,11 +564,19 @@ export function OwnerSidebar({
           <div className="flex h-14 items-center border-b border-slate-200 px-4">
             <Link
               href="/proprietaire"
-              className={cn("text-lg font-semibold text-gs-orange", isHydrated && "flex items-center")}
+              className="font-landing-logo-mark flex items-center gap-1.5 text-lg text-gs-orange"
               onClick={() => setMobileOpen(false)}
             >
-              {isHydrated && <Image src="/images/logosound.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 rounded-full object-cover" />}
-              {siteConfig.name}
+              {isHydrated && (
+                <Image
+                  src="/images/logosound.png"
+                  alt={siteConfig.name}
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 shrink-0 rounded-full object-cover"
+                />
+              )}
+              {siteConfig.name.toUpperCase()}
             </Link>
           </div>
           <NavContent
@@ -580,9 +613,17 @@ export function OwnerSidebar({
           )}
         >
           {!collapsed && (
-            <Link href="/proprietaire" className={cn("text-lg font-semibold text-gs-orange", isHydrated && "flex items-center")}>
-              {isHydrated && <Image src="/images/logosound.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 rounded-full object-cover" />}
-              {siteConfig.name}
+            <Link href="/proprietaire" className="font-landing-logo-mark flex items-center gap-1.5 text-lg text-gs-orange">
+              {isHydrated && (
+                <Image
+                  src="/images/logosound.png"
+                  alt={siteConfig.name}
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 shrink-0 rounded-full object-cover"
+                />
+              )}
+              {siteConfig.name.toUpperCase()}
             </Link>
           )}
           <button

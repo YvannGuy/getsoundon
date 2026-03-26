@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Script from "next/script";
 
+import { siteConfig } from "@/config/site";
 import { getUserOrNull } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: `Onboarding prestataire | ${siteConfig.name}`,
+  robots: { index: false, follow: false },
+};
 
 export default async function OnboardingLayout({
   children,

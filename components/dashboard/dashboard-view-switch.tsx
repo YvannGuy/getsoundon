@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Search } from "lucide-react";
+import { Package, Search } from "lucide-react";
 
 const COOKIE_NAME = "dashboard_view";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 an
@@ -18,10 +18,10 @@ export function SwitchToOwnerView({ collapsed }: { collapsed?: boolean }) {
         window.location.assign("/proprietaire");
       }}
       className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-black"
-      title={collapsed ? "Voir en tant que Propriétaire" : undefined}
+      title={collapsed ? "Voir en tant que prestataire" : undefined}
     >
-      <Building2 className="h-5 w-5 shrink-0" />
-      {!collapsed && <span className="flex-1 truncate">Voir en tant que Propriétaire</span>}
+      <Package className="h-5 w-5 shrink-0" />
+      {!collapsed && <span className="flex-1 truncate">Voir en tant que prestataire</span>}
     </button>
   );
 }

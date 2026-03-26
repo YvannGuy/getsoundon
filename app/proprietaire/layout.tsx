@@ -7,7 +7,7 @@ import { getOwnerBadgeCounts } from "@/lib/notification-counts";
 import { getUserOrNull } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Espace propriétaire",
+  title: "Espace prestataire | GetSoundOn",
   robots: { index: false, follow: false },
 };
 /** Rafraîchit les compteurs de badges à chaque requête (pas de cache layout). */
@@ -64,7 +64,7 @@ export default async function ProprietaireLayout({
     await getOwnerBadgeCounts(supabase, user.id);
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-slate-50 lg:flex-row">
+    <div className="flex h-screen flex-col overflow-hidden bg-gs-beige lg:flex-row">
       <OwnerSidebar
         user={{ ...user, displayName }}
         demandeCount={demandeCount ?? 0}
@@ -77,7 +77,7 @@ export default async function ProprietaireLayout({
         contractCount={contractCount}
         canAccessSeeker={true}
       />
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className="font-landing-body flex-1 overflow-auto text-gs-dark">{children}</main>
     </div>
   );
 }

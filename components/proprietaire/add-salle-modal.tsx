@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { SalleWizard } from "./salle-wizard";
+import { GetSoundOnOnboardingWizard } from "./getsoundon-onboarding-wizard";
 
 type AddSalleModalProps = {
   open: boolean;
@@ -36,10 +36,10 @@ export function AddSalleModal({ open, onOpenChange }: AddSalleModalProps) {
         className="max-h-[90vh] w-full max-w-2xl overflow-y-auto p-0 sm:max-w-2xl"
       >
         <DialogHeader className="border-b border-slate-200 px-6 py-4">
-          <DialogTitle>Ajouter une salle</DialogTitle>
+          <DialogTitle>Ajouter une annonce</DialogTitle>
         </DialogHeader>
         <div className="px-6 py-4">
-          <SalleWizard
+          <GetSoundOnOnboardingWizard
             embedded
             onSuccess={handleSuccess}
             onClose={handleClose}

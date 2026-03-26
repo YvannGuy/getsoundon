@@ -4,7 +4,27 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Building2, Camera, ChevronLeft, ChevronRight, CreditCard, FileText, Heart, Home, LogOut, Menu, MessageCircle, Scale, Search, Settings, User } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarCheck,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardCheck,
+  CreditCard,
+  FileText,
+  Heart,
+  Home,
+  LogOut,
+  Menu,
+  MessageCircle,
+  Package,
+  Receipt,
+  Scale,
+  Search,
+  Settings,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 
 import { signOutAction } from "@/app/actions/auth";
 import { siteConfig } from "@/config/site";
@@ -14,46 +34,46 @@ import { SwitchToOwnerView } from "@/components/dashboard/dashboard-view-switch"
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
-const navItems = [
+type SeekerNavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  badgeKey?: string;
+  opensSearchModal?: boolean;
+};
+
+const seekerNavItems: SeekerNavItem[] = [
   { href: "/dashboard", label: "Tableau de bord", icon: Home },
-  { href: "/dashboard/rechercher", label: "Rechercher une salle", icon: Search, opensSearchModal: true },
-  { href: "/dashboard/demandes", label: "Mes demandes", icon: FileText, badgeKey: "demandes" },
-  { href: "/dashboard/reservations", label: "Réservations", icon: FileText, badgeKey: "reservations" },
-  { href: "/dashboard/paiement", label: "Paiement", icon: CreditCard, badgeKey: "paiement" },
-  { href: "/dashboard/contrat", label: "Contrat & facture", icon: FileText },
-  { href: "/dashboard/etats-des-lieux", label: "États des lieux", icon: Camera, badgeKey: "etats" },
-  { href: "/dashboard/litiges", label: "Litiges", icon: Scale },
-  { href: "/dashboard/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },
+  { href: "/dashboard/rechercher", label: "Rechercher du matériel", icon: Search, opensSearchModal: true },
   { href: "/dashboard/favoris", label: "Favoris", icon: Heart },
+  { href: "/dashboard/demandes", label: "Mes demandes", icon: FileText, badgeKey: "demandes" },
+  { href: "/dashboard/reservations", label: "Réservations", icon: CalendarCheck, badgeKey: "reservations" },
+  { href: "/dashboard/etats-des-lieux", label: "État du matériel", icon: ClipboardCheck, badgeKey: "etats" },
+  { href: "/dashboard/litiges", label: "Litiges", icon: Scale },
+  { href: "/dashboard/paiement", label: "Paiements", icon: CreditCard, badgeKey: "paiement" },
+  { href: "/dashboard/contrat", label: "Factures", icon: Receipt },
+  { href: "/dashboard/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },
   { href: "/dashboard/parametres", label: "Paramètres", icon: Settings },
 ];
 
-const navSections: { title: string; itemHrefs: string[] }[] = [
-  {
-    title: "Vue d'ensemble",
-    itemHrefs: ["/dashboard"],
-  },
-  {
-    title: "Recherche",
-    itemHrefs: ["/dashboard/rechercher"],
-  },
+const seekerNavSections: { title: string; itemHrefs: string[] }[] = [
+  { title: "Vue d'ensemble", itemHrefs: ["/dashboard"] },
+  { title: "Recherche", itemHrefs: ["/dashboard/rechercher", "/dashboard/favoris"] },
   {
     title: "Mes demandes & réservations",
-    itemHrefs: ["/dashboard/demandes", "/dashboard/reservations", "/dashboard/etats-des-lieux", "/dashboard/litiges", "/dashboard/favoris"],
+    itemHrefs: ["/dashboard/demandes", "/dashboard/reservations", "/dashboard/etats-des-lieux", "/dashboard/litiges"],
   },
-  {
-    title: "Finances & documents",
-    itemHrefs: ["/dashboard/paiement", "/dashboard/contrat"],
-  },
-  {
-    title: "Communication",
-    itemHrefs: ["/dashboard/messagerie"],
-  },
-  {
-    title: "Compte",
-    itemHrefs: ["/dashboard/parametres"],
-  },
+  { title: "Finances & documents", itemHrefs: ["/dashboard/paiement", "/dashboard/contrat"] },
+  { title: "Communication", itemHrefs: ["/dashboard/messagerie"] },
+  { title: "Compte", itemHrefs: ["/dashboard/parametres"] },
 ];
+
+const SEEKER_ROOT = "/dashboard";
+
+function isSeekerNavActive(pathname: string, href: string): boolean {
+  if (href === SEEKER_ROOT) return pathname === href;
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 const SEEKER_BADGE_STORAGE_KEY = "seeker_nav_seen_badges_v1";
 
@@ -128,7 +148,9 @@ function NavContent({
   };
 
   useEffect(() => {
-    const activeItem = navItems.find((item) => item.href === pathname && item.badgeKey);
+    const activeItem = seekerNavItems.find(
+      (item) => !item.opensSearchModal && isSeekerNavActive(pathname, item.href) && item.badgeKey
+    );
     if (!activeItem?.badgeKey) return;
     markSeen(activeItem.badgeKey, rawByKey[activeItem.badgeKey] ?? 0);
   }, [pathname, demandeCount, reservationCount, messageCount, paymentCount, edlCount]);
@@ -164,15 +186,15 @@ function NavContent({
               collapsed ? "justify-center px-2" : "",
               "text-slate-600 hover:bg-slate-100 hover:text-black"
             )}
-            title={collapsed ? "Proposer une salle" : undefined}
+            title={collapsed ? "Proposer du matériel" : undefined}
           >
-            <Building2 className="h-5 w-5 shrink-0" />
-            {!collapsed && <span className="flex-1 truncate">Proposer une salle</span>}
+            <Package className="h-5 w-5 shrink-0" />
+            {!collapsed && <span className="flex-1 truncate">Proposer du matériel</span>}
           </Link>
         )}
         <div className="my-2 border-t border-slate-100" />
-        {navSections.map((section) => {
-          const sectionItems = navItems.filter((item) => section.itemHrefs.includes(item.href));
+        {seekerNavSections.map((section) => {
+          const sectionItems = seekerNavItems.filter((item) => section.itemHrefs.includes(item.href));
           if (sectionItems.length === 0) return null;
           return (
             <div key={section.title} className="mt-1 first:mt-0">
@@ -182,10 +204,10 @@ function NavContent({
                 </p>
               )}
               {sectionItems.map((item) => {
-          const isActive = pathname === item.href && !(item as { opensSearchModal?: boolean }).opensSearchModal;
+          const opensSearchModal = item.opensSearchModal;
+          const isActive = !opensSearchModal && isSeekerNavActive(pathname, item.href);
           const Icon = item.icon;
           const badgeVal = item.badgeKey ? (isActive ? 0 : unreadFor(item.badgeKey)) : null;
-          const opensSearchModal = (item as { opensSearchModal?: boolean }).opensSearchModal;
           const navClassName = cn(
             "relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors",
             collapsed ? "justify-center px-2" : "",
@@ -371,9 +393,17 @@ export function DashboardSidebar({
         >
           <Menu className="h-6 w-6" />
         </Button>
-        <Link href="/dashboard" className={cn("text-lg font-semibold text-gs-orange", isHydrated && "flex items-center")}>
-          {isHydrated && <Image src="/images/logosound.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 rounded-full object-cover" />}
-          {siteConfig.name}
+        <Link href="/dashboard" className="font-landing-logo-mark flex items-center gap-1.5 text-lg text-gs-orange">
+          {isHydrated && (
+            <Image
+              src="/images/logosound.png"
+              alt={siteConfig.name}
+              width={28}
+              height={28}
+              className="h-7 w-7 shrink-0 rounded-full object-cover"
+            />
+          )}
+          {siteConfig.name.toUpperCase()}
         </Link>
         <div className="w-10" />
       </header>
@@ -412,11 +442,19 @@ export function DashboardSidebar({
           <div className="flex h-14 items-center border-b border-slate-200 px-4">
             <Link
               href="/dashboard"
-              className={cn("text-lg font-semibold text-gs-orange", isHydrated && "flex items-center")}
+              className="font-landing-logo-mark flex items-center gap-1.5 text-lg text-gs-orange"
               onClick={() => setMobileOpen(false)}
             >
-              {isHydrated && <Image src="/images/logosound.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 rounded-full object-cover" />}
-              {siteConfig.name}
+              {isHydrated && (
+                <Image
+                  src="/images/logosound.png"
+                  alt={siteConfig.name}
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 shrink-0 rounded-full object-cover"
+                />
+              )}
+              {siteConfig.name.toUpperCase()}
             </Link>
           </div>
           <NavContent
@@ -457,9 +495,17 @@ export function DashboardSidebar({
           )}
         >
           {!collapsed && (
-            <Link href="/dashboard" className={cn("text-lg font-semibold text-gs-orange", isHydrated && "flex items-center")}>
-              {isHydrated && <Image src="/images/logosound.png" alt="" width={24} height={24} className="-mr-0.5 h-6 w-6 shrink-0 rounded-full object-cover" />}
-              {siteConfig.name}
+            <Link href="/dashboard" className="font-landing-logo-mark flex items-center gap-1.5 text-lg text-gs-orange">
+              {isHydrated && (
+                <Image
+                  src="/images/logosound.png"
+                  alt={siteConfig.name}
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 shrink-0 rounded-full object-cover"
+                />
+              )}
+              {siteConfig.name.toUpperCase()}
             </Link>
           )}
           <button

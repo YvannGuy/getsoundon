@@ -44,7 +44,8 @@ const STATUS_PAIEMENT_LABEL: Record<string, string> = {
 };
 
 export default async function ProprietaireDashboardPage() {
-  const onboardingGuideUrl = "/pdf/" + "sallede" + "culte.com_bien_debuter.pdf";
+  /** PDF d’onboarding — renommer le fichier dans /public/pdf quand l’asset GetSoundOn sera prêt */
+  const onboardingGuideUrl = "/pdf/salledeculte.com_bien_debuter.pdf";
 
   const supabase = await createClient();
   const {
@@ -145,15 +146,15 @@ export default async function ProprietaireDashboardPage() {
   const metrics = [
     { label: "Demandes reçues (30j)", value: String(demandesRecues30), icon: Inbox, color: "text-black", bgColor: "bg-gs-orange/10" },
     { label: "Taux de réponse (30j)", value: `${tauxReponse30}%`, icon: Star, color: "text-sky-500", bgColor: "bg-sky-100" },
-    { label: "Visites acceptées (30j)", value: String(visitesAcceptees30), icon: CheckCircle, color: "text-emerald-600", bgColor: "bg-emerald-100" },
+    { label: "Créneaux acceptés (30j)", value: String(visitesAcceptees30), icon: CheckCircle, color: "text-emerald-600", bgColor: "bg-emerald-100" },
     { label: "Revenu encaissé (30j)", value: `${(revenuEncaisse30 / 100).toFixed(0)} €`, icon: Banknote, color: "text-amber-700", bgColor: "bg-amber-100" },
   ];
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-black">Propriétaire · Tableau de bord</h1>
-        <p className="mt-1 text-slate-500">Gérez vos annonces et vos demandes</p>
+        <h1 className="font-landing-heading text-2xl font-bold text-gs-dark">Prestataire · Tableau de bord</h1>
+        <p className="font-landing-body mt-1 text-slate-600">Gérez vos annonces, demandes et réservations de matériel</p>
       </div>
 
       <WelcomeOnboardingBanner
@@ -200,7 +201,7 @@ export default async function ProprietaireDashboardPage() {
                 <div>
                   <p className="font-semibold text-black">Recevoir les paiements</p>
                   <p className="mt-0.5 text-sm text-slate-600">
-                    Envoyez des offres aux locataires depuis la messagerie et recevez vos paiements directement.
+                    Envoyez des offres aux loueurs depuis la messagerie et recevez vos paiements directement.
                   </p>
                 </div>
               </div>
@@ -234,7 +235,7 @@ export default async function ProprietaireDashboardPage() {
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg">Mes annonces</CardTitle>
+            <CardTitle className="font-landing-heading text-lg text-gs-dark">Mes annonces</CardTitle>
             <Link href="/proprietaire/annonces" className="text-sm font-medium text-black hover:underline">
               Voir tout →
             </Link>
@@ -291,7 +292,7 @@ export default async function ProprietaireDashboardPage() {
 
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg">Mes paiements</CardTitle>
+            <CardTitle className="font-landing-heading text-lg text-gs-dark">Paiements</CardTitle>
             <Link href="/proprietaire/paiement" className="text-sm font-medium text-black hover:underline">
               Voir →
             </Link>
@@ -343,7 +344,7 @@ export default async function ProprietaireDashboardPage() {
 
       <Card className="mt-6 border-0 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-lg">Demandes de visite récentes</CardTitle>
+          <CardTitle className="font-landing-heading text-lg text-gs-dark">Calendrier · activité récente</CardTitle>
           <Link href="/proprietaire/visites" className="text-sm font-medium text-black hover:underline">
             Voir tout →
           </Link>
@@ -352,15 +353,15 @@ export default async function ProprietaireDashboardPage() {
           {visitesAvecProfil.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-12 text-center">
               <Inbox className="mb-3 h-12 w-12 text-slate-300" />
-              <p className="text-slate-500">Aucune demande de visite pour le moment</p>
+              <p className="text-slate-500">Aucun créneau ou demande de visite pour le moment</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
-                    <th className="pb-3 pr-4">Locataire</th>
-                    <th className="pb-3 pr-4">Salle</th>
+                    <th className="pb-3 pr-4">Loueur</th>
+                    <th className="pb-3 pr-4">Annonce</th>
                     <th className="pb-3 pr-4">Date</th>
                     <th className="pb-3 pr-4">Statut</th>
                     <th className="pb-3">Action</th>

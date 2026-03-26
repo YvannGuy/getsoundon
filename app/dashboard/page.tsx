@@ -40,7 +40,8 @@ function formatTime(t: string | null): string {
 }
 
 export default async function DashboardPage() {
-  const onboardingGuideUrl = "/pdf/" + "sallede" + "culte.com_bien_debuter.pdf";
+  /** PDF d’onboarding — renommer le fichier dans /public/pdf quand l’asset GetSoundOn sera prêt */
+  const onboardingGuideUrl = "/pdf/salledeculte.com_bien_debuter.pdf";
 
   const supabase = await createClient();
   const admin = createAdminClient();
@@ -144,9 +145,9 @@ export default async function DashboardPage() {
 
   const now = new Date();
   const overviewCards = [
-    { label: "Demandes de visite envoyées (30j)", value: String(visitesEnvoyees30), icon: FileText, color: "text-black", bgColor: "bg-gs-orange/10" },
+    { label: "Demandes / créneaux envoyés (30j)", value: String(visitesEnvoyees30), icon: FileText, color: "text-black", bgColor: "bg-gs-orange/10" },
     { label: "Demandes avec réponse (30j)", value: `${tauxReponseVisites30}%`, icon: MessageCircle, color: "text-emerald-600", bgColor: "bg-emerald-100" },
-    { label: "Visites acceptées (30j)", value: String(visitesAcceptees30), icon: CheckCircle2, color: "text-sky-600", bgColor: "bg-sky-100" },
+    { label: "Créneaux acceptés (30j)", value: String(visitesAcceptees30), icon: CheckCircle2, color: "text-sky-600", bgColor: "bg-sky-100" },
     { label: "Réservations confirmées (30j)", value: String(reservationsConfirmees30), icon: Heart, color: "text-amber-500", bgColor: "bg-amber-100" },
   ];
 
@@ -162,7 +163,7 @@ export default async function DashboardPage() {
         : "";
     return {
       id: d.id,
-      salle: salle?.name ?? "Salle",
+      salle: salle?.name ?? "Annonce",
       location: salle?.city ?? "",
       date: horaires ? `${dateStr}, ${horaires}` : dateStr,
       status: STATUT_LABEL[d.status] ?? d.status,
@@ -192,8 +193,8 @@ export default async function DashboardPage() {
         : "";
       return {
         id: d.id,
-        name: "Propriétaire",
-        venue: salle?.name ?? "Salle",
+        name: "Prestataire",
+        venue: salle?.name ?? "Annonce",
         time: timeAgo,
         preview: conv?.last_message_preview ?? "Aucun message",
         isNew: false,
@@ -207,7 +208,7 @@ export default async function DashboardPage() {
       const rawImg = salle?.images && Array.isArray(salle.images) && salle.images[0];
       const img = typeof rawImg === "string" ? rawImg : "/img.png";
       return {
-        name: salle?.name ?? "Salle",
+        name: salle?.name ?? "Annonce",
         location: salle?.city ?? "",
         image: img,
         slug: salle?.slug ?? salle?.id ?? "",
@@ -217,8 +218,8 @@ export default async function DashboardPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-black">Loueur · Tableau de bord</h1>
-        <p className="mt-1 text-slate-500">Suivez vos recherches et demandes</p>
+        <h1 className="font-landing-heading text-2xl font-bold text-gs-dark">Loueur · Tableau de bord</h1>
+        <p className="font-landing-body mt-1 text-slate-600">Suivez votre matériel, vos demandes et vos réservations</p>
       </div>
 
       <WelcomeOnboardingBanner
@@ -250,7 +251,7 @@ export default async function DashboardPage() {
 
       <Card className="mt-6 border-0 shadow-sm">
         <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0 pb-2">
-          <CardTitle className="text-lg">Mes demandes de visites récentes</CardTitle>
+          <CardTitle className="font-landing-heading text-lg text-gs-dark">Mes demandes récentes</CardTitle>
           <Link href="/dashboard/demandes" className="text-sm font-medium text-black hover:underline">
             Voir tout →
           </Link>
@@ -259,10 +260,10 @@ export default async function DashboardPage() {
           {recentVisitRequests.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-12 text-center">
               <Inbox className="mb-3 h-12 w-12 text-slate-300" />
-              <p className="text-slate-500">Aucune demande de visite</p>
+              <p className="text-slate-500">Aucune demande pour l’instant</p>
               <SearchModalButton className="mt-3 inline-flex">
                 <Button className="bg-gs-orange hover:brightness-95">
-                  Rechercher une salle
+                  Rechercher du matériel
                 </Button>
               </SearchModalButton>
             </div>
@@ -271,7 +272,7 @@ export default async function DashboardPage() {
               <table className="w-full min-w-[560px]">
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
-                    <th className="pb-3 pr-3 sm:pr-4">Salle</th>
+                    <th className="pb-3 pr-3 sm:pr-4">Annonce</th>
                     <th className="pb-3 pr-3 sm:pr-4">Date</th>
                     <th className="pb-3 pr-3 sm:pr-4">Statut</th>
                     <th className="pb-3">Action</th>
@@ -357,7 +358,7 @@ export default async function DashboardPage() {
 
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0 pb-2">
-            <CardTitle className="text-lg">Favoris</CardTitle>
+            <CardTitle className="font-landing-heading text-lg text-gs-dark">Favoris</CardTitle>
             <Link href="/dashboard/favoris" className="text-sm font-medium text-black hover:underline">
               Voir mes favoris →
             </Link>
@@ -366,10 +367,10 @@ export default async function DashboardPage() {
             {recentFavorites.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 py-8 text-center">
                 <Heart className="mb-2 h-10 w-10 text-slate-300" />
-                <p className="text-sm text-slate-500">Aucune salle sauvegardée</p>
+                <p className="text-sm text-slate-500">Aucune annonce sauvegardée</p>
                 <SearchModalButton>
                   <Button variant="outline" size="sm" className="mt-3">
-                    Rechercher une salle
+                    Rechercher du matériel
                   </Button>
                 </SearchModalButton>
               </div>

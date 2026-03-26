@@ -187,25 +187,12 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     }
   }
 
-  const MIN_PHOTOS = 3;
+  /** MVP GetSoundOn : une photo suffit pour publier vite ; le placeholder reste possible en secours. */
+  const MIN_PHOTOS = 1;
   if (imageUrls.length >= MIN_PHOTOS) {
     // utilise les URLs uploadées côté client
-  } else if (imageUrls.length > 0) {
-    return {
-      success: false,
-      error: `Veuillez ajouter ${MIN_PHOTOS} photos de votre matériel (reçu : ${imageUrls.length}).`,
-      errorCode: "VALIDATION",
-    };
   } else {
     const files = formData.getAll("photos") as File[];
-    if (files.length < MIN_PHOTOS) {
-      return {
-        success: false,
-        error: `Veuillez ajouter au moins ${MIN_PHOTOS} photos de votre matériel.`,
-        errorCode: "VALIDATION",
-      };
-    }
-
     if (files.length > 0) {
       const validFiles = files.filter(
         (f) => ALLOWED_TYPES.includes(f.type) && f.size <= MAX_FILE_SIZE

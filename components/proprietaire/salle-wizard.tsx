@@ -1,5 +1,7 @@
 "use client";
 
+/** @see GetSoundOnOnboardingWizard — l’onboarding prestataire par défaut est dans `getsoundon-onboarding-wizard.tsx`. Ce fichier reste pour référence / usages legacy éventuels. */
+
 import Link from "next/link";
 import { useState, useEffect, useCallback, useRef, useMemo, type RefObject } from "react";
 import { addMonths, subMonths, startOfDay, addDays } from "date-fns";
