@@ -9,7 +9,7 @@ import { Menu, X } from "lucide-react";
 import { siteConfig } from "@/config/site";
 
 const centerNavItems = [
-  { href: "/items", label: "Location" },
+  { href: "/catalogue", label: "Catalogue" },
   { href: "/#faq", label: "FAQ" },
   { href: "/auth?tab=signup&userType=owner", label: "Louer mon matériel" },
 ] as const;

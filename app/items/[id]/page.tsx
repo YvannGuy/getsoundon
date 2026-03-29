@@ -157,8 +157,8 @@ export default function ItemDetailPage() {
 
   return (
     <main className="container max-w-4xl py-10">
-      <Link href="/items" className="text-sm text-slate-600 hover:underline">
-        Retour a la marketplace
+      <Link href="/catalogue" className="text-sm text-slate-600 hover:underline">
+        Retour au catalogue
       </Link>
 
       {loading ? <p className="mt-4 text-sm text-slate-500">Chargement...</p> : null}

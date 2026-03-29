@@ -25,7 +25,7 @@ export function LandingFooter({ isLoggedIn }: LandingFooterProps) {
                 </Link>
               </li>
               <li>
-                <Link href="/items" className="hover:text-white hover:underline">
+                <Link href="/catalogue" className="hover:text-white hover:underline">
                   Catalogue
                 </Link>
               </li>

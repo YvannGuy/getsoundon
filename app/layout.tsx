@@ -66,7 +66,7 @@ const structuredData: Graph = {
       publisher: { "@id": `${siteConfig.url}#organization` },
       potentialAction: {
         "@type": "SearchAction",
-        target: `${siteConfig.url}/rechercher?ville={search_term_string}`,
+        target: `${siteConfig.url}/catalogue?q={search_term_string}`,
         "query-input": "required name=search_term_string",
       } as SearchAction,
     } satisfies WebSite,

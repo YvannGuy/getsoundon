@@ -26,6 +26,9 @@ const LOCATION_PLACEHOLDER = "Paris, Versailles, Montreuil, code postal…";
 const fieldShell =
   "relative flex min-h-[3.25rem] w-full flex-1 items-center rounded-2xl border border-white/35 bg-white/[0.97] shadow-[0_4px_28px_rgba(0,0,0,0.1)] transition-[box-shadow,border-color] focus-within:border-white/55 focus-within:shadow-[0_8px_36px_rgba(0,0,0,0.14)] sm:min-h-[3.65rem] md:min-h-[3.75rem] md:rounded-[1.25rem]";
 
+const submitBtnClass =
+  "font-landing-btn h-[3.25rem] rounded-[1.35rem] bg-gs-orange px-6 text-white transition hover:brightness-105 sm:h-[3.65rem] md:h-[3.75rem] md:rounded-[1.25rem] md:px-8";
+
 export function HeroSearchBar({ className }: { className?: string }) {
   const router = useRouter();
   const queryHeadingId = useId();
@@ -51,7 +54,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
     if (q) params.set("q", q);
     if (loc) params.set("location", loc);
     const qs = params.toString();
-    router.push(qs ? `/items?${qs}` : "/items");
+    router.push(qs ? `/catalogue?${qs}` : "/catalogue");
   };
 
   return (
@@ -64,9 +67,9 @@ export function HeroSearchBar({ className }: { className?: string }) {
           Que recherchez-vous ?
         </h2>
 
-        {/* Mobile : colonne · md+ : deux champs côte à côte */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-stretch md:gap-3 lg:gap-4">
-          <div className={fieldShell}>
+        {/* Mobile : colonne · md+ : quoi | (lieu + bouton Rechercher sous le lieu) */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:gap-3 lg:gap-4">
+          <div className={cn(fieldShell, "md:min-h-[3.75rem] md:flex-1")}>
             <label htmlFor="hero-intelligent-q" className="sr-only">
               Matériel, prestation ou mot-clé — un mot suffit, tu peux ajouter détails, date ou capacité
             </label>
@@ -90,22 +93,34 @@ export function HeroSearchBar({ className }: { className?: string }) {
             />
           </div>
 
-          <div className={cn(fieldShell, "items-stretch")}>
-            <label htmlFor="hero-intelligent-lieu" className="sr-only">
-              Lieu (ville ou code postal)
-            </label>
-            <MapPin
-              className="pointer-events-none ml-3 h-5 w-5 shrink-0 self-center text-[#9a9a9a] sm:ml-4"
-              strokeWidth={2}
-              aria-hidden
-            />
-            <HeroLocationAutocomplete
-              id="hero-intelligent-lieu"
-              name="location"
-              value={location}
-              onChange={setLocation}
-              placeholder={LOCATION_PLACEHOLDER}
-            />
+          <div className="flex min-w-0 w-full flex-col gap-3 md:flex-1">
+            <div className={cn(fieldShell, "items-stretch")}>
+              <label htmlFor="hero-intelligent-lieu" className="sr-only">
+                Lieu (ville ou code postal)
+              </label>
+              <MapPin
+                className="pointer-events-none ml-3 h-5 w-5 shrink-0 self-center text-[#9a9a9a] sm:ml-4"
+                strokeWidth={2}
+                aria-hidden
+              />
+              <HeroLocationAutocomplete
+                id="hero-intelligent-lieu"
+                name="location"
+                value={location}
+                onChange={setLocation}
+                placeholder={LOCATION_PLACEHOLDER}
+              />
+            </div>
+            {/* Desktop : sous le lieu, même largeur qu’avant (pas pleine colonne) */}
+            <button
+              type="submit"
+              className={cn(
+                submitBtnClass,
+                "hidden md:ml-auto md:block md:w-[min(46%,260px)] md:max-w-[280px] lg:w-[min(42%,240px)]"
+              )}
+            >
+              Rechercher
+            </button>
           </div>
         </div>
 
@@ -144,7 +159,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
         <p className="font-landing-body mt-2.5 text-center text-sm leading-snug text-white/90 md:mt-3 md:text-left">
           Ou parcourir le{" "}
           <Link
-            href="/items"
+            href="/catalogue"
             className="font-semibold text-white underline decoration-white/70 underline-offset-2 transition hover:decoration-white"
           >
             catalogue
@@ -152,12 +167,9 @@ export function HeroSearchBar({ className }: { className?: string }) {
           .
         </p>
 
-        {/* Mobile : centré, ~64 % de largeur · Desktop : aligné à droite */}
-        <div className="mt-3 flex w-full flex-col items-center sm:mt-4 md:mt-4 md:flex-row md:justify-end md:pt-0.5">
-          <button
-            type="submit"
-            className="font-landing-btn h-[3.25rem] w-[64%] max-w-[280px] rounded-[1.35rem] bg-gs-orange px-6 text-white transition hover:brightness-105 sm:h-[3.65rem] md:mx-0 md:ml-auto md:h-[3.75rem] md:w-[min(46%,260px)] md:max-w-[280px] md:rounded-[1.25rem] md:px-8 lg:w-[min(42%,240px)]"
-          >
+        {/* Mobile / tablette : bouton en bas, largeur confortable · masqué sur md+ (bouton sous le lieu) */}
+        <div className="mt-3 flex w-full flex-col items-center sm:mt-4 md:hidden">
+          <button type="submit" className={cn(submitBtnClass, "w-[64%] max-w-[280px] shrink-0")}>
             Rechercher
           </button>
         </div>

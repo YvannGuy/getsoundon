@@ -108,7 +108,7 @@ export function LandingCatalogue() {
           {catalogue.map((c) => (
             <Link
               key={c.title}
-              href="/items"
+              href="/catalogue"
               className="group relative block overflow-hidden rounded-2xl shadow-md transition duration-300 hover:scale-[1.03] hover:shadow-xl"
             >
               <div className="relative aspect-[4/3] w-full">
@@ -162,7 +162,7 @@ export function LandingPopularModels() {
                 <p className="font-landing-heading text-lg font-bold text-gs-dark">{p.title}</p>
                 <p className="font-landing-body mt-1 text-[#444]">À partir de {p.price} € / jour</p>
                 <Link
-                  href="/items"
+                  href="/catalogue"
                   className="font-landing-btn mt-4 inline-flex w-full items-center justify-center rounded-md bg-gs-orange py-3 text-white transition hover:brightness-105"
                 >
                   Réserver
@@ -196,7 +196,7 @@ export function LandingInfoStrip() {
           </p>
           </div>
           <Link
-            href="/items"
+            href="/catalogue"
             className="group flex flex-col justify-between rounded-2xl bg-gs-orange p-6 text-white shadow-md transition hover:brightness-105 hover:shadow-lg"
           >
             <div>
