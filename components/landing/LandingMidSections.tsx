@@ -3,33 +3,30 @@ import Link from "next/link";
 import { ArrowRight, Headphones, MapPin, Package, Truck, Zap } from "lucide-react";
 
 import { LandingReveal } from "@/components/landing/LandingReveal";
+import {
+  CATALOGUE_SEGMENT_ORDER,
+  CATALOGUE_SEGMENTS,
+  type CatalogueSegmentSlug,
+} from "@/lib/catalogue-segments";
 
-const catalogue = [
-  {
-    title: "Enceintes",
-    img: "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=800&q=80&auto=format&fit=crop",
-  },
-  {
-    title: "Lumières",
-    img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&q=80&auto=format&fit=crop",
-  },
-  {
-    title: "Packs DJ",
-    img: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&q=80&auto=format&fit=crop",
-  },
-  {
-    title: "Vidéoprojecteurs",
-    img: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=600&q=80&auto=format&fit=crop",
-  },
-  {
-    title: "Microphones",
-    img: "https://images.unsplash.com/photo-1598653222000-6b7b7a552625?w=600&q=80&auto=format&fit=crop",
-  },
-  {
-    title: "Tables de mixage",
-    img: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&q=80&auto=format&fit=crop",
-  },
-];
+/** Visuels par segment — filtres réels dans `/api/listings?segment=…` (catégorie + mots-clés). */
+const CATALOGUE_TILE_IMAGES: Record<CatalogueSegmentSlug, string> = {
+  enceintes:
+    "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=800&q=80&auto=format&fit=crop",
+  lumieres:
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&q=80&auto=format&fit=crop",
+  dj: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&q=80&auto=format&fit=crop",
+  videoprojecteurs:
+    "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=600&q=80&auto=format&fit=crop",
+  microphones:
+    "https://images.unsplash.com/photo-1598653222000-6b7b7a552625?w=600&q=80&auto=format&fit=crop",
+  "tables-mixage":
+    "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&q=80&auto=format&fit=crop",
+};
+
+function catalogueTileHref(slug: CatalogueSegmentSlug): string {
+  return `/items?segment=${encodeURIComponent(slug)}`;
+}
 
 const popular = [
   {
@@ -105,30 +102,34 @@ export function LandingCatalogue() {
           Louez parmi des centaines de matériels pour vos événements.
         </p>
         <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {catalogue.map((c) => (
-            <Link
-              key={c.title}
-              href="/catalogue"
-              className="group relative block overflow-hidden rounded-2xl shadow-md transition duration-300 hover:scale-[1.03] hover:shadow-xl"
-            >
-              <div className="relative aspect-[4/3] w-full">
-                <Image
-                  src={c.img}
-                  alt=""
-                  fill
-                  className="object-cover transition duration-500 group-hover:scale-105"
-                  sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw"
-                />
-                <div
-                  className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"
-                  aria-hidden
-                />
-                <span className="font-landing-heading absolute bottom-4 left-4 text-xl font-bold text-white md:text-2xl">
-                  {c.title}
-                </span>
-              </div>
-            </Link>
-          ))}
+          {CATALOGUE_SEGMENT_ORDER.map((slug) => {
+            const label = CATALOGUE_SEGMENTS[slug].label;
+            const img = CATALOGUE_TILE_IMAGES[slug];
+            return (
+              <Link
+                key={slug}
+                href={catalogueTileHref(slug)}
+                className="group relative block overflow-hidden rounded-2xl shadow-md transition duration-300 hover:scale-[1.03] hover:shadow-xl"
+              >
+                <div className="relative aspect-[4/3] w-full">
+                  <Image
+                    src={img}
+                    alt={label}
+                    fill
+                    className="object-cover transition duration-500 group-hover:scale-105"
+                    sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw"
+                  />
+                  <div
+                    className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"
+                    aria-hidden
+                  />
+                  <span className="font-landing-heading absolute bottom-4 left-4 text-xl font-bold text-white md:text-2xl">
+                    {label}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>

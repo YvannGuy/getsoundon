@@ -13,6 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  CATALOGUE_SEGMENTS,
+  isCatalogueSegmentSlug,
+} from "@/lib/catalogue-segments";
 import { cn } from "@/lib/utils";
 
 const ListingsSearchMap = dynamic(
@@ -47,14 +51,19 @@ const CATEGORY_LABELS: Record<(typeof CATEGORY_OPTIONS)[number], string> = {
 
 function buildListingsQueryString(sp: URLSearchParams): string {
   const params = new URLSearchParams();
-  const q = sp.get("q")?.trim();
+  const segment = sp.get("segment")?.trim();
   const location = sp.get("location")?.trim();
-  const category = sp.get("category")?.trim();
   const minPrice = sp.get("minPrice")?.trim();
   const maxPrice = sp.get("maxPrice")?.trim();
-  if (q) params.set("q", q);
+  if (segment && isCatalogueSegmentSlug(segment)) {
+    params.set("segment", segment);
+  } else {
+    const q = sp.get("q")?.trim();
+    const category = sp.get("category")?.trim();
+    if (q) params.set("q", q);
+    if (category) params.set("category", category);
+  }
   if (location) params.set("location", location);
-  if (category) params.set("category", category);
   if (minPrice) params.set("minPrice", minPrice);
   if (maxPrice) params.set("maxPrice", maxPrice);
   params.set("limit", "50");
@@ -94,11 +103,20 @@ export function ItemsSearchContent() {
   const [searchCategory, setSearchCategory] = useState(searchParams.get("category") ?? "");
 
   useEffect(() => {
-    setSearchQ(searchParams.get("q") ?? "");
     setSearchLocation(searchParams.get("location") ?? "");
-    setSearchCategory(searchParams.get("category") ?? "");
     setPrixMin(searchParams.get("minPrice") ?? "");
     setPrixMax(searchParams.get("maxPrice") ?? "");
+    const seg = searchParams.get("segment")?.trim() ?? "";
+    if (seg && isCatalogueSegmentSlug(seg)) {
+      const cfg = CATALOGUE_SEGMENTS[seg];
+      setSearchCategory(cfg.category);
+      setSearchQ(
+        "textAnyOf" in cfg && cfg.textAnyOf.length > 0 ? cfg.textAnyOf[0] : ""
+      );
+      return;
+    }
+    setSearchQ(searchParams.get("q") ?? "");
+    setSearchCategory(searchParams.get("category") ?? "");
   }, [searchParams]);
 
   const queryString = useMemo(() => buildListingsQueryString(searchParams), [searchParams]);
@@ -127,15 +145,24 @@ export function ItemsSearchContent() {
 
   const activeChips = useMemo(() => {
     const chips: { key: string; label: string; param: string }[] = [];
+    const seg = searchParams.get("segment")?.trim() ?? "";
     const q = searchParams.get("q")?.trim();
     const loc = searchParams.get("location")?.trim();
     const cat = searchParams.get("category")?.trim();
     const minP = searchParams.get("minPrice")?.trim();
     const maxP = searchParams.get("maxPrice")?.trim();
-    if (q) chips.push({ key: "q", label: q, param: "q" });
+    if (seg && isCatalogueSegmentSlug(seg)) {
+      chips.push({ key: "seg", label: CATALOGUE_SEGMENTS[seg].label, param: "segment" });
+    } else {
+      if (q) chips.push({ key: "q", label: q, param: "q" });
+      if (cat && CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS])
+        chips.push({
+          key: "cat",
+          label: CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS],
+          param: "category",
+        });
+    }
     if (loc) chips.push({ key: "loc", label: loc, param: "location" });
-    if (cat && CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS])
-      chips.push({ key: "cat", label: CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS], param: "category" });
     if (minP || maxP)
       chips.push({
         key: "price",
@@ -150,6 +177,10 @@ export function ItemsSearchContent() {
     if (param === "price") {
       sp.delete("minPrice");
       sp.delete("maxPrice");
+    } else if (param === "segment") {
+      sp.delete("segment");
+      sp.delete("q");
+      sp.delete("category");
     } else {
       sp.delete(param);
     }
@@ -159,6 +190,7 @@ export function ItemsSearchContent() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const sp = new URLSearchParams(searchParams.toString());
+    sp.delete("segment");
     if (searchQ.trim()) sp.set("q", searchQ.trim());
     else sp.delete("q");
     if (searchLocation.trim()) sp.set("location", searchLocation.trim());
@@ -210,7 +242,14 @@ export function ItemsSearchContent() {
     cardRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, []);
 
+  const urlSegmentRaw = searchParams.get("segment")?.trim() ?? "";
+  const urlSegmentLabel =
+    urlSegmentRaw && isCatalogueSegmentSlug(urlSegmentRaw)
+      ? CATALOGUE_SEGMENTS[urlSegmentRaw].label
+      : null;
+
   const hasUrlFilters =
+    Boolean(urlSegmentLabel) ||
     Boolean(searchParams.get("q")?.trim()) ||
     Boolean(searchParams.get("location")?.trim()) ||
     Boolean(searchParams.get("category")?.trim()) ||
@@ -219,8 +258,17 @@ export function ItemsSearchContent() {
 
   const urlQ = searchParams.get("q")?.trim() ?? "";
   const urlLocation = searchParams.get("location")?.trim() ?? "";
-  /** Hero ou URL avec mot-clé et/ou lieu = page résultats, pas le bandeau « catalogue général ». */
-  const isSearchResultsView = Boolean(urlQ || urlLocation);
+  const urlCategory = searchParams.get("category")?.trim() ?? "";
+  const urlCategoryLabel =
+    !urlSegmentLabel &&
+    urlCategory &&
+    CATEGORY_LABELS[urlCategory as keyof typeof CATEGORY_LABELS]
+      ? CATEGORY_LABELS[urlCategory as keyof typeof CATEGORY_LABELS]
+      : null;
+  /** Hero, tuiles catalogue (segment), ou URL avec filtres = bandeau résultats / contexte. */
+  const isSearchResultsView = Boolean(
+    urlSegmentLabel || urlQ || urlLocation || urlCategoryLabel
+  );
 
   return (
     <>
@@ -231,12 +279,36 @@ export function ItemsSearchContent() {
               Résultats de recherche
             </h1>
             <p className="font-landing-body mt-2 max-w-3xl text-[15px] leading-relaxed text-slate-700">
-              {urlQ ? (
+              {urlSegmentLabel ? (
                 <>
-                  Matériel ou prestation : <span className="font-semibold text-gs-dark">« {urlQ} »</span>
+                  Matériel : <span className="font-semibold text-gs-dark">{urlSegmentLabel}</span>
+                  <span className="text-slate-600">
+                    {" "}
+                    — annonces filtrées pour ce type de matériel (prestataires concernés uniquement).
+                  </span>
                 </>
               ) : null}
-              {urlQ && urlLocation ? <span className="text-slate-400"> · </span> : null}
+              {urlSegmentLabel && urlLocation ? <span className="text-slate-400"> · </span> : null}
+              {!urlSegmentLabel && urlCategoryLabel ? (
+                <>
+                  Catégorie : <span className="font-semibold text-gs-dark">{urlCategoryLabel}</span>
+                </>
+              ) : null}
+              {!urlSegmentLabel && urlCategoryLabel && urlQ ? <span className="text-slate-400"> · </span> : null}
+              {!urlSegmentLabel && urlQ ? (
+                urlCategoryLabel ? (
+                  <>
+                    Affinage : <span className="font-semibold text-gs-dark">« {urlQ} »</span>
+                  </>
+                ) : (
+                  <>
+                    Matériel ou prestation : <span className="font-semibold text-gs-dark">« {urlQ} »</span>
+                  </>
+                )
+              ) : null}
+              {!urlSegmentLabel && (urlQ || urlCategoryLabel) && urlLocation ? (
+                <span className="text-slate-400"> · </span>
+              ) : null}
               {urlLocation ? (
                 <>
                   Lieu : <span className="font-semibold text-gs-dark">{urlLocation}</span>
@@ -410,7 +482,7 @@ export function ItemsSearchContent() {
               <p className="mt-2 text-slate-500">Élargis le lieu ou change les mots-clés.</p>
               {hasUrlFilters ? (
                 <Link
-                  href="/catalogue"
+                  href={listingBasePath}
                   className="mt-4 inline-block font-medium text-gs-orange hover:underline"
                 >
                   Voir tout le catalogue

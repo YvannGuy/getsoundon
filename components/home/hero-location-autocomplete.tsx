@@ -66,6 +66,10 @@ type HeroLocationAutocompleteProps = {
   onChange: (value: string) => void;
   placeholder: string;
   inputClassName?: string;
+  /** Erreur de validation (ex. champ obligatoire vide après soumission) */
+  ariaInvalid?: boolean;
+  /** Id du texte d’erreur / d’aide (aria-describedby) */
+  ariaDescribedBy?: string;
 };
 
 export function HeroLocationAutocomplete({
@@ -75,6 +79,8 @@ export function HeroLocationAutocomplete({
   onChange,
   placeholder,
   inputClassName,
+  ariaInvalid,
+  ariaDescribedBy,
 }: HeroLocationAutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -190,6 +196,8 @@ export function HeroLocationAutocomplete({
         aria-haspopup="listbox"
         aria-controls={`${id}-listbox`}
         aria-autocomplete="list"
+        aria-invalid={ariaInvalid ? true : undefined}
+        aria-describedby={ariaDescribedBy}
         className={cn(
           "font-landing-body w-full min-w-0 border-0 bg-transparent py-3 pl-3 pr-4 text-base leading-normal text-gs-dark outline-none placeholder:text-[#5c5c5c] placeholder:opacity-90 sm:py-3.5 sm:pl-3.5 sm:text-lg sm:leading-snug md:pr-5 md:text-xl",
           inputClassName

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { CATALOGUE_SEGMENTS, isCatalogueSegmentSlug } from "@/lib/catalogue-segments";
 import { createClient } from "@/lib/supabase/server";
 
 const createListingSchema = z.object({
@@ -19,6 +20,21 @@ const MAX_LIMIT = 100;
 /** Retire caractères qui cassent les filtres PostgREST / ilike. */
 function sanitizeIlikeToken(s: string): string {
   return s.replace(/%/g, "").replace(/,/g, " ").replace(/\s+/g, " ").trim();
+}
+
+const LISTING_CATEGORIES = ["sound", "dj", "lighting", "services"] as const;
+
+/** Conditions PostgREST `or` : titre ou description ilike pour chaque mot-clé. */
+function titleDescriptionOrPartsFromKeywords(keywords: readonly string[]): string[] {
+  const parts: string[] = [];
+  for (const raw of keywords) {
+    const s = sanitizeIlikeToken(raw);
+    if (s.length >= 2) {
+      parts.push(`title.ilike.%${s}%`);
+      parts.push(`description.ilike.%${s}%`);
+    }
+  }
+  return parts;
 }
 
 /** Plusieurs fragments pour matcher une fiche « Ville » ou « Ville (cp) » côté annonce. */
@@ -46,8 +62,9 @@ function pickListingCoverUrl(images: ListingImageRow[] | null | undefined): stri
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const segmentRaw = searchParams.get("segment")?.trim() ?? "";
     const query = searchParams.get("q")?.trim();
-    const category = searchParams.get("category");
+    const categoryParam = searchParams.get("category")?.trim();
     const location = searchParams.get("location")?.trim();
     const minPrice = Number(searchParams.get("minPrice") ?? 0);
     const maxPrice = Number(searchParams.get("maxPrice") ?? Number.MAX_SAFE_INTEGER);
@@ -62,6 +79,22 @@ export async function GET(request: Request) {
       "id, owner_id, title, description, category, price_per_day, location, lat, lng, rating_avg, rating_count, created_at";
     const SELECT_WITH_IMAGES = `${SELECT_BASE}, gs_listing_images ( url, is_cover, position )`;
 
+    let categoryFilter = categoryParam;
+    let textOrParts: string[] | undefined;
+
+    if (segmentRaw && isCatalogueSegmentSlug(segmentRaw)) {
+      const cfg = CATALOGUE_SEGMENTS[segmentRaw];
+      categoryFilter = cfg.category;
+      if ("textAnyOf" in cfg && cfg.textAnyOf?.length) {
+        textOrParts = titleDescriptionOrPartsFromKeywords(cfg.textAnyOf);
+      }
+    } else if (query) {
+      const safeQ = sanitizeIlikeToken(query);
+      if (safeQ.length >= 1) {
+        textOrParts = [`title.ilike.%${safeQ}%`, `description.ilike.%${safeQ}%`];
+      }
+    }
+
     const buildQuery = (select: string) => {
       let qb = supabase
         .from("gs_listings")
@@ -72,11 +105,8 @@ export async function GET(request: Request) {
         .order("created_at", { ascending: false })
         .range(from, to);
 
-      if (query) {
-        const safeQ = sanitizeIlikeToken(query);
-        if (safeQ.length >= 1) {
-          qb = qb.or(`title.ilike.%${safeQ}%,description.ilike.%${safeQ}%`);
-        }
+      if (textOrParts && textOrParts.length > 0) {
+        qb = qb.or(textOrParts.join(","));
       }
       if (location) {
         const frags = locationSearchFragments(location);
@@ -86,8 +116,8 @@ export async function GET(request: Request) {
           qb = qb.or(frags.map((f) => `location.ilike.%${f}%`).join(","));
         }
       }
-      if (category && ["sound", "dj", "lighting", "services"].includes(category)) {
-        qb = qb.eq("category", category);
+      if (categoryFilter && LISTING_CATEGORIES.includes(categoryFilter as (typeof LISTING_CATEGORIES)[number])) {
+        qb = qb.eq("category", categoryFilter);
       }
       return qb;
     };

@@ -29,13 +29,19 @@ const fieldShell =
 const submitBtnClass =
   "font-landing-btn h-[3.25rem] rounded-[1.35rem] bg-gs-orange px-6 text-white transition hover:brightness-105 sm:h-[3.65rem] md:h-[3.75rem] md:rounded-[1.25rem] md:px-8";
 
+const fieldErrorTextClass =
+  "font-landing-body text-left text-[13px] font-medium leading-snug text-orange-100/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)] sm:text-sm";
+
 export function HeroSearchBar({ className }: { className?: string }) {
   const router = useRouter();
   const queryHeadingId = useId();
+  const queryErrorId = useId();
+  const locationErrorId = useId();
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [pausePlaceholder, setPausePlaceholder] = useState(false);
+  const [showFieldErrors, setShowFieldErrors] = useState(false);
   const quickTagsId = useId();
 
   useEffect(() => {
@@ -46,15 +52,29 @@ export function HeroSearchBar({ className }: { className?: string }) {
     return () => window.clearInterval(t);
   }, [pausePlaceholder]);
 
+  const queryInvalid = showFieldErrors && !query.trim();
+  const locationInvalid = showFieldErrors && !location.trim();
+
+  useEffect(() => {
+    if (query.trim() && location.trim()) setShowFieldErrors(false);
+  }, [query, location]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const params = new URLSearchParams();
     const q = query.trim();
     const loc = location.trim();
-    if (q) params.set("q", q);
-    if (loc) params.set("location", loc);
-    const qs = params.toString();
-    router.push(qs ? `/catalogue?${qs}` : "/catalogue");
+    if (!q || !loc) {
+      setShowFieldErrors(true);
+      queueMicrotask(() => {
+        if (!q) document.getElementById("hero-intelligent-q")?.focus();
+        else document.getElementById("hero-intelligent-lieu")?.focus();
+      });
+      return;
+    }
+    const params = new URLSearchParams();
+    params.set("q", q);
+    params.set("location", loc);
+    router.push(`/catalogue?${params.toString()}`);
   };
 
   return (
@@ -67,51 +87,108 @@ export function HeroSearchBar({ className }: { className?: string }) {
           Que recherchez-vous ?
         </h2>
 
-        {/* Mobile : colonne · md+ : quoi | (lieu + bouton Rechercher sous le lieu) */}
+        {/* Matériel + suggestions sous le 1er champ · Lieu + Rechercher (desktop) à droite */}
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:gap-3 lg:gap-4">
-          <div className={cn(fieldShell, "md:min-h-[3.75rem] md:flex-1")}>
-            <label htmlFor="hero-intelligent-q" className="sr-only">
-              Matériel, prestation ou mot-clé — un mot suffit, tu peux ajouter détails, date ou capacité
-            </label>
-            <Search
-              className="pointer-events-none ml-3 h-5 w-5 shrink-0 text-[#9a9a9a] sm:ml-4"
-              strokeWidth={2}
-              aria-hidden
-            />
-            <input
-              id="hero-intelligent-q"
-              name="q"
-              type="search"
-              autoComplete="off"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onFocus={() => setPausePlaceholder(true)}
-              onBlur={() => setPausePlaceholder(false)}
-              placeholder={KEYWORD_EXAMPLES[placeholderIndex]}
-              aria-labelledby={queryHeadingId}
-              className="font-landing-body min-w-0 flex-1 border-0 bg-transparent py-3 pl-3 pr-4 text-base leading-normal text-gs-dark outline-none placeholder:text-[#5c5c5c] placeholder:opacity-90 sm:py-3.5 sm:pl-3.5 sm:text-lg sm:leading-snug md:pr-5 md:text-xl"
-            />
+          <div className="flex min-w-0 w-full flex-col gap-2 md:flex-1">
+            <div className="flex flex-col gap-1.5">
+              <div className={cn(fieldShell, "md:min-h-[3.75rem]")}>
+                <label htmlFor="hero-intelligent-q" className="sr-only">
+                  Matériel ou prestation (obligatoire)
+                </label>
+                <Search
+                  className="pointer-events-none ml-3 h-5 w-5 shrink-0 text-[#9a9a9a] sm:ml-4"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+                <input
+                  id="hero-intelligent-q"
+                  name="q"
+                  type="search"
+                  autoComplete="off"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onFocus={() => setPausePlaceholder(true)}
+                  onBlur={() => setPausePlaceholder(false)}
+                  placeholder={KEYWORD_EXAMPLES[placeholderIndex]}
+                  aria-labelledby={queryHeadingId}
+                  aria-invalid={queryInvalid}
+                  aria-describedby={queryInvalid ? queryErrorId : undefined}
+                  className="font-landing-body min-w-0 flex-1 border-0 bg-transparent py-3 pl-3 pr-4 text-base leading-normal text-gs-dark outline-none placeholder:text-[#5c5c5c] placeholder:opacity-90 sm:py-3.5 sm:pl-3.5 sm:text-lg sm:leading-snug md:pr-5 md:text-xl"
+                />
+              </div>
+              {queryInvalid ? (
+                <p
+                  id={queryErrorId}
+                  className={fieldErrorTextClass}
+                  role="status"
+                  aria-live="polite"
+                >
+                  Veuillez indiquer ce que vous recherchez — par exemple une enceinte, un micro ou une
+                  prestation (DJ, éclairage…).
+                </p>
+              ) : null}
+            </div>
+            <div className="space-y-1.5 pt-0.5 md:pt-0">
+              <p
+                id={quickTagsId}
+                className="font-landing-body text-left text-[0.7rem] font-medium uppercase tracking-[0.12em] text-white/55"
+              >
+                Suggestions rapides
+              </p>
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-labelledby={quickTagsId}
+              >
+                {KEYWORD_EXAMPLES.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      setQuery(tag);
+                      document.getElementById("hero-intelligent-q")?.focus();
+                    }}
+                    className="font-landing-body rounded-full border border-white/35 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/95 backdrop-blur-sm transition hover:border-white/55 hover:bg-white/20 sm:text-[13px]"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="flex min-w-0 w-full flex-col gap-3 md:flex-1">
-            <div className={cn(fieldShell, "items-stretch")}>
-              <label htmlFor="hero-intelligent-lieu" className="sr-only">
-                Lieu (ville ou code postal)
-              </label>
-              <MapPin
-                className="pointer-events-none ml-3 h-5 w-5 shrink-0 self-center text-[#9a9a9a] sm:ml-4"
-                strokeWidth={2}
-                aria-hidden
-              />
-              <HeroLocationAutocomplete
-                id="hero-intelligent-lieu"
-                name="location"
-                value={location}
-                onChange={setLocation}
-                placeholder={LOCATION_PLACEHOLDER}
-              />
+            <div className="flex flex-col gap-1.5">
+              <div className={cn(fieldShell, "items-stretch")}>
+                <label htmlFor="hero-intelligent-lieu" className="sr-only">
+                  Lieu ville ou code postal (obligatoire)
+                </label>
+                <MapPin
+                  className="pointer-events-none ml-3 h-5 w-5 shrink-0 self-center text-[#9a9a9a] sm:ml-4"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+                <HeroLocationAutocomplete
+                  id="hero-intelligent-lieu"
+                  name="location"
+                  value={location}
+                  onChange={setLocation}
+                  placeholder={LOCATION_PLACEHOLDER}
+                  ariaInvalid={locationInvalid}
+                  ariaDescribedBy={locationInvalid ? locationErrorId : undefined}
+                />
+              </div>
+              {locationInvalid ? (
+                <p
+                  id={locationErrorId}
+                  className={fieldErrorTextClass}
+                  role="status"
+                  aria-live="polite"
+                >
+                  Veuillez indiquer un lieu en Île-de-France : une ville ou un code postal.
+                </p>
+              ) : null}
             </div>
-            {/* Desktop : sous le lieu, même largeur qu’avant (pas pleine colonne) */}
             <button
               type="submit"
               className={cn(
@@ -124,37 +201,11 @@ export function HeroSearchBar({ className }: { className?: string }) {
           </div>
         </div>
 
-        <div className="mt-3 space-y-2 md:mt-3.5">
-          <p
-            id={quickTagsId}
-            className="font-landing-body text-center text-[0.7rem] font-medium uppercase tracking-[0.12em] text-white/55 md:text-left"
-          >
-            Suggestions rapides
-          </p>
-          <div
-            className="flex flex-wrap justify-center gap-2 md:justify-start"
-            role="group"
-            aria-labelledby={quickTagsId}
-          >
-            {KEYWORD_EXAMPLES.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => {
-                  setQuery(tag);
-                  document.getElementById("hero-intelligent-q")?.focus();
-                }}
-                className="font-landing-body rounded-full border border-white/35 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/95 backdrop-blur-sm transition hover:border-white/55 hover:bg-white/20 sm:text-[13px]"
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-          <p className="font-landing-body max-w-[52rem] text-center text-[13px] leading-relaxed text-white/80 md:text-left md:text-sm">
-            Un mot suffit pour commencer. Tu peux préciser la ville, une date ou la capacité dans le même
-            champ, ou indiquer la ville à droite. Les deux fonctionnent ensemble.
-          </p>
-        </div>
+        <p className="font-landing-body mt-3 max-w-[52rem] text-left text-[13px] leading-relaxed text-white/80 md:mt-3.5 md:text-sm">
+          Renseigne le <strong className="font-semibold text-white/95">matériel</strong> et le{" "}
+          <strong className="font-semibold text-white/95">lieu</strong> pour lancer la recherche. Tu peux
+          aussi préciser date ou capacité dans le champ matériel si tu veux.
+        </p>
 
         <p className="font-landing-body mt-2.5 text-center text-sm leading-snug text-white/90 md:mt-3 md:text-left">
           Ou parcourir le{" "}
