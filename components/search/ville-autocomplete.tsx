@@ -132,9 +132,11 @@ export function VilleAutocomplete({
         type="text"
         value={inputValue}
         onChange={(e) => {
-          setInputValue(e.target.value);
+          const v = e.target.value;
+          setInputValue(v);
           setOpen(true);
           setHighlightedIndex(0);
+          onChange?.(v);
         }}
         onFocus={() => setOpen(true)}
         onBlur={handleBlur}

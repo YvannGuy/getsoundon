@@ -1148,8 +1148,8 @@ function Step1({
             <label className="text-sm font-medium text-slate-700">Ville ou zone</label>
             <VilleAutocomplete
               value={data.ville}
-              onChange={(v) => updateData({ ville: v, ...(v ? {} : { villeCode: undefined }) })}
-              onCitySelect={(_, code) => updateData({ villeCode: code ?? undefined })}
+              onChange={(v) => updateData({ ville: v, villeCode: undefined })}
+              onCitySelect={(ville, code) => updateData({ ville, villeCode: code ?? undefined })}
               placeholder="Ex: Paris, Lyon…"
             />
           </div>

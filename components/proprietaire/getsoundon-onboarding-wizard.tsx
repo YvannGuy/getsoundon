@@ -601,8 +601,9 @@ export function GetSoundOnOnboardingWizard({
             <label className="font-landing-nav text-sm font-medium text-gs-dark">Ville</label>
             <VilleAutocomplete
               value={data.ville}
-              onChange={(ville) => updateData({ ville })}
+              onChange={(ville) => updateData({ ville, villeCode: null })}
               onCitySelect={(ville, citycode) => updateData({ ville, villeCode: citycode })}
+              inputClassName="border-gs-line"
             />
           </div>
           <Button
@@ -712,16 +713,19 @@ export function GetSoundOnOnboardingWizard({
             <label className="text-sm text-gs-dark">Adresse principale</label>
             <AdresseAutocomplete
               value={data.adresse}
-              onChange={(addr) => updateData({ adresse: addr })}
+              onChange={(addr) =>
+                updateData({ adresse: addr, lat: undefined, lng: undefined, postalCode: "" })
+              }
               citycode={data.villeCode}
               onSelectAddress={(addr, _city, postcode, coords) =>
                 updateData({
                   adresse: addr,
-                  postalCode: postcode ?? data.postalCode,
+                  postalCode: postcode ?? "",
                   lat: coords?.lat,
                   lng: coords?.lng,
                 })
               }
+              inputClassName="border-gs-line"
             />
             <p className="mt-3 font-landing-nav text-sm font-medium text-gs-dark">Rayon d’intervention</p>
             <div className="mt-2 flex flex-wrap gap-2">

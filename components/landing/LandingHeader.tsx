@@ -48,7 +48,7 @@ export function LandingHeader() {
       <div className="landing-container relative flex h-[72px] items-center justify-between gap-3">
         <Link
           href="/"
-          className="font-landing-logo-mark flex min-w-0 items-center gap-0 bg-transparent pr-2 text-lg md:flex-none md:text-xl"
+          className="font-landing-logo-mark flex shrink-0 items-center gap-1.5 overflow-visible bg-transparent pr-1 text-sm sm:pr-2 sm:text-base md:gap-0 md:text-lg lg:text-xl"
           onClick={closeMobile}
         >
           <Image
@@ -56,9 +56,9 @@ export function LandingHeader() {
             alt=""
             width={44}
             height={44}
-            className="h-10 w-10 shrink-0 rounded-full object-cover md:h-11 md:w-11"
+            className="h-9 w-9 shrink-0 rounded-full object-cover sm:h-10 sm:w-10 md:h-11 md:w-11"
           />
-          <span className="-ml-2 min-w-0 truncate text-gs-orange md:-ml-1.5">
+          <span className="whitespace-nowrap text-gs-orange md:-ml-1.5">
             {siteConfig.name.toUpperCase()}
           </span>
         </Link>
@@ -117,7 +117,7 @@ export function LandingHeader() {
                 <div className="landing-container flex h-[72px] shrink-0 items-center justify-between border-b border-gs-line">
                   <Link
                     href="/"
-                    className="font-landing-logo-mark flex min-w-0 items-center gap-0 text-lg"
+                    className="font-landing-logo-mark flex shrink-0 items-center gap-1.5 overflow-visible text-lg md:gap-0"
                     onClick={closeMobile}
                   >
                     <Image
@@ -127,7 +127,7 @@ export function LandingHeader() {
                       height={44}
                       className="h-10 w-10 shrink-0 rounded-full object-cover"
                     />
-                    <span className="-ml-2 min-w-0 truncate text-gs-orange md:-ml-1.5">
+                    <span className="whitespace-nowrap text-gs-orange md:-ml-1.5">
                       {siteConfig.name.toUpperCase()}
                     </span>
                   </Link>

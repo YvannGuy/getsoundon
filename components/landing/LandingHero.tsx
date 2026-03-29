@@ -2,7 +2,6 @@
 
 import gsap from "gsap";
 import Image from "next/image";
-import Link from "next/link";
 import { useLayoutEffect, useRef } from "react";
 
 import { HeroSearchBar } from "@/components/home/hero-search-bar";
@@ -61,7 +60,8 @@ export function LandingHero() {
 
       <div className="landing-container relative z-10 flex min-h-[560px] flex-col justify-center py-14 pb-24 pt-14 md:min-h-[640px] md:py-16 md:pb-28 md:pt-16 lg:min-h-[min(720px,90vh)] lg:pb-32">
         <h1 ref={title} className="font-landing-hero-title max-w-[920px] text-left text-balance">
-          Trouve du matériel événementiel près de chez toi simplement.
+          Trouve du matériel événementiel près de chez toi{" "}
+          <span className="text-gs-orange">simplement.</span>
         </h1>
         <p ref={sub} className="font-landing-body mt-5 max-w-[640px] text-white/95 md:text-lg md:leading-relaxed">
           Économisez jusqu&apos;à 40&nbsp;% en louant auprès de professionnels et passionnés, communauté
@@ -71,13 +71,6 @@ export function LandingHero() {
 
         <div ref={search} className="mt-10 w-full min-w-0 max-w-[min(100%,880px)]">
           <HeroSearchBar />
-          <p className="font-landing-body mt-5 text-sm text-white/80 sm:mt-6">
-            Ou parcourir le{" "}
-            <Link href="/items" className="font-landing-body font-semibold underline underline-offset-2">
-              catalogue
-            </Link>
-            .
-          </p>
         </div>
       </div>
     </section>

@@ -129,7 +129,7 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
               value={form.watch("city")}
               onChange={(value) => {
                 form.setValue("city", value, { shouldDirty: true, shouldValidate: true });
-                if (!value) setCitycode(null);
+                setCitycode(null);
               }}
               onCitySelect={(_, code) => setCitycode(code)}
               placeholder="Ville"
