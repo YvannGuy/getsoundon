@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import {
+  findMockListingById,
+  mockGsListingsEnabled,
+  mockListingToDetail,
+} from "@/lib/mock-gs-listings";
 import { createClient } from "@/lib/supabase/server";
 
 const listingIdSchema = z.string().uuid();
@@ -24,6 +29,15 @@ export async function GET(_: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
     const listingId = listingIdSchema.parse(id);
+
+    if (mockGsListingsEnabled()) {
+      const row = findMockListingById(listingId);
+      if (!row) {
+        return NextResponse.json({ error: "Listing introuvable." }, { status: 404 });
+      }
+      return NextResponse.json({ data: mockListingToDetail(row) });
+    }
+
     const supabase = await createClient();
 
     const [{ data: listing, error: listingError }, { data: images, error: imagesError }] = await Promise.all([

@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { CATALOGUE_SEGMENTS, isCatalogueSegmentSlug } from "@/lib/catalogue-segments";
+import {
+  locationSearchFragments,
+  sanitizeIlikeToken,
+} from "@/lib/listings-filter-utils";
+import { filterMockListings, mockGsListingsEnabled } from "@/lib/mock-gs-listings";
 import { createClient } from "@/lib/supabase/server";
 
 const createListingSchema = z.object({
@@ -17,11 +22,6 @@ const createListingSchema = z.object({
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 
-/** Retire caractères qui cassent les filtres PostgREST / ilike. */
-function sanitizeIlikeToken(s: string): string {
-  return s.replace(/%/g, "").replace(/,/g, " ").replace(/\s+/g, " ").trim();
-}
-
 const LISTING_CATEGORIES = ["sound", "dj", "lighting", "services"] as const;
 
 /** Conditions PostgREST `or` : titre ou description ilike pour chaque mot-clé. */
@@ -35,19 +35,6 @@ function titleDescriptionOrPartsFromKeywords(keywords: readonly string[]): strin
     }
   }
   return parts;
-}
-
-/** Plusieurs fragments pour matcher une fiche « Ville » ou « Ville (cp) » côté annonce. */
-function locationSearchFragments(raw: string): string[] {
-  const t = sanitizeIlikeToken(raw);
-  if (t.length < 2) return [];
-  const withoutParen = t.split("(")[0].trim();
-  const set = new Set<string>();
-  if (t.length >= 2) set.add(t);
-  if (withoutParen.length >= 2 && withoutParen !== t) set.add(withoutParen);
-  const postal = raw.match(/\b(\d{5})\b/);
-  if (postal?.[1]) set.add(postal[1]);
-  return [...set].map(sanitizeIlikeToken).filter((x) => x.length >= 2);
 }
 
 type ListingImageRow = { url: string; is_cover?: boolean; position?: number };
@@ -72,6 +59,23 @@ export async function GET(request: Request) {
     const limit = Math.min(MAX_LIMIT, Math.max(1, Number(searchParams.get("limit") ?? DEFAULT_LIMIT)));
     const from = (page - 1) * limit;
     const to = from + limit - 1;
+
+    if (mockGsListingsEnabled()) {
+      const { data, total } = filterMockListings({
+        segmentRaw,
+        query,
+        categoryParam,
+        location,
+        minPrice,
+        maxPrice,
+        page,
+        limit,
+      });
+      return NextResponse.json({
+        data,
+        pagination: { page, limit, total },
+      });
+    }
 
     const supabase = await createClient();
 

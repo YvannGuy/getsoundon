@@ -1,33 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-type ListingImage = {
-  id: string;
-  url: string;
-  position: number;
-  is_cover: boolean;
-};
-
-type Listing = {
-  id: string;
-  owner_id: string;
-  title: string;
-  description: string;
-  category: "sound" | "dj" | "lighting" | "services";
-  price_per_day: number;
-  location: string;
-  rating_avg: number;
-  rating_count: number;
-  images: ListingImage[];
-};
+import {
+  ListingDetailPremiumView,
+  type ListingDetailModel,
+} from "@/components/items/listing-detail-premium-view";
 
 export default function ItemDetailPage() {
   const params = useParams<{ id: string }>();
   const listingId = params?.id;
-  const [listing, setListing] = useState<Listing | null>(null);
+  const [listing, setListing] = useState<ListingDetailModel | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState("");
@@ -46,12 +30,15 @@ export default function ItemDetailPage() {
       setError(null);
       try {
         const res = await fetch(`/api/listings/${listingId}`, { cache: "no-store" });
-        const json = (await res.json()) as { data?: Listing; error?: string };
+        const json = (await res.json()) as { data?: ListingDetailModel; error?: string };
         if (!res.ok) {
           throw new Error(json.error ?? "Impossible de charger le listing.");
         }
+        if (!json.data) {
+          throw new Error("Cette annonce n’existe pas ou n’est plus disponible.");
+        }
         if (!cancelled) {
-          setListing(json.data ?? null);
+          setListing(json.data);
         }
       } catch (err) {
         if (!cancelled) {
@@ -71,18 +58,18 @@ export default function ItemDetailPage() {
 
   useEffect(() => {
     if (typeof window === "undefined" || !listingId) return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("bookingPaid") === "1") {
-      const bid = params.get("bookingId");
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("bookingPaid") === "1") {
+      const bid = sp.get("bookingId");
       setBookingFeedback(
         bid
-          ? `Paiement reussi pour la reservation ${bid}. Statut mis a jour.`
-          : "Paiement reussi. Statut de la reservation mis a jour."
+          ? `Paiement réussi pour la réservation ${bid}. Statut mis à jour.`
+          : "Paiement réussi. Statut de la réservation mis à jour."
       );
       window.history.replaceState({}, "", `/items/${listingId}`);
     }
-    if (params.get("bookingCancel") === "1") {
-      setBookingFeedback("Paiement annule. Tu peux relancer le checkout quand tu veux.");
+    if (sp.get("bookingCancel") === "1") {
+      setBookingFeedback("Paiement annulé. Tu peux relancer le checkout quand tu veux.");
       window.history.replaceState({}, "", `/items/${listingId}`);
     }
   }, [listingId]);
@@ -94,11 +81,6 @@ export default function ItemDetailPage() {
     const diff = end.getTime() - start.getTime();
     return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
   }, [endDate, startDate]);
-
-  const estimatedTotal = useMemo(() => {
-    if (!listing || estimatedDays <= 0) return 0;
-    return Number((listing.price_per_day * estimatedDays).toFixed(2));
-  }, [estimatedDays, listing]);
 
   const submitBooking = async () => {
     if (!listing) return;
@@ -117,14 +99,14 @@ export default function ItemDetailPage() {
       });
       const json = (await res.json()) as { data?: { id: string }; error?: string };
       if (!res.ok) {
-        throw new Error(json.error ?? "Booking impossible.");
+        throw new Error(json.error ?? "Réservation impossible.");
       }
       const bookingId = json.data?.id ?? null;
       setLastBookingId(bookingId);
       setBookingFeedback(
         bookingId
-          ? `Reservation creee. Tu peux payer en ligne ou ouvrir la messagerie.`
-          : "Reservation creee."
+          ? "Réservation créée. Tu peux payer en ligne ou ouvrir la messagerie."
+          : "Réservation créée."
       );
     } catch (err) {
       setBookingFeedback(err instanceof Error ? err.message : "Erreur inattendue.");
@@ -145,7 +127,7 @@ export default function ItemDetailPage() {
       });
       const json = (await res.json()) as { url?: string; error?: string };
       if (!res.ok || !json.url) {
-        throw new Error(json.error ?? "Impossible de demarrer le paiement.");
+        throw new Error(json.error ?? "Impossible de démarrer le paiement.");
       }
       window.location.href = json.url;
     } catch (err) {
@@ -155,105 +137,30 @@ export default function ItemDetailPage() {
     }
   };
 
+  if (!listingId) {
+    return (
+      <div className="landing-container py-10">
+        <p className="text-sm text-[#666]">Annonce introuvable.</p>
+      </div>
+    );
+  }
+
   return (
-    <main className="container max-w-4xl py-10">
-      <Link href="/catalogue" className="text-sm text-slate-600 hover:underline">
-        Retour au catalogue
-      </Link>
-
-      {loading ? <p className="mt-4 text-sm text-slate-500">Chargement...</p> : null}
-      {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
-
-      {listing ? (
-        <section className="mt-4 grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">{listing.category}</p>
-            <h1 className="mt-1 text-2xl font-bold text-black">{listing.title}</h1>
-            <p className="mt-2 text-sm text-slate-600">{listing.description}</p>
-            <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
-              <span className="font-semibold text-black">{listing.price_per_day.toFixed(2)} EUR / jour</span>
-              <span className="text-slate-500">{listing.location}</span>
-              <span className="text-slate-500">
-                Note: {listing.rating_avg?.toFixed(1) ?? "0.0"} ({listing.rating_count ?? 0})
-              </span>
-            </div>
-            {listing.images?.length ? (
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {listing.images.map((image) => (
-                  <img
-                    key={image.id}
-                    src={image.url}
-                    alt=""
-                    className="h-44 w-full rounded-lg border border-slate-200 object-cover"
-                  />
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <aside className="rounded-lg border border-slate-200 bg-white p-4">
-            <h2 className="text-lg font-semibold text-black">Reserver ce listing</h2>
-            <div className="mt-3 space-y-3">
-              <label className="block">
-                <span className="mb-1 block text-xs text-slate-600">Date debut</span>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm"
-                />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs text-slate-600">Date fin</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm"
-                />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs text-slate-600">Caution (EUR)</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm"
-                />
-              </label>
-            </div>
-
-            <div className="mt-4 rounded-md bg-slate-50 p-3 text-sm">
-              <p>Jours: {estimatedDays > 0 ? estimatedDays : "-"}</p>
-              <p className="font-medium text-black">Total estime: {estimatedTotal.toFixed(2)} EUR</p>
-            </div>
-
-            <button
-              type="button"
-              onClick={submitBooking}
-              disabled={bookingLoading || !startDate || !endDate}
-              className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-md bg-gs-orange px-4 text-sm font-medium text-white hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {bookingLoading ? "Creation..." : "Creer une reservation"}
-            </button>
-            {lastBookingId ? (
-              <button
-                type="button"
-                onClick={payBooking}
-                disabled={payLoading}
-                className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-md border border-gs-orange bg-white px-4 text-sm font-medium text-gs-orange hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {payLoading ? "Redirection..." : "Payer avec Stripe"}
-              </button>
-            ) : null}
-            {bookingFeedback ? <p className="mt-3 text-sm text-slate-700">{bookingFeedback}</p> : null}
-            <Link href="/customer/messages" className="mt-3 inline-block text-xs text-gs-orange hover:underline">
-              Ouvrir la messagerie (polling)
-            </Link>
-          </aside>
-        </section>
-      ) : null}
-    </main>
+    <ListingDetailPremiumView
+      listing={listing}
+      loading={loading}
+      error={error}
+      startDate={startDate}
+      endDate={endDate}
+      setStartDate={setStartDate}
+      setEndDate={setEndDate}
+      bookingLoading={bookingLoading}
+      bookingFeedback={bookingFeedback}
+      lastBookingId={lastBookingId}
+      payLoading={payLoading}
+      onReserve={submitBooking}
+      onPay={payBooking}
+      estimatedDays={estimatedDays}
+    />
   );
 }
