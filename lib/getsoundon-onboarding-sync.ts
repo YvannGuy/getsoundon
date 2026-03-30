@@ -46,7 +46,7 @@ const HANDOFF_LABELS: Record<GsHandoffId, string> = {
 };
 
 const LEAD_LABELS: Record<string, string> = {
-  same_day: "Le jour même",
+  same_day: "Même jour",
   "24h": "24 h",
   "48h": "48 h",
   other: "Autre (précisé dans la description)",
@@ -107,6 +107,10 @@ export type GsWizardSyncInput = {
   contactEmail: string;
   contactPhone: string;
   ville: string;
+  /** Étape boutique — injecté dans la description annonce tant que le schéma n’a pas de colonnes dédiées. */
+  storefrontName: string;
+  storefrontDescription: string;
+  storefrontLocationDisplay: string;
   postalCode?: string;
   offeredCategories: string[];
   additionalServices: string[];
@@ -142,6 +146,16 @@ export type GsWizardSyncInput = {
 
 export function buildGsOnboardingDescription(d: GsWizardSyncInput): string {
   const parts: string[] = [];
+
+  if (d.storefrontName.trim()) {
+    const tag = d.storefrontDescription.trim()
+      ? ` — ${d.storefrontDescription.trim()}`
+      : "";
+    parts.push(`Boutique GetSoundOn « ${d.storefrontName.trim()} »${tag}.`);
+    if (d.storefrontLocationDisplay.trim()) {
+      parts.push(`Localisation affichée : ${d.storefrontLocationDisplay.trim()}.`);
+    }
+  }
 
   if (d.raisonSociale.trim()) {
     const acc = d.accountType ? ACCOUNT_LABELS[d.accountType] : "";

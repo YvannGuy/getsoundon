@@ -10,6 +10,7 @@ import { z } from "zod";
 import { CheckCircle2, Eye, EyeOff, Package, Warehouse, ArrowLeft } from "lucide-react";
 
 import { loginAction, signupAction, type AuthFormState } from "@/app/actions/auth";
+import { GetSoundOnOnboardingWizard } from "@/components/proprietaire/getsoundon-onboarding-wizard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { siteConfig } from "@/config/site";
@@ -55,6 +56,8 @@ function AuthPageContent() {
   const [activeTab, setActiveTab] = useState<"login" | "signup">(
     tabParam === "signup" ? "signup" : "login"
   );
+  const [providerWizardOpen, setProviderWizardOpen] = useState(false);
+  const [providerPrefill, setProviderPrefill] = useState({ email: "", displayName: "" });
 
   return (
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-[0.95fr_1.05fr]">
@@ -108,7 +111,19 @@ function AuthPageContent() {
         </ul>
       </div>
 
-      <div className="relative flex flex-col bg-gs-beige p-6 md:p-10">
+      <div className="relative flex min-h-0 flex-col overflow-y-auto bg-gs-beige p-6 md:p-10">
+        {providerWizardOpen ? (
+          <div className="flex min-h-0 flex-1 flex-col">
+            <p className="mb-4 text-sm font-medium text-gs-dark">Configuration prestataire</p>
+            <GetSoundOnOnboardingWizard
+              embedded
+              initialEmail={providerPrefill.email}
+              initialDisplayName={providerPrefill.displayName}
+              onClose={() => setProviderWizardOpen(false)}
+            />
+          </div>
+        ) : (
+          <>
         {resetSuccess && (
           <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
             Votre mot de passe a été modifié. Vous pouvez maintenant vous connecter.
@@ -153,7 +168,13 @@ function AuthPageContent() {
             redirectedFrom={redirectedFrom}
             onSwitchToLogin={() => setActiveTab("login")}
             initialUserType={initialUserType}
+            onStartProviderWizard={(p) => {
+              setProviderPrefill(p);
+              setProviderWizardOpen(true);
+            }}
           />
+        )}
+          </>
         )}
       </div>
     </div>
@@ -255,10 +276,12 @@ function SignupFormContent({
   redirectedFrom,
   onSwitchToLogin,
   initialUserType,
+  onStartProviderWizard,
 }: {
   redirectedFrom: string;
   onSwitchToLogin: () => void;
   initialUserType?: "seeker" | "owner";
+  onStartProviderWizard?: (p: { email: string; displayName: string }) => void;
 }) {
   const router = useRouter();
   const [state, formAction] = useActionState(signupAction, initialState);
@@ -272,6 +295,14 @@ function SignupFormContent({
       router.push(state.redirectTo);
     }
   }, [state.redirectTo, router]);
+
+  useEffect(() => {
+    if (!state.showProviderOnboarding) return;
+    onStartProviderWizard?.({
+      email: state.prefillOwnerEmail ?? "",
+      displayName: state.prefillOwnerName ?? "",
+    });
+  }, [state.showProviderOnboarding, state.prefillOwnerEmail, state.prefillOwnerName, onStartProviderWizard]);
 
   const form = useForm<SignupSchema>({
     resolver: zodResolver(signupSchema),

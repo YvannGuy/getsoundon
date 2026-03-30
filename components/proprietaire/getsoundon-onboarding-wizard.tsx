@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, CheckCircle, ChevronLeft, Clock } from "lucide-react";
 
@@ -23,12 +24,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const TOTAL_STEPS = 6;
-const ONBOARDING_DRAFT_KEY = "gs_provider_onboarding_v1";
+const ONBOARDING_DRAFT_KEY = "gs_provider_onboarding_v2";
 const MIN_PHOTOS = 1;
 const MAX_PHOTOS = 10;
 
 const ACCOUNT_CARDS: { id: AccountTypeGs; label: string; hint: string }[] = [
-  { id: "particulier", label: "Particulier", hint: "Tu loues ton matériel à titre personnel." },
   { id: "auto_entrepreneur", label: "Auto-entrepreneur", hint: "Activité en micro / AE." },
   { id: "societe", label: "Société / prestataire événementiel", hint: "Structure pro ou équipe." },
 ];
@@ -106,6 +106,9 @@ export type GsWizardData = {
   leadTime: string;
   leadTimeOther: string;
   cancellationPolicy: "flexible" | "moderate" | "strict";
+  storefrontName: string;
+  storefrontDescription: string;
+  storefrontLocationDisplay: string;
   listingKind: "equipment" | "pack";
   nom: string;
   gearCategoryField: string;
@@ -149,6 +152,9 @@ const initialData: GsWizardData = {
   leadTime: "24h",
   leadTimeOther: "",
   cancellationPolicy: "moderate",
+  storefrontName: "",
+  storefrontDescription: "",
+  storefrontLocationDisplay: "",
   listingKind: "equipment",
   nom: "",
   gearCategoryField: "son",
@@ -170,65 +176,88 @@ function toggleIn<T extends string>(arr: T[], id: T): T[] {
   return arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id];
 }
 
-function getValidationError(
-  step: number,
-  d: GsWizardData
-): { step: number; message: string } | null {
-  if (step >= 2) {
-    if (!d.accountType || !d.raisonSociale.trim() || !d.ville.trim()) {
-      return { step: 1, message: "Complète le type de compte, le nom et la ville." };
-    }
+const emailOk = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
+
+function validationLeavingStep(fromStep: number, d: GsWizardData): { step: number; message: string } | null {
+  if (fromStep === 1) {
+    if (!d.accountType) return { step: 1, message: "Choisissez un type de compte." };
+    if (!d.raisonSociale.trim()) return { step: 1, message: "Indiquez votre nom ou raison sociale." };
+    if (!d.contactEmail.trim() || !emailOk(d.contactEmail)) return { step: 1, message: "Email invalide." };
+    const digits = d.contactPhone.replace(/\D/g, "");
+    if (!d.contactPhone.trim() || digits.length < 8) return { step: 1, message: "Téléphone requis (8 chiffres minimum)." };
+    if (!d.ville.trim()) return { step: 1, message: "Indiquez votre ville." };
   }
-  if (step >= 3) {
-    if (!d.offeredCategories.length) {
-      return { step: 2, message: "Sélectionne au moins une catégorie d’offre." };
-    }
+  if (fromStep === 2) {
+    if (!d.offeredCategories.length) return { step: 2, message: "Sélectionnez au moins une catégorie." };
   }
-  if (step >= 4) {
-    if (!d.handoffModes.length) {
-      return { step: 3, message: "Indique au moins un mode de remise du matériel." };
-    }
-    if (!d.adresse.trim()) {
-      return { step: 3, message: "Renseigne l’adresse principale." };
-    }
+  if (fromStep === 3) {
+    if (!d.handoffModes.length) return { step: 3, message: "Indiquez au moins un mode de remise." };
+    if (!d.adresse.trim()) return { step: 3, message: "Renseignez l’adresse principale." };
+    if (!d.rayonKm) return { step: 3, message: "Choisissez un rayon d’intervention." };
   }
-  if (step >= 5) {
-    // step 4 conditions — toujours remplis par défaut
-  }
-  if (step >= 6) {
-    if (!d.nom.trim()) {
-      return { step: 5, message: "Donne un titre à ton annonce." };
-    }
-    if (!d.tarifParJour.trim() || parseInt(d.tarifParJour, 10) <= 0) {
-      return { step: 5, message: "Indique un prix par jour valide." };
-    }
-    if (d.listingKind === "equipment") {
-      if (!d.gearBrand.trim() && !d.gearModel.trim()) {
-        return { step: 5, message: "Renseigne au moins la marque ou le modèle." };
-      }
-    } else {
-      if (!d.packContents.trim()) {
-        return { step: 5, message: "Décris ce que contient le pack." };
+  if (fromStep === 4) {
+    if (d.cautionEnabled) {
+      const n = parseInt(d.cautionAmountDefault.replace(/\D/g, ""), 10);
+      if (!d.cautionAmountDefault.trim() || !Number.isFinite(n) || n <= 0) {
+        return { step: 4, message: "Indiquez un montant de caution valide." };
       }
     }
-    if (d.photos.length < MIN_PHOTOS) {
-      return { step: 5, message: `Ajoute au moins ${MIN_PHOTOS} photo.` };
+    if (d.leadTime === "other" && !d.leadTimeOther.trim()) {
+      return { step: 4, message: "Précisez le délai minimum." };
     }
+  }
+  if (fromStep === 5) {
+    if (!d.storefrontName.trim()) return { step: 5, message: "Donnez un nom à votre boutique." };
+    if (!d.storefrontDescription.trim()) return { step: 5, message: "Ajoutez une courte description." };
+    if (!d.storefrontLocationDisplay.trim()) return { step: 5, message: "Indiquez la localisation affichée." };
   }
   return null;
 }
 
+function validationListingForPublish(d: GsWizardData): { step: number; message: string } | null {
+  if (!d.nom.trim()) return { step: 6, message: "Donnez un titre à votre annonce." };
+  if (!d.tarifParJour.trim() || parseInt(d.tarifParJour, 10) <= 0) {
+    return { step: 6, message: "Indiquez un prix valide." };
+  }
+  if (d.listingKind === "equipment") {
+    if (!d.description.trim()) return { step: 6, message: "Ajoutez une description courte." };
+    if (!d.gearBrand.trim() && !d.gearModel.trim()) {
+      return { step: 6, message: "Renseignez la marque ou le modèle." };
+    }
+  } else if (!d.packContents.trim()) {
+    return { step: 6, message: "Décrivez ce que contient le pack." };
+  }
+  if (d.photos.length < MIN_PHOTOS) {
+    return { step: 6, message: `Ajoutez au moins ${MIN_PHOTOS} photo.` };
+  }
+  return null;
+}
+
+function validateAllBeforePublish(d: GsWizardData): { step: number; message: string } | null {
+  for (const s of [1, 2, 3, 4, 5] as const) {
+    const e = validationLeavingStep(s, d);
+    if (e) return e;
+  }
+  return validationListingForPublish(d);
+}
+
 export type GetSoundOnOnboardingWizardProps = {
   embedded?: boolean;
+  /** Préremplissage après inscription sur /auth */
+  initialEmail?: string;
+  initialDisplayName?: string;
   onSuccess?: (slug: string | null, status: "approved" | "pending") => void;
   onClose?: () => void;
 };
 
 export function GetSoundOnOnboardingWizard({
   embedded,
+  initialEmail,
+  initialDisplayName,
   onSuccess,
   onClose,
 }: GetSoundOnOnboardingWizardProps = {}) {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<GsWizardData>(initialData);
   const [submitted, setSubmitted] = useState(false);
@@ -239,8 +268,6 @@ export function GetSoundOnOnboardingWizard({
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [draftRestored, setDraftRestored] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-  const [stripeReady, setStripeReady] = useState(false);
-  const [stripeChecked, setStripeChecked] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -251,6 +278,15 @@ export function GetSoundOnOnboardingWizard({
   useEffect(() => {
     setIsHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!initialEmail && !initialDisplayName) return;
+    setData((prev) => ({
+      ...prev,
+      contactEmail: prev.contactEmail.trim() ? prev.contactEmail : (initialEmail ?? prev.contactEmail),
+      raisonSociale: prev.raisonSociale.trim() ? prev.raisonSociale : (initialDisplayName ?? prev.raisonSociale),
+    }));
+  }, [initialEmail, initialDisplayName]);
 
   useEffect(() => {
     try {
@@ -281,29 +317,8 @@ export function GetSoundOnOnboardingWizard({
     }
   }, [step, data]);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const supabase = createClient();
-      const { data: session } = await supabase.auth.getSession();
-      const uid = session.session?.user?.id;
-      if (!uid) return;
-      const { data: row } = await supabase
-        .from("profiles")
-        .select("stripe_account_id")
-        .eq("id", uid)
-        .maybeSingle();
-      if (!cancelled) {
-        setStripeReady(!!(row as { stripe_account_id?: string } | null)?.stripe_account_id);
-        setStripeChecked(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const updateData = useCallback((u: Partial<GsWizardData>) => {
+    setSubmitError(null);
     setData((prev) => ({ ...prev, ...u }));
   }, []);
 
@@ -318,6 +333,7 @@ export function GetSoundOnOnboardingWizard({
       (f) => f.type === "image/jpeg" || f.type === "image/png"
     );
     if (files.length) {
+      setSubmitError(null);
       setData((prev) => ({
         ...prev,
         photos: [...prev.photos, ...files].slice(0, MAX_PHOTOS),
@@ -328,14 +344,14 @@ export function GetSoundOnOnboardingWizard({
 
   const handleSubmit = async () => {
     setSubmitError(null);
-    const err = getValidationError(6, data);
+    const err = validateAllBeforePublish(data);
     if (err) {
       setStep(err.step);
       setSubmitError(err.message);
       return;
     }
     if (!acceptedTerms) {
-      setSubmitError("Tu dois accepter les CGU / CGV pour publier.");
+      setSubmitError("Vous devez accepter les CGU et les CGV pour publier.");
       return;
     }
 
@@ -346,6 +362,9 @@ export function GetSoundOnOnboardingWizard({
       contactEmail: data.contactEmail,
       contactPhone: data.contactPhone,
       ville: data.ville,
+      storefrontName: data.storefrontName,
+      storefrontDescription: data.storefrontDescription,
+      storefrontLocationDisplay: data.storefrontLocationDisplay,
       postalCode: data.postalCode,
       offeredCategories: data.offeredCategories,
       additionalServices: data.additionalServices,
@@ -369,7 +388,7 @@ export function GetSoundOnOnboardingWizard({
         data.listingKind === "pack" ? "pack_premium" : data.gearCategoryField,
       gearBrand: data.gearBrand,
       gearModel: data.gearModel,
-      description: data.description,
+      description: data.listingKind === "pack" ? data.packContents : data.description,
       tarifParJour: data.tarifParJour,
       capacite: data.capacite || "0",
       quantite: data.quantite,
@@ -413,7 +432,7 @@ export function GetSoundOnOnboardingWizard({
     const { data: sessionData } = await supabaseClient.auth.getSession();
     const user = sessionData.session?.user;
     if (!user) {
-      setSubmitError("Session expirée, reconnecte-toi.");
+      setSubmitError("Session expirée. Reconnectez-vous.");
       setIsSubmitting(false);
       return;
     }
@@ -468,22 +487,50 @@ export function GetSoundOnOnboardingWizard({
 
   if (submitted && embedded) {
     return (
-      <div className="flex flex-col items-center py-6 text-center">
+      <div className="flex flex-col items-center py-6 text-center [font-family:var(--font-landing-inter),ui-sans-serif,sans-serif]">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
           <CheckCircle className="h-8 w-8 text-emerald-600" />
         </div>
-        <p className="mt-4 font-landing-heading text-lg font-bold text-gs-dark">Bienvenue sur GetSoundOn</p>
-        <p className="mt-2 font-landing-body text-sm text-slate-600">
-          Ton espace est prêt. Tu peux gérer tes annonces, demandes et réservations.
+        <h2 className="mt-4 text-lg font-semibold text-gs-dark">Votre espace est prêt</h2>
+        <p className="mt-2 text-sm text-slate-600">
+          Vous pouvez maintenant gérer votre boutique, vos annonces et vos réservations.
         </p>
-        <div className="mt-6 flex w-full flex-col gap-2">
+        <ul className="mt-5 w-full max-w-sm space-y-2 rounded-xl border border-gs-line bg-white p-4 text-left text-sm text-slate-700">
+          {[
+            "Profil complété",
+            "Services configurés",
+            "Logistique définie",
+            "Boutique créée",
+            "Première annonce ajoutée",
+          ].map((label) => (
+            <li key={label} className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" aria-hidden />
+              {label}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-6 flex w-full max-w-sm flex-col gap-2">
           <Link
             href="/proprietaire"
-            className="font-landing-btn flex h-11 w-full items-center justify-center rounded-md bg-gs-orange text-sm text-white transition hover:brightness-105"
+            className="flex h-11 w-full items-center justify-center rounded-md bg-gs-orange text-sm font-medium text-white transition hover:brightness-105"
           >
             Voir mon tableau de bord
           </Link>
-          <Button variant="outline" onClick={onClose} className="w-full border-gs-line">
+          {createdSlug ? (
+            <Link
+              href={`/salles/${createdSlug}`}
+              className="flex h-11 w-full items-center justify-center rounded-md border border-gs-line bg-white text-sm font-medium text-slate-800 transition hover:bg-slate-50"
+            >
+              Voir ma boutique
+            </Link>
+          ) : null}
+          <Link
+            href="/onboarding/salle"
+            className="flex h-11 w-full items-center justify-center text-sm font-medium text-slate-600 hover:text-gs-dark"
+          >
+            Ajouter une autre annonce
+          </Link>
+          <Button type="button" variant="outline" onClick={onClose} className="w-full border-gs-line">
             Fermer
           </Button>
         </div>
@@ -493,10 +540,10 @@ export function GetSoundOnOnboardingWizard({
 
   if (submitted && !embedded) {
     return (
-      <div className="min-h-screen bg-gs-beige">
+      <div className="min-h-screen bg-gs-beige [font-family:var(--font-landing-inter),ui-sans-serif,sans-serif]">
         <header className="border-b border-gs-line bg-white">
           <div className="mx-auto flex h-14 max-w-3xl items-center px-4">
-            <Link href="/" className="font-landing-logo-mark flex items-center gap-2 text-lg text-gs-orange">
+            <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-gs-orange">
               <Image src="/images/logosound.png" alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover" />
               {siteConfig.name.toUpperCase()}
             </Link>
@@ -504,20 +551,42 @@ export function GetSoundOnOnboardingWizard({
         </header>
         <main className="mx-auto max-w-lg px-4 py-12 text-center">
           <CheckCircle className="mx-auto h-16 w-16 text-gs-orange" />
-          <h1 className="font-landing-heading mt-6 text-2xl font-bold text-gs-dark">Bienvenue sur GetSoundOn</h1>
-          <p className="font-landing-body mt-3 text-slate-600">
-            Ton espace est prêt. Tu peux maintenant gérer tes annonces, tes demandes et tes réservations.
+          <h1 className="mt-6 text-2xl font-bold text-gs-dark">Votre espace est prêt</h1>
+          <p className="mt-3 text-slate-600">
+            Vous pouvez maintenant gérer votre boutique, vos annonces et vos réservations.
           </p>
+          <ul className="mx-auto mt-8 max-w-sm space-y-2 rounded-xl border border-gs-line bg-white p-4 text-left text-sm text-slate-700">
+            {[
+              "Profil complété",
+              "Services configurés",
+              "Logistique définie",
+              "Boutique créée",
+              "Première annonce ajoutée",
+            ].map((label) => (
+              <li key={label} className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" aria-hidden />
+                {label}
+              </li>
+            ))}
+          </ul>
           <div className="mt-8 flex flex-col gap-3">
             <Link
               href="/proprietaire"
-              className="font-landing-btn flex h-12 items-center justify-center rounded-md bg-gs-orange text-sm text-white transition hover:brightness-105"
+              className="flex h-12 items-center justify-center rounded-md bg-gs-orange text-sm font-medium text-white transition hover:brightness-105"
             >
               Voir mon tableau de bord
             </Link>
+            {createdSlug ? (
+              <Link
+                href={`/salles/${createdSlug}`}
+                className="flex h-12 items-center justify-center rounded-md border border-gs-line bg-white text-sm font-medium text-slate-800 transition hover:bg-slate-50"
+              >
+                Voir ma boutique
+              </Link>
+            ) : null}
             <Link
               href="/onboarding/salle"
-              className="flex h-12 items-center justify-center rounded-md border border-gs-line bg-white text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="flex h-12 items-center justify-center text-sm font-medium text-slate-600 hover:text-gs-dark"
             >
               Ajouter une autre annonce
             </Link>
@@ -562,15 +631,26 @@ export function GetSoundOnOnboardingWizard({
         )}
       </div>
 
+      {submitError ? (
+        <div
+          role="alert"
+          aria-live="polite"
+          className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 shadow-sm"
+        >
+          <p className="font-semibold text-red-950">Complétez les champs requis</p>
+          <p className="mt-1 leading-relaxed">{submitError}</p>
+        </div>
+      ) : null}
+
       {step === 1 && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-landing-heading text-2xl font-bold text-gs-dark">Bienvenue sur GetSoundOn</h2>
-            <p className="font-landing-body mt-1 text-slate-600">Commençons par configurer ton espace de location.</p>
-            <p className="mt-2 text-xs text-slate-500">Tu pourras modifier tout cela plus tard.</p>
+            <h2 className="text-2xl font-bold text-gs-dark">Bienvenue sur GetSoundOn</h2>
+            <p className="mt-1 text-slate-600">Créons votre espace prestataire en quelques étapes.</p>
+            <p className="mt-2 text-xs text-slate-500">Vous pourrez modifier ces informations plus tard.</p>
           </div>
-          <p className="font-landing-nav text-sm font-semibold text-gs-dark">Tu proposes du matériel en tant que :</p>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <p className="text-sm font-semibold text-gs-dark">Vous proposez du matériel en tant que :</p>
+          <div className="grid gap-3 sm:grid-cols-2">
             {ACCOUNT_CARDS.map((c) => (
               <button
                 key={c.id}
@@ -609,7 +689,7 @@ export function GetSoundOnOnboardingWizard({
           <Button
             className="w-full bg-gs-orange font-landing-btn text-white hover:brightness-105"
             onClick={() => {
-              const e = getValidationError(2, data);
+              const e = validationLeavingStep(1, data);
               if (e) {
                 setSubmitError(e.message);
                 return;
@@ -626,9 +706,12 @@ export function GetSoundOnOnboardingWizard({
       {step === 2 && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-landing-heading text-2xl font-bold text-gs-dark">Que proposes-tu sur GetSoundOn ?</h2>
-            <p className="font-landing-body mt-1 text-slate-600">Sélectionne ce que tu peux louer ou proposer.</p>
+            <h2 className="text-2xl font-bold text-gs-dark">Que proposez-vous à la location ?</h2>
+            <p className="mt-1 text-slate-600">
+              Sélectionnez les catégories et services que vous souhaitez proposer sur GetSoundOn.
+            </p>
           </div>
+          <p className="text-sm font-semibold text-gs-dark">Catégories</p>
           <div className="flex flex-wrap gap-2">
             {OFFER_CATEGORIES.map((c) => (
               <button
@@ -645,7 +728,8 @@ export function GetSoundOnOnboardingWizard({
               </button>
             ))}
           </div>
-          <p className="font-landing-nav text-sm font-semibold text-gs-dark">Tu proposes aussi :</p>
+          <p className="text-sm font-semibold text-gs-dark">Services proposés</p>
+          <p className="text-xs text-slate-500">Ces choix serviront à structurer votre boutique et vos annonces.</p>
           <div className="flex flex-wrap gap-2">
             {ADDITIONAL_SVC.map((c) => (
               <button
@@ -663,13 +747,20 @@ export function GetSoundOnOnboardingWizard({
             ))}
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" className="flex-1 border-gs-line" onClick={() => setStep(1)}>
+            <Button
+              variant="outline"
+              className="flex-1 border-gs-line"
+              onClick={() => {
+                setSubmitError(null);
+                setStep(1);
+              }}
+            >
               Retour
             </Button>
             <Button
               className="flex-1 bg-gs-orange font-landing-btn text-white hover:brightness-105"
               onClick={() => {
-                const e = getValidationError(3, data);
+                const e = validationLeavingStep(2, data);
                 if (e) {
                   setSubmitError(e.message);
                   setStep(e.step);
@@ -688,11 +779,11 @@ export function GetSoundOnOnboardingWizard({
       {step === 3 && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-landing-heading text-2xl font-bold text-gs-dark">Comment le client récupère son matériel ?</h2>
-            <p className="font-landing-body mt-1 text-slate-600">Modes et zone d’activité.</p>
+            <h2 className="text-2xl font-bold text-gs-dark">Comment vos clients récupèrent le matériel ?</h2>
+            <p className="mt-1 text-slate-600">Définissez votre zone d’activité et vos modes de remise.</p>
           </div>
           <div>
-            <p className="font-landing-nav mb-2 text-sm font-semibold text-gs-dark">Modes disponibles</p>
+            <p className="mb-2 text-sm font-semibold text-gs-dark">Modes de remise</p>
             <div className="flex flex-wrap gap-2">
               {HANDOFF.map((h) => (
                 <button
@@ -709,8 +800,8 @@ export function GetSoundOnOnboardingWizard({
             </div>
           </div>
           <div>
-            <p className="font-landing-nav mb-2 text-sm font-semibold text-gs-dark">Zone d’activité</p>
-            <label className="text-sm text-gs-dark">Adresse principale</label>
+            <p className="mb-2 text-sm font-semibold text-gs-dark">Zone desservie</p>
+            <label className="text-sm font-medium text-gs-dark">Adresse principale</label>
             <AdresseAutocomplete
               value={data.adresse}
               onChange={(addr) =>
@@ -740,7 +831,7 @@ export function GetSoundOnOnboardingWizard({
                 </button>
               ))}
             </div>
-            <label className="mt-3 block text-sm text-gs-dark">Villes desservies (optionnel)</label>
+            <label className="mt-3 block text-sm font-medium text-gs-dark">Villes desservies (optionnel)</label>
             <Input
               value={data.villesDesservies}
               onChange={(e) => updateData({ villesDesservies: e.target.value })}
@@ -748,8 +839,11 @@ export function GetSoundOnOnboardingWizard({
               className="mt-1 border-gs-line"
             />
           </div>
+          <p className="text-xs text-slate-500">
+            Ces informations seront utilisées pour la page produit, la boutique et la réservation.
+          </p>
           <div>
-            <p className="font-landing-nav mb-2 text-sm font-semibold text-gs-dark">Disponibilités générales</p>
+            <p className="mb-2 text-sm font-semibold text-gs-dark">Disponibilités générales</p>
             <div className="flex flex-wrap gap-2">
               {(
                 [
@@ -777,13 +871,20 @@ export function GetSoundOnOnboardingWizard({
             />
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" className="flex-1 border-gs-line" onClick={() => setStep(2)}>
+            <Button
+              variant="outline"
+              className="flex-1 border-gs-line"
+              onClick={() => {
+                setSubmitError(null);
+                setStep(2);
+              }}
+            >
               Retour
             </Button>
             <Button
               className="flex-1 bg-gs-orange font-landing-btn text-white hover:brightness-105"
               onClick={() => {
-                const e = getValidationError(4, data);
+                const e = validationLeavingStep(3, data);
                 if (e) {
                   setSubmitError(e.message);
                   setStep(e.step);
@@ -802,8 +903,10 @@ export function GetSoundOnOnboardingWizard({
       {step === 4 && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-landing-heading text-2xl font-bold text-gs-dark">Configure tes conditions de location</h2>
-            <p className="font-landing-body mt-1 text-slate-600">Règles simples, ajustables plus tard.</p>
+            <h2 className="font-landing-heading text-2xl font-bold text-gs-dark">Configurez vos conditions de location</h2>
+            <p className="font-landing-body mt-1 text-slate-600">
+              Définissez les règles de base pour vos réservations.
+            </p>
           </div>
           <div>
             <p className="font-landing-nav mb-2 text-sm font-semibold text-gs-dark">Mode de réservation</p>
@@ -845,17 +948,17 @@ export function GetSoundOnOnboardingWizard({
             {data.cautionEnabled && (
               <Input
                 className="mt-2 border-gs-line"
-                placeholder="Montant indicatif (€)"
+                placeholder="Montant de caution par défaut (€)"
                 value={data.cautionAmountDefault}
                 onChange={(e) => updateData({ cautionAmountDefault: e.target.value })}
               />
             )}
           </div>
           <div>
-            <p className="font-landing-nav mb-2 text-sm font-semibold text-gs-dark">Délai minimum avant réservation</p>
+            <p className="font-landing-nav mb-2 text-sm font-semibold text-gs-dark">Délai minimum</p>
             <div className="flex flex-wrap gap-2">
               {[
-                ["same_day", "Le jour même"],
+                ["same_day", "Même jour"],
                 ["24h", "24 h"],
                 ["48h", "48 h"],
                 ["other", "Autre"],
@@ -904,10 +1007,37 @@ export function GetSoundOnOnboardingWizard({
             Les paiements sont gérés de manière sécurisée via Stripe Connect.
           </p>
           <div className="flex gap-3">
-            <Button variant="outline" className="flex-1 border-gs-line" onClick={() => setStep(3)}>
+            <Button
+              variant="outline"
+              className="flex-1 border-gs-line"
+              onClick={() => {
+                setSubmitError(null);
+                setStep(3);
+              }}
+            >
               Retour
             </Button>
-            <Button className="flex-1 bg-gs-orange font-landing-btn text-white hover:brightness-105" onClick={() => setStep(5)}>
+            <Button
+              className="flex-1 bg-gs-orange font-landing-btn text-white hover:brightness-105"
+              onClick={() => {
+                const e = validationLeavingStep(4, data);
+                if (e) {
+                  setSubmitError(e.message);
+                  setStep(e.step);
+                  return;
+                }
+                setSubmitError(null);
+                setData((prev) => ({
+                  ...prev,
+                  storefrontName: prev.storefrontName.trim() || prev.raisonSociale,
+                  storefrontLocationDisplay:
+                    prev.storefrontLocationDisplay.trim() ||
+                    [prev.ville, prev.adresse.trim()].filter(Boolean).join(" · ") ||
+                    prev.ville,
+                }));
+                setStep(5);
+              }}
+            >
               Continuer
             </Button>
           </div>
@@ -917,9 +1047,100 @@ export function GetSoundOnOnboardingWizard({
       {step === 5 && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-landing-heading text-2xl font-bold text-gs-dark">Ajoute ta première annonce</h2>
+            <h2 className="font-landing-heading text-2xl font-bold text-gs-dark">Personnalisez votre boutique</h2>
             <p className="font-landing-body mt-1 text-slate-600">
-              Commence par un matériel ou un pack. Tu pourras en ajouter d’autres ensuite.
+              Créez l’espace public qui présentera votre activité et votre matériel.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <label className="font-landing-nav text-sm font-medium text-gs-dark">Nom de la boutique</label>
+            <Input
+              value={data.storefrontName}
+              onChange={(e) => updateData({ storefrontName: e.target.value })}
+              className="border-gs-line bg-white"
+              placeholder="Ex. : Sonorisation Pro 75"
+            />
+            <p className="text-xs text-slate-500">Photo / logo et image de couverture : ajoutables depuis votre espace après publication.</p>
+            <label className="font-landing-nav text-sm font-medium text-gs-dark">Description courte</label>
+            <textarea
+              className="min-h-[88px] w-full rounded-md border border-gs-line bg-white p-3 text-sm"
+              value={data.storefrontDescription}
+              onChange={(e) => updateData({ storefrontDescription: e.target.value })}
+              placeholder="Une phrase qui résume votre offre."
+            />
+            <label className="font-landing-nav text-sm font-medium text-gs-dark">Localisation affichée</label>
+            <Input
+              value={data.storefrontLocationDisplay}
+              onChange={(e) => updateData({ storefrontLocationDisplay: e.target.value })}
+              className="border-gs-line bg-white"
+              placeholder="Ex. : Paris · Île-de-France"
+            />
+          </div>
+          <div>
+            <p className="font-landing-nav mb-2 text-sm font-semibold text-gs-dark">Aperçu de votre boutique</p>
+            <div className="overflow-hidden rounded-xl border border-gs-line bg-white shadow-sm">
+              <div className="h-24 bg-gradient-to-br from-gs-orange/25 to-slate-200" />
+              <div className="space-y-2 p-4">
+                <p className="text-lg font-semibold text-gs-dark">{data.storefrontName.trim() || "Nom de la boutique"}</p>
+                <p className="text-sm text-slate-600">{data.storefrontLocationDisplay.trim() || "Ville · zone"}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {data.offeredCategories.slice(0, 4).map((id) => {
+                    const lab = OFFER_CATEGORIES.find((c) => c.id === id)?.label ?? id;
+                    return (
+                      <span key={id} className="rounded-full bg-gs-orange/10 px-2.5 py-0.5 text-xs font-medium text-gs-dark">
+                        {lab}
+                      </span>
+                    );
+                  })}
+                  {data.additionalServices.slice(0, 3).map((id) => {
+                    const lab = ADDITIONAL_SVC.find((c) => c.id === id)?.label ?? id;
+                    return (
+                      <span key={id} className="rounded-full border border-gs-line bg-gs-beige px-2.5 py-0.5 text-xs text-slate-700">
+                        {lab}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-slate-500">Votre boutique sera visible publiquement sur GetSoundOn.</p>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1 border-gs-line"
+              onClick={() => {
+                setSubmitError(null);
+                setStep(4);
+              }}
+            >
+              Retour
+            </Button>
+            <Button
+              className="flex-1 bg-gs-orange font-landing-btn text-white hover:brightness-105"
+              onClick={() => {
+                const e = validationLeavingStep(5, data);
+                if (e) {
+                  setSubmitError(e.message);
+                  setStep(e.step);
+                  return;
+                }
+                setSubmitError(null);
+                setStep(6);
+              }}
+            >
+              Continuer
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {step === 6 && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="font-landing-heading text-2xl font-bold text-gs-dark">Ajoutez votre première annonce</h2>
+            <p className="font-landing-body mt-1 text-slate-600">
+              Commencez par un matériel ou un pack. Vous pourrez en ajouter d’autres ensuite.
             </p>
           </div>
           <div className="flex gap-2">
@@ -969,33 +1190,12 @@ export function GetSoundOnOnboardingWizard({
                 value={data.description}
                 onChange={(e) => updateData({ description: e.target.value })}
               />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Input
-                  placeholder="Prix / jour (€)"
-                  type="number"
-                  min={1}
-                  value={data.tarifParJour}
-                  onChange={(e) => updateData({ tarifParJour: e.target.value })}
-                  className="border-gs-line"
-                />
-                <Input
-                  placeholder="Quantité"
-                  value={data.quantite}
-                  onChange={(e) => updateData({ quantite: e.target.value })}
-                  className="border-gs-line"
-                />
-              </div>
               <Input
-                placeholder="État du matériel"
-                value={data.etatMateriel}
-                onChange={(e) => updateData({ etatMateriel: e.target.value })}
-                className="border-gs-line"
-              />
-              <p className="text-xs text-slate-500">Capacité / personnes (optionnel)</p>
-              <Input
-                placeholder="Ex. 80"
-                value={data.capacite}
-                onChange={(e) => updateData({ capacite: e.target.value })}
+                placeholder="Prix / jour (€)"
+                type="number"
+                min={1}
+                value={data.tarifParJour}
+                onChange={(e) => updateData({ tarifParJour: e.target.value })}
                 className="border-gs-line"
               />
             </div>
@@ -1007,7 +1207,7 @@ export function GetSoundOnOnboardingWizard({
                 onChange={(e) => updateData({ nom: e.target.value })}
                 className="border-gs-line"
               />
-              <label className="text-sm font-medium text-gs-dark">Usage / type d’événement</label>
+              <label className="text-sm font-medium text-gs-dark">Usage</label>
               <select
                 className="h-11 w-full rounded-md border border-gs-line bg-white px-3 text-sm"
                 value={data.packUsage}
@@ -1019,12 +1219,6 @@ export function GetSoundOnOnboardingWizard({
                   </option>
                 ))}
               </select>
-              <Input
-                placeholder="Capacité / nombre de personnes"
-                value={data.capacite}
-                onChange={(e) => updateData({ capacite: e.target.value })}
-                className="border-gs-line"
-              />
               <textarea
                 className="min-h-[100px] w-full rounded-md border border-gs-line p-3 text-sm"
                 placeholder="Ce que le pack contient"
@@ -1055,6 +1249,9 @@ export function GetSoundOnOnboardingWizard({
                   Installation possible
                 </button>
               </div>
+              <p className="text-xs text-slate-500">
+                Les packs sont utiles pour proposer une solution prête à réserver. Vous pourrez enrichir votre boutique plus tard.
+              </p>
             </div>
           )}
 
@@ -1067,6 +1264,7 @@ export function GetSoundOnOnboardingWizard({
                 (f) => f.type === "image/jpeg" || f.type === "image/png"
               );
               if (files.length) {
+                setSubmitError(null);
                 setData((prev) => ({
                   ...prev,
                   photos: [...prev.photos, ...files].slice(0, MAX_PHOTOS),
@@ -1075,8 +1273,10 @@ export function GetSoundOnOnboardingWizard({
             }}
           >
             <Camera className="mx-auto h-10 w-10 text-gs-orange" />
-            <p className="mt-2 text-sm font-medium text-gs-dark">Photos</p>
-            <p className="text-xs text-slate-500">JPG / PNG — min. {MIN_PHOTOS}, max {MAX_PHOTOS}</p>
+            <p className="mt-2 text-sm font-medium text-gs-dark">Photo principale</p>
+            <p className="text-xs text-slate-500">
+              JPG / PNG — au moins {MIN_PHOTOS} image, jusqu’à {MAX_PHOTOS}. Une annonce simple suffit pour commencer.
+            </p>
             <input ref={fileInputRef} type="file" accept="image/jpeg,image/png" multiple className="hidden" onChange={handleFileChange} />
             <Button type="button" variant="outline" className="mt-3 border-gs-line" onClick={() => fileInputRef.current?.click()}>
               Choisir des fichiers
@@ -1086,7 +1286,14 @@ export function GetSoundOnOnboardingWizard({
                 {data.photos.map((f, i) => (
                   <li key={i} className="flex justify-between gap-2">
                     <span className="truncate">{f.name}</span>
-                    <button type="button" className="text-gs-orange" onClick={() => setData((p) => ({ ...p, photos: p.photos.filter((_, j) => j !== i) }))}>
+                    <button
+                      type="button"
+                      className="text-gs-orange"
+                      onClick={() => {
+                        setSubmitError(null);
+                        setData((p) => ({ ...p, photos: p.photos.filter((_, j) => j !== i) }));
+                      }}
+                    >
                       Retirer
                     </button>
                   </li>
@@ -1095,72 +1302,14 @@ export function GetSoundOnOnboardingWizard({
             )}
           </div>
 
-          <div className="flex gap-3">
-            <Button variant="outline" className="flex-1 border-gs-line" onClick={() => setStep(4)}>
-              Retour
-            </Button>
-            <Button
-              className="flex-1 bg-gs-orange font-landing-btn text-white hover:brightness-105"
-              onClick={() => {
-                const e = getValidationError(6, data);
-                if (e) {
-                  setSubmitError(e.message);
-                  return;
-                }
-                setSubmitError(null);
-                setStep(6);
-              }}
-            >
-              Continuer
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {step === 6 && (
-        <div className="space-y-6">
-          <div>
-            <h2 className="font-landing-heading text-2xl font-bold text-gs-dark">Ton espace est presque prêt</h2>
-            <p className="font-landing-body mt-1 text-slate-600">Vérifie les points ci-dessous avant publication.</p>
-          </div>
-          <ul className="space-y-2 rounded-xl border border-gs-line bg-white p-4 text-sm">
-            <li className="flex items-center justify-between gap-2">
-              <span>Profil complété</span>
-              <CheckCircle className="h-5 w-5 shrink-0 text-emerald-500" />
-            </li>
-            <li className="flex items-center justify-between gap-2">
-              <span>Zone définie</span>
-              <CheckCircle className="h-5 w-5 shrink-0 text-emerald-500" />
-            </li>
-            <li className="flex items-center justify-between gap-2">
-              <span>Services configurés</span>
-              <CheckCircle className="h-5 w-5 shrink-0 text-emerald-500" />
-            </li>
-            <li className="flex items-center justify-between gap-2">
-              <span>Première annonce</span>
-              <CheckCircle className="h-5 w-5 shrink-0 text-emerald-500" />
-            </li>
-            <li className="flex items-center justify-between gap-2">
-              <span>Paiement connecté (Stripe)</span>
-              {!stripeChecked ? (
-                <span className="text-xs text-slate-400">…</span>
-              ) : stripeReady ? (
-                <CheckCircle className="h-5 w-5 shrink-0 text-emerald-500" />
-              ) : (
-                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">À terminer</span>
-              )}
-            </li>
-          </ul>
-          {stripeChecked && !stripeReady && (
-            <p className="text-xs text-slate-500">
-              Tu pourras finaliser Stripe depuis <strong>Paiements</strong> dans ton tableau de bord. Ce n’est pas bloquant pour publier ton annonce.
-            </p>
-          )}
           <label className="flex items-start gap-2 text-sm text-slate-700">
             <input
               type="checkbox"
               checked={acceptedTerms}
-              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              onChange={(e) => {
+                setSubmitError(null);
+                setAcceptedTerms(e.target.checked);
+              }}
               className="mt-1 h-4 w-4 rounded border-gs-line accent-gs-orange"
             />
             <span>
@@ -1175,14 +1324,21 @@ export function GetSoundOnOnboardingWizard({
               .
             </span>
           </label>
-          {submitError && <p className="text-sm text-red-600">{submitError}</p>}
           {uploadProgress && (
             <p className="text-sm text-slate-600">
               Envoi photo {uploadProgress.current} / {uploadProgress.total}…
             </p>
           )}
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button variant="outline" className="flex-1 border-gs-line" onClick={() => setStep(5)} disabled={isSubmitting}>
+            <Button
+              variant="outline"
+              className="flex-1 border-gs-line"
+              disabled={isSubmitting}
+              onClick={() => {
+                setSubmitError(null);
+                setStep(5);
+              }}
+            >
               <ChevronLeft className="mr-1 h-4 w-4" />
               Retour
             </Button>
@@ -1191,23 +1347,37 @@ export function GetSoundOnOnboardingWizard({
               disabled={isSubmitting || !acceptedTerms}
               onClick={handleSubmit}
             >
-              {isSubmitting ? "Publication…" : "Publier mon espace"}
+              {isSubmitting ? "Publication…" : "Publier ma boutique"}
             </Button>
           </div>
-          <Link href="/proprietaire" className="block w-full py-2 text-center text-sm font-medium text-slate-600 hover:text-gs-dark">
-            Accéder à mon tableau de bord
-          </Link>
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-sm text-slate-600 hover:text-gs-dark"
+            disabled={isSubmitting}
+            onClick={() => {
+              clearDraft();
+              onClose?.();
+              router.push("/proprietaire");
+            }}
+          >
+            Je terminerai plus tard
+          </Button>
         </div>
       )}
     </>
   );
 
   if (embedded) {
-    return <div className="font-landing-body text-gs-dark">{wizardBody}</div>;
+    return (
+      <div className="text-gs-dark [font-family:var(--font-landing-inter),ui-sans-serif,sans-serif]">
+        <div className="rounded-xl border border-gs-line bg-white p-5 shadow-sm sm:p-7">{wizardBody}</div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gs-beige font-landing-body text-gs-dark">
+    <div className="min-h-screen bg-gs-beige text-gs-dark [font-family:var(--font-landing-inter),ui-sans-serif,sans-serif]">
       <header className="border-b border-gs-line bg-white">
         <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
           <Link href="/" className="font-landing-logo-mark flex items-center gap-2 text-lg text-gs-orange">
@@ -1222,7 +1392,9 @@ export function GetSoundOnOnboardingWizard({
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-2xl px-4 py-8">{wizardBody}</main>
+      <main className="mx-auto max-w-2xl px-4 py-8">
+        <div className="rounded-xl border border-gs-line bg-white p-6 shadow-sm">{wizardBody}</div>
+      </main>
     </div>
   );
 }

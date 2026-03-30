@@ -12,6 +12,10 @@ export type AuthFormState = {
   error?: string;
   success?: string;
   redirectTo?: string;
+  /** Prestataire : wizard sur la même page /auth (session immédiate, sans redirectedFrom). */
+  showProviderOnboarding?: boolean;
+  prefillOwnerEmail?: string;
+  prefillOwnerName?: string;
 };
 
 const defaultError = "Une erreur est survenue. Veuillez réessayer.";
@@ -99,13 +103,6 @@ export async function signupAction(_: AuthFormState, formData: FormData): Promis
   // Session disponible = pas de confirmation email requise → redirection immédiate
   const hasSession = !!data.session;
 
-  if (hasSession && userType === "owner" && !redirectedFrom) {
-    await sendWelcomeOwnerEmail(email, fullName).catch((e) =>
-      console.error("[auth] welcome owner email:", e)
-    );
-    return { success: "Compte créé.", redirectTo: "/onboarding/salle" };
-  }
-
   if (hasSession && userType === "seeker") {
     await sendWelcomeSeekerEmail(email, fullName).catch((e) =>
       console.error("[auth] welcome seeker email:", e)
@@ -116,13 +113,21 @@ export async function signupAction(_: AuthFormState, formData: FormData): Promis
     };
   }
 
-  if (hasSession && userType === "owner" && redirectedFrom) {
+  if (hasSession && userType === "owner") {
     await sendWelcomeOwnerEmail(email, fullName).catch((e) =>
       console.error("[auth] welcome owner email:", e)
     );
+    if (redirectedFrom && redirectedFrom.startsWith("/")) {
+      return {
+        success: "Compte créé.",
+        redirectTo: resolveRedirectForUser(redirectedFrom, "owner"),
+      };
+    }
     return {
-      success: "Compte créé.",
-      redirectTo: resolveRedirectForUser(redirectedFrom, "owner"),
+      success: "Compte créé. Poursuivez la configuration de votre boutique ci-contre.",
+      showProviderOnboarding: true,
+      prefillOwnerEmail: email,
+      prefillOwnerName: fullName,
     };
   }
 
