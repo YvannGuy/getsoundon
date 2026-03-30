@@ -31,7 +31,7 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Quel type de matériel puis-je louer sur la plateforme ?",
     paragraph:
-      "Enceintes, tables de mixage, platines, lumières, effets, accessoires… et parfois des services (livraison, installation, technicien) selon ce que chaque annonce propose. Le catalogue couvre les besoins des soirées, mariages, conférences et prestations pros.",
+      "Enceintes, consoles de mixage, platines, lumières, effets, accessoires… et parfois des services (livraison, installation, technicien) selon ce que chaque annonce propose. Le catalogue couvre les besoins des soirées, mariages, conférences et prestations pros.",
   },
   {
     question: "La location est-elle sécurisée ?",

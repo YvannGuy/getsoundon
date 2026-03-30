@@ -142,6 +142,8 @@ export type GsWizardSyncInput = {
   packContents: string;
   packLivraison: boolean;
   packInstallation: boolean;
+  /** Ligne structurée (taxonomie + mots-clés) injectée dans la description longue — futurs filtres / Supabase. */
+  equipmentTaxonomyLine?: string;
 };
 
 export function buildGsOnboardingDescription(d: GsWizardSyncInput): string {
@@ -231,6 +233,10 @@ export function buildGsOnboardingDescription(d: GsWizardSyncInput): string {
   } else {
     if (d.quantite.trim()) parts.push(`Quantité : ${d.quantite.trim()}.`);
     if (d.etatMateriel.trim()) parts.push(`État du matériel : ${d.etatMateriel.trim()}.`);
+  }
+
+  if (d.listingKind === "equipment" && d.equipmentTaxonomyLine?.trim()) {
+    parts.push(d.equipmentTaxonomyLine.trim());
   }
 
   if (d.description.trim()) {

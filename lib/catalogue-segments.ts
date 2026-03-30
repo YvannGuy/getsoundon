@@ -38,10 +38,11 @@ export const CATALOGUE_SEGMENTS = {
   },
   "tables-mixage": {
     category: "dj" as const,
-    label: "Tables de mixage",
+    label: "Consoles de mixage",
     textAnyOf: [
       "table de mixage",
       "console de mixage",
+      "consoles de mixage",
       "mixer",
       "mixage",
       "djm-",

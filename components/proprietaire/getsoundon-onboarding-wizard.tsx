@@ -4,6 +4,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { EquipmentIdentityFields } from "@/components/onboarding/EquipmentIdentityFields";
+import { getEquipmentCategory } from "@/lib/equipment/equipment-catalog";
+import {
+  buildEquipmentTaxonomyLine,
+  buildSearchKeywords,
+  buildSuggestedEquipmentDescription,
+  buildSuggestedEquipmentTitle,
+  findMatchingBrand,
+  findMatchingModel,
+  gearFieldToCategoryId,
+  resolveBrandDisplay,
+  resolveModelDisplay,
+  subcategoryLabel,
+} from "@/lib/equipment/equipment.helpers";
+import { equipmentIdentityZod, formatEquipmentZodError } from "@/lib/equipment/equipment.zod";
+import type { EquipmentCategoryId } from "@/lib/equipment/equipment.types";
+import { OTHER_KEY } from "@/lib/equipment/equipment.types";
 import { Camera, CheckCircle, ChevronLeft, Clock, Info } from "lucide-react";
 
 import { createSalleFromOnboarding } from "@/app/actions/create-salle";
@@ -105,15 +122,6 @@ const RAYON_OPTIONS = [
   { id: "devis", label: "Sur devis" },
 ];
 
-const GEAR_SELECT: { value: string; label: string }[] = [
-  { value: "son", label: "Sono" },
-  { value: "lumiere", label: "Lumière" },
-  { value: "dj", label: "DJ" },
-  { value: "video", label: "Vidéo" },
-  { value: "micros", label: "Microphones" },
-  { value: "pack_premium", label: "Pack événementiel" },
-];
-
 const PACK_USAGE: { id: string; label: string }[] = [
   { id: "anniversaire", label: "Anniversaire" },
   { id: "mariage", label: "Mariage" },
@@ -166,6 +174,15 @@ export type GsWizardData = {
   packLivraison: boolean;
   packInstallation: boolean;
   photos: File[];
+  /** Taxonomie matériel — étape 6 */
+  eqCategoryId: EquipmentCategoryId | "";
+  eqSubcategoryId: string;
+  eqBrandKey: string;
+  eqModelKey: string;
+  eqCustomBrand: string;
+  eqCustomModel: string;
+  nomTouched: boolean;
+  descriptionTouched: boolean;
 };
 
 const initialData: GsWizardData = {
@@ -212,7 +229,48 @@ const initialData: GsWizardData = {
   packLivraison: false,
   packInstallation: false,
   photos: [],
+  eqCategoryId: "sono",
+  eqSubcategoryId: "",
+  eqBrandKey: "",
+  eqModelKey: "",
+  eqCustomBrand: "",
+  eqCustomModel: "",
+  nomTouched: false,
+  descriptionTouched: false,
 };
+
+/** Brouillons sans champs taxonomie : dériver depuis gear* / texte libre. */
+function applyEquipmentLegacyMigration(d: GsWizardData): GsWizardData {
+  if (d.listingKind !== "equipment") return d;
+  let next = { ...d };
+  if (!next.eqCategoryId && next.gearCategoryField) {
+    next = { ...next, eqCategoryId: gearFieldToCategoryId(next.gearCategoryField) };
+  }
+  if (next.eqCategoryId && next.gearBrand.trim() && !next.eqBrandKey) {
+    const cid = next.eqCategoryId as EquipmentCategoryId;
+    const mb = findMatchingBrand(cid, next.gearBrand);
+    if (mb) {
+      next = { ...next, eqBrandKey: mb, eqCustomBrand: "" };
+      if (next.gearModel.trim()) {
+        const mm = findMatchingModel(cid, mb, next.gearModel);
+        if (mm) next = { ...next, eqModelKey: mm, eqCustomModel: "" };
+        else next = { ...next, eqModelKey: OTHER_KEY, eqCustomModel: next.gearModel };
+      }
+    } else {
+      next = {
+        ...next,
+        eqBrandKey: OTHER_KEY,
+        eqCustomBrand: next.gearBrand.trim(),
+        ...(next.gearModel.trim()
+          ? { eqModelKey: OTHER_KEY as string, eqCustomModel: next.gearModel.trim() }
+          : {}),
+      };
+    }
+  }
+  if (next.nom.trim()) next = { ...next, nomTouched: true };
+  if (next.description.trim()) next = { ...next, descriptionTouched: true };
+  return next;
+}
 
 function toggleIn<T extends string>(arr: T[], id: T): T[] {
   return arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id];
@@ -262,10 +320,17 @@ function validationListingForPublish(d: GsWizardData): { step: number; message: 
     return { step: 6, message: "Indiquez un prix valide." };
   }
   if (d.listingKind === "equipment") {
+    if (!d.eqCategoryId) return { step: 6, message: "Choisissez une catégorie métier." };
+    const zr = equipmentIdentityZod.safeParse({
+      eqCategoryId: d.eqCategoryId,
+      eqSubcategoryId: d.eqSubcategoryId,
+      eqBrandKey: d.eqBrandKey,
+      eqModelKey: d.eqModelKey,
+      eqCustomBrand: d.eqCustomBrand,
+      eqCustomModel: d.eqCustomModel,
+    });
+    if (!zr.success) return { step: 6, message: formatEquipmentZodError(zr.error) };
     if (!d.description.trim()) return { step: 6, message: "Ajoutez une description courte." };
-    if (!d.gearBrand.trim() && !d.gearModel.trim()) {
-      return { step: 6, message: "Renseignez la marque ou le modèle." };
-    }
   } else if (!d.packContents.trim()) {
     return { step: 6, message: "Décrivez ce que contient le pack." };
   }
@@ -336,7 +401,13 @@ export function GetSoundOnOnboardingWizard({
       if (raw) {
         const parsed = JSON.parse(raw) as { step?: number; data?: Partial<GsWizardData> };
         if (parsed.data) {
-          setData({ ...initialData, ...parsed.data, photos: [] });
+          setData(
+            applyEquipmentLegacyMigration({
+              ...initialData,
+              ...parsed.data,
+              photos: [],
+            } as GsWizardData)
+          );
         }
         if (parsed.step && parsed.step >= 1 && parsed.step <= TOTAL_STEPS) setStep(parsed.step);
         setDraftRestored(true);
@@ -363,6 +434,63 @@ export function GetSoundOnOnboardingWizard({
     setSubmitError(null);
     setData((prev) => ({ ...prev, ...u }));
   }, []);
+
+  useEffect(() => {
+    setData((prev) => {
+      if (prev.listingKind !== "equipment" || !prev.eqCategoryId || prev.nomTouched) return prev;
+      const cid = prev.eqCategoryId as EquipmentCategoryId;
+      const brand = resolveBrandDisplay(cid, prev.eqBrandKey, prev.eqCustomBrand);
+      const model = resolveModelDisplay(cid, prev.eqBrandKey, prev.eqModelKey, prev.eqCustomModel);
+      if (!prev.eqSubcategoryId) return prev;
+      const t = buildSuggestedEquipmentTitle({
+        categoryId: cid,
+        subcategoryId: prev.eqSubcategoryId,
+        brandDisplay: brand,
+        modelDisplay: model,
+      });
+      if (!t || t === prev.nom) return prev;
+      return { ...prev, nom: t };
+    });
+  }, [
+    data.listingKind,
+    data.eqCategoryId,
+    data.eqSubcategoryId,
+    data.eqBrandKey,
+    data.eqModelKey,
+    data.eqCustomBrand,
+    data.eqCustomModel,
+    data.nomTouched,
+  ]);
+
+  useEffect(() => {
+    setData((prev) => {
+      if (prev.listingKind !== "equipment" || !prev.eqCategoryId || prev.descriptionTouched) return prev;
+      const cid = prev.eqCategoryId as EquipmentCategoryId;
+      const brand = resolveBrandDisplay(cid, prev.eqBrandKey, prev.eqCustomBrand);
+      const model = resolveModelDisplay(cid, prev.eqBrandKey, prev.eqModelKey, prev.eqCustomModel);
+      if (!prev.eqSubcategoryId) return prev;
+      const title = buildSuggestedEquipmentTitle({
+        categoryId: cid,
+        subcategoryId: prev.eqSubcategoryId,
+        brandDisplay: brand,
+        modelDisplay: model,
+      });
+      if (!title) return prev;
+      const desc = buildSuggestedEquipmentDescription(title, cid);
+      if (!desc || desc === prev.description) return prev;
+      return { ...prev, description: desc };
+    });
+  }, [
+    data.listingKind,
+    data.eqCategoryId,
+    data.eqSubcategoryId,
+    data.eqBrandKey,
+    data.eqModelKey,
+    data.eqCustomBrand,
+    data.eqCustomModel,
+    data.descriptionTouched,
+    data.nom,
+  ]);
 
   const clearDraft = useCallback(() => {
     localStorage.removeItem(ONBOARDING_DRAFT_KEY);
@@ -398,6 +526,21 @@ export function GetSoundOnOnboardingWizard({
     }
 
     setIsSubmitting(true);
+
+    let equipmentTaxonomyLine: string | undefined;
+    if (data.listingKind === "equipment" && data.eqCategoryId) {
+      const cid = data.eqCategoryId as EquipmentCategoryId;
+      const bd = resolveBrandDisplay(cid, data.eqBrandKey, data.eqCustomBrand);
+      const md = resolveModelDisplay(cid, data.eqBrandKey, data.eqModelKey, data.eqCustomModel);
+      const cat = getEquipmentCategory(cid);
+      const kw = buildSearchKeywords(
+        [cat?.label, subcategoryLabel(cid, data.eqSubcategoryId), bd, md, data.nom].filter(
+          Boolean
+        ) as string[]
+      );
+      equipmentTaxonomyLine = buildEquipmentTaxonomyLine(cid, data.eqSubcategoryId, bd, md, kw);
+    }
+
     const { onboardingData, cautionRequise } = syncGsWizardToOnboardingPayload({
       accountType: data.accountType,
       raisonSociale: data.raisonSociale,
@@ -439,6 +582,7 @@ export function GetSoundOnOnboardingWizard({
       packContents: data.packContents,
       packLivraison: data.packLivraison,
       packInstallation: data.packInstallation,
+      equipmentTaxonomyLine,
     });
 
     const formData = new FormData();
@@ -1298,76 +1442,54 @@ export function GetSoundOnOnboardingWizard({
                 className={chipClass(data.listingKind === "equipment")}
                 onClick={() => updateData({ listingKind: "equipment" })}
               >
-                Ajouter un matériel
+                Matériel
               </button>
               <button
                 type="button"
                 className={chipClass(data.listingKind === "pack")}
                 onClick={() => updateData({ listingKind: "pack", gearCategoryField: "pack_premium" })}
               >
-                Créer un pack
+                Pack
+              </button>
+              <button
+                type="button"
+                disabled
+                className={cn(
+                  "cursor-not-allowed rounded-full border px-4 py-2 text-sm font-medium opacity-50",
+                  "border-gs-line bg-slate-50 text-slate-500"
+                )}
+                title="Bientôt disponible"
+              >
+                Prestation (bientôt)
               </button>
             </div>
           </div>
 
           {data.listingKind === "equipment" ? (
             <div className="space-y-4">
+              <EquipmentIdentityFields data={data} updateData={updateData} Label={LabelWithHint} />
               <div>
                 <LabelWithHint
                   label="Titre de l’annonce"
-                  hint="Nom court et clair (ex. : enceinte active 15 pouces, console DJ…)."
+                  hint="Proposition automatique selon la fiche matériel ; modifiez librement — nous ne réécraserons plus votre texte."
                 />
                 <Input
                   value={data.nom}
-                  onChange={(e) => updateData({ nom: e.target.value })}
+                  onChange={(e) => updateData({ nom: e.target.value, nomTouched: true })}
                   className="mt-1.5 border-gs-line"
-                  placeholder="Ex. : Enceinte FBT 15"
+                  placeholder="Ex. : Enceinte active FBT X-Lite 115A"
                 />
-              </div>
-              <div>
-                <LabelWithHint label="Catégorie" hint="Type de matériel pour le classement et la recherche." />
-                <select
-                  className="mt-1.5 h-11 w-full rounded-md border border-gs-line bg-white px-3 text-sm"
-                  value={data.gearCategoryField}
-                  onChange={(e) => updateData({ gearCategoryField: e.target.value })}
-                >
-                  {GEAR_SELECT.filter((g) => g.value !== "pack_premium").map((g) => (
-                    <option key={g.value} value={g.value}>
-                      {g.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <LabelWithHint label="Marque" hint="Fabricant ou marque affichée sur la fiche." />
-                  <Input
-                    value={data.gearBrand}
-                    onChange={(e) => updateData({ gearBrand: e.target.value })}
-                    className="mt-1.5 border-gs-line"
-                    placeholder="Ex. : FBT"
-                  />
-                </div>
-                <div>
-                  <LabelWithHint label="Modèle" hint="Référence ou gamme, si elle existe." />
-                  <Input
-                    value={data.gearModel}
-                    onChange={(e) => updateData({ gearModel: e.target.value })}
-                    className="mt-1.5 border-gs-line"
-                    placeholder="Ex. : ProMaxx 114"
-                  />
-                </div>
               </div>
               <div>
                 <LabelWithHint
                   label="Description"
-                  hint="État, puissance, accessoires inclus, conditions d’utilisation…"
+                  hint="Texte suggéré tant que vous ne l’avez pas modifié ; complétez avec l’état, les accessoires, etc."
                 />
                 <textarea
                   className="mt-1.5 min-h-[100px] w-full rounded-md border border-gs-line p-3 text-sm"
                   placeholder="Description courte"
                   value={data.description}
-                  onChange={(e) => updateData({ description: e.target.value })}
+                  onChange={(e) => updateData({ description: e.target.value, descriptionTouched: true })}
                 />
               </div>
               <div>

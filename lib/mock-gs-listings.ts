@@ -181,7 +181,7 @@ const MOCK_ROWS: MockListingRow[] = [
   {
     id: "a1000000-0000-4000-8000-000000000009",
     owner_id: OWNER,
-    title: "Table de mixage Yamaha MG16XU",
+    title: "Console de mixage Yamaha MG16XU",
     description:
       "Console 16 voies avec effets et USB. Idéal live et petite sono. Flight case inclus.",
     category: "dj",

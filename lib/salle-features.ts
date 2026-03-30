@@ -7,7 +7,7 @@
 export const FEATURE_GEAR_EDIT_LIST = [
   { id: "son_ligne", label: "Enceintes / retours / amplis" },
   { id: "caisson_basse", label: "Caisson de basses / sub" },
-  { id: "table_mix", label: "Table de mixage / console DJ" },
+  { id: "table_mix", label: "Console de mixage / DJ" },
   { id: "micros", label: "Micros (filaire / sans fil)" },
   { id: "lumieres_led", label: "Éclairage / effets LED" },
   { id: "flight_case", label: "Flight-case / housse / protection transport" },
@@ -42,7 +42,7 @@ export const FEATURE_TO_SALLE: Record<string, { label: string; sublabel?: string
     icon: "speaker",
   },
   caisson_basse: { label: "Caisson de basses / sub", icon: "speaker" },
-  table_mix: { label: "Table de mixage / console DJ", icon: "list" },
+  table_mix: { label: "Console de mixage / DJ", icon: "list" },
   micros: { label: "Micros (filaire / sans fil)", icon: "check" },
   lumieres_led: { label: "Éclairage / effets LED", icon: "check" },
   flight_case: { label: "Flight-case / housse / protection transport", icon: "check" },
