@@ -893,7 +893,7 @@ export function GetSoundOnOnboardingWizard({
             <div className="space-y-1.5">
               <LabelWithHint
                 label="Raison sociale ou SIRET"
-                hint="Cherchez votre entreprise ou saisissez-la manuellement."
+                hint="Cherchez votre entreprise ou passez en saisie manuelle."
               />
               <CompanyAutocompleteField
                 value={data.companySearch}
@@ -930,40 +930,21 @@ export function GetSoundOnOnboardingWizard({
                   })
                 }
               />
-              <Input
-                value={data.raisonSociale}
-                onChange={(e) => updateData({ raisonSociale: e.target.value })}
-                className="mt-1 border-gs-line"
-                placeholder="Nom ou raison sociale"
-              />
-              <div className="grid gap-3 sm:grid-cols-2">
+              {data.companyMode === "manual" ? (
                 <Input
-                  value={data.companySiret}
-                  onChange={(e) => updateData({ companySiret: e.target.value })}
-                  className="border-gs-line"
-                  placeholder="SIRET (optionnel)"
+                  value={data.raisonSociale}
+                  onChange={(e) => updateData({ raisonSociale: e.target.value })}
+                  className="mt-1 border-gs-line"
+                  placeholder="Nom ou raison sociale (saisie manuelle)"
                 />
+              ) : (
                 <Input
-                  value={data.companySiren}
-                  onChange={(e) => updateData({ companySiren: e.target.value })}
-                  className="border-gs-line"
-                  placeholder="SIREN (optionnel)"
+                  value={data.raisonSociale}
+                  onChange={(e) => updateData({ raisonSociale: e.target.value })}
+                  className="mt-1 border-gs-line"
+                  placeholder="Nom ou raison sociale"
                 />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Input
-                  value={data.companyCity}
-                  onChange={(e) => updateData({ companyCity: e.target.value })}
-                  className="border-gs-line"
-                  placeholder="Ville (optionnel)"
-                />
-                <Input
-                  value={data.companyPostalCode}
-                  onChange={(e) => updateData({ companyPostalCode: e.target.value })}
-                  className="border-gs-line"
-                  placeholder="Code postal (optionnel)"
-                />
-              </div>
+              )}
             </div>
             <div>
               <LabelWithHint label="Email" hint="Pour les notifications de réservation et la connexion." />
