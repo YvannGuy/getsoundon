@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SearchModalButton } from "@/components/search/search-modal";
 import { WelcomeOnboardingBanner } from "@/components/dashboard/welcome-onboarding-banner";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const STATUT_LABEL: Record<string, string> = {
@@ -44,7 +43,6 @@ export default async function DashboardPage() {
   const onboardingGuideUrl = "/pdf/salledeculte.com_bien_debuter.pdf";
 
   const supabase = await createClient();
-  const admin = createAdminClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -94,13 +92,16 @@ export default async function DashboardPage() {
   }
   const tauxReponseVisites30 =
     visitesEnvoyees30 > 0 ? Math.round((visitesRepondues30 / visitesEnvoyees30) * 100) : 0;
-  const { count: reservationsConfirmees30Count } = await admin
+  let reservationsConfirmees30 = 0;
+  const offersCountRes = await supabase
     .from("offers")
     .select("id", { count: "exact", head: true })
     .eq("seeker_id", seekerId)
     .eq("status", "paid")
     .gte("created_at", since30Iso);
-  const reservationsConfirmees30 = reservationsConfirmees30Count ?? 0;
+  if (!offersCountRes.error) {
+    reservationsConfirmees30 = offersCountRes.count ?? 0;
+  }
 
   const [{ data: demandesList }, { data: favorisList }] = await Promise.all([
     supabase

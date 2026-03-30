@@ -12,7 +12,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { WelcomeOnboardingBanner } from "@/components/dashboard/welcome-onboarding-banner";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 const STATUT_SALLE_LABEL: Record<string, string> = {
   approved: "Active",
@@ -54,23 +53,20 @@ export default async function ProprietaireDashboardPage() {
   if (!user) return null;
   const since30Iso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [{ data: sallesData }, { data: profile }, { data: paidOffersData }] = await Promise.all([
+  const [{ data: sallesData }, { data: profile }, paidOffersRes] = await Promise.all([
     supabase
       .from("salles")
       .select("id, slug, name, city, images, status")
       .eq("owner_id", user.id)
       .order("created_at", { ascending: false }),
     supabase.from("profiles").select("stripe_account_id, first_name, full_name").eq("id", user.id).single(),
-    createAdminClient()
-      .from("offers")
-      .select("id")
-      .eq("owner_id", user.id)
-      .eq("status", "paid"),
+    supabase.from("offers").select("id").eq("owner_id", user.id).eq("status", "paid"),
   ]);
 
   const salles = sallesData ?? [];
   const salleIds = salles.map((s) => s.id);
-  const paidOfferIds = (paidOffersData ?? []).map((o) => (o as { id: string }).id);
+  const paidOffersData = paidOffersRes.error ? [] : (paidOffersRes.data ?? []);
+  const paidOfferIds = paidOffersData.map((o) => (o as { id: string }).id);
 
   let demandesVisiteData: { id: string; seeker_id: string; salle_id: string; date_visite: string; heure_debut: string; heure_fin: string; status: string; created_at: string }[] = [];
   let demandesVisite30Data: { id: string; status: string }[] = [];
@@ -98,12 +94,12 @@ export default async function ProprietaireDashboardPage() {
   }
 
   const seekerIds = [...new Set(demandesVisiteData.map((d) => d.seeker_id).filter(Boolean))];
-  const adminSupabase = createAdminClient();
-  const { data: profiles } =
-    seekerIds.length > 0
-      ? await adminSupabase.from("profiles").select("id, full_name, email").in("id", seekerIds)
-      : { data: [] };
-  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+  let seekerProfiles: { id: string; full_name: string | null; email: string | null }[] = [];
+  if (seekerIds.length > 0) {
+    const res = await supabase.from("profiles").select("id, full_name, email").in("id", seekerIds);
+    if (!res.error) seekerProfiles = res.data ?? [];
+  }
+  const profileMap = new Map(seekerProfiles.map((p) => [p.id, p]));
   const salleMap = new Map(salles.map((s) => [s.id, s]));
 
   const visitesAvecProfil = demandesVisiteData.map((d) => ({
@@ -112,24 +108,27 @@ export default async function ProprietaireDashboardPage() {
     salle: salleMap.get(d.salle_id),
   }));
 
-  const [{ data: recentPayments }, { data: payments30 }] = paidOfferIds.length > 0
-    ? await Promise.all([
-        adminSupabase
-          .from("payments")
-          .select("id, product_type, amount, status, created_at")
-          .in("offer_id", paidOfferIds)
-          .eq("product_type", "reservation")
-          .order("created_at", { ascending: false })
-          .limit(5),
-        adminSupabase
-          .from("payments")
-          .select("amount, status")
-          .in("offer_id", paidOfferIds)
-          .eq("product_type", "reservation")
-          .in("status", ["paid", "active"])
-          .gte("created_at", since30Iso),
-      ])
-    : [{ data: [] }, { data: [] }];
+  const [recentPayRes, payments30Res] =
+    paidOfferIds.length > 0
+      ? await Promise.all([
+          supabase
+            .from("payments")
+            .select("id, product_type, amount, status, created_at")
+            .in("offer_id", paidOfferIds)
+            .eq("product_type", "reservation")
+            .order("created_at", { ascending: false })
+            .limit(5),
+          supabase
+            .from("payments")
+            .select("amount, status")
+            .in("offer_id", paidOfferIds)
+            .eq("product_type", "reservation")
+            .in("status", ["paid", "active"])
+            .gte("created_at", since30Iso),
+        ])
+      : [{ data: null, error: null }, { data: null, error: null }];
+  const recentPayments = recentPayRes.error ? [] : (recentPayRes.data ?? []);
+  const payments30 = payments30Res.error ? [] : (payments30Res.data ?? []);
   const revenuEncaisse30 = (payments30 ?? []).reduce(
     (sum, p) => sum + Number((p as { amount?: number }).amount ?? 0),
     0
