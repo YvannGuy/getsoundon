@@ -67,10 +67,10 @@ export function CompanyAutocompleteField({ value, placeholder, onChange, onSelec
     }, DEBOUNCE_MS);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      if (abortRef.current) {
+      if (abortRef.current && !abortRef.current.signal.aborted) {
         abortRef.current.abort();
-        abortRef.current = null;
       }
+      abortRef.current = null;
     };
   }, [value, canSearch]);
 
