@@ -39,7 +39,10 @@ export function CompanyAutocompleteField({ value, placeholder, onChange, onSelec
     }
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(async () => {
-      abortRef.current?.abort();
+      if (abortRef.current) {
+        abortRef.current.abort();
+        abortRef.current = null;
+      }
       const controller = new AbortController();
       abortRef.current = controller;
       setLoading(true);
@@ -52,15 +55,22 @@ export function CompanyAutocompleteField({ value, placeholder, onChange, onSelec
         const json = (await res.json()) as { suggestions?: CompanySuggestion[] };
         setResults(json.suggestions ?? []);
       } catch (e) {
-        if ((e as Error).name === "AbortError") return;
-        setError("Recherche indisponible pour le moment.");
+        if ((e as Error).name === "AbortError") {
+          // ignore abort; controller already cancelled
+        } else {
+          setError("Recherche indisponible pour le moment.");
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
+        abortRef.current = null;
       }
     }, DEBOUNCE_MS);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      abortRef.current?.abort();
+      if (abortRef.current) {
+        abortRef.current.abort();
+        abortRef.current = null;
+      }
     };
   }, [value, canSearch]);
 
