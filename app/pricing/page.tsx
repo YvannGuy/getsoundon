@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 
+import { PublicSiteShell } from "@/components/landing/public-site-shell";
 import { buildCanonical } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +16,8 @@ export const metadata: Metadata = {
 
 export default function PricingPage() {
   return (
-    <main className="container py-16">
+    <PublicSiteShell>
+    <main className="landing-container py-14 sm:py-16">
       <div className="mx-auto max-w-3xl text-center">
         <h1 className="text-4xl font-semibold tracking-tight text-black">Tarifs et consultation gratuite</h1>
         <p className="mt-4 text-slate-600">
@@ -95,5 +97,6 @@ export default function PricingPage() {
         </ul>
       </section>
     </main>
+    </PublicSiteShell>
   );
 }

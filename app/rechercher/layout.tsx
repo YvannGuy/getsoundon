@@ -1,34 +1,37 @@
 import type { Metadata } from "next";
 
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
-import { buildCanonical } from "@/lib/seo";
+import { LandingFooter } from "@/components/landing/LandingFooter";
+import { LandingHeader } from "@/components/landing/LandingHeader";
 import { siteConfig } from "@/config/site";
+import { buildCanonical } from "@/lib/seo";
+import { getUserOrNull } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: `Rechercher | ${siteConfig.name}`,
-  description: `${siteConfig.description} Recherche de lieux et de disponibilités en Île-de-France.`,
+  description: `${siteConfig.description} Recherche de lieux et disponibilités en Île-de-France.`,
   alternates: { canonical: buildCanonical("/rechercher") },
 };
 
-export default function RechercherLayout({
+export default async function RechercherLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user } = await getUserOrNull();
+
   return (
-    <div className="min-h-screen bg-white">
-      <SiteHeader />
-      <section className="border-b border-slate-100 bg-slate-50/80 py-6">
-        <div className="container max-w-[1400px]">
-          <h1 className="sr-only">Rechercher un lieu pour votre événement sur GetSoundOn</h1>
-          <p className="max-w-3xl text-[15px] leading-relaxed text-slate-700">
-            Trouvez une salle adaptée à votre événement en Île-de-France — filtrez par ville, date et capacité sur GetSoundOn.
+    <div className="font-landing-body min-h-screen bg-gs-beige text-[#222]">
+      <LandingHeader />
+      <section className="border-b border-gs-line bg-white/90 py-6">
+        <div className="landing-container">
+          <h1 className="sr-only">Rechercher un lieu pour votre événement sur {siteConfig.name}</h1>
+          <p className="font-landing-body max-w-3xl text-[15px] leading-relaxed text-[#444]">
+            Trouvez une salle adaptée à votre événement en Île-de-France — filtres par ville, date et capacité.
           </p>
         </div>
       </section>
       {children}
-      <SiteFooter />
+      <LandingFooter isLoggedIn={!!user} />
     </div>
   );
 }

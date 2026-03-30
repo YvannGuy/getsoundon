@@ -8,6 +8,7 @@ import {
   Cable,
   Check,
   ChevronDown,
+  Clock,
   MapPin,
   Plug,
   Star,
@@ -16,6 +17,8 @@ import {
   Zap,
 } from "lucide-react";
 
+import { ListingZoneMapCard } from "@/components/items/listing-zone-map-card";
+import { DEMO_PROVIDER_SLUG } from "@/lib/provider-storefront-demo";
 import { cn } from "@/lib/utils";
 
 export type ListingDetailImage = {
@@ -35,6 +38,14 @@ export type ListingDetailModel = {
   rating_avg: number;
   rating_count: number;
   images: ListingDetailImage[];
+  /** Slug public `/boutique/[slug]` — si absent, repli démo SoundElite. */
+  owner_boutique_slug?: string | null;
+  /** true = « Réserver maintenant » + paiement Stripe ; false = « Envoyer la demande ». */
+  immediate_confirmation?: boolean;
+  /** Zone affichée (ex. Montreuil (93)) — pas d’adresse précise. */
+  zone_label?: string | null;
+  lat?: number | null;
+  lng?: number | null;
 };
 
 const CATEGORY_UI: Record<
@@ -215,6 +226,13 @@ export function ListingDetailPremiumView({
     ? specsForCategory(listing.category, listing.title)
     : SPECS_DJ;
 
+  const instantBook = listing ? listing.immediate_confirmation === true : false;
+  const zoneDisplay =
+    listing?.zone_label?.trim() || listing?.location?.trim() || "Île-de-France";
+  const latNum = listing?.lat != null ? Number(listing.lat) : NaN;
+  const lngNum = listing?.lng != null ? Number(listing.lng) : NaN;
+  const showZoneMap = listing ? Number.isFinite(latNum) && Number.isFinite(lngNum) : false;
+
   return (
     <div className="font-landing-body text-gs-dark">
       {/* Breadcrumb */}
@@ -328,10 +346,17 @@ export function ListingDetailPremiumView({
                   </span>
                   <span className="text-lg font-semibold text-[#666]">€ / jour</span>
                 </div>
-                <p className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-gs-orange">
-                  <Zap className="h-4 w-4" aria-hidden />
-                  Confirmation instantanée
-                </p>
+                {instantBook ? (
+                  <p className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-gs-orange">
+                    <Zap className="h-4 w-4" aria-hidden />
+                    Confirmation immédiate
+                  </p>
+                ) : (
+                  <p className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-[#666]">
+                    <Clock className="h-4 w-4 shrink-0" aria-hidden />
+                    Validation par le prestataire
+                  </p>
+                )}
 
                 <div className="mt-6 grid grid-cols-2 gap-3">
                   <label className="block">
@@ -445,10 +470,16 @@ export function ListingDetailPremiumView({
                   disabled={bookingLoading || !startDate || !endDate}
                   className="font-landing-btn mt-6 flex h-12 w-full items-center justify-center rounded-lg bg-gs-orange text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {bookingLoading ? "Création…" : "Réserver"}
+                  {bookingLoading
+                    ? instantBook
+                      ? "Création…"
+                      : "Envoi…"
+                    : instantBook
+                      ? "Réserver maintenant"
+                      : "Envoyer la demande"}
                 </button>
 
-                {lastBookingId ? (
+                {instantBook && lastBookingId ? (
                   <button
                     type="button"
                     onClick={onPay}
@@ -459,20 +490,22 @@ export function ListingDetailPremiumView({
                   </button>
                 ) : null}
 
-                <Link
-                  href="/auth"
-                  className="font-landing-btn mt-3 flex h-12 w-full items-center justify-center rounded-lg border-2 border-gs-line bg-white text-gs-dark transition hover:bg-[#fafafa]"
-                >
-                  Contacter le prestataire
-                </Link>
-
                 {bookingFeedback ? (
                   <p className="mt-4 text-center text-[13px] text-[#555]">{bookingFeedback}</p>
                 ) : null}
 
                 <p className="mt-4 text-center text-[11px] leading-relaxed text-[#999]">
-                  Paiement sécurisé par GetSoundOn. Annulation gratuite jusqu’à 48h avant le début de la
-                  location.
+                  {instantBook ? (
+                    <>
+                      Paiement sécurisé par GetSoundOn. Annulation gratuite jusqu’à 48h avant le début de la
+                      location.
+                    </>
+                  ) : (
+                    <>
+                      Aucun paiement tant que le prestataire n’a pas accepté ta demande. Annulation gratuite
+                      jusqu’à 48h avant le début de la location.
+                    </>
+                  )}
                 </p>
               </div>
             </aside>
@@ -569,11 +602,41 @@ export function ListingDetailPremiumView({
                     </div>
                   </div>
                   <Link
-                    href="/auth"
+                    href={`/boutique/${listing.owner_boutique_slug?.trim() || DEMO_PROVIDER_SLUG}`}
                     className="font-landing-btn inline-flex h-11 w-full shrink-0 items-center justify-center rounded-lg border-2 border-gs-line bg-white px-6 text-sm text-gs-dark transition hover:bg-[#fafafa] sm:w-auto sm:min-w-[200px]"
                   >
                     Voir le profil
                   </Link>
+                </div>
+              </section>
+
+              {/* Zone approximative (carte) */}
+              <section aria-labelledby="listing-zone-heading">
+                <div className="overflow-hidden rounded-2xl border border-gs-line bg-white shadow-sm">
+                  <div className="border-b border-gs-line px-5 py-4 md:px-6">
+                    <h2 id="listing-zone-heading" className="text-lg font-bold text-black md:text-xl">
+                      Zone d&apos;intervention
+                    </h2>
+                    <p className="mt-2 flex items-start gap-2 text-sm leading-relaxed text-[#666]">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gs-orange" strokeWidth={2} aria-hidden />
+                      <span>
+                        Emplacement indicatif : <strong className="font-semibold text-gs-dark">{zoneDisplay}</strong>.
+                        L&apos;adresse précise est communiquée après validation de la location.
+                      </span>
+                    </p>
+                  </div>
+                  {showZoneMap && listing ? (
+                    <ListingZoneMapCard
+                      lat={latNum}
+                      lng={lngNum}
+                      listingId={listing.id}
+                      zoneLabel={zoneDisplay}
+                    />
+                  ) : (
+                    <div className="flex min-h-[180px] items-center justify-center bg-gs-beige/40 px-4 py-10 text-center text-sm text-[#888]">
+                      Zone géographique non disponible pour cette annonce.
+                    </div>
+                  )}
                 </div>
               </section>
 

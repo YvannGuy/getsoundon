@@ -2,8 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { PublicSiteShell } from "@/components/landing/public-site-shell";
 import { SallePhotosGallery } from "@/components/salles/salle-photos-gallery";
 import { getSalleBySlug } from "@/lib/salles";
 import { siteConfig } from "@/config/site";
@@ -35,10 +34,8 @@ export default async function SallePhotosPage({
   const imgs = salle.images?.length ? salle.images : ["/img.png"];
 
   return (
-    <div className="min-h-screen bg-white">
-      <SiteHeader />
-
-      <main className="container max-w-[1120px] py-8">
+    <PublicSiteShell>
+      <main className="landing-container max-w-[1120px] py-8">
         <Link
           href={`/salles/${slug}`}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-black"
@@ -55,8 +52,6 @@ export default async function SallePhotosPage({
           <SallePhotosGallery images={imgs} name={salle.name} />
         </div>
       </main>
-
-      <SiteFooter />
-    </div>
+    </PublicSiteShell>
   );
 }

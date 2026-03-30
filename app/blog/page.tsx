@@ -14,27 +14,26 @@ export const metadata: Metadata = {
   alternates: { canonical: buildCanonical("/blog") },
 };
 
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { PublicSiteShell } from "@/components/landing/public-site-shell";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function BlogPage() {
   return (
-    <div className="min-h-screen bg-[#f3f6fa]">
-      <SiteHeader />
-      <main className="container max-w-[1120px] py-12">
+    <PublicSiteShell>
+      <main className="landing-container max-w-[1120px] py-12 sm:py-14">
         <h1 className="text-[36px] font-bold text-black">Blog</h1>
-        <p className="mt-2 text-[16px] text-slate-600">
-          Conseils et guides pour organiser vos événements cultuels
+        <p className="font-landing-body mt-2 text-base text-[#555]">
+          Conseils pour vos événements : lieux, matériel et bonnes pratiques
         </p>
-        <div className="mt-6 max-w-3xl text-[15px] leading-relaxed text-slate-700">
+        <div className="font-landing-body mt-6 max-w-3xl text-[15px] leading-relaxed text-[#444]">
           <p>
-            Vous organisez un culte, un baptême, une conférence ou une célébration ? Ce blog rassemble des articles pratiques
-            pour vous aider à choisir une salle, comprendre les normes (ERP, sécurité, assurance), comparer les options de
-            réservation et bien préparer votre événement. Que vous soyez responsable d&apos;une communauté, coordinateur ou
-            bénévole, vous y trouverez des check-lists, des repères juridiques et des bonnes pratiques pour réserver en toute
-            sérénité en Île-de-France. Pour des questions plus précises, consultez aussi notre{" "}
-            <Link href="/centre-aide" className="font-medium text-gs-orange hover:underline">
+            Articles autour de l&apos;organisation d&apos;événements en Île-de-France : choisir une salle ou un équipement,
+            sécurité, assurance, réservation. Pour le matériel sono, DJ et lumière, explorez aussi le{" "}
+            <Link href="/catalogue" className="font-semibold text-gs-orange hover:underline">
+              catalogue
+            </Link>{" "}
+            et le{" "}
+            <Link href="/centre-aide" className="font-semibold text-gs-orange hover:underline">
               centre d&apos;aide
             </Link>
             .
@@ -73,7 +72,6 @@ export default function BlogPage() {
           ← Retour à l&apos;accueil
         </Link>
       </main>
-      <SiteFooter />
-    </div>
+    </PublicSiteShell>
   );
 }

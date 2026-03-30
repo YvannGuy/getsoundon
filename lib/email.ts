@@ -608,6 +608,42 @@ export async function sendSupportContactEmail(params: {
   return { success: !error, error: error?.message };
 }
 
+export async function sendHowItWorksContactEmail(params: {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  message: string;
+}) {
+  if (!process.env.RESEND_API_KEY) return { success: false };
+
+  const safeFirst = escapeHtml(params.firstName.trim());
+  const safeLast = escapeHtml(params.lastName.trim());
+  const safePhone = escapeHtml(params.phone.trim());
+  const safeEmail = escapeHtml(params.email.trim());
+  const safeMessage = escapeHtml(params.message.trim()).replace(/\n/g, "<br/>");
+
+  const { error } = await resend.emails.send({
+    from,
+    to: contactEmail,
+    replyTo: params.email.trim(),
+    subject: `[Comment ça marche] ${params.firstName.trim()} ${params.lastName.trim()}`,
+    html: renderEmailLayout({
+      title: "Message depuis la page Comment ça marche",
+      intro: "Un visiteur a envoyé un message via le formulaire de contact.",
+      sections: [
+        `<p><strong>Prénom:</strong> ${safeFirst}</p>`,
+        `<p><strong>Nom:</strong> ${safeLast}</p>`,
+        `<p><strong>Téléphone:</strong> ${safePhone}</p>`,
+        `<p><strong>Email:</strong> ${safeEmail}</p>`,
+        `<p><strong>Message:</strong><br/>${safeMessage}</p>`,
+      ],
+    }),
+  });
+
+  return { success: !error, error: error?.message };
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")

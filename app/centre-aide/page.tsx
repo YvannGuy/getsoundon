@@ -1,37 +1,36 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PublicSiteShell } from "@/components/landing/public-site-shell";
+import { Card, CardContent } from "@/components/ui/card";
 import { siteConfig } from "@/config/site";
 import { buildCanonical } from "@/lib/seo";
+import { HelpCircle, Package, Search, Info } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Centre d'aide",
   description:
-    "Comment pouvons-nous vous aider ? Trouvez des réponses sur la recherche de salles, la mise en ligne de votre lieu et les questions générales.",
+    "Questions sur la location de matériel événementiel (sono, DJ, lumière) sur GetSoundOn : louer, proposer une annonce, réservations et compte.",
   alternates: { canonical: buildCanonical("/centre-aide") },
 };
-import { SiteHeader } from "@/components/layout/site-header";
-import { SiteFooter } from "@/components/layout/site-footer";
-import { Card, CardContent } from "@/components/ui/card";
-import { HelpCircle, Building2, Search, Info } from "lucide-react";
 
 const CATEGORIES = [
   {
     href: "/centre-aide/organisateur",
-    title: "Chercher une salle",
-    desc: "Tout savoir sur la recherche et la réservation d'une salle sur la plateforme.",
+    title: "Louer du matériel",
+    desc: "Catalogue, recherche, demandes, options (livraison, installation) et paiement sécurisé.",
     icon: Search,
   },
   {
     href: "/centre-aide/proprietaire",
-    title: "Propriétaire",
-    desc: "Découvrez comment proposer votre salle et recevoir des demandes ciblées.",
-    icon: Building2,
+    title: "Prestataire",
+    desc: "Publier vos annonces, recevoir des demandes, messagerie, réservations et Stripe Connect.",
+    icon: Package,
   },
   {
     href: "/centre-aide/general",
     title: "Général",
-    desc: "Questions fréquentes et informations générales sur {site}.",
+    desc: `Questions fréquentes et informations sur ${siteConfig.name}.`,
     icon: Info,
   },
 ];
@@ -46,30 +45,26 @@ export default async function CentreAidePage({
   const error = typeof params.error === "string" ? params.error : null;
 
   return (
-    <div className="min-h-screen bg-[#f3f6fa]">
-      <SiteHeader />
-      <main className="container max-w-[900px] py-16 px-4">
-        <h1 className="text-[32px] font-bold tracking-tight text-black sm:text-[38px]">
-          Comment pouvons-nous vous aider ?
-        </h1>
-        <p className="mt-4 max-w-[640px] text-[16px] leading-relaxed text-slate-600">
-          Chez {siteConfig.name}, nous sommes là pour rendre votre expérience la plus fluide possible. Que vous ayez
-          des questions, besoin d&apos;assistance ou simplement envie de découvrir notre plateforme, nous sommes
-          prêts à vous accompagner.
+    <PublicSiteShell>
+      <main className="landing-container max-w-[900px] py-12 sm:py-16 md:py-20">
+        <h1 className="font-landing-section-title text-gs-dark">Comment pouvons-nous vous aider ?</h1>
+        <p className="font-landing-body mt-4 max-w-[640px] text-base leading-relaxed text-[#555] sm:text-lg">
+          {siteConfig.name} facilite la location de matériel événementiel entre particuliers et prestataires. Retrouvez
+          ci-dessous les réponses par thème ou écrivez-nous via le formulaire.
         </p>
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-3">
+        <div className="mt-10 grid gap-4 sm:grid-cols-3 sm:gap-5">
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
             return (
               <Link key={cat.href} href={cat.href}>
-                <Card className="h-full rounded-xl border-slate-200 bg-white transition hover:border-slate-300 hover:shadow-md">
+                <Card className="h-full rounded-xl border-gs-line bg-white shadow-sm transition hover:border-gs-orange/30 hover:shadow-md">
                   <CardContent className="flex flex-col p-6">
                     <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gs-orange/10">
-                      <Icon className="h-5 w-5 text-gs-orange" />
+                      <Icon className="h-5 w-5 text-gs-orange" strokeWidth={2} />
                     </div>
-                    <h2 className="mt-4 font-semibold text-black">{cat.title}</h2>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-600">{cat.desc.replace("{site}", siteConfig.name)}</p>
+                    <h2 className="font-landing-heading mt-4 text-lg font-bold text-gs-dark">{cat.title}</h2>
+                    <p className="font-landing-body mt-2 text-sm leading-relaxed text-[#555]">{cat.desc}</p>
                   </CardContent>
                 </Card>
               </Link>
@@ -77,25 +72,28 @@ export default async function CentreAidePage({
           })}
         </div>
 
-        <div className="mt-16 rounded-xl border border-slate-200 bg-white p-8">
+        <div className="mt-14 rounded-2xl border border-gs-line bg-white p-6 shadow-sm sm:p-8">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gs-orange/10">
-              <HelpCircle className="h-6 w-6 text-gs-orange" />
+              <HelpCircle className="h-6 w-6 text-gs-orange" strokeWidth={2} />
             </div>
-            <h2 className="text-xl font-semibold text-black">Nous contacter</h2>
+            <h2 className="font-landing-heading text-xl font-bold text-gs-dark">Nous contacter</h2>
           </div>
-          <p className="mt-4 text-[15px] leading-relaxed text-slate-600">
-            Sélectionnez le type de demande et envoyez votre message. Notre équipe support vous répond à
-            <span className="font-medium text-gs-orange"> contact@getsoundon.com</span>.
+          <p className="font-landing-body mt-4 text-[15px] leading-relaxed text-[#555]">
+            Choisissez le type de demande et décrivez votre besoin. Notre équipe répond sur{" "}
+            <a href="mailto:contact@getsoundon.com" className="font-semibold text-gs-orange hover:underline">
+              contact@getsoundon.com
+            </a>
+            .
           </p>
 
           {sent && (
-            <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
               Votre demande a bien été envoyée. Nous revenons vers vous rapidement.
             </p>
           )}
           {error === "rate_limit" && (
-            <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
               Trop de requêtes. Veuillez patienter avant de réessayer.
             </p>
           )}
@@ -108,39 +106,39 @@ export default async function CentreAidePage({
           <form action="/api/contact/support" method="POST" className="mt-6 space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="space-y-1">
-                <span className="text-sm font-medium text-slate-700">Nom</span>
+                <span className="text-xs font-bold uppercase tracking-wide text-[#888]">Nom</span>
                 <input
                   name="name"
                   required
-                  className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none transition focus:border-gs-orange"
+                  className="h-11 w-full rounded-lg border border-gs-line bg-white px-3 text-sm text-gs-dark outline-none transition focus:border-gs-orange focus:ring-2 focus:ring-gs-orange/20"
                   placeholder="Votre nom"
                 />
               </label>
               <label className="space-y-1">
-                <span className="text-sm font-medium text-slate-700">Email</span>
+                <span className="text-xs font-bold uppercase tracking-wide text-[#888]">Email</span>
                 <input
                   name="email"
                   type="email"
                   required
-                  className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none transition focus:border-gs-orange"
+                  className="h-11 w-full rounded-lg border border-gs-line bg-white px-3 text-sm text-gs-dark outline-none transition focus:border-gs-orange focus:ring-2 focus:ring-gs-orange/20"
                   placeholder="vous@email.com"
                 />
               </label>
             </div>
 
             <label className="space-y-1">
-              <span className="text-sm font-medium text-slate-700">Type de demande</span>
+              <span className="text-xs font-bold uppercase tracking-wide text-[#888]">Type de demande</span>
               <select
                 name="helpType"
                 required
                 defaultValue=""
-                className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-gs-orange"
+                className="h-11 w-full rounded-lg border border-gs-line bg-white px-3 text-sm text-gs-dark outline-none transition focus:border-gs-orange focus:ring-2 focus:ring-gs-orange/20"
               >
                 <option value="" disabled>
                   Sélectionnez votre demande
                 </option>
-                <option>Recherche de salle</option>
-                <option>Publier ma salle</option>
+                <option>Louer du matériel</option>
+                <option>Proposer mon matériel</option>
                 <option>Réservation et paiement</option>
                 <option>Compte et connexion</option>
                 <option>Autre demande</option>
@@ -148,19 +146,19 @@ export default async function CentreAidePage({
             </label>
 
             <label className="space-y-1">
-              <span className="text-sm font-medium text-slate-700">Message</span>
+              <span className="text-xs font-bold uppercase tracking-wide text-[#888]">Message</span>
               <textarea
                 name="message"
                 required
                 rows={5}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-gs-orange"
-                placeholder="Décrivez votre besoin pour que nous puissions vous aider rapidement."
+                className="w-full rounded-lg border border-gs-line bg-white px-3 py-2 text-sm text-gs-dark outline-none transition focus:border-gs-orange focus:ring-2 focus:ring-gs-orange/20"
+                placeholder="Décrivez votre besoin (matériel, dates, zone…)."
               />
             </label>
 
             <button
               type="submit"
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-gs-orange px-5 text-sm font-semibold text-white transition hover:brightness-95"
+              className="font-landing-btn inline-flex h-11 w-full items-center justify-center rounded-lg bg-gs-orange px-5 text-white transition hover:brightness-105 sm:w-auto"
             >
               Envoyer ma demande
             </button>
@@ -169,12 +167,11 @@ export default async function CentreAidePage({
 
         <Link
           href="/"
-          className="mt-8 inline-flex items-center gap-2 text-[14px] font-medium text-slate-600 hover:text-black"
+          className="font-landing-nav mt-10 inline-flex items-center gap-2 text-sm font-medium text-[#666] hover:text-gs-dark hover:underline"
         >
           ← Retour à l&apos;accueil
         </Link>
       </main>
-      <SiteFooter />
-    </div>
+    </PublicSiteShell>
   );
 }

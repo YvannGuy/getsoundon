@@ -4,8 +4,8 @@ import { sendSupportContactEmail } from "@/lib/email";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const HELP_TYPES = new Set([
-  "Recherche de salle",
-  "Publier ma salle",
+  "Louer du matériel",
+  "Proposer mon matériel",
   "Réservation et paiement",
   "Compte et connexion",
   "Autre demande",

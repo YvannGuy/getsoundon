@@ -4,6 +4,7 @@
  */
 
 import { CATALOGUE_SEGMENTS, isCatalogueSegmentSlug } from "@/lib/catalogue-segments";
+import { DEMO_PROVIDER_SLUG } from "@/lib/provider-storefront-demo";
 import {
   listingHaystack,
   locationMatchesRow,
@@ -27,6 +28,10 @@ export type MockListingRow = {
   rating_count: number;
   created_at: string;
   image_url: string;
+  /** Si true : bouton « Réserver maintenant » + paiement ; sinon « Envoyer la demande ». */
+  immediate_confirmation?: boolean;
+  /** Libellé public type « Montreuil (93) » (sans adresse précise). */
+  zone_label?: string | null;
 };
 
 /** Une annonce par « famille » + quelques variantes pour le rendu liste / cartes. */
@@ -34,6 +39,8 @@ const MOCK_ROWS: MockListingRow[] = [
   {
     id: "a1000000-0000-4000-8000-000000000001",
     owner_id: OWNER,
+    immediate_confirmation: false,
+    zone_label: "Paris (75) — secteur 11e",
     title: "Enceintes actives JBL EON 715",
     description:
       "Paire d’enceintes amplifiées 15 pouces, idéale soirées et petites salles. Son clair, caisson intégré possible en option.",
@@ -68,6 +75,8 @@ const MOCK_ROWS: MockListingRow[] = [
   {
     id: "a1000000-0000-4000-8000-000000000003",
     owner_id: OWNER,
+    immediate_confirmation: false,
+    zone_label: "Montreuil (93)",
     title: "Microphone Shure SM58 + pied",
     description:
       "Micro dynamique filaire, standard scène et discours. Câble XLR fourni. Idéal voix et micro chant léger.",
@@ -136,6 +145,8 @@ const MOCK_ROWS: MockListingRow[] = [
   {
     id: "a1000000-0000-4000-8000-000000000007",
     owner_id: OWNER,
+    immediate_confirmation: true,
+    zone_label: "Paris (75) — secteur 18e",
     title: "Pioneer XDJ-RX3",
     description:
       "Système DJ tout-en-un haute performance, idéal pour les soirées privées, les mariages et les sets professionnels exigeants. Une flexibilité totale sans ordinateur.",
@@ -305,6 +316,8 @@ export function mockListingToDetail(row: MockListingRow) {
   return {
     ...rest,
     is_active: true,
+    owner_boutique_slug: DEMO_PROVIDER_SLUG,
+    immediate_confirmation: row.immediate_confirmation ?? false,
     images: [
       {
         id: `${row.id}-cover`,

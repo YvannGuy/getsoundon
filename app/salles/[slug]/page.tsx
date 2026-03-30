@@ -21,8 +21,8 @@ import {
 
 import { UnlockAccessBloc } from "@/components/salles/unlock-access-bloc";
 import { Button } from "@/components/ui/button";
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { LandingFooter } from "@/components/landing/LandingFooter";
+import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LocationAvailabilityCalendar } from "@/components/salles/location-availability-calendar";
 import { SalleActionsBar } from "@/components/salles/salle-actions-bar";
 import { SalleGallery } from "@/components/salles/salle-gallery";
@@ -183,14 +183,14 @@ export default async function SalleDetailPage({
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <SiteHeader />
+    <div className="font-landing-body min-h-screen bg-gs-beige text-[#222]">
+      <LandingHeader />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(salleStructuredData) }}
       />
 
-      <main className="container max-w-[1120px] py-8 pb-28 lg:pb-8">
+      <main className="landing-container max-w-[1120px] py-8 pb-28 lg:pb-8">
         <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
           <div>
             <SalleGallery images={salle.images} name={salle.name} slug={slug} />
@@ -544,7 +544,7 @@ export default async function SalleDetailPage({
         </div>
       )}
 
-      <SiteFooter />
+      <LandingFooter isLoggedIn={isLoggedIn} />
     </div>
   );
 }

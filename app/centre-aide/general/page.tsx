@@ -1,85 +1,80 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PublicSiteShell } from "@/components/landing/public-site-shell";
 import { siteConfig } from "@/config/site";
 import { buildCanonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Questions générales",
-  description: "Questions frequentes et informations generales sur GetSoundOn.",
+  description: `Questions fréquentes sur la location de matériel événementiel sur ${siteConfig.name}.`,
   alternates: { canonical: buildCanonical("/centre-aide/general") },
 };
-import { SiteHeader } from "@/components/layout/site-header";
-import { SiteFooter } from "@/components/layout/site-footer";
 
 const FAQ_GENERAL = [
   {
     q: "Qu'est-ce que GetSoundOn ?",
-    a: `${siteConfig.name} est la plateforme pour louer ou proposer du matériel événementiel (sono, DJ, lumières) et, selon les offres, trouver des lieux pour vos événements.`,
+    a: `${siteConfig.name} est une place de marché pour louer ou proposer du matériel événementiel : sono, DJ, lumière, vidéo, micros et services associés (livraison, installation, technicien), en Île-de-France.`,
   },
   {
-    q: "Quels types d'événements sont accueillis ?",
-    a: "Concerts, conférences, réceptions, cultes, baptêmes et tout type d'événement selon les annonces disponibles. Vous précisez le type lors de votre recherche ou dans votre annonce.",
+    q: "Qui peut utiliser la plateforme ?",
+    a: "Les organisateurs d’événements (particuliers ou pros) pour trouver du matériel, et les loueurs / prestataires pour publier des annonces et gérer demandes et réservations.",
   },
   {
-    q: "La consultation des annonces est-elle payante ?",
-    a: "Non, consulter les annonces est gratuit. Les frais sont appliqués uniquement lorsqu'une réservation est payée.",
+    q: "La consultation du catalogue est-elle payante ?",
+    a: "Non. Parcourir les annonces est gratuit. Des frais peuvent s’appliquer uniquement lors d’une réservation ou d’un paiement validé, selon les conditions affichées.",
   },
   {
-    q: "Pourquoi l'Île-de-France uniquement ?",
-    a: "Nous nous concentrons sur l'Île-de-France pour offrir un service localisé et de qualité. L'extension à d'autres régions est envisagée.",
+    q: "Pourquoi l’Île-de-France en priorité ?",
+    a: "Nous concentrons le service sur l’Île-de-France pour la logistique et la qualité des mises en relation. L’extension à d’autres zones dépendra de l’offre et des partenaires.",
   },
   {
-    q: "Comment fonctionne la mise en relation ?",
-    a: "L'organisateur envoie une demande au propriétaire. La confirmation finale et les détails se font directement entre les deux parties via la messagerie.",
+    q: "Comment fonctionne une réservation ?",
+    a: "Selon l’annonce : confirmation immédiate ou demande soumise au prestataire. Après accord, le paiement peut passer par la plateforme (Stripe) lorsque c’est proposé. Les détails (dates, caution, options) figurent sur la fiche matériel.",
   },
   {
     q: "Les annonces sont-elles vérifiées ?",
-    a: "Oui. Chaque annonce est contrôlée avant publication pour garantir des informations fiables : capacité, équipements, contraintes, photos.",
+    a: "Les annonces peuvent être contrôlées avant ou après publication pour limiter les contenus incomplets ou trompeurs et garder un catalogue fiable.",
   },
   {
     q: "Comment créer un compte ?",
-    a: "Cliquez sur « Connexion » ou « Inscription » et choisissez « Je cherche une salle » ou « Je possède une salle ». Suivez les étapes pour créer votre compte.",
+    a: "Utilisez « Inscription » ou « Connexion » dans l’en-tête. Vous pourrez ensuite accéder au catalogue, à la messagerie et, pour les prestataires, publier du matériel et activer les paiements (Stripe Connect) si besoin.",
   },
   {
     q: "Comment contacter le support ?",
-    a: "Ecrivez a contact@getsoundon.com. Nous repondons generalement sous 24 a 48 heures ouvrees.",
+    a: "Écrivez à contact@getsoundon.com ou utilisez le formulaire du centre d’aide. Réponse en général sous 24 à 48 h ouvrées.",
   },
   {
-    q: "Où trouver les questions fréquentes ?",
-    a: "La page d'accueil dispose d'une section FAQ en bas. Le centre d'aide propose aussi des réponses par thème : Chercher une salle, Propriétaire, Général.",
+    q: "Où en savoir plus sur le fonctionnement ?",
+    a: "Consultez la page « Comment ça marche » pour le parcours locataires et prestataires, et la FAQ en bas de page d’accueil pour des réponses rapides.",
   },
   {
-    q: "Puis-je utiliser la plateforme sans créer de compte ?",
-    a: "Vous pouvez consulter les annonces sans compte. Pour envoyer des demandes ou publier une salle, l'inscription est nécessaire.",
+    q: "Puis-je utiliser le site sans compte ?",
+    a: "Vous pouvez consulter le catalogue. Pour envoyer une demande, réserver ou publier une annonce, un compte est nécessaire.",
   },
   {
-    q: "Comment s'abonner à la newsletter ?",
-    a: "Pour l'instant, inscrivez-vous sur la plateforme ou contactez-nous a contact@getsoundon.com pour etre tenu au courant des actualites.",
-  },
-  {
-    q: "La plateforme est-elle sécurisée ?",
-    a: "Oui. Paiements sécurisés via Stripe, données protégées. Nous nous engageons à protéger vos informations personnelles.",
+    q: "Les paiements sont-ils sécurisés ?",
+    a: "Lorsque le paiement en ligne est proposé, il est traité via des prestataires reconnus (ex. Stripe). Ne communiquez jamais vos codes carte hors du parcours officiel du site.",
   },
   {
     q: "Comment signaler un problème ?",
-    a: "Contactez-nous a contact@getsoundon.com en decrivant le probleme. Nous traiterons votre signalement dans les meilleurs delais.",
+    a: "Contactez contact@getsoundon.com en décrivant la situation (annonce, réservation, utilisateur). Nous traitons les signalements dans les meilleurs délais.",
   },
   {
-    q: "Où sont les mentions légales et CGU ?",
-    a: "Les liens vers les mentions légales, CGU et politique de confidentialité figurent dans le pied de page du site.",
+    q: "Où sont les mentions légales et la politique de confidentialité ?",
+    a: "Liens en pied de page : mentions légales, CGU, CGV le cas échéant, confidentialité et cookies.",
   },
   {
-    q: "Comment nous rejoindre ?",
-    a: "Pour toute question partenariat, collaboration ou presse : contact@getsoundon.com.",
+    q: "Partenariats ou presse ?",
+    a: "Écrivez à contact@getsoundon.com en indiquant l’objet de votre demande.",
   },
 ];
 
 function FaqItem({ question, answer }: { question: string; answer: string }) {
   return (
     <div className="mb-8">
-      <h3 className="font-semibold text-black">{question}</h3>
-      <p className="mt-2 text-[15px] leading-relaxed text-slate-600">{answer}</p>
+      <h3 className="font-landing-heading text-base font-bold text-gs-dark">{question}</h3>
+      <p className="font-landing-body mt-2 text-[15px] leading-relaxed text-[#555]">{answer}</p>
     </div>
   );
 }
@@ -90,19 +85,20 @@ export default function CentreAideGeneralPage() {
   const right = FAQ_GENERAL.slice(half);
 
   return (
-    <div className="min-h-screen bg-[#f3f6fa]">
-      <SiteHeader />
-      <main className="container max-w-[1000px] py-16 px-4">
-        <Link href="/centre-aide" className="text-[14px] font-medium text-slate-600 hover:text-black">
+    <PublicSiteShell>
+      <main className="landing-container max-w-[1000px] py-12 sm:py-16 md:py-20">
+        <Link
+          href="/centre-aide"
+          className="font-landing-nav text-sm font-medium text-[#666] hover:text-gs-dark hover:underline"
+        >
           ← Retour au centre d&apos;aide
         </Link>
-        <h1 className="mt-6 text-[32px] font-bold tracking-tight text-black">Général</h1>
-        <p className="mt-4 max-w-[640px] text-[16px] leading-relaxed text-slate-600">
-          Bienvenue dans le centre d&apos;aide {siteConfig.name}. Retrouvez ici les réponses aux questions les plus
-          fréquentes.
+        <h1 className="font-landing-section-title mt-6 text-gs-dark">Général</h1>
+        <p className="font-landing-body mt-4 max-w-[640px] text-base leading-relaxed text-[#555]">
+          Réponses aux questions les plus fréquentes sur {siteConfig.name} et la location de matériel événementiel.
         </p>
 
-        <div className="mt-12 grid gap-x-12 gap-y-4 md:grid-cols-2">
+        <div className="mt-10 grid gap-x-10 gap-y-2 md:grid-cols-2 md:mt-12">
           <div>
             {left.map((item) => (
               <FaqItem key={item.q} question={item.q} answer={item.a} />
@@ -115,15 +111,20 @@ export default function CentreAideGeneralPage() {
           </div>
         </div>
 
-        <Link href="/#faq" className="mt-6 inline-block text-[14px] font-medium text-gs-orange hover:underline">
-          Voir la FAQ sur la page d&apos;accueil →
+        <Link
+          href="/comment-ca-marche"
+          className="font-landing-nav mt-6 inline-block text-sm font-semibold text-gs-orange hover:underline"
+        >
+          Voir « Comment ça marche » →
         </Link>
 
-        <Link href="/centre-aide" className="mt-8 inline-block text-[14px] font-medium text-slate-600 hover:text-black">
+        <Link
+          href="/centre-aide"
+          className="font-landing-nav mt-8 block text-sm font-medium text-[#666] hover:text-gs-dark hover:underline"
+        >
           ← Retour au centre d&apos;aide
         </Link>
       </main>
-      <SiteFooter />
-    </div>
+    </PublicSiteShell>
   );
 }

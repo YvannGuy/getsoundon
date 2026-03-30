@@ -105,7 +105,9 @@ export default function ItemDetailPage() {
       setLastBookingId(bookingId);
       setBookingFeedback(
         bookingId
-          ? "Réservation créée. Tu peux payer en ligne ou ouvrir la messagerie."
+          ? listing.immediate_confirmation === true
+            ? "Réservation créée. Tu peux payer en ligne ou ouvrir la messagerie."
+            : "Demande envoyée au prestataire. Tu recevras une réponse sous peu."
           : "Réservation créée."
       );
     } catch (err) {

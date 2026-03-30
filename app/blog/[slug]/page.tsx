@@ -7,8 +7,7 @@ import type { Metadata } from "next";
 import type { Graph, BlogPosting, BreadcrumbList, Organization, ImageObject } from "schema-dts";
 import { AddSalleLink } from "@/components/links/add-salle-link";
 import { BLOG_POSTS, getBlogPost } from "@/lib/blog-posts";
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { PublicSiteShell } from "@/components/landing/public-site-shell";
 import { buildCanonical, defaultMetadata } from "@/lib/seo";
 import { siteConfig } from "@/config/site";
 
@@ -101,13 +100,12 @@ export default async function BlogPostPage({ params }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <SiteHeader />
+    <PublicSiteShell>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogStructuredData) }}
       />
-      <main className="container max-w-[720px] py-8 sm:py-12">
+      <main className="landing-container max-w-[720px] py-8 sm:py-12">
         <Link href="/blog" className="mb-8 inline-flex items-center gap-1 text-[14px] font-medium text-slate-500 hover:text-black hover:underline">
           ← Retour au blog
         </Link>
@@ -137,7 +135,6 @@ export default async function BlogPostPage({ params }: Props) {
           </div>
         </article>
       </main>
-      <SiteFooter />
-    </div>
+    </PublicSiteShell>
   );
 }

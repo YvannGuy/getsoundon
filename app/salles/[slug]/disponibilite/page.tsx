@@ -4,8 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, Users, Euro } from "lucide-react";
 
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { PublicSiteShell } from "@/components/landing/public-site-shell";
 import { buildCanonical } from "@/lib/seo";
 import { getSalleBySlug } from "@/lib/salles";
 import { formatSalleTarifs } from "@/lib/types/salle";
@@ -39,10 +38,8 @@ export default async function DisponibilitePage({
   if (!salle) notFound();
 
   return (
-    <div className="min-h-screen bg-white">
-      <SiteHeader />
-
-      <main className="container max-w-[1120px] py-8">
+    <PublicSiteShell>
+      <main className="landing-container max-w-[1120px] py-8">
         <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
           {/* Colonne gauche : infos salle */}
           <div className="space-y-4">
@@ -79,8 +76,6 @@ export default async function DisponibilitePage({
           </div>
         </div>
       </main>
-
-      <SiteFooter />
-    </div>
+    </PublicSiteShell>
   );
 }

@@ -10,7 +10,7 @@ import { siteConfig } from "@/config/site";
 
 const centerNavItems = [
   { href: "/catalogue", label: "Catalogue" },
-  { href: "/#faq", label: "FAQ" },
+  { href: "/comment-ca-marche", label: "Comment ça marche" },
   { href: "/auth?tab=signup&userType=owner", label: "Louer mon matériel" },
 ] as const;
 

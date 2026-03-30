@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
-import { SiteHeader } from "@/components/layout/site-header";
-import { SiteFooter } from "@/components/layout/site-footer";
+import { LandingFooter } from "@/components/landing/LandingFooter";
+import { LandingHeader } from "@/components/landing/LandingHeader";
 import { Button } from "@/components/ui/button";
 import { ConciergeForm, type ConciergeInitialValues } from "@/components/concierge/concierge-form";
 import { buildCanonical } from "@/lib/seo";
@@ -53,9 +53,9 @@ export default async function ConciergeriePage({
   const source = hasSearchParams ? "search_zero_results" : "homepage";
 
   return (
-    <div className="min-h-screen bg-[#f3f6fa]">
-      <SiteHeader />
-      <main className="container max-w-[800px] px-4 py-12">
+    <div className="font-landing-body min-h-screen bg-gs-beige text-[#222]">
+      <LandingHeader />
+      <main className="landing-container max-w-[800px] px-4 py-12">
         <section className="text-center">
           <h1 className="text-[32px] font-bold leading-tight text-black sm:text-[40px]">
             On vous aide à trouver la bonne salle, plus vite.
@@ -107,7 +107,7 @@ export default async function ConciergeriePage({
           </Link>
         </p>
       </main>
-      <SiteFooter />
+      <LandingFooter isLoggedIn={!!user} />
     </div>
   );
 }

@@ -16,12 +16,20 @@ export function LandingFinalCta() {
               <h2 className="font-landing-section-title text-gs-dark">
                 Ton prochain événement commence sur GetSoundOn
               </h2>
-              <Link
-                href="/auth?tab=signup"
-                className="font-landing-btn mt-8 inline-flex rounded-md bg-gs-orange px-8 py-3.5 text-white transition hover:brightness-105"
-              >
-                Créer un compte
-              </Link>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <Link
+                  href="/auth?tab=signup"
+                  className="font-landing-btn inline-flex justify-center rounded-md bg-gs-orange px-8 py-3.5 text-white transition hover:brightness-105"
+                >
+                  Créer un compte
+                </Link>
+                <Link
+                  href="/auth?tab=signup&userType=owner"
+                  className="font-landing-btn inline-flex justify-center rounded-md border-2 border-gs-dark/20 bg-white px-8 py-3.5 text-gs-dark transition hover:bg-white/90"
+                >
+                  Louer mon matériel
+                </Link>
+              </div>
             </div>
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-lg">
               <Image src={CTA_IMG} alt="" fill className="object-cover" sizes="(max-width:768px) 100vw, 50vw" />

@@ -1,5 +1,7 @@
-import { AddSalleLink } from "@/components/links/add-salle-link";
 import Link from "next/link";
+
+import { PublicSiteShell } from "@/components/landing/public-site-shell";
+import { AddSalleLink } from "@/components/links/add-salle-link";
 
 export const metadata = {
   title: "Plan du site | GetSoundOn",
@@ -8,7 +10,8 @@ export const metadata = {
 
 export default function PlanDuSitePage() {
   return (
-    <main className="container max-w-[960px] py-12">
+    <PublicSiteShell>
+    <main className="landing-container max-w-[960px] py-12 sm:py-14">
       <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Plan du site</h1>
       <p className="mt-2 max-w-[640px] text-sm text-slate-600">
         Retrouvez ici les principales pages publiques, l&apos;espace propriétaire, l&apos;espace organisateur et les sections d&apos;aide.
@@ -181,6 +184,7 @@ export default function PlanDuSitePage() {
         </div>
       </section>
     </main>
+    </PublicSiteShell>
   );
 }
 

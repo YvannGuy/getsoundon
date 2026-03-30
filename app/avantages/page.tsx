@@ -6,8 +6,7 @@ import { CheckCircle2, ChevronRight } from "lucide-react";
 import { AddSalleLink } from "@/components/links/add-salle-link";
 import { buildCanonical } from "@/lib/seo";
 import { siteConfig } from "@/config/site";
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { PublicSiteShell } from "@/components/landing/public-site-shell";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -82,13 +81,11 @@ const FAQ_ITEMS = [
   { q: "Comment contacter le support ?", a: "Notre equipe est joignable par email a contact@getsoundon.com. Nous repondons sous 48h ouvrees." },
 ];
 
-export default function AvantagesPage() {
+export default async function AvantagesPage() {
   return (
-    <div className="min-h-screen bg-white">
-      <SiteHeader />
-
-      <section className="border-b border-slate-200 bg-[#f6f7fb] py-14">
-        <div className="container max-w-[1120px]">
+    <PublicSiteShell>
+      <section className="border-b border-gs-line bg-white py-14">
+        <div className="landing-container max-w-[1120px]">
           <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
             <div>
               <h1 className="text-[32px] font-bold tracking-tight text-black sm:text-[40px] lg:text-[48px]">
@@ -318,7 +315,6 @@ export default function AvantagesPage() {
         </div>
       </section>
 
-      <SiteFooter />
-    </div>
+    </PublicSiteShell>
   );
 }

@@ -197,13 +197,13 @@ export function LandingInfoStrip() {
           </p>
           </div>
           <Link
-            href="/catalogue"
+            href="/comment-ca-marche"
             className="group flex flex-col justify-between rounded-2xl bg-gs-orange p-6 text-white shadow-md transition hover:brightness-105 hover:shadow-lg"
           >
             <div>
               <h3 className="font-landing-heading text-lg font-bold">Je découvre GetSoundOn</h3>
               <p className="font-landing-body mt-2 text-sm text-white/95">
-                Parcourir le catalogue et trouver ton setup.
+                Découvre comment ça marche : louer du matériel ou le mettre en ligne, en quelques étapes.
               </p>
             </div>
             <ArrowRight className="mt-6 h-6 w-6 self-end transition group-hover:translate-x-1" />
