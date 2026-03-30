@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EquipmentIdentityFields } from "@/components/onboarding/EquipmentIdentityFields";
+import { CompanyAutocompleteField } from "@/components/onboarding/CompanyAutocompleteField";
 import { getEquipmentCategory } from "@/lib/equipment/equipment-catalog";
 import {
   buildEquipmentTaxonomyLine,
@@ -140,6 +141,14 @@ export type GsWizardData = {
   postalCode: string;
   lat: number | undefined;
   lng: number | undefined;
+  companyMode: "search" | "manual";
+  companySearch: string;
+  companyName: string;
+  companySiren: string;
+  companySiret: string;
+  companyCity: string;
+  companyPostalCode: string;
+  companyLegalForm: string;
   offeredCategories: GsOfferCategoryId[];
   additionalServices: GsAdditionalServiceId[];
   handoffModes: GsHandoffId[];
@@ -237,6 +246,14 @@ const initialData: GsWizardData = {
   eqCustomModel: "",
   nomTouched: false,
   descriptionTouched: false,
+  companyMode: "search",
+  companySearch: "",
+  companyName: "",
+  companySiren: "",
+  companySiret: "",
+  companyCity: "",
+  companyPostalCode: "",
+  companyLegalForm: "",
 };
 
 /** Brouillons sans champs taxonomie : dériver depuis gear* / texte libre. */
@@ -281,7 +298,7 @@ const emailOk = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
 function validationLeavingStep(fromStep: number, d: GsWizardData): { step: number; message: string } | null {
   if (fromStep === 1) {
     if (!d.accountType) return { step: 1, message: "Choisissez un type de compte." };
-    if (!d.raisonSociale.trim()) return { step: 1, message: "Indiquez votre nom ou raison sociale." };
+    if (!d.raisonSociale.trim()) return { step: 1, message: "Indiquez votre raison sociale ou SIRET." };
     if (!d.contactEmail.trim() || !emailOk(d.contactEmail)) return { step: 1, message: "Email invalide." };
     const digits = d.contactPhone.replace(/\D/g, "");
     if (!d.contactPhone.trim() || digits.length < 8) return { step: 1, message: "Téléphone requis (8 chiffres minimum)." };
@@ -873,16 +890,80 @@ export function GetSoundOnOnboardingWizard({
             ))}
           </div>
           <div className="space-y-4">
-            <div>
+            <div className="space-y-1.5">
               <LabelWithHint
-                label="Nom ou raison sociale"
-                hint="Le nom affiché pour vos échanges avec les clients (modifiable plus tard)."
+                label="Raison sociale ou SIRET"
+                hint="Cherchez votre entreprise ou saisissez-la manuellement."
+              />
+              <CompanyAutocompleteField
+                value={data.companySearch}
+                placeholder="Ex. Soundrush Paris, Guy Location Events, ou un SIRET"
+                onChange={(v) =>
+                  updateData({
+                    companyMode: "search",
+                    companySearch: v,
+                  })
+                }
+                onSelect={(c) =>
+                  updateData({
+                    companyMode: "search",
+                    companySearch: c.name,
+                    raisonSociale: c.name,
+                    companyName: c.name,
+                    companySiren: c.siren ?? "",
+                    companySiret: c.siret ?? "",
+                    companyCity: c.city ?? "",
+                    companyPostalCode: c.postalCode ?? "",
+                    companyLegalForm: c.legalForm ?? "",
+                  })
+                }
+                onManual={() =>
+                  updateData({
+                    companyMode: "manual",
+                    companySearch: "",
+                    companyName: "",
+                    companySiren: "",
+                    companySiret: "",
+                    companyCity: "",
+                    companyPostalCode: "",
+                    companyLegalForm: "",
+                  })
+                }
               />
               <Input
                 value={data.raisonSociale}
                 onChange={(e) => updateData({ raisonSociale: e.target.value })}
-                className="mt-1.5 border-gs-line"
+                className="mt-1 border-gs-line"
+                placeholder="Nom ou raison sociale"
               />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input
+                  value={data.companySiret}
+                  onChange={(e) => updateData({ companySiret: e.target.value })}
+                  className="border-gs-line"
+                  placeholder="SIRET (optionnel)"
+                />
+                <Input
+                  value={data.companySiren}
+                  onChange={(e) => updateData({ companySiren: e.target.value })}
+                  className="border-gs-line"
+                  placeholder="SIREN (optionnel)"
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input
+                  value={data.companyCity}
+                  onChange={(e) => updateData({ companyCity: e.target.value })}
+                  className="border-gs-line"
+                  placeholder="Ville (optionnel)"
+                />
+                <Input
+                  value={data.companyPostalCode}
+                  onChange={(e) => updateData({ companyPostalCode: e.target.value })}
+                  className="border-gs-line"
+                  placeholder="Code postal (optionnel)"
+                />
+              </div>
             </div>
             <div>
               <LabelWithHint label="Email" hint="Pour les notifications de réservation et la connexion." />
