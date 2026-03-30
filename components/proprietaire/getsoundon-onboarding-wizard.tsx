@@ -246,13 +246,13 @@ function applyEquipmentLegacyMigration(d: GsWizardData): GsWizardData {
   if (!next.eqCategoryId && next.gearCategoryField) {
     next = { ...next, eqCategoryId: gearFieldToCategoryId(next.gearCategoryField) };
   }
-  if (next.eqCategoryId && next.gearBrand.trim() && !next.eqBrandKey) {
+  if (next.eqCategoryId && next.eqSubcategoryId && next.gearBrand.trim() && !next.eqBrandKey) {
     const cid = next.eqCategoryId as EquipmentCategoryId;
-    const mb = findMatchingBrand(cid, next.gearBrand);
+    const mb = findMatchingBrand(cid, next.eqSubcategoryId, next.gearBrand);
     if (mb) {
       next = { ...next, eqBrandKey: mb, eqCustomBrand: "" };
       if (next.gearModel.trim()) {
-        const mm = findMatchingModel(cid, mb, next.gearModel);
+        const mm = findMatchingModel(cid, next.eqSubcategoryId, mb, next.gearModel);
         if (mm) next = { ...next, eqModelKey: mm, eqCustomModel: "" };
         else next = { ...next, eqModelKey: OTHER_KEY, eqCustomModel: next.gearModel };
       }
@@ -437,11 +437,16 @@ export function GetSoundOnOnboardingWizard({
 
   useEffect(() => {
     setData((prev) => {
-      if (prev.listingKind !== "equipment" || !prev.eqCategoryId || prev.nomTouched) return prev;
+      if (prev.listingKind !== "equipment" || !prev.eqCategoryId || !prev.eqSubcategoryId || prev.nomTouched) return prev;
       const cid = prev.eqCategoryId as EquipmentCategoryId;
-      const brand = resolveBrandDisplay(cid, prev.eqBrandKey, prev.eqCustomBrand);
-      const model = resolveModelDisplay(cid, prev.eqBrandKey, prev.eqModelKey, prev.eqCustomModel);
-      if (!prev.eqSubcategoryId) return prev;
+      const brand = resolveBrandDisplay(cid, prev.eqSubcategoryId, prev.eqBrandKey, prev.eqCustomBrand);
+      const model = resolveModelDisplay(
+        cid,
+        prev.eqSubcategoryId,
+        prev.eqBrandKey,
+        prev.eqModelKey,
+        prev.eqCustomModel
+      );
       const t = buildSuggestedEquipmentTitle({
         categoryId: cid,
         subcategoryId: prev.eqSubcategoryId,
@@ -464,11 +469,17 @@ export function GetSoundOnOnboardingWizard({
 
   useEffect(() => {
     setData((prev) => {
-      if (prev.listingKind !== "equipment" || !prev.eqCategoryId || prev.descriptionTouched) return prev;
+      if (prev.listingKind !== "equipment" || !prev.eqCategoryId || !prev.eqSubcategoryId || prev.descriptionTouched)
+        return prev;
       const cid = prev.eqCategoryId as EquipmentCategoryId;
-      const brand = resolveBrandDisplay(cid, prev.eqBrandKey, prev.eqCustomBrand);
-      const model = resolveModelDisplay(cid, prev.eqBrandKey, prev.eqModelKey, prev.eqCustomModel);
-      if (!prev.eqSubcategoryId) return prev;
+      const brand = resolveBrandDisplay(cid, prev.eqSubcategoryId, prev.eqBrandKey, prev.eqCustomBrand);
+      const model = resolveModelDisplay(
+        cid,
+        prev.eqSubcategoryId,
+        prev.eqBrandKey,
+        prev.eqModelKey,
+        prev.eqCustomModel
+      );
       const title = buildSuggestedEquipmentTitle({
         categoryId: cid,
         subcategoryId: prev.eqSubcategoryId,
@@ -528,10 +539,16 @@ export function GetSoundOnOnboardingWizard({
     setIsSubmitting(true);
 
     let equipmentTaxonomyLine: string | undefined;
-    if (data.listingKind === "equipment" && data.eqCategoryId) {
+    if (data.listingKind === "equipment" && data.eqCategoryId && data.eqSubcategoryId) {
       const cid = data.eqCategoryId as EquipmentCategoryId;
-      const bd = resolveBrandDisplay(cid, data.eqBrandKey, data.eqCustomBrand);
-      const md = resolveModelDisplay(cid, data.eqBrandKey, data.eqModelKey, data.eqCustomModel);
+      const bd = resolveBrandDisplay(cid, data.eqSubcategoryId, data.eqBrandKey, data.eqCustomBrand);
+      const md = resolveModelDisplay(
+        cid,
+        data.eqSubcategoryId,
+        data.eqBrandKey,
+        data.eqModelKey,
+        data.eqCustomModel
+      );
       const cat = getEquipmentCategory(cid);
       const kw = buildSearchKeywords(
         [cat?.label, subcategoryLabel(cid, data.eqSubcategoryId), bd, md, data.nom].filter(

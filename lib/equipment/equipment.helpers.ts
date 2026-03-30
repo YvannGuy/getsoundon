@@ -1,4 +1,4 @@
-import { getEquipmentCategory } from "./equipment-catalog";
+import { EQUIPMENT_CATALOG, getEquipmentCategory } from "./equipment-catalog";
 import type { EquipmentCategoryId } from "./equipment.types";
 import { OTHER_KEY } from "./equipment.types";
 
@@ -19,52 +19,6 @@ export function slugifyInternal(text: string): string {
   return normalizeString(text).replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "item";
 }
 
-export function findMatchingBrand(categoryId: EquipmentCategoryId, raw: string): string | null {
-  const q = normalizeString(raw);
-  if (!q) return null;
-  const cat = getEquipmentCategory(categoryId);
-  if (!cat) return null;
-  for (const br of cat.brands) {
-    if (normalizeString(br.label) === q || normalizeString(br.id) === q) return br.id;
-  }
-  return null;
-}
-
-export function findMatchingModel(
-  categoryId: EquipmentCategoryId,
-  brandId: string,
-  raw: string
-): string | null {
-  const q = normalizeString(raw);
-  if (!q) return null;
-  const cat = getEquipmentCategory(categoryId);
-  const br = cat?.brands.find((b) => b.id === brandId);
-  if (!br) return null;
-  for (const m of br.models) {
-    if (normalizeString(m.label) === q || normalizeString(m.id) === q) return m.id;
-  }
-  return null;
-}
-
-export function canonicalizeBrand(categoryId: EquipmentCategoryId, brandKey: string): string {
-  if (brandKey === OTHER_KEY) return OTHER_KEY;
-  const cat = getEquipmentCategory(categoryId);
-  const br = cat?.brands.find((b) => b.id === brandKey);
-  return br?.label ?? brandKey;
-}
-
-export function canonicalizeModel(
-  categoryId: EquipmentCategoryId,
-  brandKey: string,
-  modelKey: string
-): string {
-  if (modelKey === OTHER_KEY) return OTHER_KEY;
-  const cat = getEquipmentCategory(categoryId);
-  const br = cat?.brands.find((b) => b.id === brandKey);
-  const m = br?.models.find((x) => x.id === modelKey);
-  return m?.label ?? modelKey;
-}
-
 export function categoryIdToGearField(categoryId: EquipmentCategoryId): string {
   return getEquipmentCategory(categoryId)?.gearField ?? "son";
 }
@@ -82,24 +36,74 @@ export function gearFieldToCategoryId(field: string): EquipmentCategoryId {
   return m[field] ?? "sono";
 }
 
-export function subcategoryLabel(categoryId: EquipmentCategoryId, subId: string): string {
+export function getSubcategories(categoryId: EquipmentCategoryId) {
   const cat = getEquipmentCategory(categoryId);
-  return cat?.subcategories.find((s) => s.id === subId)?.label ?? "";
+  if (!cat) return [];
+  return Object.values(cat.subcategories).map((s) => ({ value: s.id, label: s.label }));
 }
 
-/** Ligne structurée pour description longue / futurs index (migrable Supabase). */
-export function buildEquipmentTaxonomyLine(
+export function getBrands(categoryId: EquipmentCategoryId, subcategoryId: string) {
+  const cat = getEquipmentCategory(categoryId);
+  const sub = cat?.subcategories?.[subcategoryId];
+  if (!sub) return [];
+  return Object.keys(sub.brands).map((b) => ({
+    value: b,
+    label: b,
+    popular: sub.popularBrands?.includes(b) ?? false,
+  }));
+}
+
+export function getModels(categoryId: EquipmentCategoryId, subcategoryId: string, brand: string) {
+  const cat = getEquipmentCategory(categoryId);
+  const list = cat?.subcategories?.[subcategoryId]?.brands?.[brand] ?? [];
+  return list.map((m) => ({ value: m, label: m }));
+}
+
+export function findMatchingBrand(categoryId: EquipmentCategoryId, subId: string, raw: string): string | null {
+  const q = normalizeString(raw);
+  if (!q) return null;
+  const brands = getBrands(categoryId, subId);
+  for (const br of brands) {
+    if (normalizeString(br.label) === q || normalizeString(br.value) === q) return br.value;
+  }
+  return null;
+}
+
+export function findMatchingModel(
   categoryId: EquipmentCategoryId,
   subId: string,
-  brandDisplay: string,
-  modelDisplay: string,
-  keywords: string[]
+  brandId: string,
+  raw: string
+): string | null {
+  const q = normalizeString(raw);
+  if (!q) return null;
+  const models = getModels(categoryId, subId, brandId);
+  for (const m of models) {
+    if (normalizeString(m.label) === q || normalizeString(m.value) === q) return m.value;
+  }
+  return null;
+}
+
+export function canonicalizeBrand(categoryId: EquipmentCategoryId, subId: string, brandKey: string): string {
+  if (brandKey === OTHER_KEY) return OTHER_KEY;
+  const brands = getBrands(categoryId, subId);
+  return brands.find((b) => b.value === brandKey)?.label ?? brandKey;
+}
+
+export function canonicalizeModel(
+  categoryId: EquipmentCategoryId,
+  subId: string,
+  brandKey: string,
+  modelKey: string
 ): string {
-  const cat = getEquipmentCategory(categoryId)?.label ?? categoryId;
-  const sub = subcategoryLabel(categoryId, subId);
-  const core = [cat, sub, brandDisplay, modelDisplay].map(normalizeWhitespace).filter(Boolean).join(" · ");
-  const kw = keywords.length ? ` — mots-clés : ${keywords.slice(0, 16).join(", ")}` : "";
-  return `[Fiche matériel] ${core}${kw}`.trim();
+  if (modelKey === OTHER_KEY) return OTHER_KEY;
+  const models = getModels(categoryId, subId, brandKey);
+  return models.find((m) => m.value === modelKey)?.label ?? modelKey;
+}
+
+export function subcategoryLabel(categoryId: EquipmentCategoryId, subId: string): string {
+  const cat = getEquipmentCategory(categoryId);
+  return cat?.subcategories?.[subId]?.label ?? "";
 }
 
 export function buildSearchKeywords(parts: string[]): string[] {
@@ -147,19 +151,36 @@ export function buildSuggestedEquipmentDescription(title: string, categoryId: Eq
 
 export function resolveBrandDisplay(
   categoryId: EquipmentCategoryId,
+  subId: string,
   brandKey: string,
   customBrand: string
 ): string {
   if (brandKey === OTHER_KEY) return normalizeWhitespace(customBrand);
-  return canonicalizeBrand(categoryId, brandKey);
+  return canonicalizeBrand(categoryId, subId, brandKey);
 }
 
 export function resolveModelDisplay(
   categoryId: EquipmentCategoryId,
+  subId: string,
   brandKey: string,
   modelKey: string,
   customModel: string
 ): string {
   if (modelKey === OTHER_KEY) return normalizeWhitespace(customModel);
-  return canonicalizeModel(categoryId, brandKey, modelKey);
+  return canonicalizeModel(categoryId, subId, brandKey, modelKey);
+}
+
+/** Ligne structurée pour description longue / futurs index (migrable Supabase). */
+export function buildEquipmentTaxonomyLine(
+  categoryId: EquipmentCategoryId,
+  subId: string,
+  brandDisplay: string,
+  modelDisplay: string,
+  keywords: string[]
+): string {
+  const cat = getEquipmentCategory(categoryId)?.label ?? categoryId;
+  const sub = subcategoryLabel(categoryId, subId);
+  const core = [cat, sub, brandDisplay, modelDisplay].map(normalizeWhitespace).filter(Boolean).join(" · ");
+  const kw = keywords.length ? ` — mots-clés : ${keywords.slice(0, 16).join(", ")}` : "";
+  return `[Fiche matériel] ${core}${kw}`.trim();
 }

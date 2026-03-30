@@ -30,23 +30,24 @@ export const OTHER_KEY = "other" as const;
 
 export type EquipmentSubcategory = { id: string; label: string };
 
-export type EquipmentModel = { id: string; label: string; popular?: boolean };
+export type EquipmentBrandModels = Record<string, string[]>;
 
-export type EquipmentBrand = {
+export type EquipmentSubcategoryNode = {
   id: string;
   label: string;
-  popular?: boolean;
-  models: EquipmentModel[];
+  brands: EquipmentBrandModels;
+  popularBrands?: string[];
 };
 
-export type EquipmentCategory = {
+export type EquipmentCategoryNode = {
   id: EquipmentCategoryId;
   label: string;
   /** Valeur `gear_category` / `gearCategoryField` côté API existante */
   gearField: string;
-  subcategories: EquipmentSubcategory[];
-  brands: EquipmentBrand[];
+  subcategories: Record<string, EquipmentSubcategoryNode>;
 };
+
+export type EquipmentCatalog = Record<EquipmentCategoryId, EquipmentCategoryNode>;
 
 export type EquipmentIdentityState = {
   eqCategoryId: EquipmentCategoryId | "";

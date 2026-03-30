@@ -1,15 +1,19 @@
 "use client";
 
-import { useMemo, type FC } from "react";
+import { useEffect, useMemo, useRef, type FC } from "react";
+import { useForm, useWatch } from "react-hook-form";
 
-import { Input } from "@/components/ui/input";
 import { EquipmentCombobox, type EquipmentComboOption } from "@/components/onboarding/equipment-combobox";
-import { getEquipmentCategory, getAllEquipmentCategories } from "@/lib/equipment/equipment-catalog";
+import { Input } from "@/components/ui/input";
 import {
   categoryIdToGearField,
+  getBrands,
+  getModels,
+  getSubcategories,
   resolveBrandDisplay,
   resolveModelDisplay,
 } from "@/lib/equipment/equipment.helpers";
+import { getAllEquipmentCategories } from "@/lib/equipment/equipment-catalog";
 import type { EquipmentCategoryId, WizardEquipmentFields } from "@/lib/equipment/equipment.types";
 import { OTHER_KEY } from "@/lib/equipment/equipment.types";
 
@@ -21,92 +25,136 @@ type Props = {
   Label: EquipmentFieldLabel;
 };
 
+type FormValues = {
+  eqCategoryId: EquipmentCategoryId | "";
+  eqSubcategoryId: string;
+  eqBrandKey: string;
+  eqModelKey: string;
+  eqCustomBrand: string;
+  eqCustomModel: string;
+};
+
 export function EquipmentIdentityFields({ data, updateData, Label }: Props) {
-  const catId = data.eqCategoryId as EquipmentCategoryId | "";
-  const cat = catId ? getEquipmentCategory(catId) : undefined;
+  const form = useForm<FormValues>({
+    defaultValues: {
+      eqCategoryId: data.eqCategoryId,
+      eqSubcategoryId: data.eqSubcategoryId,
+      eqBrandKey: data.eqBrandKey,
+      eqModelKey: data.eqModelKey,
+      eqCustomBrand: data.eqCustomBrand,
+      eqCustomModel: data.eqCustomModel,
+    },
+  });
+
+  // Sync external draft restore → form.
+  useEffect(() => {
+    form.reset({
+      eqCategoryId: data.eqCategoryId,
+      eqSubcategoryId: data.eqSubcategoryId,
+      eqBrandKey: data.eqBrandKey,
+      eqModelKey: data.eqModelKey,
+      eqCustomBrand: data.eqCustomBrand,
+      eqCustomModel: data.eqCustomModel,
+    });
+  }, [data.eqCategoryId, data.eqSubcategoryId, data.eqBrandKey, data.eqModelKey, data.eqCustomBrand, data.eqCustomModel, form]);
+
+  const prevVals = useRef<FormValues | null>(null);
+  const sync = (vals: FormValues) => {
+    const cid = vals.eqCategoryId as EquipmentCategoryId | "";
+    const gearCategoryField = cid ? categoryIdToGearField(cid) : "son";
+    const brandDisplay = cid && vals.eqSubcategoryId
+      ? resolveBrandDisplay(cid, vals.eqSubcategoryId, vals.eqBrandKey, vals.eqCustomBrand)
+      : vals.eqBrandKey;
+    const modelDisplay = cid && vals.eqSubcategoryId
+      ? resolveModelDisplay(cid, vals.eqSubcategoryId, vals.eqBrandKey, vals.eqModelKey, vals.eqCustomModel)
+      : vals.eqModelKey;
+    updateData({
+      ...vals,
+      gearCategoryField,
+      gearBrand: brandDisplay ?? "",
+      gearModel: modelDisplay ?? "",
+    });
+  };
+
+  // Watch and apply reset logic with RHF semantics.
+  const watchAll = useWatch({ control: form.control }) as FormValues;
+  useEffect(() => {
+    const prev = prevVals.current;
+    prevVals.current = watchAll;
+    if (!prev) {
+      sync(watchAll);
+      return;
+    }
+    // Category change -> reset subcat/brand/model/custom
+    if (prev.eqCategoryId !== watchAll.eqCategoryId) {
+      form.setValue("eqSubcategoryId", "");
+      form.setValue("eqBrandKey", "");
+      form.setValue("eqModelKey", "");
+      form.setValue("eqCustomBrand", "");
+      form.setValue("eqCustomModel", "");
+      sync({ ...watchAll, eqSubcategoryId: "", eqBrandKey: "", eqModelKey: "", eqCustomBrand: "", eqCustomModel: "" });
+      return;
+    }
+    // Subcategory change -> reset brand/model/custom
+    if (prev.eqSubcategoryId !== watchAll.eqSubcategoryId) {
+      form.setValue("eqBrandKey", "");
+      form.setValue("eqModelKey", "");
+      form.setValue("eqCustomBrand", "");
+      form.setValue("eqCustomModel", "");
+      sync({ ...watchAll, eqBrandKey: "", eqModelKey: "", eqCustomBrand: "", eqCustomModel: "" });
+      return;
+    }
+    // Brand change -> reset model/customModel
+    if (prev.eqBrandKey !== watchAll.eqBrandKey) {
+      form.setValue("eqModelKey", "");
+      form.setValue("eqCustomModel", "");
+      sync({ ...watchAll, eqModelKey: "", eqCustomModel: "" });
+      return;
+    }
+    // Default sync (model/custom edits)
+    sync(watchAll);
+  }, [watchAll, form]);
+
+  const catId = watchAll.eqCategoryId as EquipmentCategoryId | "";
+
+  const subOptions = useMemo(() => {
+    return catId ? getSubcategories(catId) : [];
+  }, [catId]);
 
   const brandOptions: EquipmentComboOption[] = useMemo(() => {
-    if (!cat) return [];
-    return cat.brands.map((b) => ({ key: b.id, label: b.label, popular: b.popular }));
-  }, [cat]);
+    if (!catId || !watchAll.eqSubcategoryId) return [];
+    return getBrands(catId, watchAll.eqSubcategoryId).map((b) => ({
+      key: b.value,
+      label: b.label,
+      popular: b.popular,
+    }));
+  }, [catId, watchAll.eqSubcategoryId]);
 
   const modelOptions: EquipmentComboOption[] = useMemo(() => {
-    if (!cat || !data.eqBrandKey || data.eqBrandKey === OTHER_KEY) return [];
-    const br = cat.brands.find((b) => b.id === data.eqBrandKey);
-    if (!br) return [];
-    return br.models.map((m) => ({ key: m.id, label: m.label, popular: m.popular }));
-  }, [cat, data.eqBrandKey]);
+    if (!catId || !watchAll.eqSubcategoryId || !watchAll.eqBrandKey || watchAll.eqBrandKey === OTHER_KEY) return [];
+    return getModels(catId, watchAll.eqSubcategoryId, watchAll.eqBrandKey).map((m) => ({
+      key: m.value,
+      label: m.label,
+    }));
+  }, [catId, watchAll.eqSubcategoryId, watchAll.eqBrandKey]);
 
   const brandDisplayText =
-    data.eqBrandKey === OTHER_KEY
-      ? data.eqCustomBrand.trim()
-        ? data.eqCustomBrand.trim()
-        : ""
-      : data.eqBrandKey && cat
-        ? resolveBrandDisplay(catId as EquipmentCategoryId, data.eqBrandKey, "")
+    watchAll.eqBrandKey === OTHER_KEY
+      ? watchAll.eqCustomBrand.trim()
+      : watchAll.eqBrandKey && catId && watchAll.eqSubcategoryId
+        ? resolveBrandDisplay(catId as EquipmentCategoryId, watchAll.eqSubcategoryId, watchAll.eqBrandKey, "")
         : "";
 
   const modelDisplayText =
-    data.eqModelKey === OTHER_KEY
-      ? data.eqCustomModel.trim()
-        ? data.eqCustomModel.trim()
-        : ""
-      : data.eqModelKey && cat && data.eqBrandKey
-        ? resolveModelDisplay(catId as EquipmentCategoryId, data.eqBrandKey, data.eqModelKey, "")
+    watchAll.eqModelKey === OTHER_KEY
+      ? watchAll.eqCustomModel.trim()
+      : watchAll.eqModelKey && catId && watchAll.eqSubcategoryId && watchAll.eqBrandKey
+        ? resolveModelDisplay(catId as EquipmentCategoryId, watchAll.eqSubcategoryId, watchAll.eqBrandKey, watchAll.eqModelKey, "")
         : "";
 
   const subDisabled = !catId;
-  const brandDisabled = !catId;
-  const modelDisabled = !catId || !data.eqBrandKey;
-
-  const applyGearDerived = (patch: Partial<WizardEquipmentFields>) => {
-    const next: WizardEquipmentFields = { ...(data as WizardEquipmentFields), ...patch };
-    const cid = (next.eqCategoryId || "") as EquipmentCategoryId | "";
-    if (!cid) {
-      updateData({ ...patch, gearCategoryField: "son", gearBrand: "", gearModel: "" });
-      return;
-    }
-    const gearCategoryField = categoryIdToGearField(cid);
-    const brand = resolveBrandDisplay(cid, next.eqBrandKey, next.eqCustomBrand);
-    const model = resolveModelDisplay(cid, next.eqBrandKey, next.eqModelKey, next.eqCustomModel);
-    updateData({
-      ...patch,
-      gearCategoryField,
-      gearBrand: brand,
-      gearModel: model,
-    });
-  };
-
-  const onCategoryChange = (id: EquipmentCategoryId) => {
-    applyGearDerived({
-      eqCategoryId: id,
-      eqSubcategoryId: "",
-      eqBrandKey: "",
-      eqModelKey: "",
-      eqCustomBrand: "",
-      eqCustomModel: "",
-    });
-  };
-
-  const onSubcategoryChange = (subId: string) => {
-    applyGearDerived({ eqSubcategoryId: subId });
-  };
-
-  const onBrandSelect = (key: string) => {
-    applyGearDerived({
-      eqBrandKey: key,
-      eqModelKey: "",
-      eqCustomModel: "",
-      ...(key !== OTHER_KEY ? { eqCustomBrand: "" } : {}),
-    });
-  };
-
-  const onModelSelect = (key: string) => {
-    applyGearDerived({
-      eqModelKey: key,
-      ...(key !== OTHER_KEY ? { eqCustomModel: "" } : {}),
-    });
-  };
+  const brandDisabled = !catId || !watchAll.eqSubcategoryId;
+  const modelDisabled = !catId || !watchAll.eqSubcategoryId || !watchAll.eqBrandKey;
 
   return (
     <div className="space-y-4">
@@ -117,8 +165,8 @@ export function EquipmentIdentityFields({ data, updateData, Label }: Props) {
         />
         <select
           className="mt-1.5 h-11 w-full rounded-md border border-gs-line bg-white px-3 text-sm"
-          value={catId}
-          onChange={(e) => onCategoryChange(e.target.value as EquipmentCategoryId)}
+          value={watchAll.eqCategoryId}
+          onChange={(e) => form.setValue("eqCategoryId", e.target.value as EquipmentCategoryId)}
         >
           <option value="">Choisir…</option>
           {getAllEquipmentCategories().map((c) => (
@@ -137,12 +185,12 @@ export function EquipmentIdentityFields({ data, updateData, Label }: Props) {
         <select
           className="mt-1.5 h-11 w-full rounded-md border border-gs-line bg-white px-3 text-sm disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
           disabled={subDisabled}
-          value={data.eqSubcategoryId}
-          onChange={(e) => onSubcategoryChange(e.target.value)}
+          value={watchAll.eqSubcategoryId}
+          onChange={(e) => form.setValue("eqSubcategoryId", e.target.value)}
         >
           <option value="">{subDisabled ? "Choisissez d’abord une catégorie" : "Choisir…"}</option>
-          {cat?.subcategories.map((s) => (
-            <option key={s.id} value={s.id}>
+          {subOptions.map((s) => (
+            <option key={s.value} value={s.value}>
               {s.label}
             </option>
           ))}
@@ -158,28 +206,26 @@ export function EquipmentIdentityFields({ data, updateData, Label }: Props) {
           <EquipmentCombobox
             id="eq-brand"
             disabled={brandDisabled}
-            placeholder={brandDisabled ? "Choisissez d’abord une catégorie" : "Choisir une marque…"}
-            valueKey={data.eqBrandKey}
+            placeholder={brandDisabled ? "Choisissez d’abord une catégorie et une sous-catégorie" : "Choisir une marque…"}
+            valueKey={watchAll.eqBrandKey}
             displayText={brandDisplayText}
             options={brandOptions}
-            onSelect={onBrandSelect}
+            onSelect={(key) => form.setValue("eqBrandKey", key)}
             otherRowLabel="Autre marque — saisie manuelle"
             onAdoptQueryAsCustom={(query) => {
-              applyGearDerived({
-                eqBrandKey: OTHER_KEY,
-                eqCustomBrand: query,
-                eqModelKey: "",
-                eqCustomModel: "",
-              });
+              form.setValue("eqBrandKey", OTHER_KEY);
+              form.setValue("eqCustomBrand", query);
+              form.setValue("eqModelKey", "");
+              form.setValue("eqCustomModel", "");
             }}
           />
         </div>
-        {data.eqBrandKey === OTHER_KEY ? (
+        {watchAll.eqBrandKey === OTHER_KEY ? (
           <Input
             className="mt-2 border-gs-line"
             placeholder="Nom de la marque"
-            value={data.eqCustomBrand}
-            onChange={(e) => applyGearDerived({ eqCustomBrand: e.target.value })}
+            value={watchAll.eqCustomBrand}
+            onChange={(e) => form.setValue("eqCustomBrand", e.target.value)}
           />
         ) : null}
       </div>
@@ -195,30 +241,28 @@ export function EquipmentIdentityFields({ data, updateData, Label }: Props) {
             disabled={modelDisabled}
             placeholder={
               modelDisabled
-                ? !data.eqBrandKey
+                ? !watchAll.eqBrandKey
                   ? "Choisissez d’abord une marque"
-                  : "Choisissez d’abord une catégorie"
+                  : "Choisissez d’abord une catégorie et une sous-catégorie"
                 : "Choisir un modèle…"
             }
-            valueKey={data.eqModelKey}
+            valueKey={watchAll.eqModelKey}
             displayText={modelDisplayText}
             options={modelOptions}
-            onSelect={onModelSelect}
+            onSelect={(key) => form.setValue("eqModelKey", key)}
             otherRowLabel="Autre modèle — saisie manuelle"
             onAdoptQueryAsCustom={(query) => {
-              applyGearDerived({
-                eqModelKey: OTHER_KEY,
-                eqCustomModel: query,
-              });
+              form.setValue("eqModelKey", OTHER_KEY);
+              form.setValue("eqCustomModel", query);
             }}
           />
         </div>
-        {data.eqModelKey === OTHER_KEY ? (
+        {watchAll.eqModelKey === OTHER_KEY ? (
           <Input
             className="mt-2 border-gs-line"
             placeholder="Référence ou nom du modèle"
-            value={data.eqCustomModel}
-            onChange={(e) => applyGearDerived({ eqCustomModel: e.target.value })}
+            value={watchAll.eqCustomModel}
+            onChange={(e) => form.setValue("eqCustomModel", e.target.value)}
           />
         ) : null}
       </div>
