@@ -116,7 +116,7 @@ export function rowToSalle(row: SalleRow): Salle {
     city: row.city,
     address: row.address,
     contactPhone: row.contact_phone ?? null,
-    displayContactPhone: row.display_contact_phone ?? true,
+    displayContactPhone: row.display_contact_phone ?? false,
     cautionRequise: row.caution_requise ?? false,
     capacity: row.capacity,
     pricePerDay: typeof row.price_per_day === "number" ? row.price_per_day : 0,

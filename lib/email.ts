@@ -277,7 +277,6 @@ export async function sendNewVisiteRequestNotification(
 export async function sendVisiteAcceptedNotification(
   to: string,
   salleName: string,
-  address: string,
   dateStr: string,
   horairesStr: string,
   messagerieUrl: string
@@ -293,8 +292,8 @@ export async function sendVisiteAcceptedNotification(
       title: "Votre visite a été acceptée",
       intro: `Le propriétaire de <strong>${escapeHtml(salleName)}</strong> a accepté votre demande de visite.`,
       sections: [
-        `<p class="tip"><strong>Date :</strong> ${escapeHtml(dateStr)}<br><strong>Créneau :</strong> ${escapeHtml(horairesStr)}<br><strong>Adresse :</strong> ${escapeHtml(address)}</p>`,
-        "<p>Vous pouvez contacter le propriétaire pour organiser la visite.</p>",
+        `<p class="tip"><strong>Date :</strong> ${escapeHtml(dateStr)}<br><strong>Créneau :</strong> ${escapeHtml(horairesStr)}</p>`,
+        "<p>L'adresse et le téléphone du prestataire ne sont pas communiqués par e-mail. Utilisez la messagerie GetSoundOn pour convenir du lieu exact et des modalités pratiques.</p>",
       ],
       ctaLabel: "Ouvrir la messagerie",
       ctaUrl: messagerieUrl,

@@ -190,13 +190,16 @@ export default async function DemandeVisiteDetailPage({
                   <ReprogrammationVisiteActions demandeVisiteId={demande.id} />
                 </div>
               )}
-            {demande.status === "accepted" && salle.address && (
-              <div>
+            {demande.status === "accepted" && (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <dt className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
                   <MapPin className="h-4 w-4" />
-                  Adresse de la salle
+                  Lieu de la visite
                 </dt>
-                <dd className="mt-0.5 text-black">{salle.address}</dd>
+                <dd className="mt-1 text-sm text-slate-700">
+                  L&apos;adresse précise du prestataire n&apos;est pas affichée sur GetSoundOn. Convenez du lieu avec le
+                  propriétaire via la messagerie.
+                </dd>
               </div>
             )}
             <div>

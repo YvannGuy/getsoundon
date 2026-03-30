@@ -88,7 +88,6 @@ export function snapshotLinesForPdf(raw: unknown): string[] {
     for (const line of wrapPdfLine(s, PDF_LINE_MAX)) chunks.push(line);
   };
   push(`Annonce : ${snap.listing.title} — ${snap.listing.city}`);
-  if (snap.listing.address?.trim()) push(`Adresse : ${snap.listing.address}`);
   const gear = [snap.listing.gear_category, snap.listing.gear_brand, snap.listing.gear_model]
     .filter(Boolean)
     .join(" · ");

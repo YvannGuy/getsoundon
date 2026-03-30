@@ -78,14 +78,7 @@ export async function accepterDemandeVisite(demandeVisiteId: string) {
         messagerieUrl,
       ].join("\n"),
       sendEmail: () =>
-        sendVisiteAcceptedNotification(
-          seekerEmail,
-          salleRow.name,
-          salleRow.address ?? "",
-          dateStr,
-          horairesStr,
-          messagerieUrl
-        ),
+        sendVisiteAcceptedNotification(seekerEmail, salleRow.name, dateStr, horairesStr, messagerieUrl),
     }).catch((e) => console.error("[accepterDemandeVisite] notification:", e));
   }
 

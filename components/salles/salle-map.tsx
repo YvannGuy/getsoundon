@@ -72,14 +72,14 @@ export function SalleMap({ salle }: { salle: Salle }) {
       return;
     }
     let cancelled = false;
-    geocodeZone(salle.address || "", salle.city).then((result) => {
+    geocodeZone("", salle.city).then((result) => {
       if (!cancelled && result) setZone(result);
       else if (!cancelled) setGeocodeFailed(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [zone, salle.address, salle.city]);
+  }, [zone, salle.city]);
 
   if (geocodeFailed && !zone) {
     const mapUrl = `https://www.openstreetmap.org/search?query=${encodeURIComponent(salle.city)}`;

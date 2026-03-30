@@ -8,7 +8,6 @@ import {
   ListChecks,
   Lock,
   MapPin,
-  Phone,
   Car,
   CookingPot,
   Piano,
@@ -243,7 +242,7 @@ export default async function SalleDetailPage({
                       </span>
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700">
                         <Lock className="h-3.5 w-3.5 text-slate-400" />
-                        Adresse précise communiquée après confirmation de la visite
+                        Lieu et coordonnées convenus via la messagerie après accord
                       </span>
                     </div>
                   </div>
@@ -261,15 +260,6 @@ export default async function SalleDetailPage({
                             Organiser une visite
                           </Button>
                         </Link>
-                        {salle.displayContactPhone !== false && salle.contactPhone && canContact && (
-                          <a
-                            href={`tel:${salle.contactPhone.replace(/\s/g, "")}`}
-                            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-white"
-                          >
-                            <Phone className="h-4 w-4" />
-                            Contacter le propriétaire
-                          </a>
-                        )}
                       </>
                     ) : !isLoggedIn ? (
                       <>
@@ -378,7 +368,8 @@ export default async function SalleDetailPage({
                 <h2 className="mb-3 text-lg font-semibold text-black">Localisation</h2>
                 <SalleMap salle={salle} />
                 <p className="mt-3 text-xs text-slate-500">
-                  Note : L&apos;adresse de l&apos;église reste privée pour des raisons de sécurité jusqu&apos;à l&apos;approche de la date de réservation.
+                  Carte indicative autour de la zone d&apos;activité — l&apos;adresse précise du prestataire n&apos;est pas
+                  affichée sur GetSoundOn.
                 </p>
               </section>
 
@@ -445,17 +436,6 @@ export default async function SalleDetailPage({
                     Organiser une visite
                   </Button>
                 </Link>
-                {salle.displayContactPhone !== false && salle.contactPhone && (
-                  <div className="mt-4">
-                    <a
-                      href={`tel:${salle.contactPhone.replace(/\s/g, "")}`}
-                      className="flex items-center gap-2 text-[13px] font-medium text-slate-600 hover:text-black"
-                    >
-                      <Phone className="h-4 w-4" />
-                      Contactez le propriétaire
-                    </a>
-                  </div>
-                )}
                 {recentViewerCount > 0 && (
                   <p className="mt-4 flex items-center gap-2 text-[12px] text-slate-400">
                     <Clock className="h-3.5 w-3.5" />

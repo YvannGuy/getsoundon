@@ -66,7 +66,13 @@ export async function generateContractPdf(data: ContractData): Promise<Uint8Arra
 
   drawText("ENTRE LES PARTIES :", { bold: true });
   const loueurText = data.template?.raisonSociale
-    ? `${data.template.raisonSociale}${data.template.adresse ? `, ${data.template.adresse}` : ""}${data.template.codePostal && data.template.ville ? `, ${data.template.codePostal} ${data.template.ville}` : ""}${data.template?.siret ? `, SIRET ${data.template.siret}` : ""}`
+    ? `${data.template.raisonSociale}${
+        data.template.codePostal && data.template.ville
+          ? `, ${data.template.codePostal} ${data.template.ville}`
+          : data.template.ville
+            ? `, ${data.template.ville}`
+            : ""
+      }${data.template?.siret ? `, SIRET ${data.template.siret}` : ""}`
     : `${data.ownerName} (${data.ownerEmail})`;
   drawText(`Loueur (propriétaire) : ${loueurText}`, { indent: 10 });
   drawText(`Locataire : ${data.seekerName} (${data.seekerEmail})`, { indent: 10 });

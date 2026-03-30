@@ -209,7 +209,7 @@ export async function createOfferAction(formData: FormData): Promise<{ success: 
       salle_id: salleId,
       title: sr?.name?.trim() || "Annonce matériel",
       city: sr?.city?.trim() || "",
-      address: sr?.address ?? null,
+      address: null,
       listing_kind: sr?.listing_kind ?? null,
       gear_category: sr?.gear_category ?? null,
       gear_brand: sr?.gear_brand ?? null,

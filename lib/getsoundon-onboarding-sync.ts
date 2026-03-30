@@ -163,12 +163,6 @@ export function buildGsOnboardingDescription(d: GsWizardSyncInput): string {
       `Prestataire : ${d.raisonSociale.trim()}${acc ? ` (${acc})` : ""}.`
     );
   }
-  if (d.contactEmail.trim() || d.contactPhone.trim()) {
-    parts.push(
-      `Contact : ${[d.contactEmail.trim(), d.contactPhone.trim()].filter(Boolean).join(" · ")}.`
-    );
-  }
-
   const cats = d.offeredCategories.filter((c): c is GsOfferCategoryId =>
     (GS_OFFER_CATEGORY_IDS as readonly string[]).includes(c)
   );
@@ -188,10 +182,6 @@ export function buildGsOnboardingDescription(d: GsWizardSyncInput): string {
   );
   if (ho.length) {
     parts.push(`Récupération / livraison : ${ho.map((h) => HANDOFF_LABELS[h]).join(", ")}.`);
-  }
-
-  if (d.adresse.trim()) {
-    parts.push(`Adresse principale : ${d.adresse.trim()}${d.ville.trim() ? `, ${d.ville.trim()}` : ""}.`);
   }
 
   if (d.rayonKm) {

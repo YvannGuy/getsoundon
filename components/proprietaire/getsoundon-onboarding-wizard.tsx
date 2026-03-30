@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, CheckCircle, ChevronLeft, Clock } from "lucide-react";
+import { Camera, CheckCircle, ChevronLeft, Clock, Info } from "lucide-react";
 
 import { createSalleFromOnboarding } from "@/app/actions/create-salle";
 import { createClient } from "@/lib/supabase/client";
@@ -27,6 +27,48 @@ const TOTAL_STEPS = 6;
 const ONBOARDING_DRAFT_KEY = "gs_provider_onboarding_v2";
 const MIN_PHOTOS = 1;
 const MAX_PHOTOS = 10;
+
+/** Icône (i) : infobulle au survol / focus ; `title` en secours (ex. mobile). */
+function HintIcon({ hint, topic }: { hint: string; topic: string }) {
+  return (
+    <span className="group relative inline-flex shrink-0 align-middle">
+      <button
+        type="button"
+        className="inline-flex h-5 w-5 items-center justify-center rounded-full text-slate-400 transition-colors hover:text-gs-orange focus:outline-none focus-visible:ring-2 focus-visible:ring-gs-orange/35"
+        aria-label={`Aide : ${topic}`}
+        title={hint}
+      >
+        <Info className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+      </button>
+      <span
+        role="tooltip"
+        className="pointer-events-none invisible absolute left-1/2 top-full z-[60] mt-1.5 w-max max-w-[min(280px,calc(100vw-2.5rem))] -translate-x-1/2 whitespace-normal rounded-md border border-gs-line bg-white px-2.5 py-1.5 text-left text-xs font-normal leading-snug text-slate-600 opacity-0 shadow-md ring-1 ring-black/5 transition-opacity duration-100 group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100"
+      >
+        {hint}
+      </span>
+    </span>
+  );
+}
+
+/** Titre de bloc + aide au survol sur l’icône. */
+function SectionTitleWithHint({ title, hint }: { title: string; hint: string }) {
+  return (
+    <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 sm:mb-0">
+      <span className="text-sm font-semibold text-gs-dark">{title}</span>
+      <HintIcon hint={hint} topic={title} />
+    </div>
+  );
+}
+
+/** Libellé de champ + aide au survol sur l’icône. */
+function LabelWithHint({ label, hint }: { label: string; hint: string }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0">
+      <span className="text-sm font-medium text-gs-dark">{label}</span>
+      <HintIcon hint={hint} topic={label} />
+    </div>
+  );
+}
 
 const ACCOUNT_CARDS: { id: AccountTypeGs; label: string; hint: string }[] = [
   { id: "auto_entrepreneur", label: "Auto-entrepreneur", hint: "Activité en micro / AE." },
@@ -649,7 +691,10 @@ export function GetSoundOnOnboardingWizard({
             <p className="mt-1 text-slate-600">Créons votre espace prestataire en quelques étapes.</p>
             <p className="mt-2 text-xs text-slate-500">Vous pourrez modifier ces informations plus tard.</p>
           </div>
-          <p className="text-sm font-semibold text-gs-dark">Vous proposez du matériel en tant que :</p>
+          <SectionTitleWithHint
+            title="Vous proposez du matériel en tant que :"
+            hint="Choix utilisé pour personnaliser votre profil et vos documents."
+          />
           <div className="grid gap-3 sm:grid-cols-2">
             {ACCOUNT_CARDS.map((c) => (
               <button
@@ -666,25 +711,46 @@ export function GetSoundOnOnboardingWizard({
               </button>
             ))}
           </div>
-          <div className="space-y-3">
-            <label className="font-landing-nav text-sm font-medium text-gs-dark">Nom ou raison sociale</label>
-            <Input value={data.raisonSociale} onChange={(e) => updateData({ raisonSociale: e.target.value })} className="border-gs-line" />
-            <label className="font-landing-nav text-sm font-medium text-gs-dark">Email</label>
-            <Input
-              type="email"
-              value={data.contactEmail}
-              onChange={(e) => updateData({ contactEmail: e.target.value })}
-              className="border-gs-line"
-            />
-            <label className="font-landing-nav text-sm font-medium text-gs-dark">Téléphone</label>
-            <Input value={data.contactPhone} onChange={(e) => updateData({ contactPhone: e.target.value })} className="border-gs-line" />
-            <label className="font-landing-nav text-sm font-medium text-gs-dark">Ville</label>
-            <VilleAutocomplete
-              value={data.ville}
-              onChange={(ville) => updateData({ ville, villeCode: null })}
-              onCitySelect={(ville, citycode) => updateData({ ville, villeCode: citycode })}
-              inputClassName="border-gs-line"
-            />
+          <div className="space-y-4">
+            <div>
+              <LabelWithHint
+                label="Nom ou raison sociale"
+                hint="Le nom affiché pour vos échanges avec les clients (modifiable plus tard)."
+              />
+              <Input
+                value={data.raisonSociale}
+                onChange={(e) => updateData({ raisonSociale: e.target.value })}
+                className="mt-1.5 border-gs-line"
+              />
+            </div>
+            <div>
+              <LabelWithHint label="Email" hint="Pour les notifications de réservation et la connexion." />
+              <Input
+                type="email"
+                value={data.contactEmail}
+                onChange={(e) => updateData({ contactEmail: e.target.value })}
+                className="mt-1.5 border-gs-line"
+              />
+            </div>
+            <div>
+              <LabelWithHint label="Téléphone" hint="Numéro joignable pour les questions avant location." />
+              <Input
+                value={data.contactPhone}
+                onChange={(e) => updateData({ contactPhone: e.target.value })}
+                className="mt-1.5 border-gs-line"
+              />
+            </div>
+            <div>
+              <LabelWithHint label="Ville" hint="Votre ville principale d’activité ou de dépôt du matériel." />
+              <div className="mt-1.5">
+                <VilleAutocomplete
+                  value={data.ville}
+                  onChange={(ville) => updateData({ ville, villeCode: null })}
+                  onCitySelect={(ville, citycode) => updateData({ ville, villeCode: citycode })}
+                  inputClassName="border-gs-line"
+                />
+              </div>
+            </div>
           </div>
           <Button
             className="w-full bg-gs-orange font-landing-btn text-white hover:brightness-105"
@@ -711,8 +777,12 @@ export function GetSoundOnOnboardingWizard({
               Sélectionnez les catégories et services que vous souhaitez proposer sur GetSoundOn.
             </p>
           </div>
-          <p className="text-sm font-semibold text-gs-dark">Catégories</p>
-          <div className="flex flex-wrap gap-2">
+          <div>
+            <SectionTitleWithHint
+              title="Catégories"
+              hint="Types de matériel que vous louez (sono, lumière, etc.). Au moins une."
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
             {OFFER_CATEGORIES.map((c) => (
               <button
                 key={c.id}
@@ -727,10 +797,14 @@ export function GetSoundOnOnboardingWizard({
                 {c.label}
               </button>
             ))}
+            </div>
           </div>
-          <p className="text-sm font-semibold text-gs-dark">Services proposés</p>
-          <p className="text-xs text-slate-500">Ces choix serviront à structurer votre boutique et vos annonces.</p>
-          <div className="flex flex-wrap gap-2">
+          <div>
+            <SectionTitleWithHint
+              title="Services proposés"
+              hint="Livraison, installation… Aident les clients à comprendre ce que vous faites."
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
             {ADDITIONAL_SVC.map((c) => (
               <button
                 key={c.id}
@@ -745,6 +819,7 @@ export function GetSoundOnOnboardingWizard({
                 {c.label}
               </button>
             ))}
+            </div>
           </div>
           <div className="flex gap-3">
             <Button
@@ -783,8 +858,11 @@ export function GetSoundOnOnboardingWizard({
             <p className="mt-1 text-slate-600">Définissez votre zone d’activité et vos modes de remise.</p>
           </div>
           <div>
-            <p className="mb-2 text-sm font-semibold text-gs-dark">Modes de remise</p>
-            <div className="flex flex-wrap gap-2">
+            <SectionTitleWithHint
+              title="Modes de remise"
+              hint="Comment le client récupère le matériel (retrait, livraison…). Au moins un mode."
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
               {HANDOFF.map((h) => (
                 <button
                   key={h.id}
@@ -800,51 +878,74 @@ export function GetSoundOnOnboardingWizard({
             </div>
           </div>
           <div>
-            <p className="mb-2 text-sm font-semibold text-gs-dark">Zone desservie</p>
-            <label className="text-sm font-medium text-gs-dark">Adresse principale</label>
-            <AdresseAutocomplete
-              value={data.adresse}
-              onChange={(addr) =>
-                updateData({ adresse: addr, lat: undefined, lng: undefined, postalCode: "" })
-              }
-              citycode={data.villeCode}
-              onSelectAddress={(addr, _city, postcode, coords) =>
-                updateData({
-                  adresse: addr,
-                  postalCode: postcode ?? "",
-                  lat: coords?.lat,
-                  lng: coords?.lng,
-                })
-              }
-              inputClassName="border-gs-line"
+            <SectionTitleWithHint
+              title="Zone desservie"
+              hint="Point de départ pour la livraison ou le retrait, et zone couverte."
             />
-            <p className="mt-3 font-landing-nav text-sm font-medium text-gs-dark">Rayon d’intervention</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {RAYON_OPTIONS.map((r) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  className={chipClass(data.rayonKm === r.id)}
-                  onClick={() => updateData({ rayonKm: r.id })}
-                >
-                  {r.label}
-                </button>
-              ))}
+            <div className="mt-2">
+              <LabelWithHint
+                label="Adresse principale"
+                hint="Adresse de dépôt ou d’expédition ; aide à calculer distances et trajets."
+              />
+              <div className="mt-1.5">
+                <AdresseAutocomplete
+                  value={data.adresse}
+                  onChange={(addr) =>
+                    updateData({ adresse: addr, lat: undefined, lng: undefined, postalCode: "" })
+                  }
+                  citycode={data.villeCode}
+                  onSelectAddress={(addr, _city, postcode, coords) =>
+                    updateData({
+                      adresse: addr,
+                      postalCode: postcode ?? "",
+                      lat: coords?.lat,
+                      lng: coords?.lng,
+                    })
+                  }
+                  inputClassName="border-gs-line"
+                />
+              </div>
             </div>
-            <label className="mt-3 block text-sm font-medium text-gs-dark">Villes desservies (optionnel)</label>
-            <Input
-              value={data.villesDesservies}
-              onChange={(e) => updateData({ villesDesservies: e.target.value })}
-              placeholder="Ex. : Paris, Boulogne…"
-              className="mt-1 border-gs-line"
-            />
+            <div className="mt-4">
+              <SectionTitleWithHint
+                title="Rayon d’intervention"
+                hint="Distance max ou « sur devis » si vous préférez étudier chaque demande."
+              />
+              <div className="mt-2 flex flex-wrap gap-2">
+                {RAYON_OPTIONS.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    className={chipClass(data.rayonKm === r.id)}
+                    onClick={() => updateData({ rayonKm: r.id })}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="mt-4">
+              <LabelWithHint
+                label="Villes desservies (optionnel)"
+                hint="Précisez d’autres villes si votre rayon ne suffit pas à décrire votre zone."
+              />
+              <Input
+                value={data.villesDesservies}
+                onChange={(e) => updateData({ villesDesservies: e.target.value })}
+                placeholder="Ex. : Paris, Boulogne…"
+                className="mt-1.5 border-gs-line"
+              />
+            </div>
           </div>
           <p className="text-xs text-slate-500">
             Ces informations seront utilisées pour la page produit, la boutique et la réservation.
           </p>
           <div>
-            <p className="mb-2 text-sm font-semibold text-gs-dark">Disponibilités générales</p>
-            <div className="flex flex-wrap gap-2">
+            <SectionTitleWithHint
+              title="Disponibilités générales"
+              hint="Quand vous pouvez en général préparer ou remettre le matériel."
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
               {(
                 [
                   ["dispoSemaine", "En semaine"],
@@ -862,13 +963,18 @@ export function GetSoundOnOnboardingWizard({
                 </button>
               ))}
             </div>
-            <label className="mt-3 block text-sm text-gs-dark">Horaires de retrait (optionnel)</label>
-            <Input
-              value={data.horairesRetrait}
-              onChange={(e) => updateData({ horairesRetrait: e.target.value })}
-              placeholder="Ex. : 10h–19h en semaine"
-              className="mt-1 border-gs-line"
-            />
+            <div className="mt-4">
+              <LabelWithHint
+                label="Horaires de retrait (optionnel)"
+                hint="Créneaux habituels pour le retrait sur place, si applicable."
+              />
+              <Input
+                value={data.horairesRetrait}
+                onChange={(e) => updateData({ horairesRetrait: e.target.value })}
+                placeholder="Ex. : 10h–19h en semaine"
+                className="mt-1.5 border-gs-line"
+              />
+            </div>
           </div>
           <div className="flex gap-3">
             <Button
@@ -909,8 +1015,11 @@ export function GetSoundOnOnboardingWizard({
             </p>
           </div>
           <div>
-            <p className="font-landing-nav mb-2 text-sm font-semibold text-gs-dark">Mode de réservation</p>
-            <div className="flex flex-wrap gap-2">
+            <SectionTitleWithHint
+              title="Mode de réservation"
+              hint="Manuel : vous validez chaque demande. Instantané : réservation confirmée tout de suite si disponible."
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
               <button
                 type="button"
                 className={chipClass(data.bookingMode === "manual")}
@@ -928,8 +1037,11 @@ export function GetSoundOnOnboardingWizard({
             </div>
           </div>
           <div>
-            <p className="font-landing-nav mb-2 text-sm font-semibold text-gs-dark">Caution</p>
-            <div className="flex flex-wrap gap-2">
+            <SectionTitleWithHint
+              title="Caution"
+              hint="Montant bloqué ou prélevé en garantie, selon vos règles (détails modifiables plus tard)."
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
               <button
                 type="button"
                 className={chipClass(data.cautionEnabled)}
@@ -946,17 +1058,26 @@ export function GetSoundOnOnboardingWizard({
               </button>
             </div>
             {data.cautionEnabled && (
-              <Input
-                className="mt-2 border-gs-line"
-                placeholder="Montant de caution par défaut (€)"
-                value={data.cautionAmountDefault}
-                onChange={(e) => updateData({ cautionAmountDefault: e.target.value })}
-              />
+              <div className="mt-3">
+                <LabelWithHint
+                  label="Montant de caution par défaut"
+                  hint="Indicatif en euros pour la première annonce ; vous pourrez l’ajuster par matériel."
+                />
+                <Input
+                  className="mt-1.5 border-gs-line"
+                  placeholder="Ex. : 200"
+                  value={data.cautionAmountDefault}
+                  onChange={(e) => updateData({ cautionAmountDefault: e.target.value })}
+                />
+              </div>
             )}
           </div>
           <div>
-            <p className="font-landing-nav mb-2 text-sm font-semibold text-gs-dark">Délai minimum</p>
-            <div className="flex flex-wrap gap-2">
+            <SectionTitleWithHint
+              title="Délai minimum"
+              hint="À partir de quand un client peut réserver (anticipation minimale avant le jour J)."
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
               {[
                 ["same_day", "Même jour"],
                 ["24h", "24 h"],
@@ -974,17 +1095,23 @@ export function GetSoundOnOnboardingWizard({
               ))}
             </div>
             {data.leadTime === "other" && (
-              <Input
-                className="mt-2 border-gs-line"
-                placeholder="Précise…"
-                value={data.leadTimeOther}
-                onChange={(e) => updateData({ leadTimeOther: e.target.value })}
-              />
+              <div className="mt-3">
+                <LabelWithHint label="Précisez le délai" hint="Ex. : 7 jours, 2 semaines…" />
+                <Input
+                  className="mt-1.5 border-gs-line"
+                  placeholder="Précise…"
+                  value={data.leadTimeOther}
+                  onChange={(e) => updateData({ leadTimeOther: e.target.value })}
+                />
+              </div>
             )}
           </div>
           <div>
-            <p className="font-landing-nav mb-2 text-sm font-semibold text-gs-dark">Politique d’annulation</p>
-            <div className="flex flex-wrap gap-2">
+            <SectionTitleWithHint
+              title="Politique d’annulation"
+              hint="Flexible, modérée ou stricte : indique aux clients les conditions si le projet change."
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
               {(
                 [
                   ["flexible", "Flexible"],
@@ -1052,33 +1179,50 @@ export function GetSoundOnOnboardingWizard({
               Créez l’espace public qui présentera votre activité et votre matériel.
             </p>
           </div>
-          <div className="space-y-3">
-            <label className="font-landing-nav text-sm font-medium text-gs-dark">Nom de la boutique</label>
-            <Input
-              value={data.storefrontName}
-              onChange={(e) => updateData({ storefrontName: e.target.value })}
-              className="border-gs-line bg-white"
-              placeholder="Ex. : Sonorisation Pro 75"
-            />
-            <p className="text-xs text-slate-500">Photo / logo et image de couverture : ajoutables depuis votre espace après publication.</p>
-            <label className="font-landing-nav text-sm font-medium text-gs-dark">Description courte</label>
-            <textarea
-              className="min-h-[88px] w-full rounded-md border border-gs-line bg-white p-3 text-sm"
-              value={data.storefrontDescription}
-              onChange={(e) => updateData({ storefrontDescription: e.target.value })}
-              placeholder="Une phrase qui résume votre offre."
-            />
-            <label className="font-landing-nav text-sm font-medium text-gs-dark">Localisation affichée</label>
-            <Input
-              value={data.storefrontLocationDisplay}
-              onChange={(e) => updateData({ storefrontLocationDisplay: e.target.value })}
-              className="border-gs-line bg-white"
-              placeholder="Ex. : Paris · Île-de-France"
-            />
+          <div className="space-y-4">
+            <div>
+              <LabelWithHint
+                label="Nom de la boutique"
+                hint="Nom public sur votre page boutique. Photo, logo et bannière : ajoutables après publication."
+              />
+              <Input
+                value={data.storefrontName}
+                onChange={(e) => updateData({ storefrontName: e.target.value })}
+                className="mt-1.5 border-gs-line bg-white"
+                placeholder="Ex. : Sonorisation Pro 75"
+              />
+            </div>
+            <div>
+              <LabelWithHint
+                label="Description courte"
+                hint="Une ou deux phrases : types d’événements, style, ce qui vous distingue."
+              />
+              <textarea
+                className="mt-1.5 min-h-[88px] w-full rounded-md border border-gs-line bg-white p-3 text-sm"
+                value={data.storefrontDescription}
+                onChange={(e) => updateData({ storefrontDescription: e.target.value })}
+                placeholder="Une phrase qui résume votre offre."
+              />
+            </div>
+            <div>
+              <LabelWithHint
+                label="Localisation affichée"
+                hint="Texte libre visible par les clients (ville, région, zone sans adresse précise)."
+              />
+              <Input
+                value={data.storefrontLocationDisplay}
+                onChange={(e) => updateData({ storefrontLocationDisplay: e.target.value })}
+                className="mt-1.5 border-gs-line bg-white"
+                placeholder="Ex. : Paris · Île-de-France"
+              />
+            </div>
           </div>
           <div>
-            <p className="font-landing-nav mb-2 text-sm font-semibold text-gs-dark">Aperçu de votre boutique</p>
-            <div className="overflow-hidden rounded-xl border border-gs-line bg-white shadow-sm">
+            <SectionTitleWithHint
+              title="Aperçu de votre boutique"
+              hint="Rendu simplifié : les visuels et le détail s’enrichiront dans votre espace pro."
+            />
+            <div className="mt-2 overflow-hidden rounded-xl border border-gs-line bg-white shadow-sm">
               <div className="h-24 bg-gradient-to-br from-gs-orange/25 to-slate-200" />
               <div className="space-y-2 p-4">
                 <p className="text-lg font-semibold text-gs-dark">{data.storefrontName.trim() || "Nom de la boutique"}</p>
@@ -1143,111 +1287,170 @@ export function GetSoundOnOnboardingWizard({
               Commencez par un matériel ou un pack. Vous pourrez en ajouter d’autres ensuite.
             </p>
           </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className={chipClass(data.listingKind === "equipment")}
-              onClick={() => updateData({ listingKind: "equipment" })}
-            >
-              Ajouter un matériel
-            </button>
-            <button
-              type="button"
-              className={chipClass(data.listingKind === "pack")}
-              onClick={() => updateData({ listingKind: "pack", gearCategoryField: "pack_premium" })}
-            >
-              Créer un pack
-            </button>
+          <div>
+            <SectionTitleWithHint
+              title="Que souhaitez-vous publier en premier ?"
+              hint="Un matériel précis ou un pack clé en main ; d’autres annonces pourront suivre."
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={chipClass(data.listingKind === "equipment")}
+                onClick={() => updateData({ listingKind: "equipment" })}
+              >
+                Ajouter un matériel
+              </button>
+              <button
+                type="button"
+                className={chipClass(data.listingKind === "pack")}
+                onClick={() => updateData({ listingKind: "pack", gearCategoryField: "pack_premium" })}
+              >
+                Créer un pack
+              </button>
+            </div>
           </div>
 
           {data.listingKind === "equipment" ? (
-            <div className="space-y-3">
-              <Input
-                placeholder="Titre de l’annonce"
-                value={data.nom}
-                onChange={(e) => updateData({ nom: e.target.value })}
-                className="border-gs-line"
-              />
-              <label className="text-sm font-medium text-gs-dark">Catégorie</label>
-              <select
-                className="h-11 w-full rounded-md border border-gs-line bg-white px-3 text-sm"
-                value={data.gearCategoryField}
-                onChange={(e) => updateData({ gearCategoryField: e.target.value })}
-              >
-                {GEAR_SELECT.filter((g) => g.value !== "pack_premium").map((g) => (
-                  <option key={g.value} value={g.value}>
-                    {g.label}
-                  </option>
-                ))}
-              </select>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Input placeholder="Marque" value={data.gearBrand} onChange={(e) => updateData({ gearBrand: e.target.value })} className="border-gs-line" />
-                <Input placeholder="Modèle" value={data.gearModel} onChange={(e) => updateData({ gearModel: e.target.value })} className="border-gs-line" />
+            <div className="space-y-4">
+              <div>
+                <LabelWithHint
+                  label="Titre de l’annonce"
+                  hint="Nom court et clair (ex. : enceinte active 15 pouces, console DJ…)."
+                />
+                <Input
+                  value={data.nom}
+                  onChange={(e) => updateData({ nom: e.target.value })}
+                  className="mt-1.5 border-gs-line"
+                  placeholder="Ex. : Enceinte FBT 15"
+                />
               </div>
-              <textarea
-                className="min-h-[100px] w-full rounded-md border border-gs-line p-3 text-sm"
-                placeholder="Description courte"
-                value={data.description}
-                onChange={(e) => updateData({ description: e.target.value })}
-              />
-              <Input
-                placeholder="Prix / jour (€)"
-                type="number"
-                min={1}
-                value={data.tarifParJour}
-                onChange={(e) => updateData({ tarifParJour: e.target.value })}
-                className="border-gs-line"
-              />
+              <div>
+                <LabelWithHint label="Catégorie" hint="Type de matériel pour le classement et la recherche." />
+                <select
+                  className="mt-1.5 h-11 w-full rounded-md border border-gs-line bg-white px-3 text-sm"
+                  value={data.gearCategoryField}
+                  onChange={(e) => updateData({ gearCategoryField: e.target.value })}
+                >
+                  {GEAR_SELECT.filter((g) => g.value !== "pack_premium").map((g) => (
+                    <option key={g.value} value={g.value}>
+                      {g.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <LabelWithHint label="Marque" hint="Fabricant ou marque affichée sur la fiche." />
+                  <Input
+                    value={data.gearBrand}
+                    onChange={(e) => updateData({ gearBrand: e.target.value })}
+                    className="mt-1.5 border-gs-line"
+                    placeholder="Ex. : FBT"
+                  />
+                </div>
+                <div>
+                  <LabelWithHint label="Modèle" hint="Référence ou gamme, si elle existe." />
+                  <Input
+                    value={data.gearModel}
+                    onChange={(e) => updateData({ gearModel: e.target.value })}
+                    className="mt-1.5 border-gs-line"
+                    placeholder="Ex. : ProMaxx 114"
+                  />
+                </div>
+              </div>
+              <div>
+                <LabelWithHint
+                  label="Description"
+                  hint="État, puissance, accessoires inclus, conditions d’utilisation…"
+                />
+                <textarea
+                  className="mt-1.5 min-h-[100px] w-full rounded-md border border-gs-line p-3 text-sm"
+                  placeholder="Description courte"
+                  value={data.description}
+                  onChange={(e) => updateData({ description: e.target.value })}
+                />
+              </div>
+              <div>
+                <LabelWithHint label="Prix par jour" hint="Tarif de location à la journée, en euros." />
+                <Input
+                  type="number"
+                  min={1}
+                  value={data.tarifParJour}
+                  onChange={(e) => updateData({ tarifParJour: e.target.value })}
+                  className="mt-1.5 border-gs-line"
+                  placeholder="Ex. : 45"
+                />
+              </div>
             </div>
           ) : (
-            <div className="space-y-3">
-              <Input
-                placeholder="Nom du pack"
-                value={data.nom}
-                onChange={(e) => updateData({ nom: e.target.value })}
-                className="border-gs-line"
-              />
-              <label className="text-sm font-medium text-gs-dark">Usage</label>
-              <select
-                className="h-11 w-full rounded-md border border-gs-line bg-white px-3 text-sm"
-                value={data.packUsage}
-                onChange={(e) => updateData({ packUsage: e.target.value })}
-              >
-                {PACK_USAGE.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-              <textarea
-                className="min-h-[100px] w-full rounded-md border border-gs-line p-3 text-sm"
-                placeholder="Ce que le pack contient"
-                value={data.packContents}
-                onChange={(e) => updateData({ packContents: e.target.value })}
-              />
-              <Input
-                placeholder="Prix (€ / jour)"
-                type="number"
-                min={1}
-                value={data.tarifParJour}
-                onChange={(e) => updateData({ tarifParJour: e.target.value })}
-                className="border-gs-line"
-              />
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className={chipClass(data.packLivraison)}
-                  onClick={() => updateData({ packLivraison: !data.packLivraison })}
+            <div className="space-y-4">
+              <div>
+                <LabelWithHint label="Nom du pack" hint="Nom commercial du pack (visible sur la boutique)." />
+                <Input
+                  value={data.nom}
+                  onChange={(e) => updateData({ nom: e.target.value })}
+                  className="mt-1.5 border-gs-line"
+                  placeholder="Ex. : Pack sono mariage 80 pers."
+                />
+              </div>
+              <div>
+                <LabelWithHint label="Usage principal" hint="Type d’événement auquel ce pack est le plus adapté." />
+                <select
+                  className="mt-1.5 h-11 w-full rounded-md border border-gs-line bg-white px-3 text-sm"
+                  value={data.packUsage}
+                  onChange={(e) => updateData({ packUsage: e.target.value })}
                 >
-                  Livraison possible
-                </button>
-                <button
-                  type="button"
-                  className={chipClass(data.packInstallation)}
-                  onClick={() => updateData({ packInstallation: !data.packInstallation })}
-                >
-                  Installation possible
-                </button>
+                  {PACK_USAGE.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <LabelWithHint
+                  label="Contenu du pack"
+                  hint="Listez les éléments inclus (enceintes, micros, câbles, etc.)."
+                />
+                <textarea
+                  className="mt-1.5 min-h-[100px] w-full rounded-md border border-gs-line p-3 text-sm"
+                  placeholder="Ce que le pack contient"
+                  value={data.packContents}
+                  onChange={(e) => updateData({ packContents: e.target.value })}
+                />
+              </div>
+              <div>
+                <LabelWithHint label="Prix par jour" hint="Tarif du pack pour une journée de location." />
+                <Input
+                  type="number"
+                  min={1}
+                  value={data.tarifParJour}
+                  onChange={(e) => updateData({ tarifParJour: e.target.value })}
+                  className="mt-1.5 border-gs-line"
+                  placeholder="Ex. : 180"
+                />
+              </div>
+              <div>
+                <SectionTitleWithHint
+                  title="Options pack"
+                  hint="Indiquez si la livraison ou l’installation peuvent être proposées avec ce pack."
+                />
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className={chipClass(data.packLivraison)}
+                    onClick={() => updateData({ packLivraison: !data.packLivraison })}
+                  >
+                    Livraison possible
+                  </button>
+                  <button
+                    type="button"
+                    className={chipClass(data.packInstallation)}
+                    onClick={() => updateData({ packInstallation: !data.packInstallation })}
+                  >
+                    Installation possible
+                  </button>
+                </div>
               </div>
               <p className="text-xs text-slate-500">
                 Les packs sont utiles pour proposer une solution prête à réserver. Vous pourrez enrichir votre boutique plus tard.
@@ -1273,10 +1476,15 @@ export function GetSoundOnOnboardingWizard({
             }}
           >
             <Camera className="mx-auto h-10 w-10 text-gs-orange" />
-            <p className="mt-2 text-sm font-medium text-gs-dark">Photo principale</p>
-            <p className="text-xs text-slate-500">
-              JPG / PNG — au moins {MIN_PHOTOS} image, jusqu’à {MAX_PHOTOS}. Une annonce simple suffit pour commencer.
-            </p>
+            <div className="mt-2 flex justify-center">
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-semibold text-gs-dark">Photos de l’annonce</p>
+                <HintIcon
+                  hint={`JPG ou PNG — au moins ${MIN_PHOTOS} image, jusqu’à ${MAX_PHOTOS}. Une photo claire suffit pour démarrer.`}
+                  topic="Photos de l’annonce"
+                />
+              </div>
+            </div>
             <input ref={fileInputRef} type="file" accept="image/jpeg,image/png" multiple className="hidden" onChange={handleFileChange} />
             <Button type="button" variant="outline" className="mt-3 border-gs-line" onClick={() => fileInputRef.current?.click()}>
               Choisir des fichiers
@@ -1302,28 +1510,34 @@ export function GetSoundOnOnboardingWizard({
             )}
           </div>
 
-          <label className="flex items-start gap-2 text-sm text-slate-700">
-            <input
-              type="checkbox"
-              checked={acceptedTerms}
-              onChange={(e) => {
-                setSubmitError(null);
-                setAcceptedTerms(e.target.checked);
-              }}
-              className="mt-1 h-4 w-4 rounded border-gs-line accent-gs-orange"
+          <div className="space-y-2">
+            <LabelWithHint
+              label="CGU et CGV"
+              hint="Obligatoire pour publier. Les liens ouvrent le texte officiel dans un nouvel onglet."
             />
-            <span>
-              J’accepte les{" "}
-              <Link href="/cgu" className="font-medium text-gs-orange hover:underline" target="_blank">
-                CGU
-              </Link>{" "}
-              et{" "}
-              <Link href="/cgv" className="font-medium text-gs-orange hover:underline" target="_blank">
-                CGV
-              </Link>
-              .
-            </span>
-          </label>
+            <label className="flex items-start gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => {
+                  setSubmitError(null);
+                  setAcceptedTerms(e.target.checked);
+                }}
+                className="mt-1 h-4 w-4 rounded border-gs-line accent-gs-orange"
+              />
+              <span>
+                J’accepte les{" "}
+                <Link href="/cgu" className="font-medium text-gs-orange hover:underline" target="_blank">
+                  CGU
+                </Link>{" "}
+                et{" "}
+                <Link href="/cgv" className="font-medium text-gs-orange hover:underline" target="_blank">
+                  CGV
+                </Link>
+                .
+              </span>
+            </label>
+          </div>
           {uploadProgress && (
             <p className="text-sm text-slate-600">
               Envoi photo {uploadProgress.current} / {uploadProgress.total}…

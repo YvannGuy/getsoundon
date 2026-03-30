@@ -28,7 +28,6 @@ const schema = z.object({
   price_per_day: z.number().min(1, "Prix invalide"),
   description: z.string(),
   contact_phone: z.string(),
-  display_contact_phone: z.boolean(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -89,7 +88,6 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
     fd.append("price_per_day", String(values.price_per_day));
     fd.append("description", values.description);
     fd.append("contact_phone", values.contact_phone);
-    fd.append("display_contact_phone", values.display_contact_phone ? "1" : "0");
     const result = await updateSalleAction(fd);
     setIsPending(false);
     if (result.success) {
@@ -211,34 +209,17 @@ export function AnnonceEditModal({ salle, open, onOpenChange }: Props) {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700">
-              Téléphone contact
+              Téléphone (usage interne admin / suivi)
             </label>
             <Input
               {...form.register("contact_phone")}
               className="border-slate-200"
               placeholder="06 12 34 56 78"
             />
-            <p className="text-sm font-medium text-slate-600">Afficher « Contactez le propriétaire » avec téléphone ?</p>
-            <div className="flex gap-4">
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  checked={Boolean((form.watch("display_contact_phone") ?? true) === true)}
-                  onChange={() => form.setValue("display_contact_phone", true)}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Oui</span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  checked={Boolean((form.watch("display_contact_phone") ?? true) === false)}
-                  onChange={() => form.setValue("display_contact_phone", false)}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Non</span>
-              </label>
-            </div>
+            <p className="text-xs text-slate-500">
+              Ce numéro n&apos;est jamais affiché sur le site public ni communiqué aux visiteurs (politique de
+              confidentialité GetSoundOn).
+            </p>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">

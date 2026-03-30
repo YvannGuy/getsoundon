@@ -95,8 +95,6 @@ export async function updateSalleAction(formData: FormData) {
   const pricePerDay = parseInt(String(formData.get("price_per_day") ?? "0"), 10);
   const description = String(formData.get("description") ?? "").trim();
   const contactPhone = String(formData.get("contact_phone") ?? "").trim() || null;
-  const displayContactPhoneRaw = formData.get("display_contact_phone");
-  const displayContactPhone = displayContactPhoneRaw !== null ? displayContactPhoneRaw === "1" : undefined;
 
   if (!name || !city || !address || capacity <= 0 || pricePerDay <= 0) {
     return { error: "Champs obligatoires manquants ou invalides" };
@@ -111,11 +109,9 @@ export async function updateSalleAction(formData: FormData) {
     price_per_day: pricePerDay,
     description,
     contact_phone: contactPhone,
+    display_contact_phone: false,
     updated_at: new Date().toISOString(),
   };
-  if (displayContactPhone !== undefined) {
-    updates.display_contact_phone = displayContactPhone;
-  }
   const { error } = await supabase.from("salles").update(updates).eq("id", id);
 
   if (error) return { error: error.message };

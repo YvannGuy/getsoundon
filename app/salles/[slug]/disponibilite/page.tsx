@@ -57,7 +57,7 @@ export default async function DisponibilitePage({
             <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
               <span className="flex items-center gap-1.5">
                 <MapPin className="h-4 w-4 text-slate-400" />
-                {salle.address}
+                {salle.city}
               </span>
               <span className="flex items-center gap-1.5">
                 <Users className="h-4 w-4 text-slate-400" />
@@ -68,6 +68,9 @@ export default async function DisponibilitePage({
                 {formatSalleTarifs(salle)}
               </span>
             </div>
+            <p className="text-xs text-slate-500">
+              Localisation indicative (ville) — pas d&apos;adresse ni de téléphone affichés sur la plateforme.
+            </p>
           </div>
 
           {/* Colonne droite : formulaire visite */}

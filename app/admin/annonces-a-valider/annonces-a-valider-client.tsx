@@ -185,7 +185,7 @@ export function AnnoncesAValiderClient({ salles, highlightSalleId }: Props) {
       <h2 className="text-lg font-bold text-black">{selected.name}</h2>
       <p className="flex items-center gap-2 text-sm text-slate-600">
         <MapPin className="h-4 w-4 shrink-0" />
-        {selected.address}, {selected.city}
+        {selected.city}
       </p>
       <div className="flex flex-wrap gap-4">
         <div>

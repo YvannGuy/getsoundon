@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Check, MapPin, Phone, Users, Video } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, MapPin, Users, Video } from "lucide-react";
 
 import {
   Dialog,
@@ -128,19 +128,13 @@ export function AnnoncePreviewModal({ salle, open, onOpenChange }: Props) {
             <h2 className="text-xl font-bold text-black">{salle.name}</h2>
             <p className="mt-1 flex items-center gap-2 text-sm text-slate-600">
               <MapPin className="h-4 w-4 shrink-0" />
-              {salle.address}, {salle.city}
+              {salle.city}
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-gs-orange/10 px-3 py-1 text-[13px] font-medium text-black">
                 <Users className="h-4 w-4" />
                 Jusqu&apos;à {salle.capacity} personnes
               </span>
-              {salle.displayContactPhone && salle.contactPhone && (
-                <span className="flex items-center gap-1.5 text-sm text-slate-600">
-                  <Phone className="h-4 w-4" />
-                  {salle.contactPhone}
-                </span>
-              )}
               {salle.cautionRequise && (
                 <span className="text-xs text-amber-600">Caution requise</span>
               )}
