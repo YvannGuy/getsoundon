@@ -12,6 +12,12 @@ import "./globals.css";
 import "@/components/landing/landing.css";
 import "@/styles/animations.css";
 
+// Debug utils en développement
+if (process.env.NODE_ENV === 'development') {
+  import("@/lib/event-assistant/recommendation-debug-utils");
+  import("@/lib/event-assistant/matching-debug-utils");
+}
+
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-manrope",

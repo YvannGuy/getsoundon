@@ -9,8 +9,8 @@ import {
   ConversationEngineImpl 
 } from "@/lib/event-assistant/conversation-engine-v2";
 import { ConversationEngineState } from "@/lib/event-assistant/v2-types";
-import { buildRecommendedSetups } from "@/lib/event-assistant/recommendation";
-import { rankProviders } from "@/lib/event-assistant/matching";
+import { buildRecommendedSetupsAdaptive as buildRecommendedSetups } from "@/lib/event-assistant/recommendation-bridge";
+import { rankProvidersAdaptive as rankProviders } from "@/lib/event-assistant/matching-bridge-v2";
 import { getMockProviders } from "@/lib/event-assistant/mocks";
 import { getSlotValue } from "@/lib/event-assistant/slots-engine";
 import type {

@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useReducer, useRef } from "react";
 
 import { processUserTurn, createInitialAssistantState } from "@/lib/event-assistant/qualification";
-import { buildRecommendedSetups } from "@/lib/event-assistant/recommendation";
-import { rankProviders } from "@/lib/event-assistant/matching";
+import { buildRecommendedSetupsAdaptive as buildRecommendedSetups } from "@/lib/event-assistant/recommendation-bridge";
+import { rankProvidersAdaptive as rankProviders } from "@/lib/event-assistant/matching-bridge-v2";
 import { getMockProviders } from "@/lib/event-assistant/mocks";
 import type {
   AssistantQuestion,
