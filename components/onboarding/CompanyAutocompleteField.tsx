@@ -30,6 +30,8 @@ export function CompanyAutocompleteField({ value, placeholder, onChange, onSelec
 
   const canSearch = value.trim().length >= MIN_LEN;
 
+  const requestIdRef = useRef(0);
+
   useEffect(() => {
     if (!canSearch) {
       setResults([]);
@@ -39,38 +41,30 @@ export function CompanyAutocompleteField({ value, placeholder, onChange, onSelec
     }
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(async () => {
-      if (abortRef.current) {
-        abortRef.current.abort();
-        abortRef.current = null;
-      }
-      const controller = new AbortController();
-      abortRef.current = controller;
+      const currentId = ++requestIdRef.current;
       setLoading(true);
       setError(null);
+      setResults([]);
       try {
-        const res = await fetch(`/api/company-search?q=${encodeURIComponent(value.trim())}`, {
-          signal: controller.signal,
-        });
+        const res = await fetch(`/api/company-search?q=${encodeURIComponent(value.trim())}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = (await res.json()) as { suggestions?: CompanySuggestion[] };
-        setResults(json.suggestions ?? []);
+        if (requestIdRef.current === currentId) {
+          setResults(json.suggestions ?? []);
+        }
       } catch (e) {
-        if ((e as Error).name === "AbortError") {
-          // ignore abort; controller already cancelled
-        } else {
+        if (requestIdRef.current === currentId) {
           setError("Recherche indisponible pour le moment.");
+          setResults([]);
         }
       } finally {
-        if (!controller.signal.aborted) setLoading(false);
-        abortRef.current = null;
+        if (requestIdRef.current === currentId) {
+          setLoading(false);
+        }
       }
     }, DEBOUNCE_MS);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      if (abortRef.current && !abortRef.current.signal.aborted) {
-        abortRef.current.abort();
-      }
-      abortRef.current = null;
     };
   }, [value, canSearch]);
 
@@ -112,28 +106,31 @@ export function CompanyAutocompleteField({ value, placeholder, onChange, onSelec
           ) : null}
           {error ? (
             <p className="px-3 py-3 text-sm text-red-600">{error}</p>
-          ) : null}
-          {empty ? (
-            <p className="px-3 py-3 text-sm text-slate-500">Aucune entreprise trouvée.</p>
-          ) : null}
-          {results.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              className="flex w-full flex-col gap-0.5 border-b border-slate-100 px-3 py-2.5 text-left hover:bg-slate-50"
-              onClick={() => {
-                onSelect(c);
-                setOpen(false);
-              }}
-            >
-              <span className="text-sm font-semibold text-gs-dark">{c.name}</span>
-              <span className="text-xs text-slate-600">
-                {c.siret || c.siren ? `${c.siret ?? c.siren}` : "Identifiant indisponible"}
-                {c.city ? ` — ${c.city}${c.postalCode ? ` (${c.postalCode})` : ""}` : ""}
-              </span>
-              {c.legalForm ? <span className="text-[11px] text-slate-500">{c.legalForm}</span> : null}
-            </button>
-          ))}
+          ) : (
+            <>
+              {empty ? (
+                <p className="px-3 py-3 text-sm text-slate-500">Aucune entreprise trouvée.</p>
+              ) : null}
+              {results.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className="flex w-full flex-col gap-0.5 border-b border-slate-100 px-3 py-2.5 text-left hover:bg-slate-50"
+                  onClick={() => {
+                    onSelect(c);
+                    setOpen(false);
+                  }}
+                >
+                  <span className="text-sm font-semibold text-gs-dark">{c.name}</span>
+                  <span className="text-xs text-slate-600">
+                    {c.siret || c.siren ? `${c.siret ?? c.siren}` : "Identifiant indisponible"}
+                    {c.city ? ` — ${c.city}${c.postalCode ? ` (${c.postalCode})` : ""}` : ""}
+                  </span>
+                  {c.legalForm ? <span className="text-[11px] text-slate-500">{c.legalForm}</span> : null}
+                </button>
+              ))}
+            </>
+          )}
         </div>
         <div className="border-t border-slate-200 px-3 py-2">
           <Button

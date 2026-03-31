@@ -5,6 +5,7 @@ import { LandingFinalCta } from "@/components/landing/LandingFinalCta";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingHero } from "@/components/landing/LandingHero";
+import { LandingSmartEventAssistant } from "@/components/landing/LandingSmartEventAssistant";
 import { getUserOrNull } from "@/lib/supabase/server";
 
 export async function LandingPage() {
@@ -14,6 +15,7 @@ export async function LandingPage() {
     <main className="font-landing-body min-h-screen bg-gs-beige text-[#222]">
       <LandingHeader />
       <LandingHero />
+      <LandingSmartEventAssistant />
       <LandingFeaturesStrip />
       <LandingCtaDark />
       <LandingCatalogue />

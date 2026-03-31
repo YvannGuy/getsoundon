@@ -920,6 +920,7 @@ export function GetSoundOnOnboardingWizard({
                 onManual={() =>
                   updateData({
                     companyMode: "manual",
+                    raisonSociale: "",
                     companySearch: "",
                     companyName: "",
                     companySiren: "",
@@ -937,14 +938,7 @@ export function GetSoundOnOnboardingWizard({
                   className="mt-1 border-gs-line"
                   placeholder="Nom ou raison sociale (saisie manuelle)"
                 />
-              ) : (
-                <Input
-                  value={data.raisonSociale}
-                  onChange={(e) => updateData({ raisonSociale: e.target.value })}
-                  className="mt-1 border-gs-line"
-                  placeholder="Nom ou raison sociale"
-                />
-              )}
+              ) : null}
             </div>
             <div>
               <LabelWithHint label="Email" hint="Pour les notifications de réservation et la connexion." />
