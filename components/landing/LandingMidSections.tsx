@@ -63,31 +63,38 @@ const marquesLogos: { src: string; alt: string }[] = [
 
 export function LandingFeaturesStrip() {
   return (
-    <section className="landing-section bg-white">
-      <div className="landing-container grid gap-10 md:grid-cols-3 md:gap-8">
-        {[
-          {
-            icon: MapPin,
-            title: "Disponible près de toi",
-            desc: "Trouve du matériel proche de ton lieu d’événement, sans perdre de temps.",
-          },
-          {
-            icon: Package,
-            title: "Prêts à réserver",
-            desc: "Des packs et configurations prêtes à l’emploi, réservables en quelques clics.",
-          },
-          {
-            icon: Truck,
-            title: "Livraison & installation",
-            desc: "Options de retrait, livraison et mise en service selon les annonces.",
-          },
-        ].map((item) => (
-          <div key={item.title} className="flex flex-col items-center text-center md:items-start md:text-left">
-            <item.icon className="h-8 w-8 text-gs-orange" strokeWidth={1.75} aria-hidden />
-            <h3 className="font-landing-heading mt-4 text-lg font-bold text-gs-dark">{item.title}</h3>
-            <p className="font-landing-body mt-2 text-[#444]">{item.desc}</p>
-          </div>
-        ))}
+    <section className="landing-section border-y border-gs-line/70 bg-gradient-to-b from-white via-gs-beige/40 to-white">
+      <div className="landing-container">
+        <div className="grid gap-5 sm:gap-6 md:grid-cols-3 md:gap-6">
+          {[
+            {
+              icon: MapPin,
+              title: "Disponible près de toi",
+              desc: "Trouve du matériel proche de ton lieu d’événement, sans perdre de temps.",
+            },
+            {
+              icon: Package,
+              title: "Prêts à réserver",
+              desc: "Des packs et configurations prêtes à l’emploi, réservables en quelques clics.",
+            },
+            {
+              icon: Truck,
+              title: "Livraison & installation",
+              desc: "Options de retrait, livraison et mise en service selon les annonces.",
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className="flex flex-col items-center rounded-2xl border border-gs-line bg-white p-6 text-center shadow-[0_8px_30px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_40px_rgba(15,23,42,0.1)] sm:p-7 md:items-start md:text-left"
+            >
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gs-orange/10">
+                <item.icon className="h-6 w-6 text-gs-orange" strokeWidth={1.75} aria-hidden />
+              </div>
+              <h3 className="font-landing-heading mt-4 text-lg font-bold text-gs-dark">{item.title}</h3>
+              <p className="font-landing-body mt-2 text-[15px] leading-relaxed text-[#444]">{item.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
