@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { format, startOfDay } from "date-fns";
 import { useMemo, useState } from "react";
 import {
   Briefcase,
@@ -181,6 +182,7 @@ export function ListingDetailPremiumView({
   onPay,
   estimatedDays,
 }: ListingDetailPremiumViewProps) {
+  const todayIso = useMemo(() => format(startOfDay(new Date()), "yyyy-MM-dd"), []);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [optDelivery, setOptDelivery] = useState(true);
@@ -366,7 +368,14 @@ export function ListingDetailPremiumView({
                     <input
                       type="date"
                       value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
+                      min={todayIso}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        setStartDate(next);
+                        if (endDate && next && endDate < next) {
+                          setEndDate(next);
+                        }
+                      }}
                       className="h-11 w-full rounded-lg border border-gs-line bg-white px-3 text-sm text-gs-dark outline-none focus:border-gs-orange"
                     />
                   </label>
@@ -377,6 +386,7 @@ export function ListingDetailPremiumView({
                     <input
                       type="date"
                       value={endDate}
+                      min={startDate || todayIso}
                       onChange={(e) => setEndDate(e.target.value)}
                       className="h-11 w-full rounded-lg border border-gs-line bg-white px-3 text-sm text-gs-dark outline-none focus:border-gs-orange"
                     />

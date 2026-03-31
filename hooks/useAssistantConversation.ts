@@ -160,6 +160,10 @@ export function useAssistantConversation(options?: { freshSession?: boolean }) {
   const sendUserMessage = (text: string, isFirstMessage = false) => {
     const trimmed = text.trim();
     if (!trimmed) return;
+    const lastAssistantQuestion = [...state.messages]
+      .reverse()
+      .find((m) => m.role === "assistant" && m.kind === "question" && m.metadata?.relatedField)?.metadata
+      ?.relatedField;
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: "user",
@@ -175,7 +179,7 @@ export function useAssistantConversation(options?: { freshSession?: boolean }) {
 
     // Délai naturel simulant la réflexion de l'assistant
     setTimeout(() => {
-      const result = processUserTurn(currentBrief, trimmed, userMessage.id, isFirstMessage);
+      const result = processUserTurn(currentBrief, trimmed, userMessage.id, isFirstMessage, lastAssistantQuestion);
       dispatch({ type: "SET_BRIEF", payload: result.brief });
       dispatch({ type: "SET_QUALIFICATION", payload: result.qualification });
       dispatch({ type: "SET_TYPING", payload: false });

@@ -42,13 +42,34 @@ function confidenceFromExplicit(value: unknown): number {
   return 0.9;
 }
 
+function detectYesNo(raw: string): boolean | undefined {
+  const text = raw.toLowerCase();
+  if (/\b(non|nope|nop|pas besoin|pas de|aucune|jamais|sans)\b/.test(text)) return false;
+  if (/\b(oui|ouais|yep|yes|certainement|absolument|bien sûr|biensur)\b/.test(text)) return true;
+  return undefined;
+}
+
 export function processUserTurn(
   currentBrief: EventBrief,
   userText: string,
   userMessageId: string,
-  isFirstMessage = false
+  isFirstMessage = false,
+  lastQuestionField?: QuestionField
 ): ProcessResult {
   const parsed = parseEventPrompt(userText);
+  const yesNo = detectYesNo(userText);
+
+  // Si la dernière question portait sur un booléen (livraison, installation, technicien),
+  // interpréter explicitement oui/non pour éviter de reposer la question.
+  if (yesNo !== undefined) {
+    if (lastQuestionField === "deliveryNeeded") {
+      parsed.delivery = yesNo;
+    } else if (lastQuestionField === "installationNeeded") {
+      parsed.installation = yesNo;
+    } else if (lastQuestionField === "technicianNeeded") {
+      parsed.technician = yesNo;
+    }
+  }
 
   let brief = { ...currentBrief };
   const nowId = userMessageId;
