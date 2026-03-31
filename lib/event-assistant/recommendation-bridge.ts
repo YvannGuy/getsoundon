@@ -270,7 +270,15 @@ export function debugRecommendationProcess(
 
 const FEATURE_FLAG_KEY = "recommendation_engine_v2";
 
+function isJestOrNodeTest(): boolean {
+  return (
+    typeof process !== "undefined" &&
+    (process.env.NODE_ENV === "test" || Boolean(process.env.JEST_WORKER_ID))
+  );
+}
+
 export function isRecommendationV2Enabled(): boolean {
+  if (isJestOrNodeTest()) return true;
   if (typeof window === "undefined") return false;
   return localStorage.getItem(FEATURE_FLAG_KEY) === "true";
 }

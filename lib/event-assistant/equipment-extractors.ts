@@ -72,7 +72,7 @@ const EQUIPMENT_CATEGORIES: Record<EquipmentCategory, {
       'spots': [/\b(?:spots?|projecteurs?\s+fixes?)\b/gi],
       'wash': [/\b(?:wash|flood)\b/gi],
       'stroboscopes': [/\b(?:strobos?|stroboscopes?|flashs?)\b/gi]
-    ],
+    },
     brands: ['Chauvet', 'ADJ', 'Showtec', 'Martin', 'Robe'],
     quantityContext: "optional"
   },
@@ -151,7 +151,7 @@ const EQUIPMENT_CATEGORIES: Record<EquipmentCategory, {
       'jack': [/\b(?:câbles?\s+jacks?|jacks?)\b/gi],
       'rca': [/\b(?:câbles?\s+rca|rca|cinch)\b/gi],
       'di-box': [/\b(?:di[\s\-]?box|boîtiers?\s+di)\b/gi]
-    ],
+    },
     quantityContext: "rarely"
   }
 };
@@ -212,7 +212,7 @@ function extractCategoryMentions(
   }
   
   // Sous-catégories spécifiques
-  for (const [subcategory, patterns] of Object.entries(config.subcategories)) {
+  for (const [subcategory, patterns] of Object.entries(config.subcategories) as [string, RegExp[]][]) {
     for (const pattern of patterns) {
       let match;
       while ((match = pattern.exec(text)) !== null) {

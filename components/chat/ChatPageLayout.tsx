@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { useAssistantConversation } from "@/hooks/useAssistantConversation";
 import { ChatHeader } from "./ChatHeader";
@@ -13,12 +13,13 @@ interface ChatPageLayoutProps {
 }
 
 export function ChatPageLayout({ initialPrompt }: ChatPageLayoutProps) {
-  const assistant = useAssistantConversation();
+  const assistant = useAssistantConversation({ freshSession: !!initialPrompt?.trim() });
+  const sentInitialRef = useRef(false);
 
-  // Envoyer automatiquement le prompt initial si présent
   useEffect(() => {
-    if (initialPrompt?.trim()) {
-      assistant.sendUserMessage(initialPrompt);
+    if (initialPrompt?.trim() && !sentInitialRef.current) {
+      sentInitialRef.current = true;
+      assistant.sendUserMessage(initialPrompt, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialPrompt]);
@@ -30,7 +31,7 @@ export function ChatPageLayout({ initialPrompt }: ChatPageLayoutProps) {
       
       {/* Zone de messages scrollable */}
       <div className="flex-1 overflow-hidden flex flex-col">
-        <ChatMessagesArea messages={assistant.state.messages} />
+        <ChatMessagesArea messages={assistant.state.messages} isTyping={assistant.isTyping} />
         
         {/* Carousel des prestataires si prêt */}
         {assistant.readyForResults && assistant.rankedProviders.length > 0 && (

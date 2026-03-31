@@ -1,9 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { ConversationMessage } from "@/lib/event-assistant/types";
+import type { ChatMessage as ChatMessageType } from "@/lib/event-assistant/types";
 
-type Props = { role: ConversationMessage["role"]; content: string };
+type Props = { role: ChatMessageType["role"]; content: string };
 
 export function ChatMessage({ role, content }: Props) {
   const isUser = role === "user";

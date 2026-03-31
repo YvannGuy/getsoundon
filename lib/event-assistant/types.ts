@@ -213,6 +213,8 @@ export type QualificationAction =
   | "ask_optional_detail"
   | "end_qualification";
 
+export type AssistantStatus = "idle" | "chatting" | "ready";
+
 export type AssistantQuestion = {
   field: QuestionField;
   label: string;

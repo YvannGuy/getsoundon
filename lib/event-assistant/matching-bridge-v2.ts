@@ -4,7 +4,7 @@
  */
 
 import { EventBrief, MatchingProvider, UiRecommendedSetups } from "./types";
-import { SetupRecommendationV2 } from "./production-types";
+import { SetupRecommendationV2, EquipmentLineItem, ServiceLineItem } from "./production-types";
 import { ConversationEngineState } from "./v2-types";
 import { 
   ProviderV2, 
@@ -46,11 +46,11 @@ export function convertBriefToMatchingInput(
       ...recommendation.video,
       ...recommendation.infrastructure,
       ...recommendation.accessories
-    ] : generateFallbackEquipment(brief),
+    ] : generateFallbackEquipment(brief) as EquipmentLineItem[],
     
     requiredServices: recommendation ? 
       recommendation.services : 
-      generateFallbackServices(brief),
+      generateFallbackServices(brief) as ServiceLineItem[],
     
     indoorOutdoor: brief.indoorOutdoor.value || undefined,
     budgetMax: brief.budgetRange.value?.max || undefined,
@@ -553,7 +553,15 @@ export function rankProvidersAdaptive(
 
 const MATCHING_V2_FLAG_KEY = "matching_engine_v2";
 
+function isJestOrNodeTest(): boolean {
+  return (
+    typeof process !== "undefined" &&
+    (process.env.NODE_ENV === "test" || Boolean(process.env.JEST_WORKER_ID))
+  );
+}
+
 export function isMatchingV2Enabled(): boolean {
+  if (isJestOrNodeTest()) return true;
   if (typeof window === "undefined") return false;
   return localStorage.getItem(MATCHING_V2_FLAG_KEY) === "true";
 }

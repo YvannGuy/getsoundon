@@ -211,9 +211,13 @@ export function resolveSlotConflicts<T>(slot: SlotState<T>): SlotState<T> {
       break;
       
     case "most_recent":
-      resolvedCandidate = highConfCandidates.reduce((latest, current) => 
-        new Date(current.source.createdAt) > new Date(latest.source.createdAt) ? current : latest
-      );
+      resolvedCandidate = [...highConfCandidates].sort((a, b) => {
+        const ta = new Date(a.source.createdAt).getTime();
+        const tb = new Date(b.source.createdAt).getTime();
+        if (ta !== tb) return ta - tb;
+        // Même horodatage (même ms) : privilégier le candidat ajouté en dernier dans le slot
+        return slot.candidates.indexOf(a) - slot.candidates.indexOf(b);
+      }).pop()!;
       break;
       
     case "user_preference":

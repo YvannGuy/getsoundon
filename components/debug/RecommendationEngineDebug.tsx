@@ -76,7 +76,7 @@ export default function RecommendationEngineDebug() {
         indoorOutdoor: 'indoor' as IndoorOutdoor,
         venueType: 'private_home' as VenueType,
         dancingExpected: true,
-        serviceNeeds: ['sound', 'dj', 'lighting']
+        serviceNeeds: ['sound', 'dj', 'lighting'] as ServiceNeed[]
       }
     },
     {
@@ -87,7 +87,7 @@ export default function RecommendationEngineDebug() {
         indoorOutdoor: 'outdoor' as IndoorOutdoor,
         isCovered: true,
         livePerformance: true,
-        serviceNeeds: ['sound', 'lighting', 'technician']
+        serviceNeeds: ['sound', 'lighting', 'technician'] as ServiceNeed[]
       }
     },
     {
@@ -101,7 +101,7 @@ export default function RecommendationEngineDebug() {
         dancingExpected: true,
         livePerformance: true,
         technicianNeeded: true,
-        serviceNeeds: ['sound', 'microphones', 'dj', 'lighting', 'led_screen']
+        serviceNeeds: ['sound', 'microphones', 'dj', 'lighting', 'led_screen'] as ServiceNeed[]
       }
     }
   ];

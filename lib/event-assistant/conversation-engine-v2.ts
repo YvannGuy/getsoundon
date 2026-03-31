@@ -68,6 +68,7 @@ export interface ConversationEngine {
   processUserMessage(state: ConversationEngineState, userMessage: ChatMessage): {
     updatedState: ConversationEngineState;
     assistantResponse: ChatMessage;
+    lastAction: AssistantActionV2;
   };
 }
 
@@ -81,7 +82,7 @@ export class ConversationEngineImpl implements ConversationEngine {
   processUserMessage(
     state: ConversationEngineState, 
     userMessage: ChatMessage
-  ): { updatedState: ConversationEngineState; assistantResponse: ChatMessage } {
+  ): { updatedState: ConversationEngineState; assistantResponse: ChatMessage; lastAction: AssistantActionV2 } {
     
     // 1. Increment conversation turn
     let updatedState = {
@@ -135,7 +136,7 @@ export class ConversationEngineImpl implements ConversationEngine {
       messages: [...updatedState.messages, assistantResponse]
     };
     
-    return { updatedState, assistantResponse };
+    return { updatedState, assistantResponse, lastAction: assistantAction };
   }
   
   // ============================================================================
@@ -531,7 +532,7 @@ export class ConversationEngineImpl implements ConversationEngine {
   private generateSummaryText(state: ConversationEngineState): string {
     const resolvedSlots = Object.entries(state.slots)
       .filter(([_, slot]) => slot.status === "resolved")
-      .map(([field, slot]) => `${field}: ${JSON.stringify(getSlotValue(slot))}`)
+      .map(([field, slot]) => `${field}: ${JSON.stringify(getSlotValue(slot as any))}`)
       .join(", ");
       
     return `Récapitulatif de votre événement: ${resolvedSlots}`;

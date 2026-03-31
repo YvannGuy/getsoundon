@@ -251,7 +251,7 @@ export function getDialogueStats(memory: DialogueMemory): {
   });
   
   const mostAskedField = Object.entries(fieldCounts)
-    .reduce((max, [field, count]) => count > (max[1] || 0) ? [field, count] : max, [null, 0])[0] as QuestionField | null;
+    .reduce<[string | null, number]>((max, [field, count]) => count > (max[1] || 0) ? [field, count] : max, [null, 0])[0] as QuestionField | null;
     
   const conversationEfficiency = totalQuestions > 0 ? answeredQuestions / totalQuestions : 0;
   

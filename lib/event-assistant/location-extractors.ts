@@ -462,8 +462,8 @@ function deduplicateAndSortLocations(mentions: LocationMention[]): LocationMenti
       return b.confidence - a.confidence;
     }
     
-    const precisionOrder = { city: 3, district: 2, venue: 1, region: 0 };
-    return precisionOrder[b.interpretation.precision] - precisionOrder[a.interpretation.precision];
+    const precisionOrder: Record<string, number> = { city: 3, district: 2, venue: 1, region: 0, country: -1 };
+    return (precisionOrder[b.interpretation.precision] ?? 0) - (precisionOrder[a.interpretation.precision] ?? 0);
   });
 }
 

@@ -21,6 +21,7 @@ type AssistantAction =
   | { type: "SET_BRIEF"; payload: EventBrief }
   | { type: "SET_STATUS"; payload: AssistantStatus }
   | { type: "SET_EXPANDED"; payload: boolean }
+  | { type: "SET_TYPING"; payload: boolean }
   | { type: "RESTORE_STATE"; payload: AssistantState };
 
 type AssistantState = {
@@ -29,6 +30,7 @@ type AssistantState = {
   qualification: QualificationState;
   status: AssistantStatus;
   isExpanded: boolean;
+  isTyping: boolean;
 };
 
 const initialAssistantData = createInitialAssistantState();
@@ -39,6 +41,7 @@ const initialState: AssistantState = {
   qualification: initialAssistantData.qualification,
   status: "idle",
   isExpanded: false,
+  isTyping: false,
 };
 
 const createWelcomeMessage = (): ChatMessage => ({
@@ -72,8 +75,10 @@ function reducer(state: AssistantState, action: AssistantAction): AssistantState
       return { ...state, status: action.payload };
     case "SET_EXPANDED":
       return { ...state, isExpanded: action.payload };
+    case "SET_TYPING":
+      return { ...state, isTyping: action.payload };
     case "RESTORE_STATE":
-      return action.payload;
+      return { ...action.payload, isTyping: false };
     default:
       return state;
   }
@@ -103,15 +108,23 @@ function persistToStorage(state: AssistantState) {
   }
 }
 
-export function useAssistantConversation() {
+export function useAssistantConversation(options?: { freshSession?: boolean }) {
+  const freshSession = options?.freshSession ?? false;
   const [state, dispatch] = useReducer(reducer, initialState);
   const hasRestoredRef = useRef(false);
   const isRestoringRef = useRef(false);
 
-  // Hydrate depuis localStorage si dispo
   useEffect(() => {
     if (!hasRestoredRef.current) {
       hasRestoredRef.current = true;
+
+      if (freshSession) {
+        if (typeof window !== "undefined") {
+          try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+        }
+        // Pas de message de bienvenue : le prompt initial démarre directement la conversation
+        return;
+      }
       
       const restored = loadFromStorage();
       
@@ -122,7 +135,6 @@ export function useAssistantConversation() {
           isRestoringRef.current = false;
         }, 0);
       } else {
-        // Aucun état restauré, ajouter le message de bienvenue
         dispatch({ type: "ASSISTANT_MESSAGE", payload: createWelcomeMessage() });
       }
     }
@@ -145,7 +157,7 @@ export function useAssistantConversation() {
 
   const readyForResults = state.qualification.readyToRecommend;
 
-  const sendUserMessage = (text: string) => {
+  const sendUserMessage = (text: string, isFirstMessage = false) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     const userMessage: ChatMessage = {
@@ -156,13 +168,21 @@ export function useAssistantConversation() {
       createdAt: new Date().toISOString(),
     };
     dispatch({ type: "USER_MESSAGE", payload: userMessage });
+    dispatch({ type: "SET_TYPING", payload: true });
 
-    const result = processUserTurn(state.brief, trimmed, userMessage.id);
-    dispatch({ type: "SET_BRIEF", payload: result.brief });
-    dispatch({ type: "SET_QUALIFICATION", payload: result.qualification });
-    dispatch({ type: "ASSISTANT_MESSAGE", payload: result.assistantMessage });
-    dispatch({ type: "SET_STATUS", payload: result.qualification.readyToRecommend ? "ready" : "chatting" });
-    dispatch({ type: "SET_EXPANDED", payload: true });
+    // Capture le brief courant avant le re-render asynchrone
+    const currentBrief = state.brief;
+
+    // Délai naturel simulant la réflexion de l'assistant
+    setTimeout(() => {
+      const result = processUserTurn(currentBrief, trimmed, userMessage.id, isFirstMessage);
+      dispatch({ type: "SET_BRIEF", payload: result.brief });
+      dispatch({ type: "SET_QUALIFICATION", payload: result.qualification });
+      dispatch({ type: "SET_TYPING", payload: false });
+      dispatch({ type: "ASSISTANT_MESSAGE", payload: result.assistantMessage });
+      dispatch({ type: "SET_STATUS", payload: result.qualification.readyToRecommend ? "ready" : "chatting" });
+      dispatch({ type: "SET_EXPANDED", payload: true });
+    }, 700 + Math.random() * 400);
   };
 
   const expand = () => dispatch({ type: "SET_EXPANDED", payload: true });
@@ -181,6 +201,7 @@ export function useAssistantConversation() {
     recommended,
     rankedProviders,
     readyForResults,
+    isTyping: state.isTyping,
     sendUserMessage,
     expand,
   };

@@ -155,8 +155,12 @@ export class MatchingEngineV2Impl implements MatchingEngineV2 {
       }
     }
     
-    // 3. Inventaire/Stock
-    if (config.hardFilter.enableInventoryFiltering && provider.capabilities.inventory) {
+    // 3. Inventaire/Stock (si le prestataire a un inventaire renseigné ; sinon on ne filtre pas à tort)
+    if (
+      config.hardFilter.enableInventoryFiltering &&
+      provider.capabilities.inventory &&
+      provider.capabilities.inventory.length > 0
+    ) {
       const inventoryFit = calculateInventoryFit(
         input.requiredEquipment.map(eq => ({
           category: eq.category,

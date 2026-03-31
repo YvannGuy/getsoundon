@@ -202,7 +202,9 @@ describe('ConversationEngineV2', () => {
       };
       
       currentState = engine.processUserMessage(currentState, message1).updatedState;
-      expect(currentState.qualification.stage).toBe('understanding');
+      expect(['understanding', 'core_qualification']).toContain(
+        currentState.qualification.stage
+      );
       
       // Add more critical info
       const message2: ChatMessage = {

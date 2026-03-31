@@ -3,7 +3,7 @@
 import { v4 as uuid } from "uuid";
 
 import { computeQualificationState, createEmptyBrief, mergeField, resolveNextQuestionField } from "./brief";
-import { parseEventPrompt } from "./prompt-parser";
+import { parseEventPrompt, ParsedSignal } from "./prompt-parser";
 import {
   AssistantQuestion,
   EventBrief,
@@ -42,7 +42,12 @@ function confidenceFromExplicit(value: unknown): number {
   return 0.9;
 }
 
-export function processUserTurn(currentBrief: EventBrief, userText: string, userMessageId: string): ProcessResult {
+export function processUserTurn(
+  currentBrief: EventBrief,
+  userText: string,
+  userMessageId: string,
+  isFirstMessage = false
+): ProcessResult {
   const parsed = parseEventPrompt(userText);
 
   let brief = { ...currentBrief };
@@ -126,13 +131,27 @@ export function processUserTurn(currentBrief: EventBrief, userText: string, user
   const nextField = resolveNextQuestionField(brief, qualification);
   const nextQuestion = nextField ? QUESTIONS[nextField] : undefined;
 
+  // Accusé de réception naturel (sauf premier message qui contient déjà le contexte)
+  let ack = "";
+  if (!isFirstMessage) {
+    const ackParts: string[] = [];
+    if (parsed.locationLabel) ackParts.push(parsed.locationLabel);
+    if (parsed.guestCount) ackParts.push(`${parsed.guestCount} personnes`);
+    if (parsed.indoorOutdoor === "indoor") ackParts.push("intérieur");
+    if (parsed.indoorOutdoor === "outdoor") ackParts.push("extérieur");
+    if (parsed.eventDateRaw) ackParts.push(parsed.eventDateRaw);
+    if (ackParts.length > 0) {
+      ack = `Noté${ackParts.length === 1 ? ` (${ackParts[0]})` : ""} ! `;
+    }
+  }
+
   const assistantMessage: ChatMessage = {
     id: `assistant-${uuid()}`,
     role: "assistant",
     kind: nextQuestion ? "question" : "summary",
     content: nextQuestion
-      ? nextQuestion.label
-      : "Parfait, je peux déjà vous orienter et proposer une configuration. Vous pouvez ajouter des précisions si besoin.",
+      ? `${ack}${nextQuestion.label}`
+      : "Parfait, j'ai tout ce qu'il me faut ! Je vous prépare une sélection de prestataires adaptée.",
     createdAt: new Date().toISOString(),
     metadata: { relatedField: nextField },
   };

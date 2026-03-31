@@ -9,9 +9,10 @@ export const metadata: Metadata = {
   alternates: { canonical: buildCanonical("/chat") },
 };
 
-type SearchParams = { [key: string]: string | string[] | undefined };
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
-export default function ChatPage({ searchParams }: { searchParams?: SearchParams }) {
-  const initialPrompt = typeof searchParams?.prompt === "string" ? searchParams.prompt : "";
+export default async function ChatPage({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+  const initialPrompt = typeof params?.prompt === "string" ? params.prompt : "";
   return <ChatPageLayout initialPrompt={initialPrompt} />;
 }

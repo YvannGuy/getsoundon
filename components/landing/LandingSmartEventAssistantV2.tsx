@@ -68,19 +68,13 @@ export function LandingSmartEventAssistantV2() {
             {!assistant.state.isExpanded ? (
               <AssistantEntry
                 onSubmit={assistant.sendUserMessage}
-                placeholder={
-                  assistant.version === "v2" 
-                    ? "Décrivez votre événement : type, nombre de personnes, lieu, besoins..." 
-                    : "Décrivez votre événement..."
-                }
               />
             ) : (
               <AssistantChat
-                messages={assistant.state.messages}
-                onSendMessage={assistant.sendUserMessage}
-                isLoading={assistant.state.status === "chatting"}
-                recommendations={assistant.readyForResults ? assistant.recommended : undefined}
-                providers={assistant.readyForResults ? assistant.rankedProviders : undefined}
+                state={assistant.state}
+                readyForResults={assistant.readyForResults}
+                rankedProviders={assistant.rankedProviders}
+                sendUserMessage={assistant.sendUserMessage}
               />
             )}
           </div>

@@ -14,42 +14,48 @@ describe('Moteur de Matching V2 - Hard Filtering + Scoring Explicable', () => {
   // MOCK PROVIDERS POUR TESTS
   // ============================================================================
 
-  const createMockProvider = (overrides: Partial<ProviderV2> = {}): ProviderV2 => ({
-    id: `provider-${Math.random().toString(36).substr(2, 9)}`,
-    title: "Prestataire Test",
-    location: "Paris",
-    capabilities: {
-      categories: ["sound"],
-      services: {
-        delivery: true,
-        installation: true,
-        technician: false
+  const defaultCapabilities: ProviderV2["capabilities"] = {
+    categories: ["sound"],
+    services: {
+      delivery: true,
+      installation: true,
+      technician: false
+    },
+    coverage: {
+      zones: ["Paris", "Île-de-France"],
+      maxDistance: 25
+    },
+    inventory: [
+      { category: "sound", quantity: 4, qualityTier: "standard" },
+      { category: "microphones", quantity: 3, qualityTier: "standard" }
+    ],
+    specializations: [],
+    equipment_quality: "standard"
+  };
+
+  /** Fusionne `capabilities` pour ne pas perdre inventaire / services par défaut */
+  const createMockProvider = (overrides: Partial<ProviderV2> = {}): ProviderV2 => {
+    const { capabilities: capOverrides, ...restOverrides } = overrides;
+    const base: ProviderV2 = {
+      id: `provider-${Math.random().toString(36).substr(2, 9)}`,
+      title: "Prestataire Test",
+      location: "Paris",
+      capabilities: { ...defaultCapabilities, ...(capOverrides ?? {}) },
+      pricing: {
+        dailyRate: 300,
+        deliveryFee: 50,
+        setupFee: 100
       },
-      coverage: {
-        zones: ["Paris", "Île-de-France"],
-        maxDistance: 25
+      trust: {
+        verified: true,
+        responseTime: 12,
+        completionRate: 95
       },
-      inventory: [
-        { category: "sound", quantity: 4, qualityTier: "standard" },
-        { category: "microphones", quantity: 3, qualityTier: "standard" }
-      ],
-      specializations: [],
-      equipment_quality: "standard"
-    },
-    pricing: {
-      dailyRate: 300,
-      deliveryFee: 50,
-      setupFee: 100
-    },
-    trust: {
-      verified: true,
-      responseTime: 12,
-      completionRate: 95
-    },
-    rating: 4.5,
-    ratingCount: 25,
-    ...overrides
-  });
+      rating: 4.5,
+      ratingCount: 25
+    };
+    return { ...base, ...restOverrides, capabilities: { ...defaultCapabilities, ...(capOverrides ?? {}) } };
+  };
 
   const createMatchingInput = (overrides: Partial<MatchingInputV2> = {}): MatchingInputV2 => ({
     eventType: 'conference',
@@ -733,12 +739,21 @@ describe('Moteur de Matching V2 - Hard Filtering + Scoring Explicable', () => {
       });
 
       const input = createMatchingInput();
-      const results = engine.findMatches(input, [provider]);
+      const results = engine.findMatches(input, [provider], {
+        ...DEFAULT_MATCHING_CONFIG,
+        scoring: {
+          ...DEFAULT_MATCHING_CONFIG.scoring,
+          penalizeIncompleteData: false
+        },
+        results: {
+          ...DEFAULT_MATCHING_CONFIG.results,
+          minScoreThreshold: 0
+        }
+      });
 
-      // Devrait quand même fonctionner avec un score neutre
       expect(results.matches.length).toBeGreaterThan(0);
       const match = results.matches[0];
-      expect(match.scoring!.dimensions.inventory_fit.score).toBe(50); // Score neutre
+      expect(match.scoring!.dimensions.inventory_fit.score).toBe(50);
     });
   });
 });

@@ -1,9 +1,9 @@
 "use client";
 
-import type { ConversationMessage } from "@/lib/event-assistant/types";
+import type { ChatMessage as ChatMessageType } from "@/lib/event-assistant/types";
 import { ChatMessage } from "./ChatMessage";
 
-type Props = { messages: ConversationMessage[] };
+type Props = { messages: ChatMessageType[] };
 
 export function ChatThread({ messages }: Props) {
   return (

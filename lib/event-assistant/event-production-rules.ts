@@ -526,8 +526,8 @@ export function calculateEquipmentScaling(
   const speakers = Math.ceil(rules.speakers * environmentMultiplier);
   const additionalEquipment: string[] = [];
   
-  if (rules.subwoofer) additionalEquipment.push("subwoofer");
-  if (rules.monitors) additionalEquipment.push(`${rules.monitors} retours`);
+  if ("subwoofer" in rules && rules.subwoofer) additionalEquipment.push("subwoofer");
+  if ("monitors" in rules && rules.monitors) additionalEquipment.push(`${rules.monitors} retours`);
   
   return {
     speakers,

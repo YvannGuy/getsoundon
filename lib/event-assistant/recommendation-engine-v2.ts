@@ -25,6 +25,27 @@ import {
 } from "./event-production-rules";
 import { ExplicitEquipmentRequest } from "./nlp-types";
 
+const MUSIC_IMPORTANCE_RANK: Record<string, number> = {
+  none: 0,
+  low: 1,
+  medium: 2,
+  high: 3,
+  critical: 4
+};
+
+function bumpMusicImportance(
+  current: string | undefined,
+  minimum: keyof typeof MUSIC_IMPORTANCE_RANK
+): keyof typeof MUSIC_IMPORTANCE_RANK {
+  const curKey =
+    current != null && MUSIC_IMPORTANCE_RANK[current] !== undefined
+      ? current
+      : "none";
+  const a = MUSIC_IMPORTANCE_RANK[curKey] ?? 0;
+  const b = MUSIC_IMPORTANCE_RANK[minimum] ?? 0;
+  return (a >= b ? curKey : minimum) as keyof typeof MUSIC_IMPORTANCE_RANK;
+}
+
 // ============================================================================
 // MOTEUR PRINCIPAL V2
 // ============================================================================
@@ -72,6 +93,19 @@ export class RecommendationEngineV2Impl implements RecommendationEngineV2 {
     // Ajuster selon les besoins explicites
     if (input.serviceNeeds) {
       this.adjustProfileFromServiceNeeds(profile, input.serviceNeeds);
+    }
+
+    // Soirée « simple » sans DJ/lumière : ne pas imposer le profil « fête » par défaut
+    if (
+      input.eventType === "private_party" &&
+      input.simplicityPreference === "simple" &&
+      input.serviceNeeds?.length &&
+      !input.serviceNeeds.includes("dj") &&
+      !input.serviceNeeds.includes("lighting")
+    ) {
+      profile.danceIntent = false;
+      profile.lightingNeed = false;
+      profile.musicImportance = bumpMusicImportance(profile.musicImportance, "low");
     }
     
     // Ajuster selon les intentions spécifiques
@@ -129,7 +163,7 @@ export class RecommendationEngineV2Impl implements RecommendationEngineV2 {
     }
     
     if (needs.has("sound")) {
-      profile.musicImportance = Math.max(profile.musicImportance as any, "medium" as any);
+      profile.musicImportance = bumpMusicImportance(profile.musicImportance, "medium");
     }
   }
   
@@ -193,58 +227,80 @@ export class RecommendationEngineV2Impl implements RecommendationEngineV2 {
     const infrastructure = this.generateInfrastructureRecommendation(profile, venueContext, tier);
     const accessories = this.generateAccessoriesRecommendation(tier);
     
-    // Générer services
     const services = this.generateServicesRecommendation(input, profile, tier);
-    
-    // Adapter selon demandes explicites
-    const { 
-      adaptedEquipment, 
-      explicitRequestsHandled 
-    } = this.adaptToExplicitRequests({
-      soundSystem, microphones, djSetup, lighting, video, infrastructure, accessories
-    }, input.explicitEquipmentRequests || []);
-    
-    // Générer justifications et warnings
+
+    // adaptToExplicitRequests attend un SetupRecommendationV2 complet (copie superficielle + mutation des blocs matériel)
+    const stubForExplicit: SetupRecommendationV2 = {
+      tier,
+      productionProfile: profile,
+      venueContext,
+      assumptions,
+      soundSystem,
+      microphones,
+      djSetup,
+      lighting,
+      video,
+      infrastructure,
+      accessories,
+      services,
+      rationale: [],
+      warnings: [],
+      considerations: [],
+      complexity: "simple",
+      setupTime: "",
+      staffingRequired: 0,
+      explicitRequestsHandled: [],
+    };
+
+    const afterExplicit = this.adaptToExplicitRequests(
+      stubForExplicit,
+      input.explicitEquipmentRequests || []
+    );
+    const explicitRequestsHandled = afterExplicit.explicitRequestsHandled;
+
     const rationale = this.generateRationale(profile, venueContext, tier, scaling);
     const warnings = this.generateWarnings(profile, venueContext, assumptions);
     const considerations = this.generateConsiderations(input, profile, venueContext);
-    
-    // Métriques
+
     const complexity = this.calculateComplexity(profile, [
-      ...adaptedEquipment.soundSystem,
-      ...adaptedEquipment.microphones,
-      ...adaptedEquipment.djSetup,
-      ...adaptedEquipment.lighting,
-      ...adaptedEquipment.video
+      ...afterExplicit.soundSystem,
+      ...afterExplicit.microphones,
+      ...afterExplicit.djSetup,
+      ...afterExplicit.lighting,
+      ...afterExplicit.video,
     ]);
-    
-    const setupTime = this.estimateSetupTime(complexity, services.length);
-    const staffingRequired = this.calculateStaffingRequired(profile, tier, services);
-    
+
+    const setupTime = this.estimateSetupTime(complexity, afterExplicit.services.length);
+    const staffingRequired = this.calculateStaffingRequired(
+      profile,
+      tier,
+      afterExplicit.services
+    );
+
     return {
       tier,
       productionProfile: profile,
       venueContext,
       assumptions,
-      
-      soundSystem: adaptedEquipment.soundSystem,
-      microphones: adaptedEquipment.microphones,
-      djSetup: adaptedEquipment.djSetup,
-      lighting: adaptedEquipment.lighting,
-      video: adaptedEquipment.video,
-      infrastructure: adaptedEquipment.infrastructure,
-      accessories: adaptedEquipment.accessories,
-      
-      services,
-      
+
+      soundSystem: afterExplicit.soundSystem,
+      microphones: afterExplicit.microphones,
+      djSetup: afterExplicit.djSetup,
+      lighting: afterExplicit.lighting,
+      video: afterExplicit.video,
+      infrastructure: afterExplicit.infrastructure,
+      accessories: afterExplicit.accessories,
+
+      services: afterExplicit.services,
+
       rationale,
       warnings,
       considerations,
-      
+
       complexity,
       setupTime,
       staffingRequired,
-      explicitRequestsHandled
+      explicitRequestsHandled,
     };
   }
   
@@ -704,11 +760,19 @@ export class RecommendationEngineV2Impl implements RecommendationEngineV2 {
     
     // Adapter quantité si spécifiée
     if (request.quantity && request.quantity.kind === "exact") {
-      const relevantItem = equipmentSection.find(item => 
-        item.category === section || 
-        item.subcategory.includes(request.subcategory || '')
-      );
-      
+      const relevantItem = (request.subcategory
+        ? equipmentSection.find(
+            item =>
+              item.subcategory === request.subcategory ||
+              item.subcategory.includes(request.subcategory)
+          )
+        : undefined) ??
+        equipmentSection.find(
+          item =>
+            item.category === section ||
+            (request.subcategory ? item.subcategory.includes(request.subcategory) : false)
+        );
+
       if (relevantItem) {
         relevantItem.quantity = request.quantity.value;
         relevantItem.reasoning = `Quantité ajustée selon demande explicite (${request.quantity.value})`;
@@ -845,6 +909,10 @@ export class RecommendationEngineV2Impl implements RecommendationEngineV2 {
     
     if (profile.professionalStaffing) {
       rationale.push("Niveau professionnel avec technicien recommandé");
+    }
+
+    if (profile.autonomyRequired) {
+      rationale.push("Scénario autonome : privilégier une mise en service simple");
     }
     
     return rationale;

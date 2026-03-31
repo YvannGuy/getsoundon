@@ -79,16 +79,10 @@ describe('🏃‍♂️ Test Runner - Suite QA Complète', () => {
   // ============================================================================
   
   describe('🔗 Intégration entre Modules', () => {
-    it('doit avoir des types cohérents entre modules', () => {
-      // Vérifier que les types s'importent correctement
-      const { ChatMessage, EventBrief } = require('../types');
-      const { SlotState } = require('../v2-types');
-      const { SetupRecommendationV2 } = require('../production-types');
-      
-      expect(ChatMessage).toBeDefined();
-      expect(EventBrief).toBeDefined(); 
-      expect(SlotState).toBeDefined();
-      expect(SetupRecommendationV2).toBeDefined();
+    it('doit charger les modules types sans erreur (types TS épurés au runtime)', () => {
+      expect(() => require('../types')).not.toThrow();
+      expect(() => require('../v2-types')).not.toThrow();
+      expect(() => require('../production-types')).not.toThrow();
     });
 
     it('doit avoir des engines cohérents', () => {

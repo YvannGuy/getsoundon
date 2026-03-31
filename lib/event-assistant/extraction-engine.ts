@@ -307,7 +307,8 @@ class ContextualExtractor {
     const venuePatterns: Record<string, VenueType> = {
       'appartement': 'apartment',
       'maison': 'private_home',
-      'hôtel': 'hotel',
+      hôtel: 'hotel',
+      hotel: 'hotel',
       'salle': 'event_hall',
       'jardin': 'garden',
       'terrasse': 'terrace'
@@ -326,6 +327,37 @@ class ContextualExtractor {
           applied: false,
           createdAt: new Date().toISOString()
         });
+        // Lieux typiquement en intérieur / extérieur (ferme la question indoor/outdoor)
+        if (
+          venueType === "hotel" ||
+          venueType === "apartment" ||
+          venueType === "private_home" ||
+          venueType === "event_hall"
+        ) {
+          extractions.push({
+            id: uuid(),
+            messageId,
+            extractor: "contextual",
+            field: "indoorOutdoor",
+            rawValue: "indoor",
+            normalizedValue: "indoor",
+            confidence: 0.78,
+            applied: false,
+            createdAt: new Date().toISOString()
+          });
+        } else if (venueType === "garden" || venueType === "terrace") {
+          extractions.push({
+            id: uuid(),
+            messageId,
+            extractor: "contextual",
+            field: "indoorOutdoor",
+            rawValue: "outdoor",
+            normalizedValue: "outdoor",
+            confidence: 0.72,
+            applied: false,
+            createdAt: new Date().toISOString()
+          });
+        }
         break;
       }
     }

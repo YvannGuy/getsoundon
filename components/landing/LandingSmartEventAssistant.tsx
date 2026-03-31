@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Sparkles, Map, Shield } from "lucide-react";
 import { AssistantEntry } from "@/components/assistant/AssistantEntry";
 
@@ -22,6 +23,7 @@ const featureCards = [
 ];
 
 export function LandingSmartEventAssistant() {
+  const router = useRouter();
 
   return (
     <section className="bg-gradient-to-b from-gs-beige via-gs-beige to-white px-4 py-14 sm:py-18 lg:py-24">
@@ -45,9 +47,8 @@ export function LandingSmartEventAssistant() {
           <div className="space-y-5 px-5 pb-6 pt-5 sm:px-6 lg:px-8">
             <AssistantEntry
               onSubmit={(text) => {
-                // Rediriger vers la page de chat avec le prompt initial
                 const searchParams = new URLSearchParams({ prompt: text });
-                window.open(`/chat?${searchParams.toString()}`, '_blank');
+                router.push(`/chat?${searchParams.toString()}`);
               }}
             />
           </div>

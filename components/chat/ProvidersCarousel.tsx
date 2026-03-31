@@ -6,8 +6,13 @@ import { Button } from "@/components/ui/button";
 import { MatchingProvider } from "@/lib/event-assistant/types";
 import { ProviderCardCompact } from "./ProviderCardCompact";
 
+interface RankedProvider {
+  provider: MatchingProvider;
+  score?: { total?: number } | number;
+}
+
 interface ProvidersCarouselProps {
-  providers: MatchingProvider[];
+  providers: RankedProvider[];
 }
 
 export function ProvidersCarousel({ providers }: ProvidersCarouselProps) {
@@ -67,11 +72,19 @@ export function ProvidersCarousel({ providers }: ProvidersCarouselProps) {
       
       {/* Cards carousel */}
       <div className="flex gap-3 overflow-hidden">
-        {visibleProviders.map((provider) => (
-          <div key={provider.id} className="flex-1 min-w-0">
-            <ProviderCardCompact provider={provider} />
-          </div>
-        ))}
+        {visibleProviders.map((item) => {
+          const scoreNum =
+            typeof item.score === "number"
+              ? item.score
+              : typeof item.score === "object" && item.score?.total != null
+                ? item.score.total
+                : undefined;
+          return (
+            <div key={item.provider.id} className="flex-1 min-w-0">
+              <ProviderCardCompact provider={item.provider} matchScore={scoreNum} />
+            </div>
+          );
+        })}
       </div>
       
       {/* Indicators */}
