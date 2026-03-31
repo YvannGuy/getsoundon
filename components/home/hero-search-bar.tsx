@@ -8,7 +8,7 @@ import { MapPin, Search } from "lucide-react";
 import { HeroLocationAutocomplete } from "@/components/home/hero-location-autocomplete";
 import { cn } from "@/lib/utils";
 
-/** Un mot-clé à la fois — même liste que les suggestions rapides (cohérence UX) */
+/** Mots-clés pour le placeholder rotatif du champ matériel */
 const KEYWORD_EXAMPLES = [
   "Enceinte",
   "Écran",
@@ -42,7 +42,6 @@ export function HeroSearchBar({ className }: { className?: string }) {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [pausePlaceholder, setPausePlaceholder] = useState(false);
   const [showFieldErrors, setShowFieldErrors] = useState(false);
-  const quickTagsId = useId();
 
   useEffect(() => {
     if (pausePlaceholder) return;
@@ -87,113 +86,102 @@ export function HeroSearchBar({ className }: { className?: string }) {
           Que recherchez-vous ?
         </h2>
 
-        {/* Matériel + suggestions sous le 1er champ · Lieu + Rechercher (desktop) à droite */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-start md:gap-3 lg:gap-4">
-          <div className="flex min-w-0 w-full flex-col gap-2 md:flex-1">
-            <div className="flex flex-col gap-1.5">
-              <div className={cn(fieldShell, "md:min-h-[3.75rem]")}>
-                <label htmlFor="hero-intelligent-q" className="sr-only">
-                  Matériel ou prestation (obligatoire)
-                </label>
-                <Search
-                  className="pointer-events-none ml-3 h-5 w-5 shrink-0 text-[#9a9a9a] sm:ml-4"
-                  strokeWidth={2}
-                  aria-hidden
-                />
-                <input
-                  id="hero-intelligent-q"
-                  name="q"
-                  type="search"
-                  autoComplete="off"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onFocus={() => setPausePlaceholder(true)}
-                  onBlur={() => setPausePlaceholder(false)}
-                  placeholder={KEYWORD_EXAMPLES[placeholderIndex]}
-                  aria-labelledby={queryHeadingId}
-                  aria-invalid={queryInvalid}
-                  aria-describedby={queryInvalid ? queryErrorId : undefined}
-                  className="font-landing-body min-w-0 flex-1 border-0 bg-transparent py-3 pl-3 pr-4 text-base leading-normal text-gs-dark outline-none placeholder:text-[#5c5c5c] placeholder:opacity-90 sm:py-3.5 sm:pl-3.5 sm:text-lg sm:leading-snug md:pr-5 md:text-xl"
-                />
-              </div>
-              {queryInvalid ? (
-                <p
-                  id={queryErrorId}
-                  className={fieldErrorTextClass}
-                  role="status"
-                  aria-live="polite"
-                >
-                  Veuillez indiquer ce que vous recherchez — par exemple une enceinte, un micro ou une
-                  prestation (DJ, éclairage…).
-                </p>
-              ) : null}
+        {/* Desktop : ligne 1 = matériel | lieu ; ligne 2 = texte d'aide + bouton à droite (sous la zone lieu) */}
+        <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:items-start md:gap-x-3 md:gap-y-2 lg:gap-x-4">
+          <div className="flex min-w-0 w-full flex-col gap-1.5 md:min-w-0">
+            <div className={cn(fieldShell, "md:min-h-[3.75rem]")}>
+              <label htmlFor="hero-intelligent-q" className="sr-only">
+                Matériel ou prestation (obligatoire)
+              </label>
+              <Search
+                className="pointer-events-none ml-3 h-5 w-5 shrink-0 text-[#9a9a9a] sm:ml-4"
+                strokeWidth={2}
+                aria-hidden
+              />
+              <input
+                id="hero-intelligent-q"
+                name="q"
+                type="search"
+                autoComplete="off"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setPausePlaceholder(true)}
+                onBlur={() => setPausePlaceholder(false)}
+                placeholder={KEYWORD_EXAMPLES[placeholderIndex]}
+                aria-labelledby={queryHeadingId}
+                aria-invalid={queryInvalid}
+                aria-describedby={queryInvalid ? queryErrorId : undefined}
+                className="font-landing-body min-w-0 flex-1 border-0 bg-transparent py-3 pl-3 pr-4 text-base leading-normal text-gs-dark outline-none placeholder:text-[#5c5c5c] placeholder:opacity-90 sm:py-3.5 sm:pl-3.5 sm:text-lg sm:leading-snug md:pr-5 md:text-xl"
+              />
             </div>
-            <div className="space-y-1.5 pt-0.5 md:pt-0">
+            {queryInvalid ? (
               <p
-                id={quickTagsId}
-                className="font-landing-body text-left text-[0.7rem] font-medium uppercase tracking-[0.12em] text-white/55"
+                id={queryErrorId}
+                className={fieldErrorTextClass}
+                role="status"
+                aria-live="polite"
               >
-                Suggestions rapides
+                Veuillez indiquer ce que vous recherchez — par exemple une enceinte, un micro ou une
+                prestation (DJ, éclairage…).
               </p>
-              <div
-                className="flex flex-wrap gap-2"
-                role="group"
-                aria-labelledby={quickTagsId}
-              >
-                {KEYWORD_EXAMPLES.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => {
-                      setQuery(tag);
-                      document.getElementById("hero-intelligent-q")?.focus();
-                    }}
-                    className="font-landing-body rounded-full border border-white/35 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/95 backdrop-blur-sm transition hover:border-white/55 hover:bg-white/20 sm:text-[13px]"
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
+            ) : null}
           </div>
 
-          <div className="flex min-w-0 w-full flex-col gap-3 md:flex-1">
-            <div className="flex flex-col gap-1.5">
-              <div className={cn(fieldShell, "items-stretch")}>
-                <label htmlFor="hero-intelligent-lieu" className="sr-only">
-                  Lieu ville ou code postal (obligatoire)
-                </label>
-                <MapPin
-                  className="pointer-events-none ml-3 h-5 w-5 shrink-0 self-center text-[#9a9a9a] sm:ml-4"
-                  strokeWidth={2}
-                  aria-hidden
-                />
-                <HeroLocationAutocomplete
-                  id="hero-intelligent-lieu"
-                  name="location"
-                  value={location}
-                  onChange={setLocation}
-                  placeholder={LOCATION_PLACEHOLDER}
-                  ariaInvalid={locationInvalid}
-                  ariaDescribedBy={locationInvalid ? locationErrorId : undefined}
-                />
-              </div>
-              {locationInvalid ? (
-                <p
-                  id={locationErrorId}
-                  className={fieldErrorTextClass}
-                  role="status"
-                  aria-live="polite"
+          <div className="flex min-w-0 w-full flex-col gap-1.5 md:min-w-0">
+            <div className={cn(fieldShell, "items-stretch")}>
+              <label htmlFor="hero-intelligent-lieu" className="sr-only">
+                Lieu ville ou code postal (obligatoire)
+              </label>
+              <MapPin
+                className="pointer-events-none ml-3 h-5 w-5 shrink-0 self-center text-[#9a9a9a] sm:ml-4"
+                strokeWidth={2}
+                aria-hidden
+              />
+              <HeroLocationAutocomplete
+                id="hero-intelligent-lieu"
+                name="location"
+                value={location}
+                onChange={setLocation}
+                placeholder={LOCATION_PLACEHOLDER}
+                ariaInvalid={locationInvalid}
+                ariaDescribedBy={locationInvalid ? locationErrorId : undefined}
+              />
+            </div>
+            {locationInvalid ? (
+              <p
+                id={locationErrorId}
+                className={fieldErrorTextClass}
+                role="status"
+                aria-live="polite"
+              >
+                Veuillez indiquer un lieu en Île-de-France : une ville ou un code postal.
+              </p>
+            ) : null}
+          </div>
+
+          <div className="flex flex-col gap-3 md:col-span-2 md:min-w-0 md:flex-row md:items-start md:justify-between md:gap-4 md:pt-1">
+            <div className="min-w-0 max-w-[52rem] flex-1">
+              <p className="font-landing-body text-left text-[13px] leading-relaxed text-white/80 md:text-sm">
+                Renseigne le <strong className="font-semibold text-white/95">matériel</strong> et le{" "}
+                <strong className="font-semibold text-white/95">lieu</strong> pour lancer la recherche. Tu peux
+                aussi préciser date ou capacité dans le champ matériel si tu veux.
+              </p>
+              <p className="font-landing-body mt-2 text-center text-sm leading-snug text-white/90 md:mt-2 md:text-left">
+                Ou parcourir le{" "}
+                <Link
+                  href="/catalogue"
+                  className="font-semibold text-white underline decoration-white/70 underline-offset-2 transition hover:decoration-white"
                 >
-                  Veuillez indiquer un lieu en Île-de-France : une ville ou un code postal.
-                </p>
-              ) : null}
+                  catalogue
+                </Link>
+                .
+              </p>
             </div>
             <button
               type="submit"
               className={cn(
                 submitBtnClass,
-                "hidden md:ml-auto md:block md:w-[min(46%,260px)] md:max-w-[280px] lg:w-[min(42%,240px)]"
+                "hidden shrink-0 md:inline-flex md:w-[min(46%,260px)] md:max-w-[280px] md:items-center md:justify-center md:self-start lg:w-[min(42%,240px)]"
               )}
             >
               Rechercher
@@ -201,24 +189,7 @@ export function HeroSearchBar({ className }: { className?: string }) {
           </div>
         </div>
 
-        <p className="font-landing-body mt-3 max-w-[52rem] text-left text-[13px] leading-relaxed text-white/80 md:mt-3.5 md:text-sm">
-          Renseigne le <strong className="font-semibold text-white/95">matériel</strong> et le{" "}
-          <strong className="font-semibold text-white/95">lieu</strong> pour lancer la recherche. Tu peux
-          aussi préciser date ou capacité dans le champ matériel si tu veux.
-        </p>
-
-        <p className="font-landing-body mt-2.5 text-center text-sm leading-snug text-white/90 md:mt-3 md:text-left">
-          Ou parcourir le{" "}
-          <Link
-            href="/catalogue"
-            className="font-semibold text-white underline decoration-white/70 underline-offset-2 transition hover:decoration-white"
-          >
-            catalogue
-          </Link>
-          .
-        </p>
-
-        {/* Mobile / tablette : bouton en bas, largeur confortable · masqué sur md+ (bouton sous le lieu) */}
+        {/* Mobile / tablette : bouton sous le bloc champs + aide */}
         <div className="mt-3 flex w-full flex-col items-center sm:mt-4 md:hidden">
           <button type="submit" className={cn(submitBtnClass, "w-[64%] max-w-[280px] shrink-0")}>
             Rechercher
