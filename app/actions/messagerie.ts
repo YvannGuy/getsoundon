@@ -215,6 +215,17 @@ export async function sendMessage(
   const trimmed = content.trim();
   if (!trimmed) return { success: false, error: "Message vide" };
 
+  // Vérification de participation (même logique que sendMessageWithAttachments)
+  const { data: conv } = await supabase
+    .from("conversations")
+    .select("id, seeker_id, owner_id")
+    .eq("id", conversationId)
+    .single();
+
+  if (!conv || ((conv as { seeker_id: string; owner_id: string }).seeker_id !== user.id && (conv as { seeker_id: string; owner_id: string }).owner_id !== user.id)) {
+    return { success: false, error: "Accès refusé" };
+  }
+
   const { error } = await supabase.from("messages").insert({
     conversation_id: conversationId,
     sender_id: user.id,

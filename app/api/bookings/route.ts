@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
     const { data: listing, error: listingError } = await supabase
       .from("gs_listings")
-      .select("id, owner_id, price_per_day, is_active")
+      .select("id, owner_id, price_per_day, is_active, immediate_confirmation")
       .eq("id", payload.listingId)
       .maybeSingle();
 
@@ -60,6 +60,10 @@ export async function POST(request: Request) {
 
     const totalPrice = Number((Number((listing as { price_per_day?: number }).price_per_day ?? 0) * totalDays).toFixed(2));
 
+    // Si instant booking activé sur le listing, la réservation est directement acceptée dès création
+    const isInstant = (listing as { immediate_confirmation?: boolean }).immediate_confirmation === true;
+    const initialStatus = isInstant ? "accepted" : "pending";
+
     const { data, error } = await supabase
       .from("gs_bookings")
       .insert({
@@ -70,7 +74,7 @@ export async function POST(request: Request) {
         end_date: payload.endDate,
         total_price: totalPrice,
         deposit_amount: Number((payload.depositAmount ?? 0).toFixed(2)),
-        status: "pending",
+        status: initialStatus,
       })
       .select("id, listing_id, customer_id, provider_id, start_date, end_date, total_price, deposit_amount, status, created_at")
       .single();

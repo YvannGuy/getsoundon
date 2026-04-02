@@ -1,10 +1,15 @@
 import type Stripe from "stripe";
 
+import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * Paiement marketplace MVP (tables gs_bookings / gs_payments).
  * Montant toujours relu depuis la base ; metadata sert à lier session → booking.
+ * Après paiement :
+ *  - gs_bookings → status "accepted", stripe_payment_intent_id, payout_due_at, deposit_hold
+ *  - gs_payments → insert
+ *  - Si deposit_amount_cents > 0 → PaymentIntent d'autorisation (empreinte caution)
  */
 export async function handleGsBookingCheckoutCompleted(
   session: Stripe.Checkout.Session,
@@ -12,11 +17,16 @@ export async function handleGsBookingCheckoutCompleted(
 ): Promise<void> {
   const bookingId = metadata.booking_id;
   const userId = metadata.user_id;
+  const payoutDueAt = metadata.payout_due_at ?? null;
+  const depositReleaseDueAt = metadata.deposit_release_due_at ?? null;
+  const depositAmountCents = parseInt(metadata.deposit_amount_cents ?? "0", 10);
+  const providerStripeAccountId = metadata.provider_stripe_account_id ?? null;
+
   const supabase = createAdminClient();
 
   const { data: booking, error: fetchError } = await supabase
     .from("gs_bookings")
-    .select("id, customer_id, status, total_price, listing_id")
+    .select("id, customer_id, status, total_price, listing_id, end_date")
     .eq("id", bookingId)
     .maybeSingle();
 
@@ -31,6 +41,7 @@ export async function handleGsBookingCheckoutCompleted(
     status: string;
     total_price: number | string;
     listing_id: string;
+    end_date: string;
   };
 
   if (row.customer_id !== userId) {
@@ -38,7 +49,8 @@ export async function handleGsBookingCheckoutCompleted(
     return;
   }
 
-  if (row.status !== "pending") {
+  // Accepter les statuts "pending" (demande standard) et "accepted" (instant booking)
+  if (row.status !== "pending" && row.status !== "accepted") {
     console.log("[webhook] gs_booking: deja traite ou statut", row.status, bookingId);
     return;
   }
@@ -67,11 +79,27 @@ export async function handleGsBookingCheckoutCompleted(
 
   const now = new Date().toISOString();
 
+  // Calcul fallback des dates si absentes des metadata (rétro-compatibilité)
+  const resolvedPayoutDueAt =
+    payoutDueAt ??
+    new Date(new Date(`${row.end_date}T18:00:00.000Z`).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString();
+
+  const resolvedDepositReleaseDueAt =
+    depositReleaseDueAt ??
+    new Date(new Date(`${row.end_date}T18:00:00.000Z`).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
   const { data: updated, error: updateError } = await supabase
     .from("gs_bookings")
-    .update({ status: "accepted", updated_at: now })
+    .update({
+      status: "accepted",
+      stripe_payment_intent_id: paymentIntentId,
+      payout_due_at: resolvedPayoutDueAt,
+      deposit_release_due_at: resolvedDepositReleaseDueAt,
+      payout_status: "pending",
+      updated_at: now,
+    })
     .eq("id", bookingId)
-    .eq("status", "pending")
+    .in("status", ["pending", "accepted"])
     .select("id")
     .maybeSingle();
 
@@ -96,5 +124,59 @@ export async function handleGsBookingCheckoutCompleted(
     console.error("[webhook] gs_booking: insert gs_payments", payError.message);
   } else {
     console.log("[webhook] gs_booking: paiement enregistre", bookingId);
+  }
+
+  // Création de l'empreinte caution si applicable
+  if (depositAmountCents > 0 && providerStripeAccountId && paymentIntentId) {
+    try {
+      const stripe = getStripe();
+
+      // Récupération de la PM du PaymentIntent pour le hold off-session
+      const pi = await stripe.paymentIntents.retrieve(paymentIntentId, {
+        expand: ["payment_method"],
+      });
+      const pmId =
+        typeof pi.payment_method === "string"
+          ? pi.payment_method
+          : pi.payment_method?.id ?? null;
+
+      if (pmId && pi.customer) {
+        const depositPi = await stripe.paymentIntents.create(
+          {
+            amount: depositAmountCents,
+            currency: "eur",
+            customer: typeof pi.customer === "string" ? pi.customer : pi.customer.id,
+            payment_method: pmId,
+            capture_method: "manual",
+            confirm: true,
+            off_session: true,
+            metadata: {
+              gs_booking_id: bookingId,
+              deposit_type: "gs_booking",
+              deposit_release_due_at: resolvedDepositReleaseDueAt,
+            },
+          },
+          { idempotencyKey: `gs-deposit-hold-${bookingId}` }
+        );
+
+        await supabase
+          .from("gs_bookings")
+          .update({
+            deposit_payment_intent_id: depositPi.id,
+            deposit_hold_status: depositPi.status === "requires_capture" ? "authorized" : "failed",
+            deposit_amount_cents: depositAmountCents,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", bookingId);
+
+        console.log("[webhook] gs_booking: empreinte caution créée", depositPi.id);
+      }
+    } catch (depositErr) {
+      console.error("[webhook] gs_booking: erreur empreinte caution", bookingId, depositErr);
+      await supabase
+        .from("gs_bookings")
+        .update({ deposit_hold_status: "failed", updated_at: new Date().toISOString() })
+        .eq("id", bookingId);
+    }
   }
 }

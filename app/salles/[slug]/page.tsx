@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Clock,
   ListChecks,
-  Lock,
   MapPin,
   Car,
   CookingPot,
@@ -18,7 +17,6 @@ import {
   Wifi,
 } from "lucide-react";
 
-import { UnlockAccessBloc } from "@/components/salles/unlock-access-bloc";
 import { Button } from "@/components/ui/button";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
@@ -427,15 +425,36 @@ export default async function SalleDetailPage({
               </div>
             ) : canContact ? (
               <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-black">Intéressé par cette salle ?</h3>
-                <p className="mt-2 text-[14px] text-slate-600">
-                  Organisez une visite pour la découvrir sur place.
-                </p>
-                <Link href={`/salles/${salle.slug}/disponibilite`}>
-                  <Button className="mt-4 h-12 w-full rounded-lg bg-gs-orange font-semibold hover:brightness-95">
-                    Organiser une visite
-                  </Button>
-                </Link>
+                {salle.instantBookingEnabled ? (
+                  <>
+                    <h3 className="text-lg font-semibold text-black">Réservation disponible</h3>
+                    <p className="mt-2 text-[14px] text-slate-600">
+                      Réservez directement en ligne — paiement sécurisé, confirmation immédiate.
+                    </p>
+                    <Link href={`/salles/${salle.slug}/reserver`}>
+                      <Button className="mt-4 h-12 w-full rounded-lg bg-gs-orange font-semibold hover:brightness-95">
+                        Réserver maintenant
+                      </Button>
+                    </Link>
+                    <Link href={`/salles/${salle.slug}/disponibilite`} className="mt-3 flex justify-center">
+                      <span className="text-sm text-slate-500 hover:text-black hover:underline">
+                        Préférer une visite d&apos;abord
+                      </span>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-lg font-semibold text-black">Intéressé par cette salle ?</h3>
+                    <p className="mt-2 text-[14px] text-slate-600">
+                      Organisez une visite pour la découvrir sur place.
+                    </p>
+                    <Link href={`/salles/${salle.slug}/disponibilite`}>
+                      <Button className="mt-4 h-12 w-full rounded-lg bg-gs-orange font-semibold hover:brightness-95">
+                        Organiser une visite
+                      </Button>
+                    </Link>
+                  </>
+                )}
                 {recentViewerCount > 0 && (
                   <p className="mt-4 flex items-center gap-2 text-[12px] text-slate-400">
                     <Clock className="h-3.5 w-3.5" />
@@ -464,27 +483,7 @@ export default async function SalleDetailPage({
                   </Button>
                 </Link>
               </div>
-            ) : (
-              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="flex justify-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gs-orange/10">
-                    <Lock className="h-6 w-6 text-gs-orange" />
-                  </div>
-                </div>
-                <h3 className="mt-4 text-center text-lg font-semibold text-black">
-                  Débloquez le contact propriétaire
-                </h3>
-                <p className="mt-2 text-center text-[14px] text-slate-600">
-                  Activez votre accès pour contacter le propriétaire et envoyer une demande de visite.
-                </p>
-                <div className="mt-6">
-                  <UnlockAccessBloc
-                    isLoggedIn={!!user}
-                    paiementUrl={`/salles/${slug}`}
-                  />
-                </div>
-              </div>
-            )}
+            ) : null}
             <div className="mt-6">
               <LocationAvailabilityCalendar
                 blockedDates={blockedLocationDates}
@@ -504,21 +503,36 @@ export default async function SalleDetailPage({
                   {priceFrom ? `À partir de ${priceFrom.value} € ${priceFrom.label}` : "Tarifs sur demande"}
                 </p>
                 <p className="text-[11px] text-slate-500">
-                  {canContact
-                    ? "Visite sans engagement"
-                    : "Choisissez une date, connexion demandée à l&apos;envoi"}
+                  {canContact && salle.instantBookingEnabled
+                    ? "Confirmation immédiate · paiement sécurisé"
+                    : canContact
+                      ? "Visite sans engagement"
+                      : "Choisissez une date, connexion demandée à l'envoi"}
                 </p>
               </div>
-              <Link href={`/salles/${salle.slug}/disponibilite`} className="shrink-0">
+              <Link
+                href={
+                  canContact && salle.instantBookingEnabled
+                    ? `/salles/${salle.slug}/reserver`
+                    : `/salles/${salle.slug}/disponibilite`
+                }
+                className="shrink-0"
+              >
                 <Button className="h-10 rounded-lg bg-gs-orange px-4 font-semibold hover:brightness-95">
-                  {canContact ? "Organiser une visite" : "Voir les disponibilités"}
+                  {canContact && salle.instantBookingEnabled
+                    ? "Réserver maintenant"
+                    : canContact
+                      ? "Organiser une visite"
+                      : "Voir les disponibilités"}
                 </Button>
               </Link>
             </div>
             <p className="mt-2 text-[11px] text-slate-500">
-              {canContact
-                ? "Vous confirmez seulement après échange avec le propriétaire."
-                : "Vous pourrez explorer les créneaux avant de créer un compte."}
+              {canContact && salle.instantBookingEnabled
+                ? "Aucun débit avant confirmation Stripe."
+                : canContact
+                  ? "Vous confirmez seulement après échange avec le propriétaire."
+                  : "Vous pourrez explorer les créneaux avant de créer un compte."}
             </p>
           </div>
         </div>

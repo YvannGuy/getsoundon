@@ -40,6 +40,8 @@ export type Salle = {
   gearCategory?: string | null;
   gearBrand?: string | null;
   gearModel?: string | null;
+  /** Si true, le locataire peut réserver et payer directement sans passer par la messagerie. */
+  instantBookingEnabled?: boolean;
 };
 
 export type SalleRow = {
@@ -78,6 +80,7 @@ export type SalleRow = {
   gear_category?: string | null;
   gear_brand?: string | null;
   gear_model?: string | null;
+  instant_booking_enabled?: boolean | null;
 };
 
 /** Retourne les libellés tarifs (ex: "800 € / jour · 90 € / heure · 879 € / mois") */
@@ -152,5 +155,6 @@ export function rowToSalle(row: SalleRow): Salle {
     gearCategory: row.gear_category ?? null,
     gearBrand: row.gear_brand ?? null,
     gearModel: row.gear_model ?? null,
+    instantBookingEnabled: row.instant_booking_enabled === true,
   };
 }

@@ -43,7 +43,7 @@ export async function GET(_: Request, context: RouteContext) {
     const [{ data: listing, error: listingError }, { data: images, error: imagesError }] = await Promise.all([
       supabase
         .from("gs_listings")
-        .select("id, owner_id, title, description, category, price_per_day, location, lat, lng, rating_avg, rating_count, is_active, created_at")
+        .select("id, owner_id, title, description, category, price_per_day, location, lat, lng, rating_avg, rating_count, is_active, immediate_confirmation, created_at")
         .eq("id", listingId)
         .maybeSingle(),
       supabase

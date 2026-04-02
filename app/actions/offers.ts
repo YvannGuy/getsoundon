@@ -367,3 +367,160 @@ export async function refuseOfferAction(offerId: string): Promise<{ success: boo
 
   return { success: true };
 }
+
+/**
+ * Réservation instantanée sur une salle (sans messagerie préalable).
+ * Crée une conversation système + une offre prête au paiement.
+ * Requiert : instant_booking_enabled = true sur la salle, et Connect actif chez le propriétaire.
+ */
+export async function createInstantBookingOfferAction(params: {
+  salleId: string;
+  dateDebut: string;
+  dateFin: string;
+}): Promise<{ success: boolean; error?: string; offerId?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecté" };
+
+  const adminSupabase = createAdminClient();
+
+  const { data: salleRow } = await adminSupabase
+    .from("salles")
+    .select("id, owner_id, name, price_per_day, price_per_hour, price_per_month, instant_booking_enabled, caution_requise")
+    .eq("id", params.salleId)
+    .eq("status", "approved")
+    .maybeSingle();
+
+  if (!salleRow) {
+    return { success: false, error: "Annonce introuvable ou non approuvée." };
+  }
+
+  const sr = salleRow as {
+    id: string;
+    owner_id: string;
+    name: string;
+    price_per_day: number | null;
+    instant_booking_enabled: boolean | null;
+    caution_requise: boolean | null;
+  };
+
+  if (!sr.instant_booking_enabled) {
+    return { success: false, error: "La réservation directe n'est pas disponible pour cette annonce." };
+  }
+
+  if (sr.owner_id === user.id) {
+    return { success: false, error: "Vous ne pouvez pas réserver votre propre annonce." };
+  }
+
+  // Vérification Connect du propriétaire
+  const { data: ownerProfile } = await adminSupabase
+    .from("profiles")
+    .select("stripe_account_id")
+    .eq("id", sr.owner_id)
+    .maybeSingle();
+
+  if (!(ownerProfile as { stripe_account_id?: string } | null)?.stripe_account_id) {
+    return { success: false, error: "Le propriétaire n'a pas encore activé les paiements." };
+  }
+
+  // Calcul du montant selon price_per_day et durée
+  const start = new Date(`${params.dateDebut}T00:00:00.000Z`);
+  const end = new Date(`${params.dateFin}T00:00:00.000Z`);
+  const days = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+  const pricePerDay = Number(sr.price_per_day ?? 0);
+  if (pricePerDay <= 0) {
+    return { success: false, error: "Tarif non disponible pour cette annonce." };
+  }
+  const amountCents = Math.round(pricePerDay * days * 100);
+
+  const serviceFeeCents = await getPlatformFeeCents({
+    adminSupabase,
+    eventType: "ponctuel",
+  });
+
+  const eventEndAt = new Date(`${params.dateFin}T18:00:00.000Z`).toISOString();
+  const incidentDeadlineAt = new Date(new Date(eventEndAt).getTime() + 48 * 60 * 60 * 1000).toISOString();
+  const ownerPayoutDueAt = new Date(new Date(eventEndAt).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString();
+  const depositReleaseDueAt = new Date(new Date(eventEndAt).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 min
+
+  // Création ou récupération de la conversation système instant booking
+  let conversationId: string | null = null;
+  const { data: existingConv } = await adminSupabase
+    .from("conversations")
+    .select("id")
+    .eq("seeker_id", user.id)
+    .eq("owner_id", sr.owner_id)
+    .eq("salle_id", params.salleId)
+    .maybeSingle();
+
+  if (existingConv) {
+    conversationId = (existingConv as { id: string }).id;
+  } else {
+    const { data: newConv, error: convErr } = await adminSupabase
+      .from("conversations")
+      .insert({
+        seeker_id: user.id,
+        owner_id: sr.owner_id,
+        salle_id: params.salleId,
+        last_message_at: new Date().toISOString(),
+        last_message_preview: "Réservation directe",
+      })
+      .select("id")
+      .single();
+
+    if (convErr || !newConv) {
+      return { success: false, error: "Impossible de créer la conversation." };
+    }
+    conversationId = (newConv as { id: string }).id;
+  }
+
+  // Création de l'offre
+  const { data: offerData, error: offerErr } = await adminSupabase
+    .from("offers")
+    .insert({
+      conversation_id: conversationId,
+      owner_id: sr.owner_id,
+      seeker_id: user.id,
+      salle_id: params.salleId,
+      amount_cents: amountCents,
+      payment_mode: "full",
+      upfront_amount_cents: amountCents,
+      balance_amount_cents: 0,
+      cancellation_policy: "strict",
+      service_fee_cents: serviceFeeCents,
+      date_debut: params.dateDebut,
+      date_fin: params.dateFin,
+      event_end_at: eventEndAt,
+      incident_deadline_at: incidentDeadlineAt,
+      owner_payout_due_at: ownerPayoutDueAt,
+      deposit_release_due_at: depositReleaseDueAt,
+      owner_payout_status: "pending",
+      incident_status: "none",
+      status: "pending",
+      expires_at: expiresAt,
+    })
+    .select("id")
+    .single();
+
+  if (offerErr || !offerData) {
+    return { success: false, error: "Impossible de créer l'offre." };
+  }
+
+  const offerId = (offerData as { id: string }).id;
+
+  // Message système dans la conversation
+  await adminSupabase.from("messages").insert({
+    conversation_id: conversationId,
+    sender_id: user.id,
+    content: `Demande de réservation directe du ${params.dateDebut} au ${params.dateFin}.`,
+  });
+
+  await adminSupabase.from("conversations").update({
+    last_message_at: new Date().toISOString(),
+    last_message_preview: `Réservation ${params.dateDebut} → ${params.dateFin}`,
+    updated_at: new Date().toISOString(),
+  }).eq("id", conversationId);
+
+  return { success: true, offerId };
+}
