@@ -17,6 +17,7 @@ import { getUserOrNull } from "@/lib/supabase/server";
 import { CheckInActions } from "@/components/materiel/checkin-actions";
 import { CheckOutAction } from "@/components/materiel/checkout-action";
 import { ReportIncidentForm } from "@/components/materiel/report-incident-form";
+import { BookingChat } from "@/components/materiel/booking-chat";
 
 export const dynamic = "force-dynamic";
 
@@ -345,6 +346,14 @@ export default async function ProprietaireMaterielDetailPage({
               incidentStatus={booking.incident_status}
             />
           </section>
+        )}
+
+        {/* Messagerie — uniquement post-paiement */}
+        {isPaid && (
+          <BookingChat
+            bookingId={booking.id}
+            otherPartyLabel={`le locataire${customer?.full_name ? ` (${customer.full_name})` : ""}`}
+          />
         )}
 
         {/* Lien vers l'annonce */}

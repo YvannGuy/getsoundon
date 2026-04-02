@@ -17,6 +17,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
 import { PayNowButton } from "@/components/materiel/pay-now-button";
+import { BookingChat } from "@/components/materiel/booking-chat";
 
 export const dynamic = "force-dynamic";
 
@@ -363,6 +364,14 @@ export default async function DashboardMaterielDetailPage({
             ))}
           </ol>
         </section>
+
+        {/* Messagerie — uniquement post-paiement */}
+        {isPaid && (
+          <BookingChat
+            bookingId={booking.id}
+            otherPartyLabel={`le prestataire${provider?.full_name ? ` (${provider.full_name})` : ""}`}
+          />
+        )}
 
         {/* CTA retour catalogue si terminé */}
         {isCompleted && !booking.incident_status && (
