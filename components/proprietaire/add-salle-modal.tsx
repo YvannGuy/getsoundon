@@ -82,3 +82,11 @@ export function AddSalleButton({
     </>
   );
 }
+
+export function AddSalleAutoOpen({ initialOpen }: { initialOpen: boolean }) {
+  const [open, setOpen] = useState(initialOpen);
+
+  if (!initialOpen) return null;
+
+  return <AddSalleModal open={open} onOpenChange={setOpen} />;
+}

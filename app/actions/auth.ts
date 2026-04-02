@@ -12,10 +12,6 @@ export type AuthFormState = {
   error?: string;
   success?: string;
   redirectTo?: string;
-  /** Prestataire : wizard sur la même page /auth (session immédiate, sans redirectedFrom). */
-  showProviderOnboarding?: boolean;
-  prefillOwnerEmail?: string;
-  prefillOwnerName?: string;
 };
 
 const defaultError = "Une erreur est survenue. Veuillez réessayer.";
@@ -117,24 +113,19 @@ export async function signupAction(_: AuthFormState, formData: FormData): Promis
     await sendWelcomeOwnerEmail(email, fullName).catch((e) =>
       console.error("[auth] welcome owner email:", e)
     );
-    if (redirectedFrom && redirectedFrom.startsWith("/")) {
-      return {
-        success: "Compte créé.",
-        redirectTo: resolveRedirectForUser(redirectedFrom, "owner"),
-      };
-    }
     return {
-      success: "Compte créé. Poursuivez la configuration de votre boutique ci-contre.",
-      showProviderOnboarding: true,
-      prefillOwnerEmail: email,
-      prefillOwnerName: fullName,
+      success: "Félicitations, votre compte est créé.",
+      redirectTo:
+        redirectedFrom && redirectedFrom.startsWith("/")
+          ? resolveRedirectForUser(redirectedFrom, "owner")
+          : "/proprietaire",
     };
   }
 
   // Confirmation email requise : pas de redirection (l'utilisateur n'a pas encore de session)
   return {
     success:
-      "Compte créé. Vérifiez votre email pour confirmer votre inscription, puis connectez-vous.",
+      "Félicitations ! Votre compte est créé. Vérifiez votre boîte mail pour confirmer l'inscription (pensez à regarder vos dossiers Spam/Indésirables). Une fois confirmé, vous pourrez vous connecter et accéder à votre dashboard.",
   };
 }
 

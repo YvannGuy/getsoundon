@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { AddSalleButton } from "@/components/proprietaire/add-salle-modal";
+import { AddSalleAutoOpen, AddSalleButton } from "@/components/proprietaire/add-salle-modal";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Banknote, CheckCircle, Inbox, Star } from "lucide-react";
@@ -42,7 +42,15 @@ const STATUS_PAIEMENT_LABEL: Record<string, string> = {
   canceled: "Annulé",
 };
 
-export default async function ProprietaireDashboardPage() {
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+export default async function ProprietaireDashboardPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const params = await searchParams;
+  const openAddAnnonce = params?.openAddAnnonce === "1";
   /** PDF d’onboarding — renommer le fichier dans /public/pdf quand l’asset GetSoundOn sera prêt */
   const onboardingGuideUrl = "/pdf/salledeculte.com_bien_debuter.pdf";
 
@@ -151,6 +159,7 @@ export default async function ProprietaireDashboardPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
+      <AddSalleAutoOpen initialOpen={openAddAnnonce} />
       <div className="mb-8">
         <h1 className="font-landing-heading text-2xl font-bold text-gs-dark">Prestataire · Tableau de bord</h1>
         <p className="font-landing-body mt-1 text-slate-600">Gérez vos annonces, demandes et réservations de matériel</p>

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const AUTH_HREF = "/auth?tab=signup&userType=owner";
-const ONBOARDING_HREF = "/onboarding/salle";
+const OWNER_DASHBOARD_ADD_HREF = "/proprietaire?openAddAnnonce=1";
 
 type AddSalleLinkProps = {
   className?: string;
@@ -14,7 +14,9 @@ type AddSalleLinkProps = {
 };
 
 /**
- * Lien "Ajouter ma salle" / "Ajoutez ma salle" : vers onboarding si connecté, sinon vers auth signup owner.
+ * Lien "Ajouter mon annonce" :
+ * - si connecté -> dashboard propriétaire avec ouverture automatique du wizard intégré
+ * - sinon -> auth signup owner
  */
 export function AddSalleLink({ className, children }: AddSalleLinkProps) {
   const [href, setHref] = useState(AUTH_HREF);
@@ -22,7 +24,7 @@ export function AddSalleLink({ className, children }: AddSalleLinkProps) {
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setHref(session?.user ? ONBOARDING_HREF : AUTH_HREF);
+      setHref(session?.user ? OWNER_DASHBOARD_ADD_HREF : AUTH_HREF);
     });
   }, []);
 
