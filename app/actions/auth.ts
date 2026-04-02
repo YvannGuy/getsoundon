@@ -16,6 +16,12 @@ export type AuthFormState = {
 
 const defaultError = "Une erreur est survenue. Veuillez réessayer.";
 
+function resolveSiteUrl() {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+}
+
 export async function loginAction(_: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
@@ -82,10 +88,12 @@ export async function signupAction(_: AuthFormState, formData: FormData): Promis
   const redirectedFrom = String(formData.get("redirectedFrom") ?? "").trim();
 
   const supabase = await createClient();
+  const siteUrl = resolveSiteUrl();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo: `${siteUrl}/auth/confirm`,
       data: { full_name: fullName, user_type: userType },
     },
   });

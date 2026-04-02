@@ -51,10 +51,22 @@ function AuthPageContent() {
   const redirectedFrom = searchParams.get("redirectedFrom") ?? "";
   const suspended = searchParams.get("suspended") === "1";
   const resetSuccess = searchParams.get("reset") === "success";
+  const authErrorCode = searchParams.get("error");
   const initialUserType = userTypeParam === "owner" ? "owner" : undefined;
   const [activeTab, setActiveTab] = useState<"login" | "signup">(
     tabParam === "signup" ? "signup" : "login"
   );
+
+  const authErrorMessage =
+    authErrorCode === "session_expired"
+      ? "Session expirée. Reconnectez-vous pour continuer."
+      : authErrorCode === "confirm_missing_params"
+        ? "Lien de confirmation invalide. Merci de réessayer depuis l’email."
+        : authErrorCode === "confirm_invalid_or_expired"
+          ? "Le lien de confirmation est invalide ou expiré. Demandez un nouvel email de confirmation."
+          : authErrorCode === "confirm_session_not_created"
+            ? "Confirmation effectuée, mais la session n’a pas pu être créée. Connectez-vous manuellement."
+            : null;
 
   return (
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-[0.95fr_1.05fr]">
@@ -110,6 +122,11 @@ function AuthPageContent() {
 
       <div className="relative flex min-h-0 flex-col overflow-y-auto bg-gs-beige p-6 md:p-10">
         <>
+        {authErrorMessage && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {authErrorMessage}
+          </div>
+        )}
         {resetSuccess && (
           <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
             Votre mot de passe a été modifié. Vous pouvez maintenant vous connecter.
@@ -265,6 +282,7 @@ function SignupFormContent({
   const router = useRouter();
   const [state, formAction] = useActionState(signupAction, initialState);
   const [isPending, startTransition] = useTransition();
+  const [submitLocked, setSubmitLocked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [userType, setUserType] = useState<"seeker" | "owner">(initialUserType ?? "seeker");
@@ -274,6 +292,12 @@ function SignupFormContent({
       router.push(state.redirectTo);
     }
   }, [state.redirectTo, router]);
+
+  useEffect(() => {
+    if (state.error) {
+      setSubmitLocked(false);
+    }
+  }, [state.error]);
 
   const form = useForm<SignupSchema>({
     resolver: zodResolver(signupSchema),
@@ -287,6 +311,8 @@ function SignupFormContent({
   });
 
   const onSubmit = (values: SignupSchema) => {
+    if (submitLocked || isPending) return;
+    setSubmitLocked(true);
     const fd = new FormData();
     fd.append("fullName", `${values.firstName} ${values.lastName}`);
     fd.append("email", values.email);
@@ -431,7 +457,7 @@ function SignupFormContent({
       <Button
         type="submit"
         className="font-landing-btn mt-5 h-11 w-full bg-gs-orange text-white transition hover:brightness-105"
-        disabled={isPending}
+        disabled={isPending || submitLocked}
       >
         {isPending ? "Création..." : "Créer mon compte"}
       </Button>
