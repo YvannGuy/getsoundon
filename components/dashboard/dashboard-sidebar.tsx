@@ -46,6 +46,7 @@ const seekerNavItems: SeekerNavItem[] = [
   { href: "/dashboard", label: "Tableau de bord", icon: Home },
   { href: "/dashboard/rechercher", label: "Rechercher du matériel", icon: Search, opensSearchModal: true },
   { href: "/dashboard/favoris", label: "Favoris", icon: Heart },
+  { href: "/dashboard/materiel", label: "Mes locations matériel", icon: Package },
   { href: "/dashboard/demandes", label: "Mes demandes", icon: FileText, badgeKey: "demandes" },
   { href: "/dashboard/reservations", label: "Réservations", icon: CalendarCheck, badgeKey: "reservations" },
   { href: "/dashboard/etats-des-lieux", label: "État du matériel", icon: ClipboardCheck, badgeKey: "etats" },
@@ -61,7 +62,7 @@ const seekerNavSections: { title: string; itemHrefs: string[] }[] = [
   { title: "Recherche", itemHrefs: ["/dashboard/rechercher", "/dashboard/favoris"] },
   {
     title: "Mes demandes & réservations",
-    itemHrefs: ["/dashboard/demandes", "/dashboard/reservations", "/dashboard/etats-des-lieux", "/dashboard/litiges"],
+    itemHrefs: ["/dashboard/materiel", "/dashboard/demandes", "/dashboard/reservations", "/dashboard/etats-des-lieux", "/dashboard/litiges"],
   },
   { title: "Finances & documents", itemHrefs: ["/dashboard/paiement", "/dashboard/contrat"] },
   { title: "Communication", itemHrefs: ["/dashboard/messagerie"] },

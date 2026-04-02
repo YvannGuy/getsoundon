@@ -313,11 +313,16 @@ export function findMockListingById(id: string): MockListingRow | undefined {
 /** Payload attendu par GET /api/listings/[id] */
 export function mockListingToDetail(row: MockListingRow) {
   const { image_url, ...rest } = row;
+  const immediateConfirmation = row.immediate_confirmation ?? false;
   return {
     ...rest,
     is_active: true,
+    deposit_amount: 0,
     owner_boutique_slug: DEMO_PROVIDER_SLUG,
-    immediate_confirmation: row.immediate_confirmation ?? false,
+    immediate_confirmation: immediateConfirmation,
+    /** En mode mock, les annonces instant booking sont supposées avoir Connect actif. */
+    has_connect: immediateConfirmation,
+    can_accept_instant_booking: immediateConfirmation,
     images: [
       {
         id: `${row.id}-cover`,

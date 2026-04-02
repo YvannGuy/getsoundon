@@ -54,6 +54,7 @@ export default async function AdminLayout({
     etatsDesLieux: 0,
     litiges: 0,
     conciergeRequests: 0,
+    incidentsMateriel: 0,
   };
 
   try {
@@ -182,6 +183,16 @@ export default async function AdminLayout({
       } catch {
         // Tables EDL/refund_cases peuvent ne pas exister
       }
+    }
+
+    try {
+      const { count } = await admin
+        .from("gs_bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("incident_status", "open");
+      badgeCounts.incidentsMateriel = count ?? 0;
+    } catch {
+      // gs_bookings peut ne pas encore avoir la colonne incident_status
     }
 
   } catch {

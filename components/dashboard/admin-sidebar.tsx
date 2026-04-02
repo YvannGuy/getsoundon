@@ -14,6 +14,7 @@ import {
   Flag,
   Headphones,
   Home,
+  Package,
   Scale,
   Menu,
   Settings,
@@ -38,6 +39,7 @@ type AdminSidebarProps = {
     etatsDesLieux: number;
     litiges: number;
     conciergeRequests: number;
+    incidentsMateriel: number;
   };
   userEmail?: string | null;
 };
@@ -117,6 +119,14 @@ const navItems = (
     icon: Scale,
     badgeKey: "litiges",
     badge: counts.litiges,
+    badgeTone: "danger" as const,
+  },
+  {
+    href: "/admin/incidents-materiel",
+    label: "Incidents matériel",
+    icon: Package,
+    badgeKey: "incidentsMateriel",
+    badge: counts.incidentsMateriel,
     badgeTone: "danger" as const,
   },
   {

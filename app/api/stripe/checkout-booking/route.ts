@@ -91,6 +91,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // Récupération du stripe_customer_id existant du locataire (même pattern que checkout-offer)
+    const { data: customerProfile } = await admin
+      .from("profiles")
+      .select("stripe_customer_id")
+      .eq("id", user.id)
+      .maybeSingle();
+    const existingStripeCustomerId =
+      (customerProfile as { stripe_customer_id?: string | null } | null)?.stripe_customer_id ?? null;
+
     const { data: listingRow } = await admin
       .from("gs_listings")
       .select("title")
@@ -108,12 +117,16 @@ export async function POST(request: Request) {
     const depositEur = Number(row.deposit_amount ?? 0);
     const depositCents = Number.isFinite(depositEur) && depositEur > 0 ? Math.round(depositEur * 100) : 0;
 
-    // Calcul de la date de versement J+3 après la fin de location
+    if (depositCents > 0) {
+      console.log("[checkout-booking] caution demandée", { bookingId, depositCents });
+    }
+
+    // Calcul de la date de versement J+2 après la fin de location (policy produit)
     const endDate = new Date(`${row.end_date}T18:00:00.000Z`);
-    const payoutDueAt = new Date(endDate.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString();
+    const payoutDueAt = new Date(endDate.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString();
     const depositReleaseDueAt = new Date(endDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    const successUrl = `${siteConfig.url}/items/${row.listing_id}?bookingPaid=1&bookingId=${bookingId}`;
+    const successUrl = `${siteConfig.url}/dashboard/materiel?paid=1&bookingId=${bookingId}`;
     const cancelUrl = `${siteConfig.url}/items/${row.listing_id}?bookingCancel=1`;
 
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
@@ -133,6 +146,7 @@ export async function POST(request: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_intent_data: {
+        // setup_future_usage: "off_session" enregistre la PM pour l'empreinte caution hors-session
         setup_future_usage: "off_session",
         metadata: {
           gs_booking_id: bookingId,
@@ -158,6 +172,13 @@ export async function POST(request: Request) {
         payout_due_at: payoutDueAt,
         deposit_release_due_at: depositReleaseDueAt,
       },
+      // Customer attaché ou créé pour garantir pi.customer non-null dans le webhook (empreinte caution)
+      ...(existingStripeCustomerId
+        ? { customer: existingStripeCustomerId }
+        : {
+            customer_email: user.email ?? undefined,
+            customer_creation: "always" as const,
+          }),
     });
 
     return NextResponse.json({ url: session.url, sessionId: session.id });

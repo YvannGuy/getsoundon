@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
   const { data: bookings } = await admin
     .from("gs_bookings")
-    .select("id, provider_id, customer_id, total_price, payout_due_at, payout_status, stripe_payment_intent_id")
+    .select("id, provider_id, customer_id, total_price, payout_due_at, payout_status, stripe_payment_intent_id, incident_status, deposit_claim_status")
     .in("status", ["accepted", "completed"])
     .in("payout_status", ["pending", "scheduled", "blocked"])
     .lte("payout_due_at", nowIso)
@@ -45,7 +45,29 @@ export async function POST(request: Request) {
       total_price: number | string;
       payout_status: string | null;
       stripe_payment_intent_id: string | null;
+      incident_status: string | null;
+      deposit_claim_status: string | null;
     };
+
+    // Incident ouvert → bloquer le payout
+    if (row.incident_status === "open") {
+      blocked += 1;
+      await admin
+        .from("gs_bookings")
+        .update({ payout_status: "blocked", updated_at: new Date().toISOString() })
+        .eq("id", row.id);
+      continue;
+    }
+
+    // Incident resolved mais décision caution pas encore prise → bloquer
+    if (row.deposit_claim_status === "pending_capture") {
+      blocked += 1;
+      await admin
+        .from("gs_bookings")
+        .update({ payout_status: "blocked", updated_at: new Date().toISOString() })
+        .eq("id", row.id);
+      continue;
+    }
 
     if (!row.stripe_payment_intent_id) {
       skipped += 1;

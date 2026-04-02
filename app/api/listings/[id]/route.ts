@@ -6,6 +6,7 @@ import {
   mockGsListingsEnabled,
   mockListingToDetail,
 } from "@/lib/mock-gs-listings";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const listingIdSchema = z.string().uuid();
@@ -39,11 +40,12 @@ export async function GET(_: Request, context: RouteContext) {
     }
 
     const supabase = await createClient();
+    const admin = createAdminClient();
 
     const [{ data: listing, error: listingError }, { data: images, error: imagesError }] = await Promise.all([
       supabase
         .from("gs_listings")
-        .select("id, owner_id, title, description, category, price_per_day, location, lat, lng, rating_avg, rating_count, is_active, immediate_confirmation, created_at")
+        .select("id, owner_id, title, description, category, price_per_day, deposit_amount, location, lat, lng, rating_avg, rating_count, is_active, immediate_confirmation, created_at")
         .eq("id", listingId)
         .maybeSingle(),
       supabase
@@ -60,7 +62,28 @@ export async function GET(_: Request, context: RouteContext) {
       return NextResponse.json({ error: "Listing introuvable." }, { status: 404 });
     }
 
-    return NextResponse.json({ data: { ...listing, images: images ?? [] } });
+    // Enrichissement depuis profiles : Connect status + boutique slug.
+    // owner_id === profiles.id (même UUID auth). stripe_account_id non exposé dans la réponse.
+    const listingRow = listing as { owner_id: string; immediate_confirmation?: boolean | null };
+    const { data: ownerProfile } = await admin
+      .from("profiles")
+      .select("stripe_account_id, boutique_slug")
+      .eq("id", listingRow.owner_id)
+      .maybeSingle();
+
+    const hasConnect = !!((ownerProfile as { stripe_account_id?: string | null } | null)?.stripe_account_id);
+    const boutique_slug = (ownerProfile as { boutique_slug?: string | null } | null)?.boutique_slug ?? null;
+    const immediateConfirmation = listingRow.immediate_confirmation === true;
+
+    return NextResponse.json({
+      data: {
+        ...listing,
+        images: images ?? [],
+        owner_boutique_slug: boutique_slug,
+        has_connect: hasConnect,
+        can_accept_instant_booking: immediateConfirmation && hasConnect,
+      },
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Identifiant invalide." }, { status: 400 });

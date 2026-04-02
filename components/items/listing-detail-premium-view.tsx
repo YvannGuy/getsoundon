@@ -35,14 +35,18 @@ export type ListingDetailModel = {
   description: string;
   category: "sound" | "dj" | "lighting" | "services";
   price_per_day: number;
+  /** Caution configurée par le prestataire (en euros). 0 ou null = pas de caution. */
+  deposit_amount?: number | null;
   location: string;
   rating_avg: number;
   rating_count: number;
   images: ListingDetailImage[];
   /** Slug public `/boutique/[slug]` — si absent, repli démo SoundElite. */
   owner_boutique_slug?: string | null;
-  /** true = « Réserver maintenant » + paiement Stripe ; false = « Envoyer la demande ». */
+  /** true = le listing est configuré pour la réservation directe. */
   immediate_confirmation?: boolean;
+  /** true = immediate_confirmation ET compte Stripe Connect du prestataire actif. */
+  can_accept_instant_booking?: boolean;
   /** Zone affichée (ex. Montreuil (93)) — pas d’adresse précise. */
   zone_label?: string | null;
   lat?: number | null;
@@ -110,7 +114,6 @@ function specsForCategory(
 const OPTION_DELIVERY = 35;
 const OPTION_INSTALL = 120;
 const OPTION_TECH = 150;
-const CAUTION_DISPLAY = 1500;
 
 type ToggleRowProps = {
   label: string;
@@ -228,7 +231,10 @@ export function ListingDetailPremiumView({
     ? specsForCategory(listing.category, listing.title)
     : SPECS_DJ;
 
-  const instantBook = listing ? listing.immediate_confirmation === true : false;
+  const canInstantBook = listing ? listing.can_accept_instant_booking === true : false;
+  const connectMissing = listing
+    ? listing.immediate_confirmation === true && !listing.can_accept_instant_booking
+    : false;
   const zoneDisplay =
     listing?.zone_label?.trim() || listing?.location?.trim() || "Île-de-France";
   const latNum = listing?.lat != null ? Number(listing.lat) : NaN;
@@ -348,7 +354,7 @@ export function ListingDetailPremiumView({
                   </span>
                   <span className="text-lg font-semibold text-[#666]">€ / jour</span>
                 </div>
-                {instantBook ? (
+                {canInstantBook ? (
                   <p className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-gs-orange">
                     <Zap className="h-4 w-4" aria-hidden />
                     Confirmation immédiate
@@ -356,7 +362,7 @@ export function ListingDetailPremiumView({
                 ) : (
                   <p className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-[#666]">
                     <Clock className="h-4 w-4 shrink-0" aria-hidden />
-                    Validation par le prestataire
+                    {connectMissing ? "Paiement en ligne non disponible" : "Validation par le prestataire"}
                   </p>
                 )}
 
@@ -462,10 +468,19 @@ export function ListingDetailPremiumView({
                       <span className="font-semibold text-gs-dark">{OPTION_TECH} €</span>
                     </div>
                   ) : null}
-                  <div className="flex justify-between text-[#555]">
-                    <span>Caution (non débitée)</span>
-                    <span className="font-semibold text-gs-dark">{CAUTION_DISPLAY} €</span>
-                  </div>
+                  {listing.deposit_amount != null && listing.deposit_amount > 0 ? (
+                    <>
+                      <div className="flex justify-between text-[#555]">
+                        <span className="flex items-center gap-1">
+                          Caution (empreinte)
+                        </span>
+                        <span className="font-semibold text-gs-dark">{listing.deposit_amount} €</span>
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-[#aaa]">
+                        Non débitée — autorisation bancaire après validation du paiement.
+                      </p>
+                    </>
+                  ) : null}
                   <div className="flex items-center justify-between border-t border-gs-line pt-4">
                     <span className="text-base font-bold text-black">Total estimé</span>
                     <span className="text-2xl font-bold text-gs-orange">
@@ -476,27 +491,35 @@ export function ListingDetailPremiumView({
 
                 <button
                   type="button"
-                  onClick={onReserve}
-                  disabled={bookingLoading || !startDate || !endDate}
+                  onClick={connectMissing ? undefined : onReserve}
+                  disabled={bookingLoading || payLoading || !startDate || !endDate || connectMissing}
                   className="font-landing-btn mt-6 flex h-12 w-full items-center justify-center rounded-lg bg-gs-orange text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {bookingLoading
-                    ? instantBook
-                      ? "Création…"
+                  {bookingLoading || payLoading
+                    ? canInstantBook
+                      ? "En cours…"
                       : "Envoi…"
-                    : instantBook
+                    : canInstantBook
                       ? "Réserver maintenant"
-                      : "Envoyer la demande"}
+                      : connectMissing
+                        ? "Réservation en ligne indisponible"
+                        : "Envoyer la demande"}
                 </button>
 
-                {instantBook && lastBookingId ? (
+                {connectMissing ? (
+                  <p className="mt-2 text-center text-[12px] leading-relaxed text-amber-600">
+                    Le prestataire doit finaliser l’activation des paiements. Contactez-le pour réserver.
+                  </p>
+                ) : null}
+
+                {canInstantBook && lastBookingId && bookingFeedback ? (
                   <button
                     type="button"
                     onClick={onPay}
                     disabled={payLoading}
                     className="font-landing-btn mt-3 flex h-12 w-full items-center justify-center rounded-lg border-2 border-gs-orange bg-white text-gs-orange transition hover:bg-gs-orange/5 disabled:opacity-50"
                   >
-                    {payLoading ? "Redirection…" : "Payer avec Stripe"}
+                    {payLoading ? "Redirection…" : "Relancer le paiement"}
                   </button>
                 ) : null}
 
@@ -505,15 +528,22 @@ export function ListingDetailPremiumView({
                 ) : null}
 
                 <p className="mt-4 text-center text-[11px] leading-relaxed text-[#999]">
-                  {instantBook ? (
+                  {canInstantBook ? (
                     <>
-                      Paiement sécurisé par GetSoundOn. Annulation gratuite jusqu’à 48h avant le début de la
+                      Paiement sécurisé par GetSoundOn. Annulation gratuite jusqu'à 48h avant le début de la
                       location.
+                      {listing.deposit_amount != null && listing.deposit_amount > 0 ? (
+                        <>{" "}Si une caution est requise, une empreinte bancaire sera autorisée après validation du paiement. Elle n’est pas débitée immédiatement.</>
+                      ) : null}
+                    </>
+                  ) : connectMissing ? (
+                    <>
+                      Réservation en ligne non disponible pour le moment. Contactez le prestataire.
                     </>
                   ) : (
                     <>
-                      Aucun paiement tant que le prestataire n’a pas accepté ta demande. Annulation gratuite
-                      jusqu’à 48h avant le début de la location.
+                      Aucun paiement tant que le prestataire n'a pas accepté ta demande. Annulation gratuite
+                      jusqu'à 48h avant le début de la location.
                     </>
                   )}
                 </p>

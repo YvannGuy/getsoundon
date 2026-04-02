@@ -16,12 +16,12 @@ export default function ItemDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [depositAmount, setDepositAmount] = useState("0");
   const [bookingFeedback, setBookingFeedback] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [lastBookingId, setLastBookingId] = useState<string | null>(null);
   const [payLoading, setPayLoading] = useState(false);
+  const [lastBookingId, setLastBookingId] = useState<string | null>(null);
 
+  // Charger l'annonce
   useEffect(() => {
     if (!listingId) return;
     let cancelled = false;
@@ -31,31 +31,29 @@ export default function ItemDetailPage() {
       try {
         const res = await fetch(`/api/listings/${listingId}`, { cache: "no-store" });
         const json = (await res.json()) as { data?: ListingDetailModel; error?: string };
-        if (!res.ok) {
-          throw new Error(json.error ?? "Impossible de charger le listing.");
-        }
-        if (!json.data) {
-          throw new Error("Cette annonce n’existe pas ou n’est plus disponible.");
-        }
-        if (!cancelled) {
-          setListing(json.data);
-        }
+        if (!res.ok) throw new Error(json.error ?? "Impossible de charger le listing.");
+        if (!json.data) throw new Error("Cette annonce n'existe pas ou n'est plus disponible.");
+        if (!cancelled) setListing(json.data);
       } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Erreur inattendue.");
-        }
+        if (!cancelled) setError(err instanceof Error ? err.message : "Erreur inattendue.");
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     };
     load();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [listingId]);
 
+  // Récupération sessionStorage : booking créé mais checkout non finalisé
+  useEffect(() => {
+    if (!listingId) return;
+    try {
+      const pending = sessionStorage.getItem(`gs_pending_booking_${listingId}`);
+      if (pending) setLastBookingId(pending);
+    } catch {}
+  }, [listingId]);
+
+  // Gestion des query params de retour Stripe
   useEffect(() => {
     if (typeof window === "undefined" || !listingId) return;
     const sp = new URLSearchParams(window.location.search);
@@ -82,7 +80,60 @@ export default function ItemDetailPage() {
     return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
   }, [endDate, startDate]);
 
-  const submitBooking = async () => {
+  // Flow instant booking : création du booking + checkout enchaîné en un seul geste
+  const reserveInstant = async () => {
+    if (!listing) return;
+    setBookingLoading(true);
+    setPayLoading(false);
+    setBookingFeedback(null);
+    let bookingId: string | null = null;
+
+    try {
+      // Étape 1 — Créer la gs_booking
+      const bookingRes = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          listingId: listing.id,
+          startDate,
+          endDate,
+          // La caution vient du listing (pas saisie manuellement par l'utilisateur)
+          depositAmount: listing.deposit_amount != null && listing.deposit_amount > 0
+            ? listing.deposit_amount
+            : 0,
+        }),
+      });
+      const bookingJson = (await bookingRes.json()) as { data?: { id: string }; error?: string };
+      if (!bookingRes.ok) throw new Error(bookingJson.error ?? "Réservation impossible.");
+      bookingId = bookingJson.data?.id ?? null;
+      if (!bookingId) throw new Error("Réservation créée mais identifiant manquant.");
+
+      // Persistance pour reprendre si le tab se ferme avant le redirect
+      try { sessionStorage.setItem(`gs_pending_booking_${listing.id}`, bookingId); } catch {}
+      setLastBookingId(bookingId);
+
+      // Étape 2 — Checkout Stripe
+      setBookingLoading(false);
+      setPayLoading(true);
+      const payRes = await fetch("/api/stripe/checkout-booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId }),
+      });
+      const payJson = (await payRes.json()) as { url?: string; error?: string };
+      if (!payRes.ok || !payJson.url) throw new Error(payJson.error ?? "Impossible de démarrer le paiement.");
+
+      window.location.href = payJson.url;
+      // La page redirect — rien après cette ligne n'est exécuté en cas de succès
+    } catch (err) {
+      setBookingLoading(false);
+      setPayLoading(false);
+      setBookingFeedback(err instanceof Error ? err.message : "Erreur inattendue.");
+    }
+  };
+
+  // Flow demande standard (non-instant) : création booking seulement
+  const submitRequest = async () => {
     if (!listing) return;
     setBookingLoading(true);
     setBookingFeedback(null);
@@ -94,21 +145,15 @@ export default function ItemDetailPage() {
           listingId: listing.id,
           startDate,
           endDate,
-          depositAmount: Number(depositAmount || "0"),
+          depositAmount: 0,
         }),
       });
       const json = (await res.json()) as { data?: { id: string }; error?: string };
-      if (!res.ok) {
-        throw new Error(json.error ?? "Réservation impossible.");
-      }
+      if (!res.ok) throw new Error(json.error ?? "Réservation impossible.");
       const bookingId = json.data?.id ?? null;
       setLastBookingId(bookingId);
       setBookingFeedback(
-        bookingId
-          ? listing.immediate_confirmation === true
-            ? "Réservation créée. Tu peux payer en ligne ou ouvrir la messagerie."
-            : "Demande envoyée au prestataire. Tu recevras une réponse sous peu."
-          : "Réservation créée."
+        "Demande envoyée au prestataire. Tu recevras une réponse sous peu."
       );
     } catch (err) {
       setBookingFeedback(err instanceof Error ? err.message : "Erreur inattendue.");
@@ -117,7 +162,8 @@ export default function ItemDetailPage() {
     }
   };
 
-  const payBooking = async () => {
+  // Retry checkout si le booking est créé mais la redirection a échoué
+  const retryCheckout = async () => {
     if (!lastBookingId) return;
     setPayLoading(true);
     setBookingFeedback(null);
@@ -128,9 +174,7 @@ export default function ItemDetailPage() {
         body: JSON.stringify({ bookingId: lastBookingId }),
       });
       const json = (await res.json()) as { url?: string; error?: string };
-      if (!res.ok || !json.url) {
-        throw new Error(json.error ?? "Impossible de démarrer le paiement.");
-      }
+      if (!res.ok || !json.url) throw new Error(json.error ?? "Impossible de démarrer le paiement.");
       window.location.href = json.url;
     } catch (err) {
       setBookingFeedback(err instanceof Error ? err.message : "Erreur paiement.");
@@ -147,6 +191,8 @@ export default function ItemDetailPage() {
     );
   }
 
+  const isInstantBooking = listing?.can_accept_instant_booking === true;
+
   return (
     <ListingDetailPremiumView
       listing={listing}
@@ -160,8 +206,8 @@ export default function ItemDetailPage() {
       bookingFeedback={bookingFeedback}
       lastBookingId={lastBookingId}
       payLoading={payLoading}
-      onReserve={submitBooking}
-      onPay={payBooking}
+      onReserve={isInstantBooking ? reserveInstant : submitRequest}
+      onPay={retryCheckout}
       estimatedDays={estimatedDays}
     />
   );

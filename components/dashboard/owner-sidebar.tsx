@@ -18,6 +18,7 @@ import {
   LogOut,
   Menu,
   MessageCircle,
+  Package,
   Receipt,
   Scale,
   Settings,
@@ -47,6 +48,7 @@ const ownerNavItems: OwnerNavItem[] = [
   { href: "/proprietaire", label: "Tableau de bord", icon: Home },
   { href: "/proprietaire/annonces", label: "Mes annonces", icon: LayoutGrid },
   { href: "/proprietaire/ajouter-annonce", label: "Ajouter une annonce", icon: PlusCircle },
+  { href: "/proprietaire/materiel", label: "Locations matériel", icon: Package },
   { href: "/proprietaire/demandes", label: "Demandes", icon: FileText, badgeKey: "demandes" },
   { href: "/proprietaire/reservations", label: "Réservations", icon: CalendarCheck, badgeKey: "reservations" },
   { href: "/proprietaire/visites", label: "Calendrier", icon: Calendar, badgeKey: "visites" },
@@ -67,7 +69,7 @@ const ownerNavSections: { title: string; itemHrefs: string[] }[] = [
   },
   {
     title: "Demandes & réservations",
-    itemHrefs: ["/proprietaire/demandes", "/proprietaire/reservations", "/proprietaire/visites"],
+    itemHrefs: ["/proprietaire/materiel", "/proprietaire/demandes", "/proprietaire/reservations", "/proprietaire/visites"],
   },
   {
     title: "Logistique & suivi",
