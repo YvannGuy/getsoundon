@@ -65,7 +65,11 @@ export function LandingFeaturesStrip() {
   return (
     <section className="landing-section border-y border-gs-line/70 bg-gradient-to-b from-white via-gs-beige/40 to-white">
       <div className="landing-container">
-        <div className="grid gap-5 sm:gap-6 md:grid-cols-3 md:gap-6">
+        <h2 className="font-landing-section-title text-center text-gs-dark">Louer en toute simplicité</h2>
+        <p className="font-landing-body mx-auto mt-3 max-w-2xl text-center text-[#444]">
+          Matériel proche de toi, réservation en quelques clics et options de livraison selon les annonces.
+        </p>
+        <div className="mt-10 grid gap-5 sm:gap-6 md:grid-cols-3 md:gap-6">
           {[
             {
               icon: MapPin,
