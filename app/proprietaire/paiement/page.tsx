@@ -102,8 +102,8 @@ export default async function ProprietairePaiementPage({
           </CardTitle>
           <CardDescription>
             {hasConnectAccount
-              ? "Envoyez des offres depuis la messagerie et recevez les paiements des locataires."
-              : "Connectez votre compte bancaire pour recevoir les paiements des réservations (frais plateforme configurables par l'administration)."}
+              ? "Les encaissements passent par Stripe ; ouvrez votre espace connecté pour suivre les virements."
+              : "Pour recevoir les paiements des réservations sur GetSoundOn, activez votre espace Stripe (compte connecté). Les frais plateforme sont configurables par l'administration."}
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { AddSalleAutoOpen, AddSalleButton } from "@/components/proprietaire/add-salle-modal";
+import { AddSalleAutoOpen } from "@/components/proprietaire/add-salle-modal";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Banknote, CheckCircle, Inbox, Star } from "lucide-react";
@@ -209,7 +209,8 @@ export default async function ProprietaireDashboardPage({
                 <div>
                   <p className="font-semibold text-black">Recevoir les paiements</p>
                   <p className="mt-0.5 text-sm text-slate-600">
-                    Envoyez des offres aux loueurs depuis la messagerie et recevez vos paiements directement.
+                    Pour recevoir les paiements sur GetSoundOn, vous devez activer et configurer votre espace Stripe
+                    (compte connecté).
                   </p>
                 </div>
               </div>
@@ -243,7 +244,7 @@ export default async function ProprietaireDashboardPage({
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="font-landing-heading text-lg text-gs-dark">Mes annonces</CardTitle>
+            <CardTitle className="font-landing-heading text-lg text-gs-dark">Ajouter une annonce</CardTitle>
             <Link href="/proprietaire/annonces" className="text-sm font-medium text-black hover:underline">
               Voir tout →
             </Link>
@@ -253,9 +254,12 @@ export default async function ProprietaireDashboardPage({
               <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-12 text-center">
                 <Inbox className="mb-3 h-12 w-12 text-slate-300" />
                 <p className="text-slate-500">Aucune annonce pour le moment</p>
-                <AddSalleButton size="sm" className="mt-3 bg-gs-orange hover:brightness-95">
-                  Créer une annonce
-                </AddSalleButton>
+                <Link
+                  href="/proprietaire/ajouter-annonce"
+                  className="mt-3 inline-flex h-9 items-center justify-center rounded-md bg-gs-orange px-3 text-sm font-medium text-white transition hover:brightness-95"
+                >
+                  Ajouter une annonce
+                </Link>
               </div>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">

@@ -745,7 +745,7 @@ export function GetSoundOnOnboardingWizard({
             </Link>
           ) : null}
           <Link
-            href="/onboarding/salle"
+            href="/proprietaire/ajouter-annonce"
             className="flex h-11 w-full items-center justify-center text-sm font-medium text-slate-600 hover:text-gs-dark"
           >
             Ajouter une autre annonce
@@ -805,7 +805,7 @@ export function GetSoundOnOnboardingWizard({
               </Link>
             ) : null}
             <Link
-              href="/onboarding/salle"
+              href="/proprietaire/ajouter-annonce"
               className="flex h-12 items-center justify-center text-sm font-medium text-slate-600 hover:text-gs-dark"
             >
               Ajouter une autre annonce
@@ -865,8 +865,6 @@ export function GetSoundOnOnboardingWizard({
       {step === 1 && (
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-gs-dark">Bienvenue sur GetSoundOn</h2>
-            <p className="mt-1 text-slate-600">Créons votre espace prestataire en quelques étapes.</p>
             <p className="mt-2 text-xs text-slate-500">Vous pourrez modifier ces informations plus tard.</p>
           </div>
           <SectionTitleWithHint

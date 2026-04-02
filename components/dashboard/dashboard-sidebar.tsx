@@ -439,10 +439,10 @@ export function DashboardSidebar({
             if (tourLock) event.preventDefault();
           }}
         >
-          <div className="flex h-14 items-center border-b border-slate-200 px-4">
+          <div className="flex h-14 items-center justify-between gap-2 border-b border-slate-200 px-4">
             <Link
               href="/dashboard"
-              className="font-landing-logo-mark flex items-center gap-1.5 text-lg text-gs-orange"
+              className="font-landing-logo-mark flex min-w-0 flex-1 items-center gap-1.5 text-lg text-gs-orange"
               onClick={() => setMobileOpen(false)}
             >
               {isHydrated && (
@@ -454,8 +454,23 @@ export function DashboardSidebar({
                   className="h-7 w-7 shrink-0 rounded-full object-cover"
                 />
               )}
-              {siteConfig.name.toUpperCase()}
+              <span className="truncate">{siteConfig.name.toUpperCase()}</span>
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                if (tourLock) return;
+                setMobileOpen(false);
+              }}
+              disabled={tourLock}
+              className={cn(
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-black",
+                tourLock && "cursor-not-allowed opacity-40 hover:bg-transparent"
+              )}
+              aria-label="Réduire le menu"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
           </div>
           <NavContent
             pathname={pathname}

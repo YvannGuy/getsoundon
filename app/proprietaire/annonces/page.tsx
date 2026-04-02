@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { AddSalleButton } from "@/components/proprietaire/add-salle-modal";
 import { createClient } from "@/lib/supabase/server";
 import { AnnoncesClient } from "./annonces-client";
 
@@ -100,9 +99,12 @@ export default async function AnnoncesPage({
           <h1 className="text-2xl font-bold text-black">Mes annonces</h1>
           <p className="mt-1 text-slate-500">Gérez et modifiez vos salles</p>
         </div>
-        <AddSalleButton className="bg-gs-orange hover:brightness-95">
-          Ajouter une salle
-        </AddSalleButton>
+        <Link
+          href="/proprietaire/ajouter-annonce"
+          className="inline-flex h-10 items-center justify-center rounded-md bg-gs-orange px-4 text-sm font-medium text-white transition hover:brightness-95"
+        >
+          Ajouter une annonce
+        </Link>
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-200 pb-4">
@@ -142,9 +144,12 @@ export default async function AnnoncesPage({
               : `Aucune annonce ${STATUT_SALLE_LABEL[statusFilter] ?? statusFilter.toLowerCase()}`}
           </p>
           {statusFilter === "all" && (
-            <AddSalleButton className="mt-4 bg-gs-orange hover:brightness-95">
-              Ajouter une salle
-            </AddSalleButton>
+            <Link
+              href="/proprietaire/ajouter-annonce"
+              className="mt-4 inline-flex h-10 items-center justify-center rounded-md bg-gs-orange px-4 text-sm font-medium text-white transition hover:brightness-95"
+            >
+              Ajouter une annonce
+            </Link>
           )}
         </div>
       ) : (

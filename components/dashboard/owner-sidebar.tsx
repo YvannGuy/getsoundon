@@ -24,6 +24,7 @@ import {
   Truck,
   User,
   Wallet,
+  PlusCircle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -45,6 +46,7 @@ type OwnerNavItem = {
 const ownerNavItems: OwnerNavItem[] = [
   { href: "/proprietaire", label: "Tableau de bord", icon: Home },
   { href: "/proprietaire/annonces", label: "Mes annonces", icon: LayoutGrid },
+  { href: "/proprietaire/ajouter-annonce", label: "Ajouter une annonce", icon: PlusCircle },
   { href: "/proprietaire/demandes", label: "Demandes", icon: FileText, badgeKey: "demandes" },
   { href: "/proprietaire/reservations", label: "Réservations", icon: CalendarCheck, badgeKey: "reservations" },
   { href: "/proprietaire/visites", label: "Calendrier", icon: Calendar, badgeKey: "visites" },
@@ -59,7 +61,10 @@ const ownerNavItems: OwnerNavItem[] = [
 ];
 
 const ownerNavSections: { title: string; itemHrefs: string[] }[] = [
-  { title: "Vue d'ensemble", itemHrefs: ["/proprietaire", "/proprietaire/annonces"] },
+  {
+    title: "Vue d'ensemble",
+    itemHrefs: ["/proprietaire", "/proprietaire/annonces", "/proprietaire/ajouter-annonce"],
+  },
   {
     title: "Demandes & réservations",
     itemHrefs: ["/proprietaire/demandes", "/proprietaire/reservations", "/proprietaire/visites"],
@@ -561,10 +566,10 @@ export function OwnerSidebar({
             if (tourLock) event.preventDefault();
           }}
         >
-          <div className="flex h-14 items-center border-b border-slate-200 px-4">
+          <div className="flex h-14 items-center justify-between gap-2 border-b border-slate-200 px-4">
             <Link
               href="/proprietaire"
-              className="font-landing-logo-mark flex items-center gap-1.5 text-lg text-gs-orange"
+              className="font-landing-logo-mark flex min-w-0 flex-1 items-center gap-1.5 text-lg text-gs-orange"
               onClick={() => setMobileOpen(false)}
             >
               {isHydrated && (
@@ -576,8 +581,23 @@ export function OwnerSidebar({
                   className="h-7 w-7 shrink-0 rounded-full object-cover"
                 />
               )}
-              {siteConfig.name.toUpperCase()}
+              <span className="truncate">{siteConfig.name.toUpperCase()}</span>
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                if (tourLock) return;
+                setMobileOpen(false);
+              }}
+              disabled={tourLock}
+              className={cn(
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-black",
+                tourLock && "cursor-not-allowed opacity-40 hover:bg-transparent"
+              )}
+              aria-label="Réduire le menu"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
           </div>
           <NavContent
             pathname={pathname}

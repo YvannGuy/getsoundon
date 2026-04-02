@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const AUTH_HREF = "/auth?tab=signup&userType=owner";
-const OWNER_DASHBOARD_ADD_HREF = "/proprietaire?openAddAnnonce=1";
+const OWNER_DASHBOARD_ADD_HREF = "/proprietaire/ajouter-annonce";
 
 type AddSalleLinkProps = {
   className?: string;
