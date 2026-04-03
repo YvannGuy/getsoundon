@@ -61,7 +61,7 @@ export async function GET(request: Request) {
     const limit = parsedQuery.limit ?? 50;
     let dbQuery = supabase
       .from("gs_messages")
-      .select("id, booking_id, sender_id, content, created_at, updated_at")
+      .select("id, booking_id, sender_id, content, created_at, updated_at, read_at")
       .eq("booking_id", parsedQuery.bookingId)
       .order("created_at", { ascending: false })
       .limit(limit);
@@ -94,7 +94,15 @@ export async function GET(request: Request) {
     }
 
     const enriched = ordered.map((m) => {
-      const msg = m as { id: string; booking_id: string; sender_id: string; content: string; created_at: string; updated_at: string };
+      const msg = m as {
+        id: string;
+        booking_id: string;
+        sender_id: string;
+        content: string;
+        created_at: string;
+        updated_at: string;
+        read_at: string | null;
+      };
       return {
         ...msg,
         sender_name: nameMap[msg.sender_id] ?? "Utilisateur",
@@ -136,7 +144,7 @@ export async function POST(request: Request) {
         sender_id: user.id,
         content: payload.content,
       })
-      .select("id, booking_id, sender_id, content, created_at, updated_at")
+      .select("id, booking_id, sender_id, content, created_at, updated_at, read_at")
       .single();
 
     if (error) {

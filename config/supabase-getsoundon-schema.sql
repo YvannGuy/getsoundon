@@ -72,7 +72,8 @@ create table if not exists public.gs_messages (
   sender_id uuid not null references public.gs_users_profile(id) on delete restrict,
   content text not null check (char_length(content) > 0),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  read_at timestamptz
 );
 
 create table if not exists public.gs_payments (
@@ -108,6 +109,7 @@ create index if not exists gs_bookings_customer_idx on public.gs_bookings(custom
 create index if not exists gs_bookings_provider_idx on public.gs_bookings(provider_id);
 create index if not exists gs_bookings_status_idx on public.gs_bookings(status);
 create index if not exists gs_messages_booking_idx on public.gs_messages(booking_id, created_at desc);
+create index if not exists gs_messages_unread_recipient_idx on public.gs_messages(booking_id) where read_at is null;
 create index if not exists gs_payments_booking_idx on public.gs_payments(booking_id);
 create index if not exists gs_reviews_reviewee_idx on public.gs_reviews(reviewee_id);
 

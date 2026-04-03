@@ -1,9 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { getGsMaterialUnreadTotalCount } from "@/lib/gs-material-messages";
+
 type BadgeCounts = {
   demandeCount: number;
   visiteCount: number;
   messageCount: number;
+  /** Non lus messagerie matériel (gs_messages), aussi inclus dans messageCount pour l’item Messagerie. */
+  materielUnreadCount: number;
   paymentCount: number;
   reservationCount: number;
   edlCount: number;
@@ -38,8 +42,14 @@ export async function getSeekerBadgeCounts(
   supabase: SupabaseClient,
   userId: string
 ): Promise<BadgeCounts> {
-  const [{ count: demandesCount }, { count: visitesActionCount }, messageCount, { count: paymentActionCount }, { data: paidOffers }] =
-    await Promise.all([
+  const [
+    { count: demandesCount },
+    { count: visitesActionCount },
+    legacyMessageUnread,
+    materielUnreadCount,
+    { count: paymentActionCount },
+    { data: paidOffers },
+  ] = await Promise.all([
       supabase
         .from("demandes")
         .select("id", { count: "exact", head: true })
@@ -57,6 +67,7 @@ export async function getSeekerBadgeCounts(
         }
       })(),
       getUnreadMessageCount(supabase, userId, "seeker_id"),
+      getGsMaterialUnreadTotalCount(userId),
       supabase
         .from("offers")
         .select("id", { count: "exact", head: true })
@@ -70,6 +81,8 @@ export async function getSeekerBadgeCounts(
         .eq("status", "paid")
         .limit(200),
     ]);
+
+  const messageCount = legacyMessageUnread + materielUnreadCount;
 
   const paidOfferRows = (paidOffers ?? []) as {
     id: string;
@@ -141,6 +154,7 @@ export async function getSeekerBadgeCounts(
     demandeCount: (demandesCount ?? 0) + (visitesActionCount ?? 0),
     visiteCount: 0,
     messageCount,
+    materielUnreadCount,
     paymentCount: paymentActionCount ?? 0,
     reservationCount,
     edlCount,
@@ -204,7 +218,11 @@ export async function getOwnerBadgeCounts(
     }
   }
 
-  const messageCount = await getUnreadMessageCount(supabase, userId, "owner_id");
+  const [legacyMessageUnread, materielUnreadCount] = await Promise.all([
+    getUnreadMessageCount(supabase, userId, "owner_id"),
+    getGsMaterialUnreadTotalCount(userId),
+  ]);
+  const messageCount = legacyMessageUnread + materielUnreadCount;
   let contractCount = 0;
   if (salleIds.length > 0) {
     try {
@@ -282,6 +300,7 @@ export async function getOwnerBadgeCounts(
     demandeCount,
     visiteCount,
     messageCount,
+    materielUnreadCount,
     paymentCount,
     reservationCount,
     edlCount,

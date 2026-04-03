@@ -12,6 +12,7 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { getGsMaterialUnreadByBookingIds } from "@/lib/gs-material-messages";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
 import { CheckInActions } from "@/components/materiel/checkin-actions";
@@ -147,6 +148,10 @@ export default async function ProprietaireMaterielDetailPage({
   const isPaid = !!booking.stripe_payment_intent_id;
   const isActive = booking.status === "accepted" && isPaid;
   const isCompleted = booking.status === "completed";
+  const materielUnreadMap = isPaid
+    ? await getGsMaterialUnreadByBookingIds(user.id, [booking.id])
+    : {};
+  const materielUnreadOnBooking = materielUnreadMap[booking.id] ?? 0;
   const canReport = !booking.incident_status && isIncidentWindowOpen(booking) && isCompleted;
   const payoutBlocked = booking.payout_status === "blocked";
 
@@ -351,8 +356,10 @@ export default async function ProprietaireMaterielDetailPage({
         {/* Messagerie — uniquement post-paiement */}
         {isPaid && (
           <BookingChat
+            key={booking.id}
             bookingId={booking.id}
             otherPartyLabel={`le locataire${customer?.full_name ? ` (${customer.full_name})` : ""}`}
+            initialUnreadCount={materielUnreadOnBooking}
           />
         )}
 

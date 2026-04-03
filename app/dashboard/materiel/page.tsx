@@ -11,6 +11,7 @@ import {
   XCircle,
 } from "lucide-react";
 
+import { getGsMaterialUnreadByBookingIds } from "@/lib/gs-material-messages";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
 import { PayNowButton } from "@/components/materiel/pay-now-button";
@@ -117,6 +118,14 @@ export default async function DashboardMaterielPage({
 
   const rows = (bookings ?? []) as BookingRow[];
 
+  const unreadByBooking =
+    rows.length > 0
+      ? await getGsMaterialUnreadByBookingIds(
+          user.id,
+          rows.map((b) => b.id)
+        )
+      : {};
+
   const listingIds = [...new Set(rows.map((b) => b.listing_id))];
   let listingsMap: Record<string, ListingRow> = {};
   if (listingIds.length > 0) {
@@ -210,6 +219,7 @@ export default async function DashboardMaterielPage({
             const totalEur = Number(booking.total_price);
             const depositEur = Number(booking.deposit_amount ?? 0);
             const hasIncident = booking.incident_status === "open";
+            const unreadChat = unreadByBooking[booking.id] ?? 0;
 
             return (
               <li
@@ -225,6 +235,14 @@ export default async function DashboardMaterielPage({
                     <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_CLASS[derived]}`}>
                       {STATUS_LABEL[derived]}
                     </span>
+                    {unreadChat > 0 && (
+                      <span
+                        className="rounded-full bg-sky-500 px-2 py-0.5 text-[10px] font-bold text-white"
+                        title={`${unreadChat} message${unreadChat > 1 ? "s" : ""} matériel non lu${unreadChat > 1 ? "s" : ""}`}
+                      >
+                        {unreadChat > 99 ? "99+" : unreadChat} msg
+                      </span>
+                    )}
                   </div>
 
                   {/* Titre listing */}

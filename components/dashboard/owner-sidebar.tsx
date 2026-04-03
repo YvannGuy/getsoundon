@@ -48,7 +48,7 @@ const ownerNavItems: OwnerNavItem[] = [
   { href: "/proprietaire", label: "Tableau de bord", icon: Home },
   { href: "/proprietaire/annonces", label: "Mes annonces", icon: LayoutGrid },
   { href: "/proprietaire/ajouter-annonce", label: "Ajouter une annonce", icon: PlusCircle },
-  { href: "/proprietaire/materiel", label: "Locations matériel", icon: Package },
+  { href: "/proprietaire/materiel", label: "Locations matériel", icon: Package, badgeKey: "materiel_chat" },
   { href: "/proprietaire/demandes", label: "Demandes", icon: FileText, badgeKey: "demandes" },
   { href: "/proprietaire/reservations", label: "Réservations", icon: CalendarCheck, badgeKey: "reservations" },
   { href: "/proprietaire/visites", label: "Calendrier", icon: Calendar, badgeKey: "visites" },
@@ -102,6 +102,7 @@ function NavContent({
   visiteCount,
   reservationCount,
   messageCount,
+  materielUnreadCount,
   paymentCount,
   edlCount,
   cautionCount,
@@ -118,6 +119,7 @@ function NavContent({
   visiteCount: number;
   reservationCount: number;
   messageCount: number;
+  materielUnreadCount: number;
   paymentCount: number;
   edlCount: number;
   cautionCount: number;
@@ -160,6 +162,7 @@ function NavContent({
   const unreadVisiteCount = unreadFor("visites", visiteCount);
   const unreadReservationCount = unreadFor("reservations", reservationCount);
   const unreadMessageCount = unreadFor("messagerie", messageCount);
+  const unreadMaterielChatCount = unreadFor("materiel_chat", materielUnreadCount);
   const unreadPaymentCount = unreadFor("paiement", paymentCount);
   const unreadEdlCount = unreadFor("etats", edlCount);
   const unreadCautionCount = unreadFor("cautions", cautionCount);
@@ -172,6 +175,7 @@ function NavContent({
       case "visites": return unreadVisiteCount;
       case "reservations": return unreadReservationCount;
       case "messagerie": return unreadMessageCount;
+      case "materiel_chat": return unreadMaterielChatCount;
       case "paiement": return unreadPaymentCount;
       case "etats": return unreadEdlCount;
       case "cautions": return unreadCautionCount;
@@ -192,6 +196,8 @@ function NavContent({
             ? reservationCount
             : activeItem.badgeKey === "messagerie"
               ? messageCount
+              : activeItem.badgeKey === "materiel_chat"
+                ? materielUnreadCount
               : activeItem.badgeKey === "paiement"
                 ? paymentCount
                 : activeItem.badgeKey === "etats"
@@ -202,7 +208,7 @@ function NavContent({
                       ? contractCount
                       : 0;
     markSeen(activeItem.badgeKey, rawValue);
-  }, [pathname, demandeCount, visiteCount, reservationCount, messageCount, paymentCount, edlCount, cautionCount, contractCount]);
+  }, [pathname, demandeCount, visiteCount, reservationCount, messageCount, materielUnreadCount, paymentCount, edlCount, cautionCount, contractCount]);
 
   return (
     <>
@@ -257,6 +263,8 @@ function NavContent({
                                 ? reservationCount
                                 : item.badgeKey === "messagerie"
                                   ? messageCount
+                                  : item.badgeKey === "materiel_chat"
+                                    ? materielUnreadCount
                                   : item.badgeKey === "paiement"
                                     ? paymentCount
                                     : item.badgeKey === "etats"
@@ -323,6 +331,16 @@ function NavContent({
                       {displayCount > 99 ? "99+" : displayCount}
                     </span>
                         )}
+                        {item.badgeKey === "materiel_chat" && displayCount > 0 && (
+                    <span
+                      className={cn(
+                        "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
+                        isActive ? "bg-white/20 text-white" : "bg-sky-100 text-sky-800"
+                      )}
+                    >
+                      {displayCount > 99 ? "99+" : displayCount}
+                    </span>
+                        )}
                         {item.badgeKey === "paiement" && displayCount > 0 && (
                     <span
                       className={cn(
@@ -377,6 +395,11 @@ function NavContent({
                     )}
                     {collapsed && item.badgeKey === "messagerie" && displayCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-semibold text-white">
+                  {displayCount > 99 ? "99+" : displayCount}
+                </span>
+                    )}
+                    {collapsed && item.badgeKey === "materiel_chat" && displayCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-sky-500 px-1 text-[10px] font-semibold text-white">
                   {displayCount > 99 ? "99+" : displayCount}
                 </span>
                     )}
@@ -454,6 +477,7 @@ export function OwnerSidebar({
   visiteCount = 0,
   reservationCount = 0,
   messageCount = 0,
+  materielUnreadCount = 0,
   paymentCount = 0,
   edlCount = 0,
   cautionCount = 0,
@@ -465,6 +489,7 @@ export function OwnerSidebar({
   visiteCount?: number;
   reservationCount?: number;
   messageCount?: number;
+  materielUnreadCount?: number;
   paymentCount?: number;
   edlCount?: number;
   cautionCount?: number;
@@ -609,6 +634,7 @@ export function OwnerSidebar({
             visiteCount={visiteCount}
             reservationCount={reservationCount}
             messageCount={messageCount}
+            materielUnreadCount={materielUnreadCount}
             paymentCount={paymentCount}
             edlCount={edlCount}
             cautionCount={cautionCount}
@@ -665,6 +691,7 @@ export function OwnerSidebar({
           visiteCount={visiteCount}
           reservationCount={reservationCount}
           messageCount={messageCount}
+          materielUnreadCount={materielUnreadCount}
           paymentCount={paymentCount}
           edlCount={edlCount}
           cautionCount={cautionCount}

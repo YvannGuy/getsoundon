@@ -14,6 +14,7 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { getGsMaterialUnreadByBookingIds } from "@/lib/gs-material-messages";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
 import { PayNowButton } from "@/components/materiel/pay-now-button";
@@ -132,6 +133,11 @@ export default async function DashboardMaterielDetailPage({
   const isPaid = !!booking.stripe_payment_intent_id;
   const isAcceptedUnpaid = booking.status === "accepted" && !isPaid;
   const isCompleted = booking.status === "completed";
+
+  const materielUnreadMap = isPaid
+    ? await getGsMaterialUnreadByBookingIds(user.id, [booking.id])
+    : {};
+  const materielUnreadOnBooking = materielUnreadMap[booking.id] ?? 0;
 
   // Timeline
   type TimelineEvent = { label: string; detail?: string; date: string | null; done: boolean };
@@ -368,8 +374,10 @@ export default async function DashboardMaterielDetailPage({
         {/* Messagerie — uniquement post-paiement */}
         {isPaid && (
           <BookingChat
+            key={booking.id}
             bookingId={booking.id}
             otherPartyLabel={`le prestataire${provider?.full_name ? ` (${provider.full_name})` : ""}`}
+            initialUnreadCount={materielUnreadOnBooking}
           />
         )}
 

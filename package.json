@@ -20,6 +20,7 @@
     "supabase:init-message-storage": "node scripts/init-message-storage.mjs",
     "supabase:init-contract-storage": "node scripts/init-contract-storage.mjs",
     "supabase:init-edl-storage": "node scripts/init-edl-storage.mjs",
+    "supabase:bootstrap-admin-auth": "node scripts/bootstrap-admin-auth.mjs",
     "seo:crawl": "node scripts/crawl-seo.mjs"
   },
   "dependencies": {

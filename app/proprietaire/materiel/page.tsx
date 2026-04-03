@@ -10,6 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { getGsMaterialUnreadByBookingIds } from "@/lib/gs-material-messages";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
 import { AcceptRefuseButtons } from "@/components/materiel/accept-refuse-buttons";
@@ -124,6 +125,12 @@ export default async function ProprietaireMaterielPage() {
   const active = (activeData ?? []) as BookingRow[];
   const completed = (completedData ?? []) as BookingRow[];
 
+  const allBookingIds = [...pending, ...active, ...completed].map((b) => b.id);
+  const unreadByBooking =
+    allBookingIds.length > 0
+      ? await getGsMaterialUnreadByBookingIds(user.id, allBookingIds)
+      : {};
+
   // Listings liés
   const allListingIds = [...new Set([...pending, ...active, ...completed].map((b) => b.listing_id))];
   let listingsMap: Record<string, ListingRow> = {};
@@ -189,6 +196,7 @@ export default async function ProprietaireMaterielPage() {
                     booking={booking}
                     customer={customer}
                     badge={{ label: "En attente", cls: "bg-amber-100 text-amber-700" }}
+                    unreadCount={unreadByBooking[booking.id] ?? 0}
                   />
                   <div className="flex shrink-0 flex-col items-end gap-2 text-right">
                     <PriceBlock totalEur={totalEur} depositEur={depositEur} />
@@ -237,6 +245,7 @@ export default async function ProprietaireMaterielPage() {
                       booking={booking}
                       customer={customer}
                       badge={{ label: "Confirmée", cls: "bg-emerald-100 text-emerald-700" }}
+                      unreadCount={unreadByBooking[booking.id] ?? 0}
                     />
                     {/* Statuts opérationnels */}
                     <div className="mt-2 flex flex-wrap gap-2">
@@ -317,6 +326,7 @@ export default async function ProprietaireMaterielPage() {
                       booking={booking}
                       customer={customer}
                       badge={{ label: "Terminée", cls: "bg-slate-100 text-slate-600" }}
+                      unreadCount={unreadByBooking[booking.id] ?? 0}
                     />
                     {hasIncident && (
                       <div className="mt-2 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2">
@@ -385,11 +395,13 @@ function BookingInfo({
   booking,
   customer,
   badge,
+  unreadCount = 0,
 }: {
   listing: ListingRow | undefined;
   booking: BookingRow;
   customer: CustomerRow | undefined;
   badge: { label: string; cls: string };
+  unreadCount?: number;
 }) {
   return (
     <div className="min-w-0 flex-1">
@@ -400,6 +412,14 @@ function BookingInfo({
         <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${badge.cls}`}>
           {badge.label}
         </span>
+        {unreadCount > 0 && (
+          <span
+            className="rounded-full bg-sky-500 px-2 py-0.5 text-[10px] font-bold text-white"
+            title={`${unreadCount} message${unreadCount > 1 ? "s" : ""} non lu${unreadCount > 1 ? "s" : ""}`}
+          >
+            {unreadCount > 99 ? "99+" : unreadCount} msg
+          </span>
+        )}
       </div>
       <p className="mt-1 truncate font-semibold text-slate-900">
         {listing?.title ?? `Réservation ${booking.id.slice(0, 8)}`}
