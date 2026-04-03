@@ -87,7 +87,10 @@ export async function updateSession(request: NextRequest) {
       return supabaseResponse;
     }
 
-    throw err;
+    // Ne pas faire échouer tout le site (global error) pour erreurs réseau, JWT, config, etc.
+    console.error("[updateSession] auth.getUser failed:", err);
+    clearSupabaseCookies(request, supabaseResponse);
+    user = null;
   }
 
   const protectedPaths = ["/dashboard", "/proprietaire", "/onboarding", "/admin"];

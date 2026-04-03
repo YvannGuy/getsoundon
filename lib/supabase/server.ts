@@ -21,7 +21,8 @@ export async function getUserOrNull(): Promise<{
       await supabase.auth.signOut();
       return { user: null, supabase };
     }
-    throw err;
+    console.error("[getUserOrNull] auth.getUser failed:", err);
+    return { user: null, supabase };
   }
 }
 
