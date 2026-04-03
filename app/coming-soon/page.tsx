@@ -93,7 +93,7 @@ export default function ComingSoonPage() {
           </Link>
           <nav className="flex items-center gap-4 text-sm font-medium text-white/80" aria-label="Liens utiles">
             <a
-              href="mailto:contact@getsoundon.com"
+              href={`mailto:${siteConfig.supportEmail}`}
               className="transition hover:text-white"
             >
               Contact
@@ -317,8 +317,8 @@ export default function ComingSoonPage() {
               </span>
             </div>
             <div className="flex flex-col gap-2 text-sm text-white/55 sm:flex-row sm:gap-8">
-              <a href="mailto:contact@getsoundon.com" className="hover:text-white">
-                contact@getsoundon.com
+              <a href={`mailto:${siteConfig.supportEmail}`} className="hover:text-white">
+                {siteConfig.supportEmail}
               </a>
               <Link href="/mentions-legales" className="hover:text-white">
                 Mentions légales

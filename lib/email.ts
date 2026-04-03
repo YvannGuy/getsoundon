@@ -1,5 +1,7 @@
 import { Resend } from "resend";
 
+import { siteConfig } from "@/config/site";
+
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend: Pick<Resend, "emails"> = resendApiKey
   ? new Resend(resendApiKey)
@@ -664,7 +666,7 @@ export async function sendPrelaunchWaitlistEmail(params: {
 
   const { error } = await resend.emails.send({
     from,
-    to: contactEmail,
+    to: siteConfig.supportEmail,
     replyTo: params.email.trim(),
     subject: `[Waitlist pré-lancement] ${params.firstName.trim()}`,
     html: renderEmailLayout({
