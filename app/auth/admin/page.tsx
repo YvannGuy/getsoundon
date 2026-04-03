@@ -60,13 +60,14 @@ function AdminAuthPageContent() {
           />
         </div>
         <div className="relative z-10">
-          <Link
-            href="/"
+          <a
+            href={siteConfig.url}
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-black"
           >
             <ArrowLeft className="h-4 w-4" />
             Retour à l&apos;accueil
-          </Link>
+          </a>
           <p className="mt-6 text-lg font-semibold text-black">{siteConfig.name}</p>
           <div className="mt-1 h-0.5 w-12 bg-gs-orange" />
           <h2 className="mt-6 flex items-center gap-2 text-2xl font-bold text-black">

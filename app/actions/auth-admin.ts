@@ -3,19 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { isUserAdmin } from "@/lib/admin-access";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthFormState = {
   error?: string;
 };
-
-function getAdminEmails(): string[] {
-  const raw = process.env.ADMIN_EMAILS ?? "";
-  return raw
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-}
 
 function getSafeAdminRedirect(formData: FormData): string {
   const redirectTo = String(formData.get("redirectTo") ?? "");
@@ -36,19 +29,7 @@ export async function loginAdminAction(_: AuthFormState, formData: FormData): Pr
     return { error: msg };
   }
 
-  // Vérifier ADMIN_EMAILS (env) OU user_type = 'admin' (profiles)
-  const adminEmails = getAdminEmails();
-  const isAdminByEnv = adminEmails.length > 0 && adminEmails.includes(email);
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("user_type")
-    .eq("id", data.user!.id)
-    .maybeSingle();
-
-  const isAdminByProfile = profile?.user_type === "admin";
-
-  if (!isAdminByEnv && !isAdminByProfile) {
+  if (!data.user || !(await isUserAdmin(data.user, supabase))) {
     await supabase.auth.signOut();
     return { error: "Accès refusé. Vous n'avez pas les droits administrateur." };
   }

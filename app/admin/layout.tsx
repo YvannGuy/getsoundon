@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 import { AdminSidebar } from "@/components/dashboard/admin-sidebar";
+import { isUserAdmin } from "@/lib/admin-access";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
 
@@ -25,21 +26,7 @@ export default async function AdminLayout({
     redirect("/auth/admin");
   }
 
-  const adminEmails = (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  const isAdminByEnv =
-    adminEmails.length > 0 && adminEmails.includes(user.email?.toLowerCase() ?? "");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("user_type")
-    .eq("id", user.id)
-    .maybeSingle();
-  const isAdminByProfile = profile?.user_type === "admin";
-
-  if (!isAdminByEnv && !isAdminByProfile) {
+  if (!(await isUserAdmin(user, supabase))) {
     redirect("/auth/admin");
   }
 
