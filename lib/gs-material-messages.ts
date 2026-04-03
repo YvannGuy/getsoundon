@@ -1,6 +1,11 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
-/** Messages reçus (sender ≠ user) encore sans read_at, pour les réservations où user est participant. */
+/**
+ * Compteurs non lus messagerie matériel (`gs_messages`).
+ * Dépend de la colonne `read_at` : les requêtes utilisent `.is("read_at", null)`.
+ * Sans migration `read_at`, PostgREST renvoie une erreur → compteur 0 (voir logs).
+ * Nécessite `SUPABASE_SERVICE_ROLE_KEY` + URL (createAdminClient) ; sinon try/catch → 0.
+ */
 export async function getGsMaterialUnreadTotalCount(userId: string): Promise<number> {
   try {
     const admin = createAdminClient();
@@ -8,7 +13,14 @@ export async function getGsMaterialUnreadTotalCount(userId: string): Promise<num
       .from("gs_bookings")
       .select("id")
       .or(`customer_id.eq.${userId},provider_id.eq.${userId}`);
-    if (bErr || !bookings?.length) return 0;
+    if (bErr) {
+      console.error("[gs-material-messages] getGsMaterialUnreadTotalCount gs_bookings", {
+        message: bErr.message,
+        code: bErr.code,
+      });
+      return 0;
+    }
+    if (!bookings?.length) return 0;
 
     const ids = (bookings as { id: string }[]).map((b) => b.id);
     const { count, error } = await admin
@@ -17,9 +29,19 @@ export async function getGsMaterialUnreadTotalCount(userId: string): Promise<num
       .in("booking_id", ids)
       .neq("sender_id", userId)
       .is("read_at", null);
-    if (error) return 0;
+    if (error) {
+      console.error("[gs-material-messages] getGsMaterialUnreadTotalCount gs_messages count", {
+        message: error.message,
+        code: error.code,
+      });
+      return 0;
+    }
     return count ?? 0;
-  } catch {
+  } catch (err: unknown) {
+    console.error("[gs-material-messages] getGsMaterialUnreadTotalCount exception", {
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    });
     return 0;
   }
 }
@@ -39,13 +61,23 @@ export async function getGsMaterialUnreadByBookingIds(
       .in("booking_id", bookingIds)
       .neq("sender_id", userId)
       .is("read_at", null);
-    if (error || !data) return out;
+    if (error) {
+      console.error("[gs-material-messages] getGsMaterialUnreadByBookingIds", {
+        message: error.message,
+        code: error.code,
+      });
+      return out;
+    }
+    if (!data) return out;
     for (const row of data as { booking_id: string }[]) {
       const bid = row.booking_id;
       out[bid] = (out[bid] ?? 0) + 1;
     }
     return out;
-  } catch {
+  } catch (err: unknown) {
+    console.error("[gs-material-messages] getGsMaterialUnreadByBookingIds exception", {
+      message: err instanceof Error ? err.message : String(err),
+    });
     return out;
   }
 }

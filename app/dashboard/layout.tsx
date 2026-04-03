@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { canAccessOwnerDashboard, getEffectiveUserType } from "@/lib/auth-utils";
-import { getSeekerBadgeCounts } from "@/lib/notification-counts";
+import { EMPTY_BADGE_COUNTS, getSeekerBadgeCounts } from "@/lib/notification-counts";
 import { getUserOrNull } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -66,8 +66,31 @@ export default async function DashboardLayout({
 
   const displayName = (profile as { full_name?: string | null } | null)?.full_name ?? user.user_metadata?.full_name ?? "Utilisateur";
 
-  const { demandeCount, reservationCount, messageCount, materielUnreadCount, paymentCount, edlCount } =
-    await getSeekerBadgeCounts(supabase, user.id);
+  let demandeCount: number;
+  let reservationCount: number;
+  let materielUnreadCount: number;
+  let paymentCount: number;
+  let edlCount: number;
+  try {
+    const c = await getSeekerBadgeCounts(supabase, user.id);
+    demandeCount = c.demandeCount;
+    reservationCount = c.reservationCount;
+    materielUnreadCount = c.materielUnreadCount;
+    paymentCount = c.paymentCount;
+    edlCount = c.edlCount;
+  } catch (err: unknown) {
+    console.error("[layout] app/dashboard/layout.tsx getSeekerBadgeCounts outer catch", {
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    });
+    ({
+      demandeCount,
+      reservationCount,
+      materielUnreadCount,
+      paymentCount,
+      edlCount,
+    } = EMPTY_BADGE_COUNTS);
+  }
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gs-beige lg:flex-row">
@@ -75,7 +98,6 @@ export default async function DashboardLayout({
         user={{ ...user, displayName }}
         demandeCount={demandeCount ?? 0}
         reservationCount={reservationCount ?? 0}
-        messageCount={messageCount}
         materielUnreadCount={materielUnreadCount}
         paymentCount={paymentCount}
         edlCount={edlCount ?? 0}

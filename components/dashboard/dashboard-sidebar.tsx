@@ -53,7 +53,7 @@ const seekerNavItems: SeekerNavItem[] = [
   { href: "/dashboard/litiges", label: "Litiges", icon: Scale },
   { href: "/dashboard/paiement", label: "Paiements", icon: CreditCard, badgeKey: "paiement" },
   { href: "/dashboard/contrat", label: "Factures", icon: Receipt },
-  { href: "/dashboard/messagerie", label: "Messagerie", icon: MessageCircle, badgeKey: "messagerie" },
+  { href: "/dashboard/messagerie", label: "Messagerie", icon: MessageCircle },
   { href: "/dashboard/parametres", label: "Paramètres", icon: Settings },
 ];
 
@@ -84,7 +84,6 @@ function NavContent({
   userEmail,
   demandeCount,
   reservationCount,
-  messageCount,
   materielUnreadCount,
   paymentCount,
   edlCount,
@@ -100,7 +99,6 @@ function NavContent({
   userEmail?: string | null;
   demandeCount: number;
   reservationCount: number;
-  messageCount: number;
   materielUnreadCount: number;
   paymentCount: number;
   edlCount: number;
@@ -138,7 +136,6 @@ function NavContent({
   const rawByKey: Record<string, number> = {
     demandes: demandeCount,
     reservations: reservationCount,
-    messagerie: messageCount,
     materiel_chat: materielUnreadCount,
     paiement: paymentCount,
     etats: edlCount,
@@ -157,7 +154,7 @@ function NavContent({
     );
     if (!activeItem?.badgeKey) return;
     markSeen(activeItem.badgeKey, rawByKey[activeItem.badgeKey] ?? 0);
-  }, [pathname, demandeCount, reservationCount, messageCount, materielUnreadCount, paymentCount, edlCount]);
+  }, [pathname, demandeCount, reservationCount, materielUnreadCount, paymentCount, edlCount]);
 
   return (
     <>
@@ -231,9 +228,7 @@ function NavContent({
                         "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
                         isActive
                           ? "bg-white/20 text-white"
-                          : item.badgeKey === "messagerie"
-                            ? "bg-blue-100 text-blue-700"
-                            : item.badgeKey === "materiel_chat"
+                          : item.badgeKey === "materiel_chat"
                               ? "bg-sky-100 text-sky-800"
                             : item.badgeKey === "paiement"
                               ? "bg-amber-100 text-amber-700"
@@ -251,9 +246,7 @@ function NavContent({
                 <span
                   className={cn(
                     "absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white",
-                    item.badgeKey === "messagerie"
-                      ? "bg-blue-600"
-                      : item.badgeKey === "materiel_chat"
+                    item.badgeKey === "materiel_chat"
                         ? "bg-sky-500"
                       : item.badgeKey === "paiement"
                         ? "bg-amber-500"
@@ -339,7 +332,6 @@ export function DashboardSidebar({
   user,
   demandeCount = 0,
   reservationCount = 0,
-  messageCount = 0,
   materielUnreadCount = 0,
   paymentCount = 0,
   edlCount = 0,
@@ -348,7 +340,6 @@ export function DashboardSidebar({
   user: { email?: string | null; displayName?: string };
   demandeCount?: number;
   reservationCount?: number;
-  messageCount?: number;
   materielUnreadCount?: number;
   paymentCount?: number;
   edlCount?: number;
@@ -488,7 +479,6 @@ export function DashboardSidebar({
             userEmail={user.email}
             demandeCount={demandeCount}
             reservationCount={reservationCount}
-            messageCount={messageCount}
             materielUnreadCount={materielUnreadCount}
             paymentCount={paymentCount}
             edlCount={edlCount}
@@ -549,7 +539,6 @@ export function DashboardSidebar({
           userEmail={user.email}
           demandeCount={demandeCount}
           reservationCount={reservationCount}
-          messageCount={messageCount}
           materielUnreadCount={materielUnreadCount}
           paymentCount={paymentCount}
           edlCount={edlCount}

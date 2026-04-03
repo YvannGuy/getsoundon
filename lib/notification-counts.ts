@@ -5,8 +5,12 @@ import { getGsMaterialUnreadTotalCount } from "@/lib/gs-material-messages";
 type BadgeCounts = {
   demandeCount: number;
   visiteCount: number;
+  /**
+   * Legacy + matériel agrégé (conversations/messages + gs_messages).
+   * Réservé aux usages non-UI ; les badges navigation utilisent uniquement `materielUnreadCount`.
+   */
   messageCount: number;
-  /** Non lus messagerie matériel (gs_messages), aussi inclus dans messageCount pour l’item Messagerie. */
+  /** Non lus messagerie matériel (gs_messages) — seul compteur messagerie exposé dans les sidebars. */
   materielUnreadCount: number;
   paymentCount: number;
   reservationCount: number;
@@ -15,6 +19,32 @@ type BadgeCounts = {
   contractCount: number;
 };
 
+/** Compteurs à zéro si le calcul des badges échoue (évite de casser les layouts). */
+export const EMPTY_BADGE_COUNTS: BadgeCounts = {
+  demandeCount: 0,
+  visiteCount: 0,
+  messageCount: 0,
+  materielUnreadCount: 0,
+  paymentCount: 0,
+  reservationCount: 0,
+  edlCount: 0,
+  cautionCount: 0,
+  contractCount: 0,
+};
+
+function logBadgeFailure(fn: string, err: unknown) {
+  const e = err instanceof Error ? err : new Error(String(err));
+  console.error(`[notification-counts] ${fn} failed`, {
+    message: e.message,
+    name: e.name,
+    stack: e.stack,
+  });
+}
+
+/**
+ * Messagerie legacy (`messages`) : filtre `.is("read_at", null)` pour les non lus.
+ * Si la colonne `read_at` n’existe pas sur `messages`, PostgREST renvoie une erreur → compteur 0.
+ */
 async function getUnreadMessageCount(
   supabase: SupabaseClient,
   userId: string,
@@ -34,7 +64,15 @@ async function getUnreadMessageCount(
     .neq("sender_id", userId)
     .is("read_at", null);
 
-  if (msgError) return 0;
+  if (msgError) {
+    console.error("[notification-counts] getUnreadMessageCount supabase error", {
+      message: msgError.message,
+      code: msgError.code,
+      details: msgError.details,
+      hint: msgError.hint,
+    });
+    return 0;
+  }
   return count ?? 0;
 }
 
@@ -42,6 +80,7 @@ export async function getSeekerBadgeCounts(
   supabase: SupabaseClient,
   userId: string
 ): Promise<BadgeCounts> {
+  try {
   const [
     { count: demandesCount },
     { count: visitesActionCount },
@@ -161,12 +200,17 @@ export async function getSeekerBadgeCounts(
     cautionCount,
     contractCount: 0,
   };
+  } catch (err: unknown) {
+    logBadgeFailure("getSeekerBadgeCounts", err);
+    return { ...EMPTY_BADGE_COUNTS };
+  }
 }
 
 export async function getOwnerBadgeCounts(
   supabase: SupabaseClient,
   userId: string
 ): Promise<BadgeCounts> {
+  try {
   const [{ data: mySalles }, { data: profile }, { data: paidOffers }] = await Promise.all([
     supabase
       .from("salles")
@@ -307,4 +351,8 @@ export async function getOwnerBadgeCounts(
     cautionCount,
     contractCount,
   };
+  } catch (err: unknown) {
+    logBadgeFailure("getOwnerBadgeCounts", err);
+    return { ...EMPTY_BADGE_COUNTS };
+  }
 }
