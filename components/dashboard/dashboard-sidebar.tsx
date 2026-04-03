@@ -45,7 +45,7 @@ const seekerNavItems: SeekerNavItem[] = [
 
 const seekerNavSections: { title: string; itemHrefs: string[] }[] = [
   { title: "Vue d'ensemble", itemHrefs: ["/dashboard", "/catalogue"] },
-  { title: "Locations", itemHrefs: ["/dashboard/materiel"] },
+  { title: "Locations matériel", itemHrefs: ["/dashboard/materiel"] },
   { title: "Finances", itemHrefs: ["/dashboard/paiement"] },
   { title: "Compte", itemHrefs: ["/dashboard/parametres"] },
 ];
