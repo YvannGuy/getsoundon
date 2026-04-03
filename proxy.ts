@@ -13,6 +13,21 @@ export async function proxy(request: NextRequest) {
   const hostname = getRequestHostname(request);
 
   /**
+   * Legacy lieux publics (Lot B) : recherche lieux → catalogue ; fiches /salles/* → 410 Gone.
+   */
+  if (pathname === "/rechercher" || pathname.startsWith("/rechercher/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/catalogue";
+    return NextResponse.redirect(url, 301);
+  }
+  if (pathname.startsWith("/salles/")) {
+    return new NextResponse(null, {
+      status: 410,
+      headers: { "Cache-Control": "public, max-age=86400" },
+    });
+  }
+
+  /**
    * Sous-domaine admin : pas de page marketing / pré-lancement publique ici.
    * La racine et /coming-soon renvoient vers /admin ; session absente ou non-admin
    * → updateSession ou layout admin redirigent ensuite vers /auth/admin.

@@ -264,8 +264,6 @@ export async function submitEtatDesLieuxAction(
     return { success: false, error: insertPhotosError.message };
   }
 
-  revalidatePath("/dashboard/etats-des-lieux");
-  revalidatePath("/proprietaire/etats-des-lieux");
   revalidatePath("/admin/etats-des-lieux");
   revalidatePath("/admin/paiements");
 
@@ -437,74 +435,11 @@ export async function openUserDisputeCaseAction(
   const { error: evidenceError } = await admin.from("refund_case_evidences").insert(evidenceRows);
   if (evidenceError) return { success: false, error: evidenceError.message };
 
-  revalidatePath("/dashboard/etats-des-lieux");
-  revalidatePath("/dashboard/litiges");
-  revalidatePath("/proprietaire/etats-des-lieux");
-  revalidatePath("/proprietaire/litiges");
   revalidatePath("/admin/etats-des-lieux");
   revalidatePath("/admin/litiges");
   revalidatePath("/admin/cautions");
-  revalidatePath("/proprietaire/cautions");
   revalidatePath("/admin/paiements");
 
-  return { success: true };
-}
-
-export async function reportNoShowAction(
-  offerId: string,
-  details: string
-): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Non connecté." };
-  if (!offerId) return { success: false, error: "Offre manquante." };
-
-  const actor = await getActorRoleForOffer(user.id, offerId);
-  if ("error" in actor) return { success: false, error: actor.error };
-  if (actor.incidentDeadlineAt && new Date() > new Date(actor.incidentDeadlineAt)) {
-    return {
-      success: false,
-      error: "Le délai de signalement no-show est expiré (48h après la fin).",
-    };
-  }
-
-  const admin = createAdminClient();
-  const role = actor.role;
-  const nowIso = new Date().toISOString();
-  await admin
-    .from("offers")
-    .update({
-      no_show_reported_by: role,
-      no_show_reported_at: nowIso,
-      incident_status: "reported",
-      cancellation_outcome_status: "pending",
-      updated_at: nowIso,
-    })
-    .eq("id", offerId);
-
-  await admin.from("refund_cases").insert({
-    offer_id: offerId,
-    requested_by_role: role,
-    side: role,
-    case_type: "dispute",
-    status: "open",
-    amount_cents: 0,
-    reason: `No-show déclaré (${role})${details ? `: ${details}` : ""}`,
-    evidence_required: true,
-    created_by: user.id,
-    created_at: nowIso,
-    updated_at: nowIso,
-  });
-
-  revalidatePath("/dashboard/litiges");
-  revalidatePath("/proprietaire/litiges");
-  revalidatePath("/admin/litiges");
-  revalidatePath("/admin/cautions");
-  revalidatePath("/dashboard/reservations");
-  revalidatePath("/proprietaire/reservations");
-  revalidatePath("/admin/reservations");
   return { success: true };
 }
 
@@ -596,7 +531,6 @@ export async function submitSeekerDisputeResponseAction(
     })
     .eq("id", caseId);
 
-  revalidatePath("/dashboard/litiges");
   revalidatePath("/admin/litiges");
   revalidatePath("/admin/cautions");
 
@@ -779,8 +713,6 @@ export async function openAdminRefundCaseAction(
 
   revalidatePath("/admin/paiements");
   revalidatePath("/admin/etats-des-lieux");
-  revalidatePath("/dashboard/etats-des-lieux");
-  revalidatePath("/proprietaire/etats-des-lieux");
 
   return { success: true };
 }

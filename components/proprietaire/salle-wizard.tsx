@@ -375,7 +375,6 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
     ...getWizardCompatDefaults(),
   }));
   const [submitted, setSubmitted] = useState(false);
-  const [createdSlug, setCreatedSlug] = useState<string | null>(null);
   const [createdStatus, setCreatedStatus] = useState<"approved" | "pending">("pending");
   const [submitError, setSubmitError] = useState<string | null>(null);
   /** Index 1-based de la photo en échec (pour afficher "Réessayer" ciblé). */
@@ -674,7 +673,6 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
 
       if (result.success) {
         localStorage.removeItem(ONBOARDING_DRAFT_KEY);
-        setCreatedSlug(result.slug ?? null);
         setCreatedStatus(result.status ?? "pending");
         setSubmitted(true);
         onSuccess?.(result.slug ?? null, result.status ?? "pending");
@@ -725,7 +723,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
             Fermer
           </Button>
           <Link
-            href={createdSlug ? `/salles/${createdSlug}` : "/proprietaire/annonces"}
+            href="/proprietaire/annonces"
             className="flex h-10 w-full items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             Voir mon annonce
@@ -802,7 +800,7 @@ export function SalleWizard({ embedded, onSuccess, onClose }: SalleWizardProps =
                 <ChevronRight className="h-5 w-5" />
               </Link>
               <Link
-                href={createdSlug ? `/salles/${createdSlug}` : "/proprietaire/annonces"}
+                href="/proprietaire/annonces"
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
               >
                 <Eye className="h-5 w-5" />

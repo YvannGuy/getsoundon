@@ -120,13 +120,13 @@ export function ConciergeForm({ initialValues, isLoggedIn, source }: ConciergeFo
       <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-8 text-center">
         <h3 className="text-xl font-semibold text-emerald-800">Merci !</h3>
         <p className="mt-3 text-[15px] leading-relaxed text-emerald-700">
-          On vous recontacte sous 24–72h. Nous préparerons une shortlist de 3 à 5 lieux adaptés à votre besoin.
+          On vous recontacte sous 24–72h avec des pistes matériel adaptées à votre besoin.
         </p>
         <a
-          href="/rechercher"
+          href="/catalogue"
           className="mt-6 inline-flex h-11 items-center justify-center rounded-lg bg-gs-orange px-5 text-[14px] font-semibold text-white transition hover:brightness-95"
         >
-          Retour aux salles
+          Voir le catalogue matériel
         </a>
       </div>
     );

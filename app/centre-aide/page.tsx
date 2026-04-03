@@ -24,7 +24,7 @@ const CATEGORIES = [
   {
     href: "/centre-aide/proprietaire",
     title: "Prestataire",
-    desc: "Publier vos annonces, recevoir des demandes, messagerie, réservations et Stripe Connect.",
+    desc: "Publier vos annonces matériel, recevoir des demandes, réservations et Stripe Connect.",
     icon: Package,
   },
   {

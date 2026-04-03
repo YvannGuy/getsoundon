@@ -22,11 +22,11 @@ const FAQ_ITEMS: FaqItem[] = [
     intro: "GetSoundOn met en relation locataires et loueurs en quelques étapes simples :",
     bullets: [
       "Recherchez le matériel événementiel dont vous avez besoin (sono, DJ, lumières, etc.).",
-      "Échangez avec le loueur et validez une offre (dates, lieu, options).",
+      "Échangez avec le prestataire et validez les conditions (dates, retrait ou livraison, options).",
       "Réglez en ligne de façon sécurisée : la réservation est confirmée selon les conditions affichées.",
     ],
     highlight:
-      "Paiement et messagerie sont intégrés à la plateforme pour des échanges plus sereins.",
+      "Paiement et outils d’échange sont intégrés à la plateforme pour des locations matériel plus sereines.",
   },
   {
     question: "Quel type de matériel puis-je louer sur la plateforme ?",
@@ -36,22 +36,22 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: "La location est-elle sécurisée ?",
     paragraph:
-      "Les profils et annonces sont encadrés par la plateforme. Les échanges passent par la messagerie, les conditions (caution, dépôt, annulation) sont précisées dans l’offre et le contrat. Le paiement suit un parcours sécurisé adapté au modèle GetSoundOn.",
+      "Les profils et annonces sont encadrés par la plateforme. Les échanges se font dans votre espace (réservations matériel, messages liés aux locations), les conditions (caution, dépôt, annulation) sont précisées sur l’annonce et dans le contrat. Le paiement suit un parcours sécurisé adapté au modèle GetSoundOn.",
   },
   {
     question: "Comment proposer mon matériel en location ?",
     paragraph:
-      "Créez un compte, complétez votre profil loueur, puis publiez une annonce avec photos, description, tarifs et options (retrait, livraison, zone d’intervention). Vous recevez les demandes et validez les offres qui vous conviennent.",
+      "Créez un compte, complétez votre profil prestataire, puis publiez une annonce avec photos, description, tarifs et options (retrait, livraison, zone d’intervention). Vous recevez les demandes et validez les réservations qui vous conviennent.",
   },
   {
     question: "Quels sont les tarifs et les frais de service ?",
     paragraph:
-      "Le prix affiché sur l’annonce est fixé par le loueur (souvent à la journée ou au forfait). Des frais de plateforme peuvent s’appliquer selon l’offre ; le détail vous est montré avant paiement, sans surprise au moment de valider.",
+      "Le prix affiché sur l’annonce est fixé par le loueur (souvent à la journée ou au forfait). Des frais de plateforme peuvent s’appliquer ; le détail vous est montré avant paiement, sans surprise au moment de valider.",
   },
   {
     question: "Combien de temps puis-je louer du matériel ?",
     paragraph:
-      "La durée dépend de chaque annonce et de ce que vous convenez avec le loueur : quelques heures, une journée, un week-end ou plus. Indiquez vos dates dans la recherche ou la demande pour obtenir une offre adaptée.",
+      "La durée dépend de chaque annonce et de ce que vous convenez avec le prestataire : quelques heures, une journée, un week-end ou plus. Indiquez vos dates dans la recherche ou la demande.",
   },
   {
     question: "Comment se déroulent la livraison et la récupération ?",
@@ -61,12 +61,12 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Que faire en cas de problème avec le matériel loué ?",
     paragraph:
-      "Contactez d’abord le loueur via la messagerie. En cas de litige persistant, documentez l’échange et sollicitez le support ou les procédures prévues dans les conditions générales et le contrat de location.",
+      "Contactez d’abord le loueur depuis votre espace (fil lié à la réservation matériel). En cas de litige persistant, documentez l’échange et sollicitez le support ou les procédures prévues dans les conditions générales et le contrat de location.",
   },
   {
     question: "Puis-je annuler ma réservation ?",
     paragraph:
-      "Les règles d’annulation et de remboursement dépendent des conditions affichées sur l’offre et du moment où vous annulez. Vérifiez-les avant de payer ; elles font partie du contrat entre vous et le loueur.",
+      "Les règles d’annulation et de remboursement dépendent des conditions affichées sur l’annonce et du moment où vous annulez. Vérifiez-les avant de payer ; elles font partie du contrat entre vous et le loueur.",
   },
   {
     question: "Qui peut utiliser GetSoundOn ?",

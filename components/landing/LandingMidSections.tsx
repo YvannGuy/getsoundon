@@ -230,7 +230,8 @@ export function LandingInfoStrip() {
               <div>
                 <h3 className="font-landing-heading text-xl font-bold text-gs-dark">Réservation rapide</h3>
                 <p className="font-landing-body mt-2 max-w-xl text-[#444]">
-                  Envoie une demande, reçois une offre et paie en ligne en toute sécurité.
+                  Envoie une demande, fais valider ta réservation par le prestataire et paie en ligne en toute
+                  sécurité.
                 </p>
               </div>
             </div>

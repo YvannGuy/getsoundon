@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
+import { resolvePublishListingHref } from "@/lib/landing-publish-href";
 import { getUserOrNull } from "@/lib/supabase/server";
 
 export async function LegalPageLayout({
@@ -11,7 +12,8 @@ export async function LegalPageLayout({
   children: React.ReactNode;
   title: string;
 }) {
-  const { user } = await getUserOrNull();
+  const { user, supabase } = await getUserOrNull();
+  const publishListingHref = await resolvePublishListingHref(user, supabase);
 
   return (
     <div className="font-landing-body min-h-screen bg-gs-beige text-[#222]">
@@ -45,7 +47,7 @@ export async function LegalPageLayout({
           </Link>
         </div>
       </main>
-      <LandingFooter isLoggedIn={!!user} />
+      <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
     </div>
   );
 }

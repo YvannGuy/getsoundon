@@ -125,20 +125,19 @@ export async function sendWelcomeSeekerEmail(to: string, fullName: string) {
     html: renderEmailLayout({
       title: `Bienvenue ${firstName} sur GetSoundOn`,
       intro:
-        "Vous venez de rejoindre une plateforme pensée pour connecter les propriétaires de salles chrétiennes et les utilisateurs en recherche d’un lieu adapté à leurs besoins.",
+        "Vous venez de rejoindre une plateforme dédiée à la <strong>location de matériel événementiel</strong> (sono, DJ, lumière, services) entre <strong>locataires</strong> et <strong>prestataires</strong> vérifiés.",
       sections: [
-        `<h2>Un espace simple et sécurisé</h2>
-         <p>Notre objectif : simplifier les échanges, faciliter la réservation et sécuriser les paiements, tout en proposant une expérience claire et professionnelle.</p>`,
+        `<h2>Un parcours simple et encadré</h2>
+         <p>Notre objectif : vous aider à trouver le bon matériel, échanger clairement avec le prestataire, sécuriser la <strong>demande</strong>, la <strong>réservation</strong> et le <strong>paiement</strong> lorsque le flux en ligne est proposé sur l’annonce.</p>`,
         `<h2>Ce que vous pouvez faire</h2>
          <ul>
-           <li>Parcourir les salles disponibles</li>
-           <li>Envoyer une demande de location ou de visite</li>
-           <li>Échanger directement avec le propriétaire</li>
-           <li>Recevoir une offre personnalisée</li>
-           <li>Payer en ligne de manière sécurisée (optionnel)</li>
+           <li>Parcourir le <a href="${siteUrl}/catalogue">catalogue matériel</a></li>
+           <li>Réserver et payer en ligne lorsque l’annonce le propose (paiement sécurisé)</li>
+           <li>Échanger avec le prestataire depuis <strong>Mes locations matériel</strong> (tableau de bord)</li>
+           <li>Suivre vos réservations, cautions (empreinte le cas échéant) et demandes d’annulation depuis votre espace</li>
          </ul>`,
         `<h2>Astuce pour bien démarrer</h2>
-         <p>Complétez votre demande avec un maximum de détails (type d’événement, date, capacité, budget). Vous recevrez des réponses plus rapides et plus pertinentes.</p>`,
+         <p>Indiquez vos dates, votre zone et le type de matériel recherché : les prestataires pourront vous répondre plus vite. Vérifiez sur chaque annonce les conditions d’<strong>annulation</strong> et de <strong>caution</strong> avant de valider.</p>`,
         `<h2>Bien débuter</h2>
          <p>Pour vous lancer rapidement :</p>
          <ul>
@@ -165,201 +164,34 @@ export async function sendWelcomeOwnerEmail(to: string, _fullName: string) {
     html: renderEmailLayout({
       title: "Bienvenue sur GetSoundOn",
       intro:
-        "Merci d’avoir rejoint la plateforme en tant que propriétaire. Vous faites désormais partie d’un réseau dédié à la location de salles chrétiennes.",
+        "Merci d’avoir rejoint GetSoundOn en tant que <strong>prestataire</strong>. Vous proposez du <strong>matériel</strong> en location et gérez vos <strong>annonces</strong> et vos <strong>réservations catalogue</strong> depuis un espace dédié.",
       sections: [
-        `<h2>Un outil conçu pour vous faire gagner du temps</h2>
-         <p>GetSoundOn vous permet de publier votre salle, recevoir des demandes ciblees, echanger simplement avec les utilisateurs et securiser vos paiements.</p>`,
+        `<h2>Un outil pensé pour les loueurs</h2>
+         <p>Publiez vos <strong>annonces</strong> (photos, tarifs, zone, options), gérez les <strong>réservations catalogue</strong> et, lorsque Stripe Connect est activé, encaissez les <strong>paiements</strong> associés.</p>`,
         `<h2>Ce que vous pouvez faire dès maintenant</h2>
          <ul>
-           <li>Ajouter ou modifier vos annonces</li>
-           <li>Gérer vos disponibilités</li>
-           <li>Recevoir des demandes de visite/location</li>
-           <li>Envoyer des offres</li>
-           <li>Suivre vos transactions depuis votre dashboard</li>
+           <li>Créer ou compléter une <strong>annonce</strong> matériel</li>
+           <li>Suivre les <strong>locations matériel</strong> et les échanges liés aux réservations</li>
+           <li>Configurer caution (<strong>empreinte</strong>) et politique d’<strong>annulation</strong> sur l’annonce</li>
+           <li>Suivre les <strong>paiements</strong> et les <strong>incidents</strong> matériel le cas échéant</li>
          </ul>`,
         `<h2>Conseil pour bien démarrer</h2>
-         <p>Prenez quelques minutes pour compléter votre annonce avec des photos de qualité, une description claire et les informations pratiques. Plus votre annonce est détaillée, plus vous recevrez des demandes pertinentes.</p>`,
+         <p>Des photos nettes, une description précise (état du matériel, accessoires, retrait / livraison) et des tarifs clairs attirent des demandes plus qualifiées.</p>`,
         `<h2>Vidéo de prise en main</h2>
-         <p>Découvrez les principales fonctionnalités propriétaire :</p>
+         <p>Découvrez les principales fonctionnalités côté prestataire :</p>
          <p><a href="${ownerWelcomeVideoUrl}">${ownerWelcomeVideoUrl}</a></p>`,
       ],
-      ctaLabel: "Créer ou gérer mon annonce",
-      ctaUrl: `${siteUrl}/onboarding/salle`,
+      ctaLabel: "Créer ou gérer mes annonces",
+      ctaUrl: `${siteUrl}/proprietaire/ajouter-annonce`,
     }),
   });
   return { success: !error, error: error?.message };
 }
 
-export async function sendNewMessageNotification(
-  to: string,
-  senderName: string,
-  preview: string,
-  messagerieUrl: string
-) {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn("[email] RESEND_API_KEY non configuré, email non envoyé");
-    return { success: false };
-  }
-  const safePreview =
-    preview.length > 120 ? preview.slice(0, 117) + "..." : preview;
-  const { error } = await resend.emails.send({
-    from,
-    to,
-    subject: `Nouveau message de ${senderName} sur GetSoundOn`,
-    html: renderEmailLayout({
-      title: "Nouveau message",
-      intro: `<strong>${escapeHtml(senderName)}</strong> vous a envoyé un message :`,
-      sections: [
-        `<p class="tip">${escapeHtml(safePreview)}</p>`,
-      ],
-      ctaLabel: "Voir la discussion",
-      ctaUrl: messagerieUrl,
-    }),
-  });
-  return { success: !error, error: error?.message };
-}
-
-export async function sendNewDemandeNotification(
-  to: string,
-  seekerName: string,
-  salleName: string,
-  demandeUrl: string
-) {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn("[email] RESEND_API_KEY non configuré, notification nouvelle demande non envoyée");
-    return { success: false };
-  }
-  const { error } = await resend.emails.send({
-    from,
-    to,
-    subject: `Nouvelle demande pour ${salleName} sur GetSoundOn`,
-    html: renderEmailLayout({
-      title: "Nouvelle demande de réservation",
-      intro: `<strong>${escapeHtml(seekerName)}</strong> vous a envoyé une demande pour la salle <strong>${escapeHtml(salleName)}</strong>.`,
-      sections: [
-        "<p>Connectez-vous à votre espace propriétaire pour la consulter et y répondre.</p>",
-      ],
-      ctaLabel: "Voir la demande",
-      ctaUrl: demandeUrl,
-    }),
-  });
-  return { success: !error, error: error?.message };
-}
-
-/** Notifie le propriétaire d'une demande de visite */
-export async function sendNewVisiteRequestNotification(
-  to: string,
-  seekerName: string,
-  salleName: string,
-  creneauLabel: string,
-  demandesUrl: string
-) {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn("[email] RESEND_API_KEY non configuré, notification demande de visite non envoyée");
-    return { success: false };
-  }
-  const { error } = await resend.emails.send({
-    from,
-    to,
-    subject: `Demande de visite pour ${salleName} — ${seekerName}`,
-    html: renderEmailLayout({
-      title: "Demande de visite",
-      intro: `<strong>${escapeHtml(seekerName)}</strong> souhaite organiser une visite pour <strong>${escapeHtml(salleName)}</strong>.`,
-      sections: [
-        `<p class="tip"><strong>Créneau demandé :</strong> ${escapeHtml(creneauLabel)}</p>`,
-      ],
-      ctaLabel: "Voir et répondre",
-      ctaUrl: demandesUrl,
-    }),
-  });
-  return { success: !error, error: error?.message };
-}
-
-/** Confirmation au seeker quand sa demande de visite est acceptée */
-export async function sendVisiteAcceptedNotification(
-  to: string,
-  salleName: string,
-  dateStr: string,
-  horairesStr: string,
-  messagerieUrl: string
-) {
-  if (!process.env.RESEND_API_KEY) {
-    return { success: false };
-  }
-  const { error } = await resend.emails.send({
-    from,
-    to,
-    subject: `Visite acceptee pour ${salleName} - GetSoundOn`,
-    html: renderEmailLayout({
-      title: "Votre visite a été acceptée",
-      intro: `Le propriétaire de <strong>${escapeHtml(salleName)}</strong> a accepté votre demande de visite.`,
-      sections: [
-        `<p class="tip"><strong>Date :</strong> ${escapeHtml(dateStr)}<br><strong>Créneau :</strong> ${escapeHtml(horairesStr)}</p>`,
-        "<p>L'adresse et le téléphone du prestataire ne sont pas communiqués par e-mail. Utilisez la messagerie GetSoundOn pour convenir du lieu exact et des modalités pratiques.</p>",
-      ],
-      ctaLabel: "Ouvrir la messagerie",
-      ctaUrl: messagerieUrl,
-    }),
-  });
-  return { success: !error, error: error?.message };
-}
-
-/** Notification au seeker quand sa demande de visite est refusée */
-export async function sendVisiteRefusedNotification(
-  to: string,
-  salleName: string,
-  demandesUrl: string
-) {
-  if (!process.env.RESEND_API_KEY) {
-    return { success: false };
-  }
-  const { error } = await resend.emails.send({
-    from,
-    to,
-    subject: `Creneau indisponible pour ${salleName} - GetSoundOn`,
-    html: renderEmailLayout({
-      title: "Votre demande de visite n'a pas pu être confirmée",
-      intro: `Le propriétaire de <strong>${escapeHtml(salleName)}</strong> n'est pas disponible sur ce créneau.`,
-      sections: [
-        "<p>Vous pouvez consulter votre demande et échanger avec le propriétaire depuis votre espace.</p>",
-      ],
-      ctaLabel: "Voir ma demande",
-      ctaUrl: demandesUrl,
-    }),
-  });
-  return { success: !error, error: error?.message };
-}
-
-/** Notification au seeker quand le propriétaire propose une reprogrammation */
-export async function sendVisiteRescheduleNotification(
-  to: string,
-  salleName: string,
-  dateStr: string,
-  horairesStr: string,
-  demandeUrl: string
-) {
-  if (!process.env.RESEND_API_KEY) {
-    return { success: false };
-  }
-  const { error } = await resend.emails.send({
-    from,
-    to,
-    subject: `Nouveau creneau propose pour ${salleName} - GetSoundOn`,
-    html: renderEmailLayout({
-      title: "Un nouveau créneau vous est proposé",
-      intro: `Le propriétaire de <strong>${escapeHtml(salleName)}</strong> vous propose une nouvelle date de visite.`,
-      sections: [
-        `<p class="tip"><strong>Date :</strong> ${escapeHtml(dateStr)}<br><strong>Créneau :</strong> ${escapeHtml(horairesStr)}</p>`,
-        "<p>Vous pouvez accepter ou refuser cette proposition depuis votre demande.</p>",
-      ],
-      ctaLabel: "Gérer ma demande",
-      ctaUrl: demandeUrl,
-    }),
-  });
-  return { success: !error, error: error?.message };
-}
-
-/** Notifie les admins quand une nouvelle annonce est soumise et doit être validée */
+/**
+ * Notifie les admins lors d’une soumission depuis l’onboarding prestataire (fiche lieu + sync annonce matériel).
+ * Wording neutre « annonce » ; validation admin inchangée.
+ */
 export async function sendNewSallePendingAdminNotification(
   adminEmails: string[],
   salleName: string,
@@ -381,7 +213,7 @@ export async function sendNewSallePendingAdminNotification(
     html: renderEmailLayout({
       title: "Nouvelle annonce à valider",
       intro:
-        "Une nouvelle annonce a été soumise et nécessite votre validation.",
+        "Une nouvelle annonce a été soumise depuis l’espace prestataire et nécessite votre validation.",
       sections: [
         `<p><strong>${escapeHtml(salleName)}</strong> — ${escapeHtml(salleCity)}</p>`,
       ],
@@ -392,7 +224,7 @@ export async function sendNewSallePendingAdminNotification(
   return { success: !error, error: error?.message };
 }
 
-/** Notifie les admins quand une nouvelle annonce est publiée automatiquement (sans validation) */
+/** Admin — publication auto onboarding prestataire (fiche + annonce matériel). */
 export async function sendNewSallePublishedAdminNotification(
   adminEmails: string[],
   salleName: string,
@@ -414,7 +246,7 @@ export async function sendNewSallePublishedAdminNotification(
     html: renderEmailLayout({
       title: "Nouvelle annonce publiée",
       intro:
-        "Une nouvelle annonce a été publiée automatiquement (mode publication auto).",
+        "Une nouvelle annonce a été publiée automatiquement depuis l’onboarding prestataire (mode publication auto).",
       sections: [
         `<p><strong>${escapeHtml(salleName)}</strong> — ${escapeHtml(salleCity)}</p>`,
       ],
@@ -425,102 +257,63 @@ export async function sendNewSallePublishedAdminNotification(
   return { success: !error, error: error?.message };
 }
 
-export async function sendReservationConfirmedSeekerEmail(
+/** Paiement réservation — flux matériel (`gs_bookings` / catalogue). */
+export async function sendGsBookingPaymentConfirmedLocataireEmail(
   to: string,
-  salleName: string,
+  listingTitle: string,
   amountEur: string,
-  reservationsUrl: string
+  bookingUrl: string,
+  cautionHtml?: string | null
 ) {
   if (!process.env.RESEND_API_KEY) return { success: false };
+  const sections = [
+    `<p class="tip"><strong>Montant payé :</strong> ${escapeHtml(amountEur)} EUR</p>`,
+  ];
+  if (cautionHtml) sections.push(cautionHtml);
   const { error } = await resend.emails.send({
     from,
     to,
-    subject: `Reservation confirmee pour ${salleName}`,
+    subject: `Paiement confirmé — ${listingTitle}`,
     html: renderEmailLayout({
-      title: "Votre reservation est confirmee",
-      intro: `Votre paiement pour <strong>${escapeHtml(salleName)}</strong> a ete valide.`,
-      sections: [
-        `<p class="tip"><strong>Montant paye :</strong> ${escapeHtml(amountEur)} EUR</p>`,
-        "<p>Vous pouvez consulter les details de votre reservation dans votre espace.</p>",
-      ],
-      ctaLabel: "Voir ma reservation",
-      ctaUrl: reservationsUrl,
+      title: "Votre réservation matériel est confirmée",
+      intro: `Votre paiement pour la réservation concernant <strong>${escapeHtml(listingTitle)}</strong> a bien été enregistré.`,
+      sections,
+      ctaLabel: "Voir ma réservation",
+      ctaUrl: bookingUrl,
     }),
   });
   return { success: !error, error: error?.message };
 }
 
-export async function sendReservationConfirmedOwnerEmail(
+/** Paiement réservation — flux matériel (`gs_bookings`), côté prestataire. */
+export async function sendGsBookingPaymentConfirmedPrestataireEmail(
   to: string,
-  salleName: string,
+  listingTitle: string,
   amountEur: string,
-  ownerReservationsUrl: string
+  bookingUrl: string,
+  cautionHtml?: string | null
 ) {
   if (!process.env.RESEND_API_KEY) return { success: false };
+  const sections = [
+    `<p class="tip"><strong>Montant encaissé côté plateforme (réservation) :</strong> ${escapeHtml(amountEur)} EUR</p>`,
+  ];
+  if (cautionHtml) sections.push(cautionHtml);
   const { error } = await resend.emails.send({
     from,
     to,
-    subject: `Reservation confirmee pour ${salleName}`,
+    subject: `Réservation payée — ${listingTitle}`,
     html: renderEmailLayout({
-      title: "Une reservation vient d'etre confirmee",
-      intro: `Le paiement de la reservation pour <strong>${escapeHtml(salleName)}</strong> est confirme.`,
-      sections: [
-        `<p class="tip"><strong>Montant paye :</strong> ${escapeHtml(amountEur)} EUR</p>`,
-      ],
-      ctaLabel: "Voir mes reservations",
-      ctaUrl: ownerReservationsUrl,
+      title: "Une réservation vient d’être payée",
+      intro: `Un locataire a finalisé le paiement pour votre annonce <strong>${escapeHtml(listingTitle)}</strong>.`,
+      sections,
+      ctaLabel: "Voir la réservation",
+      ctaUrl: bookingUrl,
     }),
   });
   return { success: !error, error: error?.message };
 }
 
-export async function sendPaymentFailedSeekerEmail(
-  to: string,
-  salleName: string,
-  paymentUrl: string
-) {
-  if (!process.env.RESEND_API_KEY) return { success: false };
-  const { error } = await resend.emails.send({
-    from,
-    to,
-    subject: `Paiement echoue pour ${salleName}`,
-    html: renderEmailLayout({
-      title: "Paiement non finalise",
-      intro: `Le paiement pour <strong>${escapeHtml(salleName)}</strong> n'a pas pu aboutir.`,
-      sections: [
-        "<p>Verifiez votre moyen de paiement puis relancez l'operation depuis votre espace.</p>",
-      ],
-      ctaLabel: "Reessayer le paiement",
-      ctaUrl: paymentUrl,
-    }),
-  });
-  return { success: !error, error: error?.message };
-}
-
-export async function sendPaymentFailedOwnerEmail(
-  to: string,
-  salleName: string,
-  ownerReservationsUrl: string
-) {
-  if (!process.env.RESEND_API_KEY) return { success: false };
-  const { error } = await resend.emails.send({
-    from,
-    to,
-    subject: `Paiement echoue pour ${salleName}`,
-    html: renderEmailLayout({
-      title: "Echec de paiement sur une reservation",
-      intro: `Le paiement de la reservation pour <strong>${escapeHtml(salleName)}</strong> a echoue.`,
-      sections: [
-        "<p>Vous pouvez suivre la reservation et reprendre l'echange depuis votre espace proprietaire.</p>",
-      ],
-      ctaLabel: "Voir mes reservations",
-      ctaUrl: ownerReservationsUrl,
-    }),
-  });
-  return { success: !error, error: error?.message };
-}
-
-/** Confirmation à l'utilisateur après soumission du formulaire conciergerie */
+/** Confirmation utilisateur après formulaire conciergerie (brief matériel / accompagnement catalogue). */
 export async function sendConciergeConfirmationEmail(to: string) {
   if (!process.env.RESEND_API_KEY) {
     console.warn("[email] RESEND_API_KEY non configuré, email confirmation conciergerie non envoyé");
@@ -533,12 +326,14 @@ export async function sendConciergeConfirmationEmail(to: string) {
     html: renderEmailLayout({
       title: "Votre demande a bien été enregistrée",
       intro:
-        "Merci d'avoir confié votre recherche de salle à notre équipe. Nous avons bien reçu votre brief et nous vous recontacterons sous 24–72h avec une shortlist de 3 à 5 lieux adaptés à votre besoin.",
+        "Merci d’avoir partagé votre besoin matériel avec notre équipe. Nous avons bien reçu votre brief et nous vous recontacterons sous 24–72h avec des pistes d’annonces et de prestataires adaptés.",
       sections: [
-        "<p>En attendant, vous pouvez continuer à explorer nos <a href=\"" + siteUrl + "/rechercher\">salles disponibles</a>.</p>",
+        "<p>En attendant, vous pouvez parcourir le <a href=\"" +
+          siteUrl +
+          "/catalogue\">catalogue matériel</a> et lancer une demande ou une réservation directement.</p>",
       ],
-      ctaLabel: "Explorer les salles",
-      ctaUrl: `${siteUrl}/rechercher`,
+      ctaLabel: "Parcourir le catalogue",
+      ctaUrl: `${siteUrl}/catalogue`,
     }),
   });
   return { success: !error, error: error?.message };
@@ -631,7 +426,7 @@ export async function sendHowItWorksContactEmail(params: {
     subject: `[Comment ça marche] ${params.firstName.trim()} ${params.lastName.trim()}`,
     html: renderEmailLayout({
       title: "Message depuis la page Comment ça marche",
-      intro: "Un visiteur a envoyé un message via le formulaire de contact.",
+      intro: "Un utilisateur a envoyé un message via le formulaire de contact.",
       sections: [
         `<p><strong>Prénom:</strong> ${safeFirst}</p>`,
         `<p><strong>Nom:</strong> ${safeLast}</p>`,

@@ -781,10 +781,10 @@ export function GetSoundOnOnboardingWizard({
           </Link>
           {createdSlug ? (
             <Link
-              href={`/salles/${createdSlug}`}
+              href="/proprietaire/annonces"
               className="flex h-11 w-full items-center justify-center rounded-md border border-gs-line bg-white text-sm font-medium text-slate-800 transition hover:bg-slate-50"
             >
-              Voir ma boutique
+              Voir mes annonces
             </Link>
           ) : null}
           <Link
@@ -841,10 +841,10 @@ export function GetSoundOnOnboardingWizard({
             </Link>
             {createdSlug ? (
               <Link
-                href={`/salles/${createdSlug}`}
+                href="/proprietaire/annonces"
                 className="flex h-12 items-center justify-center rounded-md border border-gs-line bg-white text-sm font-medium text-slate-800 transition hover:bg-slate-50"
               >
-                Voir ma boutique
+                Voir mes annonces
               </Link>
             ) : null}
             <Link

@@ -60,52 +60,30 @@ export default async function ProprietaireLayout({
     (profile as { full_name?: string | null } | null)?.full_name ??
     user.user_metadata?.full_name ??
     "Utilisateur";
-  let demandeCount: number;
-  let visiteCount: number;
-  let reservationCount: number;
   let materielUnreadCount: number;
   let paymentCount: number;
-  let edlCount: number;
-  let cautionCount: number;
   let contractCount: number;
   try {
     const c = await getOwnerBadgeCounts(supabase, user.id);
-    demandeCount = c.demandeCount;
-    visiteCount = c.visiteCount;
-    reservationCount = c.reservationCount;
     materielUnreadCount = c.materielUnreadCount;
     paymentCount = c.paymentCount;
-    edlCount = c.edlCount;
-    cautionCount = c.cautionCount;
     contractCount = c.contractCount;
   } catch (err: unknown) {
     console.error("[layout] app/proprietaire/layout.tsx getOwnerBadgeCounts outer catch", {
       message: err instanceof Error ? err.message : String(err),
       stack: err instanceof Error ? err.stack : undefined,
     });
-    ({
-      demandeCount,
-      visiteCount,
-      reservationCount,
-      materielUnreadCount,
-      paymentCount,
-      edlCount,
-      cautionCount,
-      contractCount,
-    } = EMPTY_BADGE_COUNTS);
+    materielUnreadCount = EMPTY_BADGE_COUNTS.materielUnreadCount;
+    paymentCount = EMPTY_BADGE_COUNTS.paymentCount;
+    contractCount = EMPTY_BADGE_COUNTS.contractCount;
   }
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gs-beige lg:flex-row">
       <OwnerSidebar
         user={{ ...user, displayName }}
-        demandeCount={demandeCount ?? 0}
-        visiteCount={visiteCount ?? 0}
-        reservationCount={reservationCount ?? 0}
         materielUnreadCount={materielUnreadCount}
         paymentCount={paymentCount}
-        edlCount={edlCount ?? 0}
-        cautionCount={cautionCount ?? 0}
         contractCount={contractCount}
         canAccessSeeker={true}
       />

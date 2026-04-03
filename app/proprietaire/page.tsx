@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AddSalleAutoOpen } from "@/components/proprietaire/add-salle-modal";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Banknote, CheckCircle, Inbox, Star } from "lucide-react";
+import { Banknote, Inbox, LayoutGrid } from "lucide-react";
 
 import { ConnectLoginButton } from "@/components/paiement/connect-login-button";
 import { ConnectOnboardingButton } from "@/components/paiement/connect-onboarding-button";
@@ -76,46 +76,6 @@ export default async function ProprietaireDashboardPage({
   const paidOffersData = paidOffersRes.error ? [] : (paidOffersRes.data ?? []);
   const paidOfferIds = paidOffersData.map((o) => (o as { id: string }).id);
 
-  let demandesVisiteData: { id: string; seeker_id: string; salle_id: string; date_visite: string; heure_debut: string; heure_fin: string; status: string; created_at: string }[] = [];
-  let demandesVisite30Data: { id: string; status: string }[] = [];
-  try {
-    const [res, res30] =
-      salleIds.length > 0
-        ? await Promise.all([
-            supabase
-              .from("demandes_visite")
-              .select("id, seeker_id, salle_id, date_visite, heure_debut, heure_fin, status, created_at")
-              .in("salle_id", salleIds)
-              .order("created_at", { ascending: false })
-              .limit(10),
-            supabase
-              .from("demandes_visite")
-              .select("id, status")
-              .in("salle_id", salleIds)
-              .gte("created_at", since30Iso),
-          ])
-        : [{ data: [] }, { data: [] }];
-    demandesVisiteData = res.data ?? [];
-    demandesVisite30Data = (res30.data ?? []) as { id: string; status: string }[];
-  } catch {
-    // Table peut ne pas exister
-  }
-
-  const seekerIds = [...new Set(demandesVisiteData.map((d) => d.seeker_id).filter(Boolean))];
-  let seekerProfiles: { id: string; full_name: string | null; email: string | null }[] = [];
-  if (seekerIds.length > 0) {
-    const res = await supabase.from("profiles").select("id, full_name, email").in("id", seekerIds);
-    if (!res.error) seekerProfiles = res.data ?? [];
-  }
-  const profileMap = new Map(seekerProfiles.map((p) => [p.id, p]));
-  const salleMap = new Map(salles.map((s) => [s.id, s]));
-
-  const visitesAvecProfil = demandesVisiteData.map((d) => ({
-    ...d,
-    seeker: d.seeker_id ? profileMap.get(d.seeker_id) : undefined,
-    salle: salleMap.get(d.salle_id),
-  }));
-
   const [recentPayRes, payments30Res] =
     paidOfferIds.length > 0
       ? await Promise.all([
@@ -142,19 +102,31 @@ export default async function ProprietaireDashboardPage({
     0
   );
 
-  const demandesRecues30 = demandesVisite30Data.length;
-  const visitesRepondues30 = demandesVisite30Data.filter((d) =>
-    ["accepted", "refused", "reschedule_proposed"].includes(d.status)
-  ).length;
-  const visitesAcceptees30 = demandesVisite30Data.filter((d) => d.status === "accepted").length;
-  const tauxReponse30 =
-    demandesRecues30 > 0 ? Math.round((visitesRepondues30 / demandesRecues30) * 100) : 0;
+  const annoncesCount = salles.length;
+  const annoncesActives = salles.filter((s) => s.status === "approved").length;
 
   const metrics = [
-    { label: "Demandes reçues (30j)", value: String(demandesRecues30), icon: Inbox, color: "text-black", bgColor: "bg-gs-orange/10" },
-    { label: "Taux de réponse (30j)", value: `${tauxReponse30}%`, icon: Star, color: "text-sky-500", bgColor: "bg-sky-100" },
-    { label: "Créneaux acceptés (30j)", value: String(visitesAcceptees30), icon: CheckCircle, color: "text-emerald-600", bgColor: "bg-emerald-100" },
-    { label: "Revenu encaissé (30j)", value: `${(revenuEncaisse30 / 100).toFixed(0)} €`, icon: Banknote, color: "text-amber-700", bgColor: "bg-amber-100" },
+    {
+      label: "Annonces (toutes)",
+      value: String(annoncesCount),
+      icon: LayoutGrid,
+      color: "text-black",
+      bgColor: "bg-gs-orange/10",
+    },
+    {
+      label: "Annonces actives",
+      value: String(annoncesActives),
+      icon: Inbox,
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-100",
+    },
+    {
+      label: "Revenu encaissé (30j, réservations legacy)",
+      value: `${(revenuEncaisse30 / 100).toFixed(0)} €`,
+      icon: Banknote,
+      color: "text-amber-700",
+      bgColor: "bg-amber-100",
+    },
   ];
 
   return (
@@ -222,7 +194,7 @@ export default async function ProprietaireDashboardPage({
         </CardContent>
       </Card>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {metrics.map((m) => {
           const Icon = m.icon;
           return (
@@ -283,14 +255,9 @@ export default async function ProprietaireDashboardPage({
                         • {STATUT_SALLE_LABEL[s.status] ?? s.status}
                       </span>
                       <div className="mt-3 flex gap-2">
-                        <Link href={`/salles/${s.slug}`}>
-                          <Button variant="outline" size="sm" className="flex-1 border-slate-300">
-                            Voir
-                          </Button>
-                        </Link>
-                        <Link href={`/proprietaire/annonces?edit=${s.id}`}>
-                          <Button size="sm" className="flex-1 bg-gs-orange hover:brightness-95">
-                            Modifier
+                        <Link href={`/proprietaire/annonces?edit=${s.id}`} className="flex-1">
+                          <Button size="sm" className="w-full bg-gs-orange hover:brightness-95">
+                            Gérer l&apos;annonce
                           </Button>
                         </Link>
                       </div>
@@ -355,80 +322,25 @@ export default async function ProprietaireDashboardPage({
       </div>
 
       <Card className="mt-6 border-0 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="font-landing-heading text-lg text-gs-dark">Calendrier · activité récente</CardTitle>
-          <Link href="/proprietaire/visites" className="text-sm font-medium text-black hover:underline">
-            Voir tout →
-          </Link>
+        <CardHeader className="pb-2">
+          <CardTitle className="font-landing-heading text-lg text-gs-dark">Locations matériel</CardTitle>
         </CardHeader>
         <CardContent>
-          {visitesAvecProfil.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-12 text-center">
-              <Inbox className="mb-3 h-12 w-12 text-slate-300" />
-              <p className="text-slate-500">Aucun créneau ou demande de visite pour le moment</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
-                    <th className="pb-3 pr-4">Loueur</th>
-                    <th className="pb-3 pr-4">Annonce</th>
-                    <th className="pb-3 pr-4">Date</th>
-                    <th className="pb-3 pr-4">Statut</th>
-                    <th className="pb-3">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {visitesAvecProfil.map((d) => {
-                    const dateStr = d.date_visite
-                      ? format(new Date(d.date_visite + "T12:00:00"), "d MMMM yyyy", { locale: fr })
-                      : "";
-                    const hDebut = d.heure_debut?.match(/(\d{1,2}):(\d{2})/)?.[0] ?? "";
-                    const hFin = d.heure_fin?.match(/(\d{1,2}):(\d{2})/)?.[0] ?? "";
-                    const horaires = hDebut && hFin ? `${hDebut}–${hFin}` : "";
-                    const dateDisplay = horaires ? `${dateStr}, ${horaires}` : dateStr;
-                    const statutLabel =
-                      { pending: "En attente", accepted: "Acceptée", refused: "Refusée", reschedule_proposed: "Reprogrammation proposée" }[
-                        d.status
-                      ] ?? d.status;
-                    const statutColor =
-                      { pending: "text-amber-600", accepted: "text-emerald-600", refused: "text-red-600", reschedule_proposed: "text-sky-600" }[
-                        d.status
-                      ] ?? "text-slate-600";
-                    return (
-                      <tr key={d.id} className="group">
-                        <td className="py-4 pr-4">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-medium text-slate-600">
-                              {(d.seeker?.full_name ?? d.seeker?.email ?? "?").charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <p className="font-medium text-black">{d.seeker?.full_name ?? "—"}</p>
-                              <p className="text-sm text-slate-500">{d.seeker?.email ?? "—"}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-4 pr-4 text-sm text-slate-600">{d.salle?.name ?? "—"}</td>
-                        <td className="py-4 pr-4 text-sm text-slate-600">{dateDisplay}</td>
-                        <td className="py-4 pr-4">
-                          <span className={`text-sm font-medium ${statutColor}`}>• {statutLabel}</span>
-                        </td>
-                        <td className="py-4">
-                          <Link
-                            href="/proprietaire/visites"
-                            className="text-sm font-medium text-black hover:underline"
-                          >
-                            Voir la demande
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-12 text-center">
+            <p className="max-w-md text-slate-600">
+              Gérez les réservations et la messagerie liées au <strong>matériel</strong> depuis l&apos;espace dédié.
+            </p>
+            <Link
+              href="/proprietaire/materiel"
+              className="mt-4 inline-flex h-9 items-center justify-center rounded-md bg-gs-orange px-4 text-sm font-medium text-white transition hover:brightness-95"
+            >
+              Ouvrir les locations matériel
+            </Link>
+            <p className="mt-4 max-w-lg text-xs text-slate-400">
+              Un dossier historique (visites lieux / ancien calendrier) peut exister : il reste accessible en URL
+              directe pour le support ; il n&apos;est plus mis en avant dans le produit.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

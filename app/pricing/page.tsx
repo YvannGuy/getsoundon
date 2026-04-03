@@ -21,14 +21,15 @@ export default function PricingPage() {
       <div className="mx-auto max-w-3xl text-center">
         <h1 className="text-4xl font-semibold tracking-tight text-black">Tarifs et consultation gratuite</h1>
         <p className="mt-4 text-slate-600">
-          Parcourez les annonces librement et échangez avec les propriétaires sans frais. Les tarifs des locations
-          sont fixés par les propriétaires ; une fois votre réservation confirmée, des frais de service fixes de 15 €
-          s&apos;ajoutent au moment du paiement pour couvrir la sécurisation des transactions et le support de la plateforme.
+          Parcourez le catalogue matériel librement et échangez avec les prestataires sans frais. Les tarifs de
+          location sont fixés par annonce ; une fois votre réservation confirmée, des frais de service fixes de 15 €
+          s&apos;ajoutent au moment du paiement pour couvrir la sécurisation des transactions et le support de la
+          plateforme.
         </p>
         <p className="mt-3 text-slate-600">
-          Que vous cherchiez une salle pour un culte régulier, un baptême, une conférence ou une retraite spirituelle en Île-de-France,
-          vous pouvez comparer les offres, envoyer autant de demandes que nécessaire et ne payer qu&apos;une fois la réservation acceptée.
-          Les propriétaires fixent leurs prix à la journée ou à la demi-journée ; le forfait de 15 € est identique quelle que soit la durée.
+          Comparez les annonces (sono, DJ, lumière, services), envoyez vos demandes et ne payez qu&apos;une fois la
+          réservation acceptée. Les loueurs fixent leurs prix (souvent à la journée) ; le forfait de 15 € est
+          identique quelle que soit la durée.
         </p>
       </div>
 
@@ -47,16 +48,16 @@ export default function PricingPage() {
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-black" />
-                Demandes et messagerie gratuites
+                Demandes et échanges avec les prestataires gratuits
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-black" />
-                Mise en relation directe avec les propriétaires
+                Mise en relation avec les prestataires
               </li>
             </ul>
-            <Link href="/rechercher" className="mt-6 block">
+            <Link href="/catalogue" className="mt-6 block">
               <Button className="w-full bg-gs-orange hover:brightness-95">
-                Rechercher une salle
+                Voir le catalogue matériel
               </Button>
             </Link>
           </CardContent>
@@ -69,29 +70,29 @@ export default function PricingPage() {
           <li>
             <strong className="text-slate-800">Combien coûte la consultation ?</strong>
             <p className="mt-1">
-              La consultation des annonces, l&apos;envoi de demandes et la messagerie avec les propriétaires sont
-              entièrement gratuits. Vous ne payez qu&apos;au moment de confirmer une réservation.
+              La consultation du catalogue, l&apos;envoi de demandes et les échanges avec les prestataires sont
+              entièrement gratuits. Vous ne payez qu&apos;au moment de confirmer une réservation matériel.
             </p>
           </li>
           <li>
             <strong className="text-slate-800">Quels frais s&apos;appliquent à la réservation ?</strong>
             <p className="mt-1">
               Un forfait de 15 € de frais de service est ajouté au moment du paiement de la réservation. Le prix
-              de la location est fixé par le propriétaire et indiqué sur chaque annonce.
+              de la location est fixé par le prestataire et indiqué sur chaque annonce.
             </p>
           </li>
           <li>
-            <strong className="text-slate-800">Les propriétaires paient-ils pour publier leur salle ?</strong>
+            <strong className="text-slate-800">Les prestataires paient-ils pour publier une annonce ?</strong>
             <p className="mt-1">
-              La mise en ligne d&apos;une annonce est gratuite. Les propriétaires peuvent souscrire à des packs
-              optionnels pour augmenter la visibilité de leurs annonces (voir l&apos;espace propriétaire).
+              La mise en ligne d&apos;une annonce matériel est gratuite. Des packs optionnels peuvent augmenter la
+              visibilité (voir l&apos;espace prestataire).
             </p>
           </li>
           <li>
             <strong className="text-slate-800">Puis-je annuler une réservation ?</strong>
             <p className="mt-1">
-              Les conditions d&apos;annulation dépendent du propriétaire et sont indiquées sur chaque annonce. En cas de litige,
-              la plateforme peut vous accompagner. Consultez nos CGV pour les détails.
+              Les conditions d&apos;annulation dépendent du prestataire et sont indiquées sur chaque annonce. En cas
+              de litige, la plateforme peut vous accompagner. Consultez nos CGV pour les détails.
             </p>
           </li>
         </ul>

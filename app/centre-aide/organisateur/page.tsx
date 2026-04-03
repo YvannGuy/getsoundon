@@ -25,8 +25,8 @@ const FAQ_LOCATAIRE = [
     a: "Certaines annonces permettent de réserver tout de suite ; d’autres exigent d’abord une demande que le prestataire accepte. C’est indiqué sur la fiche matériel.",
   },
   {
-    q: "Comment fonctionnent les demandes et la messagerie ?",
-    a: "Vous pouvez envoyer une demande ou réserver selon le cas, puis échanger avec le prestataire dans votre espace (messagerie) pour préciser dates, lieu de retrait ou livraison, etc.",
+    q: "Comment fonctionnent les demandes et les échanges avec un prestataire ?",
+    a: "Vous pouvez envoyer une demande ou réserver selon le cas, puis échanger avec le prestataire depuis votre espace (réservations matériel, fil de messages lié à la location) pour préciser dates, retrait ou livraison, etc.",
   },
   {
     q: "Puis-je ajouter la livraison ou un technicien ?",
@@ -46,7 +46,7 @@ const FAQ_LOCATAIRE = [
   },
   {
     q: "Comment suivre mes réservations ?",
-    a: "Rendez-vous dans votre tableau de bord (espace locataire) : réservations, messagerie et documents utiles y sont centralisés.",
+    a: "Rendez-vous dans votre tableau de bord (espace locataire) : réservations matériel, documents utiles et suivi y sont centralisés.",
   },
   {
     q: "Pourquoi la zone affichée est-elle approximative ?",

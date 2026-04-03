@@ -1,7 +1,36 @@
 import type Stripe from "stripe";
 
+import { siteConfig } from "@/config/site";
+import {
+  sendGsBookingPaymentConfirmedLocataireEmail,
+  sendGsBookingPaymentConfirmedPrestataireEmail,
+} from "@/lib/email";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+
+function gsBookingCautionHtmlLocataire(cents: number, hold: string): string | null {
+  if (!cents || cents <= 0) return null;
+  const eur = (cents / 100).toFixed(2);
+  if (hold === "authorized") {
+    return `<p>Une empreinte de <strong>caution</strong> de ${eur} EUR a été enregistrée sur votre moyen de paiement (aucun débit immédiat de ce montant en l’état).</p>`;
+  }
+  if (hold === "failed") {
+    return `<p>La mise en place de la <strong>caution</strong> (${eur} EUR) n’a pas pu aboutir. Consultez le détail de votre réservation.</p>`;
+  }
+  return `<p>Une <strong>caution</strong> de ${eur} EUR est prévue ; son statut est visible depuis votre réservation.</p>`;
+}
+
+function gsBookingCautionHtmlPrestataire(cents: number, hold: string): string | null {
+  if (!cents || cents <= 0) return null;
+  const eur = (cents / 100).toFixed(2);
+  if (hold === "authorized") {
+    return `<p>Empreinte de <strong>caution</strong> locataire en place (${eur} EUR), selon les règles de l’annonce.</p>`;
+  }
+  if (hold === "failed") {
+    return `<p>L’empreinte de <strong>caution</strong> (${eur} EUR) côté locataire n’a pas pu être finalisée.</p>`;
+  }
+  return `<p>Une <strong>caution</strong> de ${eur} EUR est prévue sur cette réservation ; le statut se met à jour automatiquement.</p>`;
+}
 
 /**
  * Paiement marketplace MVP (tables gs_bookings / gs_payments).
@@ -26,7 +55,7 @@ export async function handleGsBookingCheckoutCompleted(
 
   const { data: booking, error: fetchError } = await supabase
     .from("gs_bookings")
-    .select("id, customer_id, status, total_price, listing_id, end_date")
+    .select("id, customer_id, provider_id, status, total_price, listing_id, end_date")
     .eq("id", bookingId)
     .maybeSingle();
 
@@ -38,6 +67,7 @@ export async function handleGsBookingCheckoutCompleted(
   const row = booking as {
     id: string;
     customer_id: string;
+    provider_id: string;
     status: string;
     total_price: number | string;
     listing_id: string;
@@ -242,5 +272,76 @@ export async function handleGsBookingCheckoutCompleted(
     }
   } else if (depositAmountCents <= 0) {
     console.log("[webhook] gs_booking: pas de caution (deposit_amount_cents=0)", bookingId);
+  }
+
+  try {
+    const siteBase = siteConfig.url.replace(/\/$/, "");
+    const [{ data: listingRow }, { data: bookingFinal }, customerUserRes, providerUserRes] =
+      await Promise.all([
+        supabase.from("gs_listings").select("title").eq("id", row.listing_id).maybeSingle(),
+        supabase
+          .from("gs_bookings")
+          .select("deposit_amount_cents, deposit_hold_status")
+          .eq("id", bookingId)
+          .maybeSingle(),
+        supabase.auth.admin.getUserById(row.customer_id),
+        supabase.auth.admin.getUserById(row.provider_id),
+      ]);
+
+    const title =
+      (listingRow as { title?: string } | null)?.title?.trim() || "Annonce matériel";
+    const amountEur = totalEur.toFixed(2);
+    const finalB = bookingFinal as {
+      deposit_amount_cents?: number | null;
+      deposit_hold_status?: string | null;
+    } | null;
+    const depCents = Math.max(
+      0,
+      Number(finalB?.deposit_amount_cents ?? 0),
+      depositAmountCents
+    );
+    const hold = String(finalB?.deposit_hold_status ?? "none");
+
+    const locataireCaution = gsBookingCautionHtmlLocataire(depCents, hold);
+    const prestataireCaution = gsBookingCautionHtmlPrestataire(depCents, hold);
+
+    const customerEmail = customerUserRes.data?.user?.email ?? null;
+    const providerEmail = providerUserRes.data?.user?.email ?? null;
+
+    const emailTasks: Promise<{ success: boolean; error?: string }>[] = [];
+    if (customerEmail) {
+      emailTasks.push(
+        sendGsBookingPaymentConfirmedLocataireEmail(
+          customerEmail,
+          title,
+          amountEur,
+          `${siteBase}/dashboard/materiel/${bookingId}`,
+          locataireCaution
+        )
+      );
+    }
+    if (providerEmail) {
+      emailTasks.push(
+        sendGsBookingPaymentConfirmedPrestataireEmail(
+          providerEmail,
+          title,
+          amountEur,
+          `${siteBase}/proprietaire/materiel/${bookingId}`,
+          prestataireCaution
+        )
+      );
+    }
+    if (emailTasks.length > 0) {
+      const results = await Promise.allSettled(emailTasks);
+      results.forEach((r, i) => {
+        if (r.status === "rejected") {
+          console.error("[webhook] gs_booking: email confirmation", i, r.reason);
+        } else if (!r.value.success) {
+          console.warn("[webhook] gs_booking: email confirmation", i, r.value.error);
+        }
+      });
+    }
+  } catch (e) {
+    console.error("[webhook] gs_booking: emails confirmation", e);
   }
 }

@@ -254,8 +254,6 @@ export async function resolveDepositClaimAdminAction(params: {
   revalidatePath("/admin/cautions");
   revalidatePath("/admin/litiges");
   revalidatePath("/admin/reservations");
-  revalidatePath("/dashboard/reservations");
-  revalidatePath("/proprietaire/reservations");
   revalidatePath("/proprietaire/paiement");
   return { success: true };
 }

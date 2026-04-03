@@ -12,6 +12,7 @@ import { siteConfig } from "@/config/site";
 import { DEMO_PROVIDER_SLUG, demoProvider } from "@/lib/provider-storefront-demo";
 import { buildCanonical } from "@/lib/seo";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { resolvePublishListingHref } from "@/lib/landing-publish-href";
 import { getUserOrNull } from "@/lib/supabase/server";
 import { rowToSalle } from "@/lib/types/salle";
 import { getSallePriceFrom } from "@/lib/types/salle";
@@ -78,7 +79,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProviderStorefrontPage({ params }: PageProps) {
   const { slug } = await params;
-  const { user } = await getUserOrNull();
+  const { user, supabase } = await getUserOrNull();
+  const publishListingHref = await resolvePublishListingHref(user, supabase);
 
   // Démo statique
   if (slug === DEMO_PROVIDER_SLUG) {
@@ -95,7 +97,7 @@ export default async function ProviderStorefrontPage({ params }: PageProps) {
           />
           <ProviderStorefrontBody />
         </main>
-        <LandingFooter isLoggedIn={!!user} />
+        <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
       </div>
     );
   }
@@ -138,7 +140,7 @@ export default async function ProviderStorefrontPage({ params }: PageProps) {
                 return (
                   <Link
                     key={salle.id}
-                    href={`/salles/${salle.slug}`}
+                    href="/catalogue"
                     className="group overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:border-slate-300 hover:shadow-sm"
                   >
                     <div className="relative aspect-[16/10] bg-slate-100">
@@ -175,7 +177,7 @@ export default async function ProviderStorefrontPage({ params }: PageProps) {
           )}
         </section>
       </main>
-      <LandingFooter isLoggedIn={!!user} />
+      <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
     </div>
   );
 }

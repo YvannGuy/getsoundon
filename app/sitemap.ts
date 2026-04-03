@@ -2,14 +2,12 @@ import type { MetadataRoute } from "next";
 
 import { BLOG_POSTS } from "@/lib/blog-posts";
 import { siteConfig } from "@/config/site";
-import { getSalles } from "@/lib/salles";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
-    { url: `${baseUrl}/rechercher`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
     { url: `${baseUrl}/catalogue`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
     { url: `${baseUrl}/comment-ca-marche`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.85 },
     { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
@@ -35,18 +33,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  let salleRoutes: MetadataRoute.Sitemap = [];
-  try {
-    const salles = await getSalles();
-    salleRoutes = salles.map((s) => ({
-      url: `${baseUrl}/salles/${s.slug}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    }));
-  } catch {
-    // Fallback si erreur (ex: DB)
-  }
-
-  return [...staticRoutes, ...blogRoutes, ...salleRoutes];
+  return [...staticRoutes, ...blogRoutes];
 }

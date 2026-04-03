@@ -38,7 +38,7 @@ const FAQ_GENERAL = [
   },
   {
     q: "Comment créer un compte ?",
-    a: "Utilisez « Inscription » ou « Connexion » dans l’en-tête. Vous pourrez ensuite accéder au catalogue, à la messagerie et, pour les prestataires, publier du matériel et activer les paiements (Stripe Connect) si besoin.",
+    a: "Utilisez « Inscription » ou « Connexion » dans l’en-tête. Vous pourrez ensuite accéder au catalogue, à vos réservations matériel et, pour les prestataires, publier du matériel et activer les paiements (Stripe Connect) si besoin.",
   },
   {
     q: "Comment contacter le support ?",

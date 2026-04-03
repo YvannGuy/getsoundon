@@ -34,11 +34,11 @@ const FAQ_PRESTATAIRE = [
   },
   {
     q: "Puis-je refuser une demande ?",
-    a: "Oui. Indiquez un refus ou proposez une alternative (autres dates, autre matériel) via la messagerie pour garder une relation claire avec le client.",
+    a: "Oui. Indiquez un refus ou proposez une alternative (autres dates, autre matériel) depuis votre espace (réservations / messages liés à la location matériel) pour garder une relation claire avec le client.",
   },
   {
-    q: "Comment gérer la messagerie ?",
-    a: "Ouvrez « Messagerie » dans votre tableau de bord prestataire : toutes les conversations liées à vos annonces y sont regroupées.",
+    q: "Comment gérer les échanges avec les locataires ?",
+    a: "Ouvrez « Locations matériel » dans votre tableau de bord prestataire : les échanges liés aux réservations matériel y sont regroupés par location.",
   },
   {
     q: "Comment modifier ou désactiver mon annonce ?",

@@ -14,7 +14,8 @@ export default function PlanDuSitePage() {
     <main className="landing-container max-w-[960px] py-12 sm:py-14">
       <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Plan du site</h1>
       <p className="mt-2 max-w-[640px] text-sm text-slate-600">
-        Retrouvez ici les principales pages publiques, l&apos;espace propriétaire, l&apos;espace organisateur et les sections d&apos;aide.
+        Retrouvez ici les pages publiques autour de la location de matériel, l&apos;espace prestataire, l&apos;espace
+        locataire et le centre d&apos;aide.
       </p>
 
       <section className="mt-8 space-y-6">
@@ -27,8 +28,8 @@ export default function PlanDuSitePage() {
               </Link>
             </li>
             <li>
-              <Link href="/rechercher" className="text-blue-700 hover:underline">
-                Rechercher une salle
+              <Link href="/catalogue" className="text-blue-700 hover:underline">
+                Catalogue matériel
               </Link>
             </li>
             <li>
@@ -38,7 +39,7 @@ export default function PlanDuSitePage() {
             </li>
             <li>
               <Link href="/avantages" className="text-blue-700 hover:underline">
-                Avantages pour les propriétaires
+                Avantages prestataires
               </Link>
             </li>
             <li>
@@ -50,42 +51,42 @@ export default function PlanDuSitePage() {
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Espace organisateur</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Espace locataire (organisateur)</h2>
           <ul className="mt-3 list-disc space-y-1 pl-6 text-sm text-slate-700">
             <li>
               <Link href="/auth?tab=login&userType=organizer" className="text-blue-700 hover:underline">
-                Connexion organisateur
+                Connexion locataire
               </Link>
             </li>
             <li>
               <Link href="/auth?tab=signup&userType=organizer" className="text-blue-700 hover:underline">
-                Inscription organisateur
+                Inscription locataire
               </Link>
             </li>
             <li>
               <Link href="/dashboard" className="text-blue-700 hover:underline">
-                Tableau de bord organisateur
+                Tableau de bord locataire
               </Link>
             </li>
           </ul>
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Espace propriétaire</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Espace prestataire (loueur)</h2>
           <ul className="mt-3 list-disc space-y-1 pl-6 text-sm text-slate-700">
             <li>
               <Link href="/auth?tab=login&userType=owner" className="text-blue-700 hover:underline">
-                Connexion propriétaire
+                Connexion prestataire
               </Link>
             </li>
             <li>
               <AddSalleLink className="text-blue-700 hover:underline">
-                Inscription propriétaire
+                Inscription prestataire
               </AddSalleLink>
             </li>
             <li>
               <Link href="/proprietaire" className="text-blue-700 hover:underline">
-                Espace propriétaire
+                Tableau de bord prestataire
               </Link>
             </li>
           </ul>

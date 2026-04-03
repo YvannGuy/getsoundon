@@ -69,8 +69,8 @@ export default async function ProprietaireContratPage({
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <FileText className="mb-4 h-16 w-16 text-slate-300" />
             <p className="text-slate-600">Aucune offre payée pour le moment.</p>
-            <Link href="/proprietaire/messagerie" className="mt-4 text-sm font-medium text-gs-orange hover:underline">
-              Ouvrir la messagerie →
+            <Link href="/proprietaire/materiel" className="mt-4 text-sm font-medium text-gs-orange hover:underline">
+              Locations matériel →
             </Link>
           </CardContent>
         </Card>
@@ -127,7 +127,7 @@ export default async function ProprietaireContratPage({
           <h3 className="font-semibold text-black">À propos des factures</h3>
           <p className="mt-2 text-sm text-slate-600">
             Apres chaque paiement de reservation, le contrat GetSoundOn et la facture sont generes automatiquement en PDF.
-            Vous pouvez les récupérer ici et directement depuis la carte d&apos;offre dans la messagerie.
+            Vous pouvez les récupérer ici ; les échanges matériel actuels se font depuis Locations matériel.
           </p>
         </CardContent>
       </Card>

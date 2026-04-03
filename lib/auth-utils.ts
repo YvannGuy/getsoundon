@@ -58,3 +58,19 @@ export function canAccessOwnerDashboard(
   if (!userType || userType === "admin") return false;
   return userType === "owner" || hasSalles;
 }
+
+/**
+ * Lien « publier une annonce matériel » : espace prestataire si éligible, sinon inscription loueur.
+ * (Ne pointe pas vers les routes legacy onboarding salles exposées au public.)
+ */
+export function getPublishMaterialListingHref(
+  userType: EffectiveUserType | null,
+  hasSalles: boolean,
+  isLoggedIn: boolean,
+): string {
+  if (!isLoggedIn) return "/auth?tab=signup&userType=owner";
+  if (canAccessOwnerDashboard(userType, hasSalles)) {
+    return "/proprietaire/ajouter-annonce";
+  }
+  return "/auth?tab=signup&userType=owner";
+}

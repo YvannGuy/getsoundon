@@ -6,10 +6,12 @@ import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingHero } from "@/components/landing/LandingHero";
 import { LandingSmartEventAssistant } from "@/components/landing/LandingSmartEventAssistant";
+import { resolvePublishListingHref } from "@/lib/landing-publish-href";
 import { getUserOrNull } from "@/lib/supabase/server";
 
 export async function LandingPage() {
-  const { user } = await getUserOrNull();
+  const { user, supabase } = await getUserOrNull();
+  const publishListingHref = await resolvePublishListingHref(user, supabase);
 
   return (
     <main className="font-landing-body min-h-screen bg-gs-beige text-[#222]">
@@ -24,7 +26,7 @@ export async function LandingPage() {
       <LandingBrands />
       <LandingFinalCta />
       <LandingFaq />
-      <LandingFooter isLoggedIn={!!user} />
+      <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
     </main>
   );
 }

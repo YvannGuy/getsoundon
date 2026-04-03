@@ -6,25 +6,18 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
-  Calendar,
-  CalendarCheck,
   ChevronLeft,
   ChevronRight,
-  ClipboardCheck,
   CreditCard,
-  FileText,
   Home,
   LayoutGrid,
   LogOut,
   Menu,
-  MessageCircle,
   Package,
   Receipt,
-  Scale,
   Settings,
   Truck,
   User,
-  Wallet,
   PlusCircle,
   type LucideIcon,
 } from "lucide-react";
@@ -49,16 +42,9 @@ const ownerNavItems: OwnerNavItem[] = [
   { href: "/proprietaire/annonces", label: "Mes annonces", icon: LayoutGrid },
   { href: "/proprietaire/ajouter-annonce", label: "Ajouter une annonce", icon: PlusCircle },
   { href: "/proprietaire/materiel", label: "Locations matériel", icon: Package, badgeKey: "materiel_chat" },
-  { href: "/proprietaire/demandes", label: "Demandes", icon: FileText, badgeKey: "demandes" },
-  { href: "/proprietaire/reservations", label: "Réservations", icon: CalendarCheck, badgeKey: "reservations" },
-  { href: "/proprietaire/visites", label: "Calendrier", icon: Calendar, badgeKey: "visites" },
   { href: "/proprietaire/logistique", label: "Livraisons & retraits", icon: Truck },
-  { href: "/proprietaire/etats-des-lieux", label: "État du matériel", icon: ClipboardCheck, badgeKey: "etats" },
-  { href: "/proprietaire/cautions", label: "Cautions", icon: Wallet, badgeKey: "cautions" },
-  { href: "/proprietaire/litiges", label: "Litiges", icon: Scale },
-  { href: "/proprietaire/messagerie", label: "Messagerie", icon: MessageCircle },
   { href: "/proprietaire/paiement", label: "Paiements", icon: CreditCard, badgeKey: "paiement" },
-  { href: "/proprietaire/contrat", label: "Factures", icon: Receipt, badgeKey: "contrat" },
+  { href: "/proprietaire/contrat", label: "Modèles & factures", icon: Receipt, badgeKey: "contrat" },
   { href: "/proprietaire/parametres", label: "Paramètres", icon: Settings },
 ];
 
@@ -68,19 +54,9 @@ const ownerNavSections: { title: string; itemHrefs: string[] }[] = [
     itemHrefs: ["/proprietaire", "/proprietaire/annonces", "/proprietaire/ajouter-annonce"],
   },
   {
-    title: "Demandes & réservations",
-    itemHrefs: ["/proprietaire/materiel", "/proprietaire/demandes", "/proprietaire/reservations", "/proprietaire/visites"],
+    title: "Locations",
+    itemHrefs: ["/proprietaire/materiel", "/proprietaire/logistique"],
   },
-  {
-    title: "Logistique & suivi",
-    itemHrefs: [
-      "/proprietaire/logistique",
-      "/proprietaire/etats-des-lieux",
-      "/proprietaire/cautions",
-      "/proprietaire/litiges",
-    ],
-  },
-  { title: "Communication", itemHrefs: ["/proprietaire/messagerie"] },
   { title: "Finances & documents", itemHrefs: ["/proprietaire/paiement", "/proprietaire/contrat"] },
   { title: "Compte", itemHrefs: ["/proprietaire/parametres"] },
 ];
@@ -98,13 +74,8 @@ function NavContent({
   pathname,
   displayName,
   userEmail,
-  demandeCount,
-  visiteCount,
-  reservationCount,
   materielUnreadCount,
   paymentCount,
-  edlCount,
-  cautionCount,
   contractCount,
   collapsed = false,
   onItemClick,
@@ -114,13 +85,8 @@ function NavContent({
   pathname: string;
   displayName: string;
   userEmail?: string | null;
-  demandeCount: number;
-  visiteCount: number;
-  reservationCount: number;
   materielUnreadCount: number;
   paymentCount: number;
-  edlCount: number;
-  cautionCount: number;
   contractCount: number;
   collapsed?: boolean;
   onItemClick?: () => void;
@@ -156,27 +122,21 @@ function NavContent({
     return Math.max(rawValue - seen, 0);
   };
 
-  const unreadDemandeCount = unreadFor("demandes", demandeCount);
-  const unreadVisiteCount = unreadFor("visites", visiteCount);
-  const unreadReservationCount = unreadFor("reservations", reservationCount);
   const unreadMaterielChatCount = unreadFor("materiel_chat", materielUnreadCount);
   const unreadPaymentCount = unreadFor("paiement", paymentCount);
-  const unreadEdlCount = unreadFor("etats", edlCount);
-  const unreadCautionCount = unreadFor("cautions", cautionCount);
   const unreadContractCount = unreadFor("contrat", contractCount);
 
   const getDisplayCount = (badgeKey: string | undefined, active: boolean) => {
     if (active) return 0;
     switch (badgeKey) {
-      case "demandes": return unreadDemandeCount;
-      case "visites": return unreadVisiteCount;
-      case "reservations": return unreadReservationCount;
-      case "materiel_chat": return unreadMaterielChatCount;
-      case "paiement": return unreadPaymentCount;
-      case "etats": return unreadEdlCount;
-      case "cautions": return unreadCautionCount;
-      case "contrat": return unreadContractCount;
-      default: return 0;
+      case "materiel_chat":
+        return unreadMaterielChatCount;
+      case "paiement":
+        return unreadPaymentCount;
+      case "contrat":
+        return unreadContractCount;
+      default:
+        return 0;
     }
   };
 
@@ -184,25 +144,15 @@ function NavContent({
     const activeItem = ownerNavItems.find((item) => isOwnerNavActive(pathname, item.href) && item.badgeKey);
     if (!activeItem?.badgeKey) return;
     const rawValue =
-      activeItem.badgeKey === "demandes"
-        ? demandeCount
-        : activeItem.badgeKey === "visites"
-          ? visiteCount
-          : activeItem.badgeKey === "reservations"
-            ? reservationCount
-            : activeItem.badgeKey === "materiel_chat"
-                ? materielUnreadCount
-              : activeItem.badgeKey === "paiement"
-                ? paymentCount
-                : activeItem.badgeKey === "etats"
-                  ? edlCount
-                  : activeItem.badgeKey === "cautions"
-                    ? cautionCount
-                    : activeItem.badgeKey === "contrat"
-                      ? contractCount
-                      : 0;
+      activeItem.badgeKey === "materiel_chat"
+        ? materielUnreadCount
+        : activeItem.badgeKey === "paiement"
+          ? paymentCount
+          : activeItem.badgeKey === "contrat"
+            ? contractCount
+            : 0;
     markSeen(activeItem.badgeKey, rawValue);
-  }, [pathname, demandeCount, visiteCount, reservationCount, materielUnreadCount, paymentCount, edlCount, cautionCount, contractCount]);
+  }, [pathname, materielUnreadCount, paymentCount, contractCount]);
 
   return (
     <>
@@ -249,23 +199,13 @@ function NavContent({
                     onClick={() => {
                       if (item.badgeKey) {
                         const rawValue =
-                          item.badgeKey === "demandes"
-                            ? demandeCount
-                            : item.badgeKey === "visites"
-                              ? visiteCount
-                              : item.badgeKey === "reservations"
-                                ? reservationCount
-                                : item.badgeKey === "materiel_chat"
-                                    ? materielUnreadCount
-                                  : item.badgeKey === "paiement"
-                                    ? paymentCount
-                                    : item.badgeKey === "etats"
-                                      ? edlCount
-                                      : item.badgeKey === "cautions"
-                                        ? cautionCount
-                                        : item.badgeKey === "contrat"
-                                          ? contractCount
-                                          : 0;
+                          item.badgeKey === "materiel_chat"
+                            ? materielUnreadCount
+                            : item.badgeKey === "paiement"
+                              ? paymentCount
+                              : item.badgeKey === "contrat"
+                                ? contractCount
+                                : 0;
                         markSeen(item.badgeKey, rawValue);
                       }
                       onItemClick?.();
@@ -283,36 +223,6 @@ function NavContent({
                     {!collapsed && (
                       <>
                         <span className="flex-1 truncate">{item.label}</span>
-                        {item.badgeKey === "demandes" && displayCount > 0 && (
-                    <span
-                      className={cn(
-                        "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                        isActive ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700"
-                      )}
-                    >
-                      {displayCount > 99 ? "99+" : displayCount}
-                    </span>
-                        )}
-                        {item.badgeKey === "visites" && displayCount > 0 && (
-                    <span
-                      className={cn(
-                        "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                        isActive ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700"
-                      )}
-                    >
-                      {displayCount > 99 ? "99+" : displayCount}
-                    </span>
-                        )}
-                        {item.badgeKey === "reservations" && displayCount > 0 && (
-                    <span
-                      className={cn(
-                        "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                        isActive ? "bg-white/20 text-white" : "bg-violet-100 text-violet-700"
-                      )}
-                    >
-                      {displayCount > 99 ? "99+" : displayCount}
-                    </span>
-                        )}
                         {item.badgeKey === "materiel_chat" && displayCount > 0 && (
                     <span
                       className={cn(
@@ -333,26 +243,6 @@ function NavContent({
                       {displayCount > 99 ? "99+" : displayCount}
                     </span>
                         )}
-                        {item.badgeKey === "etats" && displayCount > 0 && (
-                    <span
-                      className={cn(
-                        "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                        isActive ? "bg-white/20 text-white" : "bg-indigo-100 text-indigo-700"
-                      )}
-                    >
-                      {displayCount > 99 ? "99+" : displayCount}
-                    </span>
-                        )}
-                        {item.badgeKey === "cautions" && displayCount > 0 && (
-                    <span
-                      className={cn(
-                        "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                        isActive ? "bg-white/20 text-white" : "bg-rose-100 text-rose-700"
-                      )}
-                    >
-                      {displayCount > 99 ? "99+" : displayCount}
-                    </span>
-                        )}
                         {item.badgeKey === "contrat" && displayCount > 0 && (
                     <span
                       className={cn(
@@ -365,16 +255,6 @@ function NavContent({
                         )}
                       </>
                     )}
-                    {collapsed && item.badgeKey === "demandes" && displayCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-semibold text-white">
-                  {displayCount > 99 ? "99+" : displayCount}
-                </span>
-                    )}
-                    {collapsed && item.badgeKey === "visites" && displayCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-semibold text-white">
-                  {displayCount > 99 ? "99+" : displayCount}
-                </span>
-                    )}
                     {collapsed && item.badgeKey === "materiel_chat" && displayCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-sky-500 px-1 text-[10px] font-semibold text-white">
                   {displayCount > 99 ? "99+" : displayCount}
@@ -382,21 +262,6 @@ function NavContent({
                     )}
                     {collapsed && item.badgeKey === "paiement" && displayCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white">
-                  {displayCount > 99 ? "99+" : displayCount}
-                </span>
-                    )}
-                    {collapsed && item.badgeKey === "reservations" && displayCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-violet-500 px-1 text-[10px] font-semibold text-white">
-                  {displayCount > 99 ? "99+" : displayCount}
-                </span>
-                    )}
-                    {collapsed && item.badgeKey === "etats" && displayCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-indigo-500 px-1 text-[10px] font-semibold text-white">
-                  {displayCount > 99 ? "99+" : displayCount}
-                </span>
-                    )}
-                    {collapsed && item.badgeKey === "cautions" && displayCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white">
                   {displayCount > 99 ? "99+" : displayCount}
                 </span>
                     )}
@@ -450,24 +315,14 @@ function NavContent({
 
 export function OwnerSidebar({
   user,
-  demandeCount = 0,
-  visiteCount = 0,
-  reservationCount = 0,
   materielUnreadCount = 0,
   paymentCount = 0,
-  edlCount = 0,
-  cautionCount = 0,
   contractCount = 0,
   canAccessSeeker = false,
 }: {
   user: { email?: string | null; displayName?: string };
-  demandeCount?: number;
-  visiteCount?: number;
-  reservationCount?: number;
   materielUnreadCount?: number;
   paymentCount?: number;
-  edlCount?: number;
-  cautionCount?: number;
   contractCount?: number;
   canAccessSeeker?: boolean;
 }) {
@@ -605,13 +460,8 @@ export function OwnerSidebar({
             pathname={pathname}
             displayName={displayName}
             userEmail={user.email}
-            demandeCount={demandeCount}
-            visiteCount={visiteCount}
-            reservationCount={reservationCount}
             materielUnreadCount={materielUnreadCount}
             paymentCount={paymentCount}
-            edlCount={edlCount}
-            cautionCount={cautionCount}
             contractCount={contractCount}
             onItemClick={() => setMobileOpen(false)}
             canAccessSeeker={canAccessSeeker}
@@ -661,13 +511,8 @@ export function OwnerSidebar({
           pathname={pathname}
           displayName={displayName}
           userEmail={user.email}
-          demandeCount={demandeCount}
-          visiteCount={visiteCount}
-          reservationCount={reservationCount}
           materielUnreadCount={materielUnreadCount}
           paymentCount={paymentCount}
-          edlCount={edlCount}
-          cautionCount={cautionCount}
           contractCount={contractCount}
           collapsed={collapsed}
           canAccessSeeker={canAccessSeeker}

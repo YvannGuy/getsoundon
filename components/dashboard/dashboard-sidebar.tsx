@@ -6,20 +6,13 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
-  CalendarCheck,
   ChevronLeft,
   ChevronRight,
-  ClipboardCheck,
   CreditCard,
-  FileText,
-  Heart,
   Home,
   LogOut,
   Menu,
-  MessageCircle,
   Package,
-  Receipt,
-  Scale,
   Search,
   Settings,
   User,
@@ -44,28 +37,16 @@ type SeekerNavItem = {
 
 const seekerNavItems: SeekerNavItem[] = [
   { href: "/dashboard", label: "Tableau de bord", icon: Home },
-  { href: "/dashboard/rechercher", label: "Rechercher du matériel", icon: Search, opensSearchModal: true },
-  { href: "/dashboard/favoris", label: "Favoris", icon: Heart },
+  { href: "/catalogue", label: "Catalogue matériel", icon: Search, opensSearchModal: true },
   { href: "/dashboard/materiel", label: "Mes locations matériel", icon: Package, badgeKey: "materiel_chat" },
-  { href: "/dashboard/demandes", label: "Mes demandes", icon: FileText, badgeKey: "demandes" },
-  { href: "/dashboard/reservations", label: "Réservations", icon: CalendarCheck, badgeKey: "reservations" },
-  { href: "/dashboard/etats-des-lieux", label: "État du matériel", icon: ClipboardCheck, badgeKey: "etats" },
-  { href: "/dashboard/litiges", label: "Litiges", icon: Scale },
-  { href: "/dashboard/paiement", label: "Paiements", icon: CreditCard, badgeKey: "paiement" },
-  { href: "/dashboard/contrat", label: "Factures", icon: Receipt },
-  { href: "/dashboard/messagerie", label: "Messagerie", icon: MessageCircle },
+  { href: "/dashboard/paiement", label: "Paiements & carte", icon: CreditCard },
   { href: "/dashboard/parametres", label: "Paramètres", icon: Settings },
 ];
 
 const seekerNavSections: { title: string; itemHrefs: string[] }[] = [
-  { title: "Vue d'ensemble", itemHrefs: ["/dashboard"] },
-  { title: "Recherche", itemHrefs: ["/dashboard/rechercher", "/dashboard/favoris"] },
-  {
-    title: "Mes demandes & réservations",
-    itemHrefs: ["/dashboard/materiel", "/dashboard/demandes", "/dashboard/reservations", "/dashboard/etats-des-lieux", "/dashboard/litiges"],
-  },
-  { title: "Finances & documents", itemHrefs: ["/dashboard/paiement", "/dashboard/contrat"] },
-  { title: "Communication", itemHrefs: ["/dashboard/messagerie"] },
+  { title: "Vue d'ensemble", itemHrefs: ["/dashboard", "/catalogue"] },
+  { title: "Locations", itemHrefs: ["/dashboard/materiel"] },
+  { title: "Finances", itemHrefs: ["/dashboard/paiement"] },
   { title: "Compte", itemHrefs: ["/dashboard/parametres"] },
 ];
 
@@ -82,32 +63,26 @@ function NavContent({
   pathname,
   displayName,
   userEmail,
-  demandeCount,
-  reservationCount,
   materielUnreadCount,
-  paymentCount,
-  edlCount,
   collapsed = false,
   onItemClick,
   searchModalOpen,
   setSearchModalOpen,
   canAccessOwner = false,
   tourLock = false,
+  publishMaterialHref = "/auth?tab=signup&userType=owner",
 }: {
   pathname: string;
   displayName: string;
   userEmail?: string | null;
-  demandeCount: number;
-  reservationCount: number;
   materielUnreadCount: number;
-  paymentCount: number;
-  edlCount: number;
   collapsed?: boolean;
   onItemClick?: () => void;
   searchModalOpen?: boolean;
   setSearchModalOpen?: (open: boolean) => void;
   canAccessOwner?: boolean;
   tourLock?: boolean;
+  publishMaterialHref?: string;
 }) {
   const [seenByKey, setSeenByKey] = useState<Record<string, number>>({});
 
@@ -134,11 +109,7 @@ function NavContent({
   };
 
   const rawByKey: Record<string, number> = {
-    demandes: demandeCount,
-    reservations: reservationCount,
     materiel_chat: materielUnreadCount,
-    paiement: paymentCount,
-    etats: edlCount,
   };
 
   const unreadFor = (badgeKey: string | undefined): number => {
@@ -154,7 +125,7 @@ function NavContent({
     );
     if (!activeItem?.badgeKey) return;
     markSeen(activeItem.badgeKey, rawByKey[activeItem.badgeKey] ?? 0);
-  }, [pathname, demandeCount, reservationCount, materielUnreadCount, paymentCount, edlCount]);
+  }, [pathname, materielUnreadCount]);
 
   return (
     <>
@@ -180,7 +151,7 @@ function NavContent({
         {canAccessOwner && !tourLock && <SwitchToOwnerView collapsed={collapsed} />}
         {!canAccessOwner && (
           <Link
-            href="/onboarding/salle"
+            href={publishMaterialHref}
             onClick={onItemClick}
             className={cn(
               "relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors",
@@ -229,12 +200,8 @@ function NavContent({
                         isActive
                           ? "bg-white/20 text-white"
                           : item.badgeKey === "materiel_chat"
-                              ? "bg-sky-100 text-sky-800"
-                            : item.badgeKey === "paiement"
-                              ? "bg-amber-100 text-amber-700"
-                              : item.badgeKey === "etats"
-                                ? "bg-violet-100 text-violet-700"
-                              : "bg-emerald-100 text-emerald-700"
+                            ? "bg-sky-100 text-sky-800"
+                            : "bg-emerald-100 text-emerald-700"
                       )}
                     >
                       {badgeVal}
@@ -246,13 +213,7 @@ function NavContent({
                 <span
                   className={cn(
                     "absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white",
-                    item.badgeKey === "materiel_chat"
-                        ? "bg-sky-500"
-                      : item.badgeKey === "paiement"
-                        ? "bg-amber-500"
-                        : item.badgeKey === "etats"
-                          ? "bg-violet-500"
-                        : "bg-emerald-500"
+                    item.badgeKey === "materiel_chat" ? "bg-sky-500" : "bg-emerald-500"
                   )}
                 >
                   {badgeVal > 99 ? "99+" : badgeVal}
@@ -330,20 +291,14 @@ function NavContent({
 
 export function DashboardSidebar({
   user,
-  demandeCount = 0,
-  reservationCount = 0,
   materielUnreadCount = 0,
-  paymentCount = 0,
-  edlCount = 0,
   canAccessOwner = false,
+  publishMaterialHref = "/auth?tab=signup&userType=owner",
 }: {
   user: { email?: string | null; displayName?: string };
-  demandeCount?: number;
-  reservationCount?: number;
   materielUnreadCount?: number;
-  paymentCount?: number;
-  edlCount?: number;
   canAccessOwner?: boolean;
+  publishMaterialHref?: string;
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
@@ -477,11 +432,7 @@ export function DashboardSidebar({
             pathname={pathname}
             displayName={displayName}
             userEmail={user.email}
-            demandeCount={demandeCount}
-            reservationCount={reservationCount}
             materielUnreadCount={materielUnreadCount}
-            paymentCount={paymentCount}
-            edlCount={edlCount}
             onItemClick={() => setMobileOpen(false)}
             searchModalOpen={searchModalOpen}
             setSearchModalOpen={(open) => {
@@ -490,6 +441,7 @@ export function DashboardSidebar({
             }}
             canAccessOwner={canAccessOwner}
             tourLock={tourLock}
+            publishMaterialHref={publishMaterialHref}
           />
         </SheetContent>
       </Sheet>
@@ -537,16 +489,13 @@ export function DashboardSidebar({
           pathname={pathname}
           displayName={displayName}
           userEmail={user.email}
-          demandeCount={demandeCount}
-          reservationCount={reservationCount}
           materielUnreadCount={materielUnreadCount}
-          paymentCount={paymentCount}
-          edlCount={edlCount}
           collapsed={collapsed}
           searchModalOpen={searchModalOpen}
           setSearchModalOpen={setSearchModalOpen}
           canAccessOwner={canAccessOwner}
           tourLock={false}
+          publishMaterialHref={publishMaterialHref}
         />
       </aside>
     </>

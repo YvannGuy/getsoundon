@@ -275,7 +275,6 @@ export async function updateSalleVisitesCalendarAction(params: {
 
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/proprietaire/visites");
   revalidatePath("/proprietaire");
   return { success: true };
 }
@@ -352,9 +351,7 @@ export async function addSalleLocationBlockedDateAction(params: {
   );
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/proprietaire/visites");
-  const slug = (salle as { slug?: string | null }).slug;
-  if (slug) revalidatePath(`/salles/${slug}`);
+  revalidatePath("/proprietaire/annonces");
   return { success: true };
 }
 
@@ -388,8 +385,6 @@ export async function removeSalleLocationBlockedDateAction(params: {
     .eq("date_exclusion", date);
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/proprietaire/visites");
-  const slug = (salle as { slug?: string | null }).slug;
-  if (slug) revalidatePath(`/salles/${slug}`);
+  revalidatePath("/proprietaire/annonces");
   return { success: true };
 }

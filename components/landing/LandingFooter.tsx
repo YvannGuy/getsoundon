@@ -7,10 +7,15 @@ import { siteConfig } from "@/config/site";
 
 type LandingFooterProps = {
   isLoggedIn: boolean;
+  /** Résolu côté serveur si possible ; sinon défaut inscription prestataire. */
+  publishListingHref?: string;
 };
 
-export function LandingFooter({ isLoggedIn }: LandingFooterProps) {
-  const publishHref = isLoggedIn ? "/onboarding/salle" : "/auth?tab=signup&userType=owner";
+export function LandingFooter({
+  isLoggedIn,
+  publishListingHref = "/auth?tab=signup&userType=owner",
+}: LandingFooterProps) {
+  const publishHref = publishListingHref;
 
   return (
     <footer className="bg-gs-dark py-14 text-gs-muted">
@@ -20,8 +25,8 @@ export function LandingFooter({ isLoggedIn }: LandingFooterProps) {
             <p className="font-landing-overline text-white">Plateforme</p>
             <ul className="font-landing-body mt-4 space-y-2.5 text-base">
               <li>
-                <Link href="/rechercher" className="hover:text-white hover:underline">
-                  Rechercher
+                <Link href="/catalogue" className="hover:text-white hover:underline">
+                  Catalogue matériel
                 </Link>
               </li>
               <li>

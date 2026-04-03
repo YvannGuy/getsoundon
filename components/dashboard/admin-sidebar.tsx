@@ -51,13 +51,13 @@ const navItems = (
   { href: "/admin", label: "Dashboard", icon: Home },
   {
     href: "/admin/annonces-a-valider",
-    label: "Annonces à valider",
+    label: "Annonces lieux à valider (legacy)",
     icon: Bell,
     badgeKey: "pendingAnnonces",
     badge: counts.pendingAnnonces,
     badgeTone: "warning" as const,
   },
-  { href: "/admin/annonces", label: "Annonces", icon: Building2 },
+  { href: "/admin/annonces", label: "Annonces lieux (legacy)", icon: Building2 },
   {
     href: "/admin/signalements",
     label: "Signalements",
@@ -68,7 +68,7 @@ const navItems = (
   },
   {
     href: "/admin/demandes",
-    label: "Demandes de visites",
+    label: "Demandes lieux (legacy)",
     icon: FileText,
     badgeKey: "demandesVisite",
     badge: counts.demandesVisite,
@@ -108,7 +108,7 @@ const navItems = (
   },
   {
     href: "/admin/etats-des-lieux",
-    label: "États des lieux",
+    label: "États des lieux — legacy",
     icon: Camera,
     badgeKey: "etatsDesLieux",
     badge: counts.etatsDesLieux,

@@ -113,7 +113,8 @@ export default async function ProprietairePaiementPage({
               <div>
                 <p className="font-semibold text-emerald-800">Paiements activés !</p>
                 <p className="mt-0.5 text-sm text-emerald-700">
-                  Vous pouvez maintenant envoyer des offres aux organisateurs depuis la messagerie.
+                  Vous pouvez encaisser les paiements liés aux réservations (parcours historique offres / matériel selon
+                  vos annonces).
                 </p>
               </div>
             </div>

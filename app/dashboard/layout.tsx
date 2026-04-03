@@ -3,7 +3,11 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
-import { canAccessOwnerDashboard, getEffectiveUserType } from "@/lib/auth-utils";
+import {
+  canAccessOwnerDashboard,
+  getEffectiveUserType,
+  getPublishMaterialListingHref,
+} from "@/lib/auth-utils";
 import { EMPTY_BADGE_COUNTS, getSeekerBadgeCounts } from "@/lib/notification-counts";
 import { getUserOrNull } from "@/lib/supabase/server";
 
@@ -55,6 +59,7 @@ export default async function DashboardLayout({
     .eq("owner_id", user.id);
   const hasSalles = (mySalles ?? []).length > 0;
   const canAccessOwner = canAccessOwnerDashboard(userType, hasSalles);
+  const publishMaterialHref = getPublishMaterialListingHref(userType, hasSalles, true);
 
   if (userType === "owner") {
     const cookieStore = await cookies();
@@ -66,42 +71,25 @@ export default async function DashboardLayout({
 
   const displayName = (profile as { full_name?: string | null } | null)?.full_name ?? user.user_metadata?.full_name ?? "Utilisateur";
 
-  let demandeCount: number;
-  let reservationCount: number;
   let materielUnreadCount: number;
-  let paymentCount: number;
-  let edlCount: number;
   try {
     const c = await getSeekerBadgeCounts(supabase, user.id);
-    demandeCount = c.demandeCount;
-    reservationCount = c.reservationCount;
     materielUnreadCount = c.materielUnreadCount;
-    paymentCount = c.paymentCount;
-    edlCount = c.edlCount;
   } catch (err: unknown) {
     console.error("[layout] app/dashboard/layout.tsx getSeekerBadgeCounts outer catch", {
       message: err instanceof Error ? err.message : String(err),
       stack: err instanceof Error ? err.stack : undefined,
     });
-    ({
-      demandeCount,
-      reservationCount,
-      materielUnreadCount,
-      paymentCount,
-      edlCount,
-    } = EMPTY_BADGE_COUNTS);
+    materielUnreadCount = EMPTY_BADGE_COUNTS.materielUnreadCount;
   }
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gs-beige lg:flex-row">
       <DashboardSidebar
         user={{ ...user, displayName }}
-        demandeCount={demandeCount ?? 0}
-        reservationCount={reservationCount ?? 0}
         materielUnreadCount={materielUnreadCount}
-        paymentCount={paymentCount}
-        edlCount={edlCount ?? 0}
         canAccessOwner={canAccessOwner}
+        publishMaterialHref={publishMaterialHref}
       />
       <main className="font-landing-body flex-1 overflow-auto text-gs-dark">{children}</main>
     </div>

@@ -70,9 +70,9 @@ export function AnnoncePreviewModal({ salle, open, onOpenChange }: Props) {
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Fermer
             </Button>
-            <Link href={`/salles/${salle.slug}`}>
+            <Link href="/catalogue">
               <Button className="bg-gs-orange hover:brightness-95">
-                Voir la fiche publique
+                Voir le catalogue matériel
               </Button>
             </Link>
           </div>

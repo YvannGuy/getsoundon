@@ -5,7 +5,7 @@ import { HeaderAuth } from "@/components/layout/header-auth";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { siteConfig } from "@/config/site";
 import type { EffectiveUserType } from "@/lib/auth-utils";
-import { getDashboardHref, getEffectiveUserType } from "@/lib/auth-utils";
+import { getDashboardHref, getEffectiveUserType, getPublishMaterialListingHref } from "@/lib/auth-utils";
 import { getUserOrNull } from "@/lib/supabase/server";
 
 export async function SiteHeader() {
@@ -22,6 +22,17 @@ export async function SiteHeader() {
   const userType = (user
     ? await getEffectiveUserType(user, getProfile)
     : null) as EffectiveUserType | null;
+
+  let publishMaterialHref = "/auth?tab=signup&userType=owner";
+  if (user) {
+    const { data: mySalles } = await supabase
+      .from("salles")
+      .select("id")
+      .eq("owner_id", user.id)
+      .limit(1);
+    const hasSalles = (mySalles ?? []).length > 0;
+    publishMaterialHref = getPublishMaterialListingHref(userType, hasSalles, true);
+  }
 
   return (
     <header className="border-y border-slate-300 bg-[#f1f3f5]">
@@ -43,10 +54,7 @@ export async function SiteHeader() {
           <Link href="/avantages" className="hover:text-black">
             Nos avantages
           </Link>
-          <Link
-            href={isLoggedIn ? "/onboarding/salle" : "/auth?tab=signup&userType=owner"}
-            className="hover:text-black"
-          >
+          <Link href={publishMaterialHref} className="hover:text-black">
             Publier mon materiel
           </Link>
         </nav>
@@ -58,7 +66,7 @@ export async function SiteHeader() {
             isLoggedIn={isLoggedIn}
             userType={userType}
             dashboardHref={isLoggedIn ? getDashboardHref(userType ?? "seeker") : undefined}
-            addSalleHref={isLoggedIn ? "/onboarding/salle" : "/auth?tab=signup&userType=owner"}
+            addSalleHref={publishMaterialHref}
           />
         </div>
       </div>

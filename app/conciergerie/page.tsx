@@ -7,20 +7,21 @@ import { Button } from "@/components/ui/button";
 import { ConciergeForm, type ConciergeInitialValues } from "@/components/concierge/concierge-form";
 import { buildCanonical } from "@/lib/seo";
 import { siteConfig } from "@/config/site";
+import { resolvePublishListingHref } from "@/lib/landing-publish-href";
 import { getUserOrNull } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: `Conciergerie — On vous aide à trouver la salle idéale | ${siteConfig.name}`,
+  title: `Conciergerie — Aide à la recherche matériel & événement | ${siteConfig.name}`,
   description:
-    "Confiez-nous votre recherche de salle. Nous vous proposons 3 à 5 lieux compatibles et organisons les visites pour vous.",
+    "Décrivez votre besoin matériel ou logistique : l’équipe GetSoundOn vous oriente vers le catalogue et des pistes adaptées.",
   alternates: { canonical: buildCanonical("/conciergerie") },
 };
 
 const STEPS = [
   "Vous décrivez votre besoin (2 minutes)",
-  "On vous propose une shortlist (3–5 lieux)",
-  "On organise les visites",
-  "Vous choisissez et on vous aide à finaliser",
+  "On vous propose des pistes (matériel, prestataires, options)",
+  "On vous aide à cadrer les prochaines étapes",
+  "Vous validez sur la plateforme quand vous êtes prêt",
 ];
 
 export default async function ConciergeriePage({
@@ -37,7 +38,8 @@ export default async function ConciergeriePage({
   const personnes_max = typeof params.personnes_max === "string" ? params.personnes_max : undefined;
   const type = typeof params.type === "string" ? params.type : undefined;
 
-  const { user } = await getUserOrNull();
+  const { user, supabase } = await getUserOrNull();
+  const publishListingHref = await resolvePublishListingHref(user, supabase);
 
   const initialValues: ConciergeInitialValues = {
     ville,
@@ -58,10 +60,11 @@ export default async function ConciergeriePage({
       <main className="landing-container max-w-[800px] px-4 py-12">
         <section className="text-center">
           <h1 className="text-[32px] font-bold leading-tight text-black sm:text-[40px]">
-            On vous aide à trouver la bonne salle, plus vite.
+            On vous aide à cadrer votre besoin matériel.
           </h1>
           <p className="mt-4 text-[16px] leading-relaxed text-slate-600">
-            Vous nous donnez vos critères. On vous propose 3 à 5 lieux compatibles et on organise les visites.
+            Décrivez votre événement et votre besoin (sono, lumière, logistique). Nous vous répondons avec des pistes
+            alignées sur le catalogue GetSoundOn.
           </p>
           <a href="#form">
             <Button className="mt-6 h-12 bg-gs-orange px-6 hover:brightness-95">
@@ -90,7 +93,7 @@ export default async function ConciergeriePage({
         <section className="mt-16 rounded-xl border border-slate-200 bg-white p-6 sm:p-8">
           <h2 className="text-[22px] font-semibold text-black">Brief de recherche</h2>
           <p className="mt-2 text-[14px] text-slate-600">
-            Décrivez votre besoin. Nous vous recontactons sous 24–72h avec une shortlist de lieux adaptés.
+            Décrivez votre besoin. Nous vous recontactons sous 24–72h avec des recommandations matériel / prestataires.
           </p>
           <div className="mt-6">
             <ConciergeForm
@@ -107,7 +110,7 @@ export default async function ConciergeriePage({
           </Link>
         </p>
       </main>
-      <LandingFooter isLoggedIn={!!user} />
+      <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
     </div>
   );
 }

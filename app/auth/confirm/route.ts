@@ -31,7 +31,7 @@ async function resolvePostConfirmationTarget(userId: string): Promise<string> {
       .eq("owner_id", userId);
 
     if (!count || count === 0) {
-      return "/onboarding/salle";
+      return "/proprietaire/ajouter-annonce";
     }
   }
 

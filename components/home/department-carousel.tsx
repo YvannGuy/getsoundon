@@ -77,7 +77,7 @@ export function DepartmentCarousel({ items }: { items: DepartmentCard[] }) {
         {items.map((item) => (
           <Link
             key={item.departmentCode}
-            href={`/rechercher?departement=${encodeURIComponent(item.departmentCode)}`}
+            href={`/catalogue?location=${encodeURIComponent(item.departmentLabel)}`}
             data-card
             className="group flex w-[280px] shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-slate-300 hover:shadow-md"
           >

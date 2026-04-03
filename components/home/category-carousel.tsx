@@ -141,7 +141,7 @@ export function CategoryCarousel() {
           return (
             <Link
               key={cat.type}
-              href={`/rechercher?type=${cat.type}`}
+              href="/catalogue"
               data-card
               className="group flex w-[280px] shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
             >
