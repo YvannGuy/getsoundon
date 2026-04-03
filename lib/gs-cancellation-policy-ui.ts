@@ -1,5 +1,8 @@
 import type { GsListingCancellationPolicy } from "@/lib/gs-booking-cancellation";
-import { normalizeCancellationPolicy } from "@/lib/gs-booking-cancellation";
+import {
+  CANCELLATION_POLICY_REFUND_GRID_LINES,
+  normalizeCancellationPolicy,
+} from "@/lib/gs-booking-cancellation";
 
 /** Libellé produit uniquement — la valeur stockée reste `moderate`. */
 export function getCancellationPolicyLabel(policy: string | null | undefined): string {
@@ -32,28 +35,7 @@ export function getCancellationPolicyOptionDescription(policy: GsListingCancella
 /** Lignes de résumé « remboursement du montant de location » (affichage locataire / prestataire). */
 export function getCancellationPolicySummaryLines(policy: string | null | undefined): string[] {
   const p = normalizeCancellationPolicy(policy);
-  switch (p) {
-    case "flexible":
-      return [
-        "100 % si annulation plus de 7 jours avant la réservation",
-        "50 % entre 7 jours et 2 jours",
-        "0 % à moins de 2 jours",
-      ];
-    case "moderate":
-      return [
-        "100 % si annulation plus de 30 jours avant la réservation",
-        "50 % entre 30 jours et 15 jours",
-        "0 % à moins de 15 jours",
-      ];
-    case "strict":
-      return [
-        "100 % si annulation plus de 90 jours avant la réservation",
-        "50 % entre 90 jours et 30 jours",
-        "0 % à moins de 30 jours",
-      ];
-    default:
-      return [];
-  }
+  return [...CANCELLATION_POLICY_REFUND_GRID_LINES[p]];
 }
 
 export function cancellationPolicyLegalNoteShort(): string {

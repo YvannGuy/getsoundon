@@ -82,7 +82,7 @@ export default function ItemDetailPage() {
 
   // Flow instant booking : création du booking + checkout enchaîné en un seul geste
   const reserveInstant = async () => {
-    if (!listing) return;
+    if (!listing || listing.is_active === false) return;
     setBookingLoading(true);
     setPayLoading(false);
     setBookingFeedback(null);
@@ -130,7 +130,7 @@ export default function ItemDetailPage() {
 
   // Flow demande standard (non-instant) : création booking seulement
   const submitRequest = async () => {
-    if (!listing) return;
+    if (!listing || listing.is_active === false) return;
     setBookingLoading(true);
     setBookingFeedback(null);
     try {
@@ -159,7 +159,7 @@ export default function ItemDetailPage() {
 
   // Retry checkout si le booking est créé mais la redirection a échoué
   const retryCheckout = async () => {
-    if (!lastBookingId) return;
+    if (!lastBookingId || listing?.is_active === false) return;
     setPayLoading(true);
     setBookingFeedback(null);
     try {

@@ -40,6 +40,8 @@ export type ListingDetailModel = {
   description: string;
   category: "sound" | "dj" | "lighting" | "services";
   price_per_day: number;
+  /** false = annonce désactivée ; réservation impossible (aligné POST /api/bookings). */
+  is_active?: boolean | null;
   /** Caution configurée par le prestataire (en euros). 0 ou null = pas de caution. */
   deposit_amount?: number | null;
   location: string;
@@ -127,9 +129,10 @@ type ToggleRowProps = {
   priceNote: string;
   checked: boolean;
   onChange: (v: boolean) => void;
+  disabled?: boolean;
 };
 
-function ToggleRow({ label, priceNote, checked, onChange }: ToggleRowProps) {
+function ToggleRow({ label, priceNote, checked, onChange, disabled }: ToggleRowProps) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-gs-line py-3 last:border-b-0">
       <div className="min-w-0">
@@ -142,10 +145,14 @@ function ToggleRow({ label, priceNote, checked, onChange }: ToggleRowProps) {
         type="button"
         role="switch"
         aria-checked={checked}
-        onClick={() => onChange(!checked)}
+        disabled={disabled}
+        onClick={() => {
+          if (!disabled) onChange(!checked);
+        }}
         className={cn(
           "relative h-7 w-12 shrink-0 rounded-full transition-colors",
-          checked ? "bg-gs-orange" : "bg-[#ddd]"
+          checked ? "bg-gs-orange" : "bg-[#ddd]",
+          disabled && "cursor-not-allowed opacity-50"
         )}
       >
         <span
@@ -238,9 +245,12 @@ export function ListingDetailPremiumView({
     ? specsForCategory(listing.category, listing.title)
     : SPECS_DJ;
 
+  const listingUnavailable = listing ? listing.is_active === false : false;
   const canInstantBook = listing ? listing.can_accept_instant_booking === true : false;
   const connectMissing = listing
-    ? listing.immediate_confirmation === true && !listing.can_accept_instant_booking
+    ? listing.immediate_confirmation === true &&
+      !listing.can_accept_instant_booking &&
+      !listingUnavailable
     : false;
   const zoneDisplay =
     listing?.zone_label?.trim() || listing?.location?.trim() || "Île-de-France";
@@ -295,6 +305,15 @@ export function ListingDetailPremiumView({
 
         {!loading && !error && listing ? (
           <div className="mt-0 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_min(100%,380px)] lg:items-start lg:gap-x-10 lg:gap-y-10 xl:gap-x-12">
+            {listingUnavailable ? (
+              <div
+                className="lg:col-span-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[14px] font-medium text-amber-950"
+                role="status"
+              >
+                Annonce indisponible — cette fiche n&apos;accepte plus de nouvelles réservations sur
+                GetSoundOn.
+              </div>
+            ) : null}
             {/* Hero (galerie) — mobile row 1, desktop col1 row1 */}
             <div className="min-w-0 lg:col-start-1 lg:row-start-1">
               {/* Metadata row */}
@@ -361,7 +380,12 @@ export function ListingDetailPremiumView({
                   </span>
                   <span className="text-lg font-semibold text-[#666]">€ / jour</span>
                 </div>
-                {canInstantBook ? (
+                {listingUnavailable ? (
+                  <p className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-amber-900">
+                    <Clock className="h-4 w-4 shrink-0" aria-hidden />
+                    Réservation fermée
+                  </p>
+                ) : canInstantBook ? (
                   <p className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-gs-orange">
                     <Zap className="h-4 w-4" aria-hidden />
                     Confirmation immédiate
@@ -384,6 +408,7 @@ export function ListingDetailPremiumView({
                       type="date"
                       value={startDate}
                       min={todayIso}
+                      disabled={listingUnavailable}
                       onChange={(e) => {
                         const next = e.target.value;
                         setStartDate(next);
@@ -391,7 +416,10 @@ export function ListingDetailPremiumView({
                           setEndDate(next);
                         }
                       }}
-                      className="h-11 w-full rounded-lg border border-gs-line bg-white px-3 text-sm text-gs-dark outline-none focus:border-gs-orange"
+                      className={cn(
+                        "h-11 w-full rounded-lg border border-gs-line bg-white px-3 text-sm text-gs-dark outline-none focus:border-gs-orange",
+                        listingUnavailable && "cursor-not-allowed opacity-60"
+                      )}
                     />
                   </label>
                   <label className="block">
@@ -402,8 +430,12 @@ export function ListingDetailPremiumView({
                       type="date"
                       value={endDate}
                       min={startDate || todayIso}
+                      disabled={listingUnavailable}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="h-11 w-full rounded-lg border border-gs-line bg-white px-3 text-sm text-gs-dark outline-none focus:border-gs-orange"
+                      className={cn(
+                        "h-11 w-full rounded-lg border border-gs-line bg-white px-3 text-sm text-gs-dark outline-none focus:border-gs-orange",
+                        listingUnavailable && "cursor-not-allowed opacity-60"
+                      )}
                     />
                   </label>
                 </div>
@@ -415,8 +447,12 @@ export function ListingDetailPremiumView({
                   <div className="relative">
                     <select
                       value={quantity}
+                      disabled={listingUnavailable}
                       onChange={(e) => setQuantity(Number(e.target.value))}
-                      className="h-11 w-full appearance-none rounded-lg border border-gs-line bg-white px-3 pr-10 text-sm font-medium text-gs-dark outline-none focus:border-gs-orange"
+                      className={cn(
+                        "h-11 w-full appearance-none rounded-lg border border-gs-line bg-white px-3 pr-10 text-sm font-medium text-gs-dark outline-none focus:border-gs-orange",
+                        listingUnavailable && "cursor-not-allowed opacity-60"
+                      )}
                     >
                       {[1, 2, 3, 4, 5].map((n) => (
                         <option key={n} value={n}>
@@ -443,18 +479,21 @@ export function ListingDetailPremiumView({
                     priceNote={`(+${OPTION_DELIVERY}€)`}
                     checked={optDelivery}
                     onChange={setOptDelivery}
+                    disabled={listingUnavailable}
                   />
                   <ToggleRow
                     label="Installation"
                     priceNote={`(+${OPTION_INSTALL}€)`}
                     checked={optInstall}
                     onChange={setOptInstall}
+                    disabled={listingUnavailable}
                   />
                   <ToggleRow
                     label="Technicien"
                     priceNote={`(+${OPTION_TECH}€)`}
                     checked={optTech}
                     onChange={setOptTech}
+                    disabled={listingUnavailable}
                   />
                 </div>
 
@@ -522,7 +561,13 @@ export function ListingDetailPremiumView({
                 <button
                   type="button"
                   onClick={onReserve}
-                  disabled={bookingLoading || payLoading || !startDate || !endDate}
+                  disabled={
+                    listingUnavailable ||
+                    bookingLoading ||
+                    payLoading ||
+                    !startDate ||
+                    !endDate
+                  }
                   className="font-landing-btn mt-6 flex h-12 w-full items-center justify-center rounded-lg bg-gs-orange text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {bookingLoading || payLoading
@@ -541,11 +586,11 @@ export function ListingDetailPremiumView({
                   </p>
                 ) : null}
 
-                {canInstantBook && lastBookingId && bookingFeedback ? (
+                {canInstantBook && lastBookingId && bookingFeedback && !listingUnavailable ? (
                   <button
                     type="button"
                     onClick={onPay}
-                    disabled={payLoading}
+                    disabled={payLoading || listingUnavailable}
                     className="font-landing-btn mt-3 flex h-12 w-full items-center justify-center rounded-lg border-2 border-gs-orange bg-white text-gs-orange transition hover:bg-gs-orange/5 disabled:opacity-50"
                   >
                     {payLoading ? "Redirection…" : "Relancer le paiement"}
@@ -576,7 +621,9 @@ export function ListingDetailPremiumView({
                 </div>
 
                 <p className="mt-3 text-center text-[11px] leading-relaxed text-[#999]">
-                  {canInstantBook ? (
+                  {listingUnavailable ? (
+                    <>Les réservations ne sont plus possibles sur cette annonce.</>
+                  ) : canInstantBook ? (
                     <>
                       Paiement sécurisé par GetSoundOn.
                       {listing.deposit_amount != null && listing.deposit_amount > 0 ? (

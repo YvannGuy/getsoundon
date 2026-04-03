@@ -50,6 +50,31 @@ export const POLICY_LABELS: Record<GsListingCancellationPolicy, string> = {
   strict: "Strict (indicatif)",
 };
 
+/**
+ * Grille remboursement (% du montant de location) — source unique pour fiche annonce,
+ * dashboards et guidance admin (évite dérive entre écrans).
+ */
+export const CANCELLATION_POLICY_REFUND_GRID_LINES: Record<
+  GsListingCancellationPolicy,
+  readonly string[]
+> = {
+  flexible: [
+    "100 % si annulation plus de 7 jours avant la réservation",
+    "50 % entre 7 jours et 2 jours",
+    "0 % à moins de 2 jours",
+  ],
+  moderate: [
+    "100 % si annulation plus de 30 jours avant la réservation",
+    "50 % entre 30 jours et 15 jours",
+    "0 % à moins de 15 jours",
+  ],
+  strict: [
+    "100 % si annulation plus de 90 jours avant la réservation",
+    "50 % entre 90 jours et 30 jours",
+    "0 % à moins de 30 jours",
+  ],
+};
+
 export function normalizeCancellationPolicy(
   raw: string | null | undefined,
 ): GsListingCancellationPolicy {
@@ -60,6 +85,7 @@ export function normalizeCancellationPolicy(
 
 /**
  * Indications pour l’admin (pas une obligation légale — décision manuelle).
+ * Aligné sur les grilles Flexible / Standard / Strict affichées locataire / prestataire.
  */
 export function adminPolicyGuidanceText(
   policy: GsListingCancellationPolicy,
@@ -67,19 +93,17 @@ export function adminPolicyGuidanceText(
   totalEur: number,
 ): string {
   const start = parseISO(`${startDateIso}T12:00:00`);
-  const days = differenceInCalendarDays(start, new Date());
+  const daysUntilStart = differenceInCalendarDays(start, new Date());
   const t = Number.isFinite(totalEur) ? totalEur : 0;
-
-  switch (policy) {
-    case "flexible":
-      return `Politique annonce : flexible. En général remboursement intégral si l’événement est dans ${days} j. (montant location ${t} €).`;
-    case "moderate":
-      return `Politique annonce : standard (moderate). Grille indicative type J-30 / J-15 — à trancher selon le contexte (${t} €).`;
-    case "strict":
-      return `Politique annonce : stricte. Souvent pas de remboursement sauf exception ; à trancher selon le contexte (${t} €).`;
-    default:
-      return "";
-  }
+  const label = POLICY_LABELS[policy];
+  const grid = CANCELLATION_POLICY_REFUND_GRID_LINES[policy];
+  const gridSentence = grid.join(" ; ");
+  return (
+    `${label} — Jusqu’au début de la location : ${daysUntilStart} j. calendaires. ` +
+    `Grille indicative affichée côté annonce (remboursement du montant de location) : ${gridSentence}. ` +
+    `Montant location de référence : ${t} €. ` +
+    `Ces éléments servent de base de décision ; l’admin tranche au cas par cas (contexte, preuves, bonne foi).`
+  );
 }
 
 export type CancellationEligibility =

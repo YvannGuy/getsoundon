@@ -71,7 +71,11 @@ export async function GET(_: Request, context: RouteContext) {
 
     // Enrichissement depuis profiles : Connect status + boutique slug.
     // owner_id === profiles.id (même UUID auth). stripe_account_id non exposé dans la réponse.
-    const listingRow = listing as { owner_id: string; immediate_confirmation?: boolean | null };
+    const listingRow = listing as {
+      owner_id: string;
+      immediate_confirmation?: boolean | null;
+      is_active?: boolean | null;
+    };
     const { data: ownerProfile } = await admin
       .from("profiles")
       .select("stripe_account_id, boutique_slug")
@@ -83,9 +87,12 @@ export async function GET(_: Request, context: RouteContext) {
     const hasConnect = !!stripeAccountId;
     const boutique_slug = (ownerProfile as { boutique_slug?: string | null } | null)?.boutique_slug ?? null;
     const immediateConfirmation = listingRow.immediate_confirmation === true;
+    const listingActive = listingRow.is_active === true;
 
+    // Annonce inactive : pas d’appel Stripe (aligné POST /api/bookings — pas de réservation).
+    // has_connect reste dérivé du profil pour cohérence d’affichage si l’annonce est réactivée côté client.
     const connectReceives =
-      hasConnect && (await providerStripeCanReceivePayments(admin, listingRow.owner_id));
+      listingActive && hasConnect && (await providerStripeCanReceivePayments(admin, listingRow.owner_id));
 
     return NextResponse.json({
       data: {
@@ -93,7 +100,7 @@ export async function GET(_: Request, context: RouteContext) {
         images: images ?? [],
         owner_boutique_slug: boutique_slug,
         has_connect: hasConnect,
-        can_accept_instant_booking: immediateConfirmation && connectReceives,
+        can_accept_instant_booking: listingActive && immediateConfirmation && connectReceives,
       },
     });
   } catch (error) {
