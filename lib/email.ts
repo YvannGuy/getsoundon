@@ -643,6 +643,45 @@ export async function sendHowItWorksContactEmail(params: {
   return { success: !error, error: error?.message };
 }
 
+export async function sendPrelaunchWaitlistEmail(params: {
+  firstName: string;
+  email: string;
+  profile: "organisateur" | "prestataire" | "autre";
+  city?: string;
+}) {
+  if (!process.env.RESEND_API_KEY) return { success: false };
+
+  const safeFirst = escapeHtml(params.firstName.trim());
+  const safeEmail = escapeHtml(params.email.trim());
+  const profileLabel =
+    params.profile === "organisateur"
+      ? "Organisateur / chercheur de matériel"
+      : params.profile === "prestataire"
+        ? "Prestataire / loueur"
+        : "Autre";
+  const safeProfile = escapeHtml(profileLabel);
+  const safeCity = params.city?.trim() ? escapeHtml(params.city.trim()) : "—";
+
+  const { error } = await resend.emails.send({
+    from,
+    to: contactEmail,
+    replyTo: params.email.trim(),
+    subject: `[Waitlist pré-lancement] ${params.firstName.trim()}`,
+    html: renderEmailLayout({
+      title: "Inscription liste d’attente (pré-lancement)",
+      intro: "Une personne souhaite être informée du lancement public.",
+      sections: [
+        `<p><strong>Prénom :</strong> ${safeFirst}</p>`,
+        `<p><strong>Email :</strong> ${safeEmail}</p>`,
+        `<p><strong>Profil :</strong> ${safeProfile}</p>`,
+        `<p><strong>Ville :</strong> ${safeCity}</p>`,
+      ],
+    }),
+  });
+
+  return { success: !error, error: error?.message };
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
