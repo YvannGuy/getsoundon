@@ -3,6 +3,7 @@ import { z } from "zod";
 import type Stripe from "stripe";
 
 import { siteConfig } from "@/config/site";
+import { providerStripeCanReceivePayments } from "@/lib/gs-provider-stripe-connect";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -58,38 +59,33 @@ export async function POST(request: Request) {
       );
     }
 
-    // Vérification Stripe Connect du provider
-    const { data: providerProfile } = await admin
-      .from("profiles")
-      .select("stripe_account_id")
-      .eq("id", row.provider_id)
-      .maybeSingle();
-
-    const stripeAccountId =
-      (providerProfile as { stripe_account_id?: string | null } | null)?.stripe_account_id ?? null;
-
-    if (!stripeAccountId) {
-      return NextResponse.json(
-        { error: "Le prestataire n'a pas encore activé les paiements. Veuillez le contacter." },
-        { status: 400 }
-      );
-    }
-
-    const stripe = getStripe();
-    const account = await stripe.accounts.retrieve(stripeAccountId);
-    const capabilities = (account as Stripe.Account).capabilities;
-    const canReceive =
-      capabilities?.transfers === "active" || capabilities?.legacy_payments === "active";
+    const canReceive = await providerStripeCanReceivePayments(admin, row.provider_id);
 
     if (!canReceive) {
       return NextResponse.json(
         {
           error:
-            "Le prestataire doit finaliser la configuration de son compte de paiement avant de pouvoir accepter des réservations.",
+            "Le prestataire n'a pas encore activé les paiements ou doit finaliser son compte Stripe. Veuillez le contacter.",
         },
         { status: 400 }
       );
     }
+
+    const { data: providerProfileForConnect } = await admin
+      .from("profiles")
+      .select("stripe_account_id")
+      .eq("id", row.provider_id)
+      .maybeSingle();
+    const stripeAccountId =
+      (providerProfileForConnect as { stripe_account_id?: string | null } | null)?.stripe_account_id ?? null;
+    if (!stripeAccountId) {
+      return NextResponse.json(
+        { error: "Compte Stripe du prestataire introuvable. Veuillez le contacter." },
+        { status: 400 }
+      );
+    }
+
+    const stripe = getStripe();
 
     // Récupération du stripe_customer_id existant du locataire (même pattern que checkout-offer)
     const { data: customerProfile } = await admin

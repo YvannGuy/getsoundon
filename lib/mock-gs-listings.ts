@@ -318,6 +318,7 @@ export function mockListingToDetail(row: MockListingRow) {
     ...rest,
     is_active: true,
     deposit_amount: 0,
+    cancellation_policy: "moderate",
     owner_boutique_slug: DEMO_PROVIDER_SLUG,
     immediate_confirmation: immediateConfirmation,
     /** En mode mock, les annonces instant booking sont supposées avoir Connect actif. */

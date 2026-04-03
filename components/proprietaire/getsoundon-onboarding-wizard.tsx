@@ -40,6 +40,14 @@ import { AdresseAutocomplete } from "@/components/search/adresse-autocomplete";
 import { VilleAutocomplete } from "@/components/search/ville-autocomplete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  GsListingRulesRecap,
+  ListingRulesCancellationBlock,
+  ListingRulesDepositBlock,
+  ListingRulesPaymentBlock,
+  ListingRulesReservationBlock,
+} from "@/components/materiel/listing-rules-blocks";
+import type { GsListingCancellationPolicy } from "@/lib/gs-booking-cancellation";
 
 const TOTAL_STEPS = 6;
 const ONBOARDING_DRAFT_KEY = "gs_provider_onboarding_v2";
@@ -160,8 +168,8 @@ export type GsWizardData = {
   dispoSoiree: boolean;
   horairesRetrait: string;
   bookingMode: "manual" | "instant";
-  cautionEnabled: boolean;
-  cautionAmountDefault: string;
+  /** Montant caution (€), « 0 » ou vide = pas de caution */
+  depositAmountEur: string;
   leadTime: string;
   leadTimeOther: string;
   cancellationPolicy: "flexible" | "moderate" | "strict";
@@ -215,8 +223,7 @@ const initialData: GsWizardData = {
   dispoSoiree: false,
   horairesRetrait: "",
   bookingMode: "manual",
-  cautionEnabled: false,
-  cautionAmountDefault: "",
+  depositAmountEur: "0",
   leadTime: "24h",
   leadTimeOther: "",
   cancellationPolicy: "moderate",
@@ -286,6 +293,18 @@ function applyEquipmentLegacyMigration(d: GsWizardData): GsWizardData {
   }
   if (next.nom.trim()) next = { ...next, nomTouched: true };
   if (next.description.trim()) next = { ...next, descriptionTouched: true };
+  const legacy = next as GsWizardData & { cautionEnabled?: boolean; cautionAmountDefault?: string };
+  if (legacy.cautionEnabled && legacy.cautionAmountDefault?.trim()) {
+    next = {
+      ...next,
+      depositAmountEur: legacy.cautionAmountDefault.replace(/[^\d.,]/g, "").replace(",", "."),
+    };
+  } else if ("cautionEnabled" in legacy && legacy.cautionEnabled === false) {
+    next = { ...next, depositAmountEur: "0" };
+  }
+  if (!next.depositAmountEur || next.depositAmountEur.trim() === "") {
+    next = { ...next, depositAmountEur: "0" };
+  }
   return next;
 }
 
@@ -313,11 +332,10 @@ function validationLeavingStep(fromStep: number, d: GsWizardData): { step: numbe
     if (!d.rayonKm) return { step: 3, message: "Choisissez un rayon d’intervention." };
   }
   if (fromStep === 4) {
-    if (d.cautionEnabled) {
-      const n = parseInt(d.cautionAmountDefault.replace(/\D/g, ""), 10);
-      if (!d.cautionAmountDefault.trim() || !Number.isFinite(n) || n <= 0) {
-        return { step: 4, message: "Indiquez un montant de caution valide." };
-      }
+    const depRaw = String(d.depositAmountEur ?? "").replace(",", ".").trim();
+    const dep = depRaw === "" ? 0 : Number.parseFloat(depRaw);
+    if (!Number.isFinite(dep) || dep < 0) {
+      return { step: 4, message: "Indiquez un montant de caution valide (0 € si aucune caution)." };
     }
     if (d.leadTime === "other" && !d.leadTimeOther.trim()) {
       return { step: 4, message: "Précisez le délai minimum." };
@@ -394,6 +412,7 @@ export function GetSoundOnOnboardingWizard({
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [stripeConnectReady, setStripeConnectReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const hasLoadedDraftRef = useRef(false);
 
@@ -401,6 +420,24 @@ export function GetSoundOnOnboardingWizard({
 
   useEffect(() => {
     setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const sb = createClient();
+      const {
+        data: { user },
+      } = await sb.auth.getUser();
+      if (!user || cancelled) return;
+      const { data: row } = await sb.from("profiles").select("stripe_account_id").eq("id", user.id).maybeSingle();
+      if (!cancelled) {
+        setStripeConnectReady(!!(row as { stripe_account_id?: string | null } | null)?.stripe_account_id);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -596,8 +633,7 @@ export function GetSoundOnOnboardingWizard({
       dispoSoiree: data.dispoSoiree,
       horairesRetrait: data.horairesRetrait,
       bookingMode: data.bookingMode,
-      cautionEnabled: data.cautionEnabled,
-      cautionAmountDefault: data.cautionAmountDefault,
+      depositAmountEur: data.depositAmountEur,
       leadTime: data.leadTime,
       leadTimeOther: data.leadTimeOther,
       cancellationPolicy: data.cancellationPolicy,
@@ -632,6 +668,13 @@ export function GetSoundOnOnboardingWizard({
     formData.set("tarifMensuel", onboardingData.tarifMensuel ?? "");
     formData.set("tarifHoraire", onboardingData.tarifHoraire ?? "");
     formData.set("cautionRequise", cautionRequise ? "1" : "0");
+    const depEur = Math.max(
+      0,
+      Number.parseFloat(String(data.depositAmountEur).replace(",", ".").trim()) || 0
+    );
+    formData.set("gsListingDepositEur", String(depEur));
+    formData.set("gsListingImmediateConfirmation", data.bookingMode === "instant" ? "1" : "0");
+    formData.set("gsListingCancellationPolicy", data.cancellationPolicy);
     formData.set("inclusions", JSON.stringify(onboardingData.inclusions));
     formData.set("placesParking", onboardingData.placesParking ?? "");
     formData.set("features", JSON.stringify(onboardingData.features));
@@ -1226,66 +1269,24 @@ export function GetSoundOnOnboardingWizard({
           <div>
             <h2 className="font-landing-heading text-2xl font-bold text-gs-dark">Configurez vos conditions de location</h2>
             <p className="font-landing-body mt-1 text-slate-600">
-              Définissez les règles de base pour vos réservations.
+              Caution, paiements Stripe, mode de réservation et politique d’annulation pour cette annonce.
             </p>
           </div>
-          <div>
-            <SectionTitleWithHint
-              title="Mode de réservation"
-              hint="Manuel : vous validez chaque demande. Instantané : réservation confirmée tout de suite si disponible."
+          <div className="space-y-4">
+            <ListingRulesDepositBlock
+              depositAmountEur={data.depositAmountEur}
+              onDepositChange={(v) => updateData({ depositAmountEur: v })}
             />
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button
-                type="button"
-                className={chipClass(data.bookingMode === "manual")}
-                onClick={() => updateData({ bookingMode: "manual" })}
-              >
-                Validation manuelle
-              </button>
-              <button
-                type="button"
-                className={chipClass(data.bookingMode === "instant")}
-                onClick={() => updateData({ bookingMode: "instant" })}
-              >
-                Réservation instantanée
-              </button>
-            </div>
-          </div>
-          <div>
-            <SectionTitleWithHint
-              title="Caution"
-              hint="Montant bloqué ou prélevé en garantie, selon vos règles (détails modifiables plus tard)."
+            <ListingRulesPaymentBlock stripeConnectReady={stripeConnectReady} />
+            <ListingRulesReservationBlock
+              bookingMode={data.bookingMode}
+              onBookingMode={(m) => updateData({ bookingMode: m })}
+              stripeConnectReady={stripeConnectReady}
             />
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button
-                type="button"
-                className={chipClass(data.cautionEnabled)}
-                onClick={() => updateData({ cautionEnabled: true })}
-              >
-                Caution requise
-              </button>
-              <button
-                type="button"
-                className={chipClass(!data.cautionEnabled)}
-                onClick={() => updateData({ cautionEnabled: false })}
-              >
-                Pas de caution
-              </button>
-            </div>
-            {data.cautionEnabled && (
-              <div className="mt-3">
-                <LabelWithHint
-                  label="Montant de caution par défaut"
-                  hint="Indicatif en euros pour la première annonce ; vous pourrez l’ajuster par matériel."
-                />
-                <Input
-                  className="mt-1.5 border-gs-line"
-                  placeholder="Ex. : 200"
-                  value={data.cautionAmountDefault}
-                  onChange={(e) => updateData({ cautionAmountDefault: e.target.value })}
-                />
-              </div>
-            )}
+            <ListingRulesCancellationBlock
+              cancellationPolicy={data.cancellationPolicy as GsListingCancellationPolicy}
+              onPolicy={(p) => updateData({ cancellationPolicy: p })}
+            />
           </div>
           <div>
             <SectionTitleWithHint
@@ -1321,33 +1322,6 @@ export function GetSoundOnOnboardingWizard({
               </div>
             )}
           </div>
-          <div>
-            <SectionTitleWithHint
-              title="Politique d’annulation"
-              hint="Flexible, modérée ou stricte : indique aux clients les conditions si le projet change."
-            />
-            <div className="mt-2 flex flex-wrap gap-2">
-              {(
-                [
-                  ["flexible", "Flexible"],
-                  ["moderate", "Modérée"],
-                  ["strict", "Stricte"],
-                ] as const
-              ).map(([id, label]) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={chipClass(data.cancellationPolicy === id)}
-                  onClick={() => updateData({ cancellationPolicy: id })}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <p className="rounded-lg border border-gs-line bg-white p-3 text-xs text-slate-600">
-            Les paiements sont gérés de manière sécurisée via Stripe Connect.
-          </p>
           <div className="flex gap-3">
             <Button
               variant="outline"
@@ -1702,6 +1676,13 @@ export function GetSoundOnOnboardingWizard({
               </ul>
             )}
           </div>
+
+          <GsListingRulesRecap
+            bookingMode={data.bookingMode}
+            depositAmountEur={data.depositAmountEur}
+            cancellationPolicy={data.cancellationPolicy as GsListingCancellationPolicy}
+            stripeConnectReady={stripeConnectReady}
+          />
 
           <div className="space-y-2">
             <LabelWithHint

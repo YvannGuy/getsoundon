@@ -15,6 +15,7 @@ import {
   Headphones,
   Home,
   Package,
+  Ban,
   Scale,
   Menu,
   Settings,
@@ -129,6 +130,7 @@ const navItems = (
     badge: counts.incidentsMateriel,
     badgeTone: "danger" as const,
   },
+  { href: "/admin/materiel-annulations", label: "Annulations matériel", icon: Ban },
   {
     href: "/admin/conciergerie",
     label: "Conciergerie",

@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { providerStripeCanReceivePayments } from "@/lib/gs-provider-stripe-connect";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const createBookingSchema = z.object({
   listingId: z.string().uuid(),
   startDate: z.string().date(),
   endDate: z.string().date(),
-  depositAmount: z.number().nonnegative().optional(),
 });
 
 function daysBetween(start: string, end: string): number {
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
 
     const { data: listing, error: listingError } = await supabase
       .from("gs_listings")
-      .select("id, owner_id, price_per_day, is_active, immediate_confirmation")
+      .select("id, owner_id, price_per_day, is_active, immediate_confirmation, deposit_amount")
       .eq("id", payload.listingId)
       .maybeSingle();
 
@@ -60,20 +61,33 @@ export async function POST(request: Request) {
 
     const totalPrice = Number((Number((listing as { price_per_day?: number }).price_per_day ?? 0) * totalDays).toFixed(2));
 
-    // Si instant booking activé sur le listing, la réservation est directement acceptée dès création
-    const isInstant = (listing as { immediate_confirmation?: boolean }).immediate_confirmation === true;
-    const initialStatus = isInstant ? "accepted" : "pending";
+    const listingRow = listing as {
+      owner_id: string;
+      immediate_confirmation?: boolean | null;
+      deposit_amount?: number | string | null;
+    };
+
+    const wantsInstant = listingRow.immediate_confirmation === true;
+    const admin = createAdminClient();
+    const connectReady = await providerStripeCanReceivePayments(admin, listingRow.owner_id);
+    const instantEligible = wantsInstant && connectReady;
+
+    // Source de vérité : caution sur l’annonce uniquement (jamais le body client).
+    const depositEur = Math.max(0, Number(listingRow.deposit_amount ?? 0));
+
+    // `accepted` uniquement si paiement en ligne réellement possible (aligné checkout-booking).
+    const initialStatus = instantEligible ? "accepted" : "pending";
 
     const { data, error } = await supabase
       .from("gs_bookings")
       .insert({
         listing_id: payload.listingId,
         customer_id: user.id,
-        provider_id: (listing as { owner_id: string }).owner_id,
+        provider_id: listingRow.owner_id,
         start_date: payload.startDate,
         end_date: payload.endDate,
         total_price: totalPrice,
-        deposit_amount: Number((payload.depositAmount ?? 0).toFixed(2)),
+        deposit_amount: Number(depositEur.toFixed(2)),
         status: initialStatus,
       })
       .select("id, listing_id, customer_id, provider_id, start_date, end_date, total_price, deposit_amount, status, created_at")

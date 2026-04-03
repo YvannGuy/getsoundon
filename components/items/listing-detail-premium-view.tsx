@@ -19,6 +19,11 @@ import {
 } from "lucide-react";
 
 import { ListingZoneMapCard } from "@/components/items/listing-zone-map-card";
+import {
+  cancellationPolicyLegalNoteShort,
+  getCancellationPolicyLabel,
+  getCancellationPolicySummaryLines,
+} from "@/lib/gs-cancellation-policy-ui";
 import { DEMO_PROVIDER_SLUG } from "@/lib/provider-storefront-demo";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +52,8 @@ export type ListingDetailModel = {
   immediate_confirmation?: boolean;
   /** true = immediate_confirmation ET compte Stripe Connect du prestataire actif. */
   can_accept_instant_booking?: boolean;
+  /** Politique stockée (`flexible` | `moderate` | `strict`). */
+  cancellation_policy?: string | null;
   /** Zone affichée (ex. Montreuil (93)) — pas d’adresse précise. */
   zone_label?: string | null;
   lat?: number | null;
@@ -210,18 +217,18 @@ export function ListingDetailPremiumView({
   const mainImageUrl = gallerySlots[activeImageIndex] ?? FALLBACK_HERO;
   const cat = listing ? CATEGORY_UI[listing.category] : { breadcrumb: "…", badge: "…" };
 
-  const rentalSubtotal = useMemo(() => {
+  /** Montant aligné sur `POST /api/bookings` : prix/jour × jours (1 unité — quantité / options non persistées). */
+  const rentalSubtotalOnline = useMemo(() => {
     if (!listing) return 0;
     const days = estimatedDays > 0 ? estimatedDays : 0;
     if (days <= 0) return 0;
-    return Math.round(listing.price_per_day * days * quantity * 100) / 100;
-  }, [estimatedDays, listing, quantity]);
+    return Math.round(listing.price_per_day * days * 100) / 100;
+  }, [estimatedDays, listing]);
 
-  const optionsExtra =
+  const optionsExtraIndicative =
     (optDelivery ? OPTION_DELIVERY : 0) +
     (optInstall ? OPTION_INSTALL : 0) +
     (optTech ? OPTION_TECH : 0);
-  const totalEstimated = rentalSubtotal + (estimatedDays > 0 ? optionsExtra : 0);
 
   const ratingLabel =
     listing && listing.rating_count > 0 ? listing.rating_avg.toFixed(1) : "4.9";
@@ -362,7 +369,9 @@ export function ListingDetailPremiumView({
                 ) : (
                   <p className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-[#666]">
                     <Clock className="h-4 w-4 shrink-0" aria-hidden />
-                    {connectMissing ? "Paiement en ligne non disponible" : "Validation par le prestataire"}
+                    {connectMissing
+                      ? "Demande au prestataire — paiement en ligne indisponible pour l’instant"
+                      : "Validation par le prestataire"}
                   </p>
                 )}
 
@@ -417,7 +426,16 @@ export function ListingDetailPremiumView({
                     </select>
                     <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#888]" />
                   </div>
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-[#999]">
+                    Indicatif : le montant réservable en ligne correspond à <span className="font-medium">1 unité</span>.
+                  </p>
                 </label>
+
+                <p className="mt-3 text-[11px] leading-relaxed text-[#888]">
+                  Options ci-dessous : montants indicatifs,{" "}
+                  <span className="font-medium">non inclus</span> dans le total payable sur la plateforme pour
+                  l’instant — à confirmer avec le prestataire.
+                </p>
 
                 <div className="mt-2 border-t border-gs-line">
                   <ToggleRow
@@ -444,28 +462,40 @@ export function ListingDetailPremiumView({
                   <div className="flex justify-between text-[#555]">
                     <span>
                       Location ({estimatedDays > 0 ? estimatedDays : "—"} jour
-                      {estimatedDays !== 1 ? "s" : ""})
+                      {estimatedDays !== 1 ? "s" : ""}, 1 unité)
                     </span>
                     <span className="font-semibold text-gs-dark">
-                      {estimatedDays > 0 ? `${rentalSubtotal} €` : "—"}
+                      {estimatedDays > 0 ? `${rentalSubtotalOnline} €` : "—"}
                     </span>
                   </div>
-                  {optDelivery ? (
-                    <div className="flex justify-between text-[#555]">
-                      <span>Livraison & Reprise</span>
-                      <span className="font-semibold text-gs-dark">{OPTION_DELIVERY} €</span>
-                    </div>
-                  ) : null}
-                  {optInstall ? (
-                    <div className="flex justify-between text-[#555]">
-                      <span>Installation</span>
-                      <span className="font-semibold text-gs-dark">{OPTION_INSTALL} €</span>
-                    </div>
-                  ) : null}
-                  {optTech ? (
-                    <div className="flex justify-between text-[#555]">
-                      <span>Technicien</span>
-                      <span className="font-semibold text-gs-dark">{OPTION_TECH} €</span>
+                  {optDelivery || optInstall || optTech ? (
+                    <div className="rounded-md border border-dashed border-gs-line bg-slate-50/80 px-2.5 py-2 text-[12px] text-[#666]">
+                      <p className="font-medium text-[#555]">Options (hors total en ligne)</p>
+                      <ul className="mt-1 space-y-0.5">
+                        {optDelivery ? (
+                          <li className="flex justify-between gap-2">
+                            <span>Livraison & Reprise</span>
+                            <span className="shrink-0 font-medium text-gs-dark">{OPTION_DELIVERY} €</span>
+                          </li>
+                        ) : null}
+                        {optInstall ? (
+                          <li className="flex justify-between gap-2">
+                            <span>Installation</span>
+                            <span className="shrink-0 font-medium text-gs-dark">{OPTION_INSTALL} €</span>
+                          </li>
+                        ) : null}
+                        {optTech ? (
+                          <li className="flex justify-between gap-2">
+                            <span>Technicien</span>
+                            <span className="shrink-0 font-medium text-gs-dark">{OPTION_TECH} €</span>
+                          </li>
+                        ) : null}
+                      </ul>
+                      {optionsExtraIndicative > 0 ? (
+                        <p className="mt-1.5 text-[11px] text-[#888]">
+                          Indicatif total options : {optionsExtraIndicative} € — non facturé sur cette page.
+                        </p>
+                      ) : null}
                     </div>
                   ) : null}
                   {listing.deposit_amount != null && listing.deposit_amount > 0 ? (
@@ -482,17 +512,17 @@ export function ListingDetailPremiumView({
                     </>
                   ) : null}
                   <div className="flex items-center justify-between border-t border-gs-line pt-4">
-                    <span className="text-base font-bold text-black">Total estimé</span>
+                    <span className="text-base font-bold text-black">Total réservable en ligne</span>
                     <span className="text-2xl font-bold text-gs-orange">
-                      {estimatedDays > 0 ? `${totalEstimated} €` : "—"}
+                      {estimatedDays > 0 ? `${rentalSubtotalOnline} €` : "—"}
                     </span>
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  onClick={connectMissing ? undefined : onReserve}
-                  disabled={bookingLoading || payLoading || !startDate || !endDate || connectMissing}
+                  onClick={onReserve}
+                  disabled={bookingLoading || payLoading || !startDate || !endDate}
                   className="font-landing-btn mt-6 flex h-12 w-full items-center justify-center rounded-lg bg-gs-orange text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {bookingLoading || payLoading
@@ -501,14 +531,13 @@ export function ListingDetailPremiumView({
                       : "Envoi…"
                     : canInstantBook
                       ? "Réserver maintenant"
-                      : connectMissing
-                        ? "Réservation en ligne indisponible"
-                        : "Envoyer la demande"}
+                      : "Envoyer la demande"}
                 </button>
 
                 {connectMissing ? (
-                  <p className="mt-2 text-center text-[12px] leading-relaxed text-amber-600">
-                    Le prestataire doit finaliser l’activation des paiements. Contactez-le pour réserver.
+                  <p className="mt-2 text-center text-[12px] leading-relaxed text-amber-700">
+                    La réservation instantanée n’est pas disponible : les paiements du prestataire ne sont pas
+                    finalisés. Vous pouvez envoyer une demande ; le prestataire vous répondra hors flux instantané.
                   </p>
                 ) : null}
 
@@ -527,23 +556,46 @@ export function ListingDetailPremiumView({
                   <p className="mt-4 text-center text-[13px] text-[#555]">{bookingFeedback}</p>
                 ) : null}
 
-                <p className="mt-4 text-center text-[11px] leading-relaxed text-[#999]">
+                <div className="mt-4 rounded-lg border border-gs-line bg-slate-50/90 p-3 text-left text-[11px] leading-relaxed text-[#555]">
+                  <p className="font-semibold text-gs-dark">
+                    Politique d’annulation — {getCancellationPolicyLabel(listing.cancellation_policy)}
+                  </p>
+                  <p className="mt-1">
+                    Les demandes d’annulation sont examinées par GetSoundOn selon cette grille indicative et le
+                    contexte de la réservation.
+                  </p>
+                  <p className="mt-2 text-[10px] font-medium uppercase tracking-wide text-[#888]">
+                    Remboursement du montant de location (indicatif)
+                  </p>
+                  <ul className="mt-1 list-inside list-disc space-y-0.5 text-[11px] text-[#555]">
+                    {getCancellationPolicySummaryLines(listing.cancellation_policy).map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-[10px] text-[#888]">{cancellationPolicyLegalNoteShort()}</p>
+                </div>
+
+                <p className="mt-3 text-center text-[11px] leading-relaxed text-[#999]">
                   {canInstantBook ? (
                     <>
-                      Paiement sécurisé par GetSoundOn. Annulation gratuite jusqu'à 48h avant le début de la
-                      location.
+                      Paiement sécurisé par GetSoundOn.
                       {listing.deposit_amount != null && listing.deposit_amount > 0 ? (
-                        <>{" "}Si une caution est requise, une empreinte bancaire sera autorisée après validation du paiement. Elle n’est pas débitée immédiatement.</>
+                        <>
+                          {" "}
+                          Si une caution est requise, une empreinte bancaire sera autorisée après validation du
+                          paiement. Elle n’est pas débitée immédiatement.
+                        </>
                       ) : null}
                     </>
                   ) : connectMissing ? (
                     <>
-                      Réservation en ligne non disponible pour le moment. Contactez le prestataire.
+                      Vous pouvez envoyer une demande sans payer en ligne. Le prestataire pourra accepter et vous
+                      guider si ses paiements ne sont pas encore activés.
                     </>
                   ) : (
                     <>
-                      Aucun paiement tant que le prestataire n'a pas accepté ta demande. Annulation gratuite
-                      jusqu'à 48h avant le début de la location.
+                      Aucun paiement en ligne tant que le prestataire n’a pas accepté votre demande. Après
+                      acceptation, le paiement suit le parcours indiqué sur GetSoundOn.
                     </>
                   )}
                 </p>

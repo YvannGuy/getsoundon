@@ -6,6 +6,7 @@ import {
   mockGsListingsEnabled,
   mockListingToDetail,
 } from "@/lib/mock-gs-listings";
+import { providerStripeCanReceivePayments } from "@/lib/gs-provider-stripe-connect";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,6 +21,10 @@ const updateListingSchema = z.object({
   lat: z.number().nullable().optional(),
   lng: z.number().nullable().optional(),
   isActive: z.boolean().optional(),
+  /** Politique indicative pour les demandes d'annulation (matériel) */
+  cancellationPolicy: z.enum(["flexible", "moderate", "strict"]).optional(),
+  depositAmount: z.number().nonnegative().optional(),
+  immediateConfirmation: z.boolean().optional(),
 });
 
 type RouteContext = {
@@ -45,7 +50,9 @@ export async function GET(_: Request, context: RouteContext) {
     const [{ data: listing, error: listingError }, { data: images, error: imagesError }] = await Promise.all([
       supabase
         .from("gs_listings")
-        .select("id, owner_id, title, description, category, price_per_day, deposit_amount, location, lat, lng, rating_avg, rating_count, is_active, immediate_confirmation, created_at")
+        .select(
+          "id, owner_id, title, description, category, price_per_day, deposit_amount, location, lat, lng, rating_avg, rating_count, is_active, immediate_confirmation, cancellation_policy, created_at"
+        )
         .eq("id", listingId)
         .maybeSingle(),
       supabase
@@ -71,9 +78,14 @@ export async function GET(_: Request, context: RouteContext) {
       .eq("id", listingRow.owner_id)
       .maybeSingle();
 
-    const hasConnect = !!((ownerProfile as { stripe_account_id?: string | null } | null)?.stripe_account_id);
+    const stripeAccountId =
+      (ownerProfile as { stripe_account_id?: string | null } | null)?.stripe_account_id ?? null;
+    const hasConnect = !!stripeAccountId;
     const boutique_slug = (ownerProfile as { boutique_slug?: string | null } | null)?.boutique_slug ?? null;
     const immediateConfirmation = listingRow.immediate_confirmation === true;
+
+    const connectReceives =
+      hasConnect && (await providerStripeCanReceivePayments(admin, listingRow.owner_id));
 
     return NextResponse.json({
       data: {
@@ -81,7 +93,7 @@ export async function GET(_: Request, context: RouteContext) {
         images: images ?? [],
         owner_boutique_slug: boutique_slug,
         has_connect: hasConnect,
-        can_accept_instant_booking: immediateConfirmation && hasConnect,
+        can_accept_instant_booking: immediateConfirmation && connectReceives,
       },
     });
   } catch (error) {
@@ -115,6 +127,15 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (payload.lat !== undefined) updatePayload.lat = payload.lat;
     if (payload.lng !== undefined) updatePayload.lng = payload.lng;
     if (payload.isActive !== undefined) updatePayload.is_active = payload.isActive;
+    if (payload.cancellationPolicy !== undefined) {
+      updatePayload.cancellation_policy = payload.cancellationPolicy;
+    }
+    if (payload.depositAmount !== undefined) {
+      updatePayload.deposit_amount = payload.depositAmount;
+    }
+    if (payload.immediateConfirmation !== undefined) {
+      updatePayload.immediate_confirmation = payload.immediateConfirmation;
+    }
 
     if (Object.keys(updatePayload).length === 0) {
       return NextResponse.json({ error: "Aucune modification fournie." }, { status: 400 });
@@ -125,7 +146,9 @@ export async function PATCH(request: Request, context: RouteContext) {
       .update(updatePayload)
       .eq("id", listingId)
       .eq("owner_id", user.id)
-      .select("id, owner_id, title, description, category, price_per_day, location, lat, lng, is_active, updated_at")
+      .select(
+        "id, owner_id, title, description, category, price_per_day, deposit_amount, location, lat, lng, is_active, immediate_confirmation, cancellation_policy, updated_at"
+      )
       .maybeSingle();
 
     if (error) {

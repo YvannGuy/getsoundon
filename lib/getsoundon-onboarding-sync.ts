@@ -54,8 +54,8 @@ const LEAD_LABELS: Record<string, string> = {
 
 const CANCEL_LABELS: Record<string, string> = {
   flexible: "Flexible",
-  moderate: "Modérée",
-  strict: "Stricte",
+  moderate: "Standard",
+  strict: "Strict",
 };
 
 /** Catégories étape 2 → ids `features` (salle-features / FEATURE_TO_SALLE). */
@@ -123,8 +123,8 @@ export type GsWizardSyncInput = {
   dispoSoiree: boolean;
   horairesRetrait: string;
   bookingMode: "manual" | "instant";
-  cautionEnabled: boolean;
-  cautionAmountDefault: string;
+  /** Montant caution annonce (€), chaîne pour l’input ; 0 ou vide = pas de caution. */
+  depositAmountEur: string;
   leadTime: string;
   leadTimeOther: string;
   cancellationPolicy: string;
@@ -207,12 +207,12 @@ export function buildGsOnboardingDescription(d: GsWizardSyncInput): string {
   parts.push(
     `Mode de réservation : ${d.bookingMode === "instant" ? "réservation instantanée (sous réserve des règles plateforme)" : "validation manuelle"}.`
   );
-  if (d.cautionEnabled) {
-    parts.push(
-      d.cautionAmountDefault.trim()
-        ? `Caution : oui — montant indicatif ${d.cautionAmountDefault.trim()} €.`
-        : `Caution : oui.`
-    );
+  const depositNum = Math.max(
+    0,
+    Number.parseFloat(String(d.depositAmountEur ?? "").replace(",", ".").trim()) || 0
+  );
+  if (depositNum > 0) {
+    parts.push(`Caution : ${depositNum} € (montant demandé pour cette annonce).`);
   } else {
     parts.push(`Caution : non.`);
   }
@@ -297,6 +297,11 @@ export function syncGsWizardToOnboardingPayload(d: GsWizardSyncInput): {
     d.gearCategoryField.trim() ||
     gsPrimaryGearCategory(d.offeredCategories, d.listingKind);
 
+  const depositNum = Math.max(
+    0,
+    Number.parseFloat(String(d.depositAmountEur ?? "").replace(",", ".").trim()) || 0
+  );
+
   const fullDescription = buildGsOnboardingDescription(d);
 
   const onboardingData: OnboardingWizardData = {
@@ -321,5 +326,5 @@ export function syncGsWizardToOnboardingPayload(d: GsWizardSyncInput): {
     gearModel: d.gearModel.trim(),
   };
 
-  return { onboardingData, cautionRequise: d.cautionEnabled };
+  return { onboardingData, cautionRequise: depositNum > 0 };
 }

@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Clock,
   Package,
+  Settings2,
   Wallet,
 } from "lucide-react";
 
@@ -131,6 +132,14 @@ export default async function ProprietaireMaterielPage() {
       ? await getGsMaterialUnreadByBookingIds(user.id, allBookingIds)
       : {};
 
+  const { data: myListingsData } = await admin
+    .from("gs_listings")
+    .select("id, title, is_active")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(30);
+  const myListings = (myListingsData ?? []) as { id: string; title: string; is_active: boolean }[];
+
   // Listings liés
   const allListingIds = [...new Set([...pending, ...active, ...completed].map((b) => b.listing_id))];
   let listingsMap: Record<string, ListingRow> = {};
@@ -161,6 +170,35 @@ export default async function ProprietaireMaterielPage() {
           Demandes, réservations et suivi opérationnel
         </p>
       </div>
+
+      {myListings.length > 0 && (
+        <section className="mb-10">
+          <div className="mb-3 flex items-center gap-2">
+            <Settings2 className="h-5 w-5 text-slate-500" />
+            <h2 className="text-lg font-bold text-slate-800">Mes annonces matériel</h2>
+          </div>
+          <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white shadow-sm">
+            {myListings.map((l) => (
+              <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+                <span className="text-sm font-medium text-slate-800">{l.title}</span>
+                <div className="flex items-center gap-2">
+                  {!l.is_active && (
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                      Inactive
+                    </span>
+                  )}
+                  <Link
+                    href={`/proprietaire/materiel/listing/${l.id}/reglages`}
+                    className="text-sm font-medium text-gs-orange hover:underline"
+                  >
+                    Caution, paiement, annulation…
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* ── Section 1 : Demandes à traiter ─────────────────────────────── */}
       <section className="mb-10">

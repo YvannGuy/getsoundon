@@ -17,8 +17,14 @@ import {
 import { getGsMaterialUnreadByBookingIds } from "@/lib/gs-material-messages";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
+import { CancellationRequestPanel } from "@/components/materiel/cancellation-request-panel";
 import { PayNowButton } from "@/components/materiel/pay-now-button";
 import { BookingChat } from "@/components/materiel/booking-chat";
+import {
+  normalizeCancellationPolicy,
+  type GsBookingForCancellationEligibility,
+  type GsCancellationRequestRow,
+} from "@/lib/gs-booking-cancellation";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +59,7 @@ type BookingFull = {
 };
 
 type ProfileRow = { id: string; full_name: string | null };
-type ListingRow = { id: string; title: string; category: string };
+type ListingRow = { id: string; title: string; category: string; cancellation_policy?: string | null };
 
 function fmt(iso: string | null) {
   if (!iso) return "—";
@@ -120,10 +126,26 @@ export default async function DashboardMaterielDetailPage({
 
   const booking = raw as BookingFull;
 
-  const [{ data: providerRaw }, { data: listingRaw }] = await Promise.all([
-    admin.from("profiles").select("id, full_name").eq("id", booking.provider_id).maybeSingle(),
-    admin.from("gs_listings").select("id, title, category").eq("id", booking.listing_id).maybeSingle(),
-  ]);
+  const [{ data: providerRaw }, { data: listingRaw }, { data: cancelRows, error: cancelErr }] =
+    await Promise.all([
+      admin.from("profiles").select("id, full_name").eq("id", booking.provider_id).maybeSingle(),
+      admin
+        .from("gs_listings")
+        .select("id, title, category, cancellation_policy")
+        .eq("id", booking.listing_id)
+        .maybeSingle(),
+      admin
+        .from("gs_booking_cancellation_requests")
+        .select("id, booking_id, status, reason, requested_at, decided_at, admin_note, refund_amount_eur, stripe_refund_id")
+        .eq("booking_id", booking.id)
+        .order("requested_at", { ascending: false }),
+    ]);
+
+  const cancellationRequests: GsCancellationRequestRow[] = cancelErr
+    ? []
+    : ((cancelRows ?? []) as GsCancellationRequestRow[]);
+
+  const listingPolicy = normalizeCancellationPolicy(listingRaw?.cancellation_policy);
 
   const provider = providerRaw as ProfileRow | null;
   const listing = listingRaw as ListingRow | null;
@@ -138,6 +160,17 @@ export default async function DashboardMaterielDetailPage({
     ? await getGsMaterialUnreadByBookingIds(user.id, [booking.id])
     : {};
   const materielUnreadOnBooking = materielUnreadMap[booking.id] ?? 0;
+
+  const bookingForCancel: GsBookingForCancellationEligibility = {
+    id: booking.id,
+    customer_id: booking.customer_id,
+    status: booking.status,
+    stripe_payment_intent_id: booking.stripe_payment_intent_id,
+    check_in_status: booking.check_in_status,
+    check_out_status: booking.check_out_status,
+    incident_status: booking.incident_status,
+    payout_status: booking.payout_status,
+  };
 
   // Timeline
   type TimelineEvent = { label: string; detail?: string; date: string | null; done: boolean };
@@ -370,6 +403,13 @@ export default async function DashboardMaterielDetailPage({
             ))}
           </ol>
         </section>
+
+        <CancellationRequestPanel
+          bookingId={booking.id}
+          booking={bookingForCancel}
+          existingRequests={cancellationRequests}
+          listingPolicy={listingPolicy}
+        />
 
         {/* Messagerie — uniquement post-paiement */}
         {isPaid && (

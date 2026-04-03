@@ -97,10 +97,6 @@ export default function ItemDetailPage() {
           listingId: listing.id,
           startDate,
           endDate,
-          // La caution vient du listing (pas saisie manuellement par l'utilisateur)
-          depositAmount: listing.deposit_amount != null && listing.deposit_amount > 0
-            ? listing.deposit_amount
-            : 0,
         }),
       });
       const bookingJson = (await bookingRes.json()) as { data?: { id: string }; error?: string };
@@ -145,7 +141,6 @@ export default function ItemDetailPage() {
           listingId: listing.id,
           startDate,
           endDate,
-          depositAmount: 0,
         }),
       });
       const json = (await res.json()) as { data?: { id: string }; error?: string };
