@@ -42,7 +42,7 @@ export type VenueType =
   | "stage"
   | "other"
   | "unknown";
-export type ExtractionType = "explicit" | "inferred" | "assumed";
+export type ExtractionType = "explicit" | "inferred" | "assumed" | "unconfirmed";
 export type ConfirmationStatus = "confirmed" | "unconfirmed" | "needs_confirmation" | "contradicted";
 export type QualificationStage =
   | "initial"
@@ -277,6 +277,13 @@ export type UiSetupTier = {
   items: UiEquipmentRequirement[];
   services: string[];
   rationale?: string;
+  metadata?: {
+    complexity?: "simple" | "moderate" | "complex";
+    setupTime?: string;
+    staffingRequired?: number;
+    warnings?: string[];
+    assumptions?: string[];
+  };
 };
 
 export type UiRecommendedSetups = {

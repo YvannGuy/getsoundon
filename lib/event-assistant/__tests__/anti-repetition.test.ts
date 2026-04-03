@@ -308,7 +308,9 @@ describe('🚫 Anti-Répétition - Règles Strictes', () => {
     const customPolicy: ConversationPolicy = {
       maxRepeatQuestion: 2, // Limite à 2 répétitions  
       minTurnsBetweenSameQuestion: 2,
-      antiRepetitionStrategy: 'skip_to_next'
+      antiRepetitionStrategy: 'skip_to_next',
+      maxConversationTurns: 20,
+      minConfidenceThreshold: 0.7,
     };
 
     it('doit respecter maxRepeatQuestion policy', () => {
@@ -407,7 +409,9 @@ describe('🚫 Anti-Répétition - Règles Strictes', () => {
       const policy: ConversationPolicy = {
         maxRepeatQuestion: 5,
         minTurnsBetweenSameQuestion: 3, // Au moins 3 tours d'écart
-        antiRepetitionStrategy: 'reformulate'
+        antiRepetitionStrategy: 'reformulate',
+        maxConversationTurns: 20,
+        minConfidenceThreshold: 0.7,
       };
       
       const engineWithPolicy = new ConversationEngineImpl(policy);

@@ -137,7 +137,8 @@ export function shouldSkipQuestion(
   policy: ConversationPolicy = DEFAULT_CONVERSATION_POLICY
 ): boolean {
   return hasAskedQuestion(memory, field, policy) && 
-         policy.antiRepetitionStrategy === "skip_question";
+         (policy.antiRepetitionStrategy === "skip_question" ||
+          policy.antiRepetitionStrategy === "skip_to_next");
 }
 
 export function needsAlternativePhrasing(
@@ -148,7 +149,8 @@ export function needsAlternativePhrasing(
   const questionHistory = getQuestionHistory(memory, field);
   return questionHistory.length > 0 && 
          questionHistory.length < policy.maxRepeatQuestion &&
-         policy.antiRepetitionStrategy === "alternative_phrasing";
+         (policy.antiRepetitionStrategy === "alternative_phrasing" ||
+          policy.antiRepetitionStrategy === "reformulate");
 }
 
 export function shouldSwitchContext(

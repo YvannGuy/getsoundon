@@ -139,6 +139,7 @@ export type RecommendationInput = {
   speechExpected?: boolean;
   dancingExpected?: boolean;
   livePerformance?: boolean;
+  presentationNeed?: boolean;
   
   // Contraintes opérationnelles
   installationNeeded?: boolean;

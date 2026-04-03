@@ -309,18 +309,8 @@ export function buildRecommendedSetupsAdaptive(brief: EventBrief): UiRecommended
   }
 }
 
-// Import de l'ancienne fonction pour fallback
-let buildRecommendedSetupsV1: (brief: EventBrief) => UiRecommendedSetups;
-
-// Dynamic import pour éviter les dépendances circulaires
-if (typeof window !== "undefined") {
-  import("./recommendation").then(module => {
-    buildRecommendedSetupsV1 = module.buildRecommendedSetups;
-  });
-}
-
-// Fallback sécurisé si import échoue
-function safeFallbackV1(brief: EventBrief): UiRecommendedSetups {
+// Fallback sécurisé si import V1 échoue ou n’est pas encore chargé
+function safeFallbackV1(_brief: EventBrief): UiRecommendedSetups {
   return {
     tiers: [
       {
@@ -337,8 +327,12 @@ function safeFallbackV1(brief: EventBrief): UiRecommendedSetups {
   };
 }
 
-if (!buildRecommendedSetupsV1) {
-  buildRecommendedSetupsV1 = safeFallbackV1;
+let buildRecommendedSetupsV1: (brief: EventBrief) => UiRecommendedSetups = safeFallbackV1;
+
+if (typeof window !== "undefined") {
+  import("./recommendation").then(module => {
+    buildRecommendedSetupsV1 = module.buildRecommendedSetups;
+  });
 }
 
 // ============================================================================

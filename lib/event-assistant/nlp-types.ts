@@ -34,7 +34,7 @@ export type NumericMention = {
   position: { start: number; end: number };
   interpretation: NumericInterpretation;
   confidence: number;
-  context?: "people" | "equipment" | "generic";
+  context?: "people" | "equipment" | "generic" | "money";
 };
 
 // ============================================================================

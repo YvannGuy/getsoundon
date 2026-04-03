@@ -52,7 +52,7 @@ export default async function ReserverPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
-      <LandingHeader isLoggedIn />
+      <LandingHeader />
 
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10">
         <div className="mb-6">

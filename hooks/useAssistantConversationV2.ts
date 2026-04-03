@@ -292,6 +292,7 @@ export function useAssistantConversationV2() {
     qualification: state.engine.qualification,
     status: state.status,
     isExpanded: state.isExpanded,
+    isTyping: false,
   };
 
   return {
@@ -300,6 +301,7 @@ export function useAssistantConversationV2() {
     recommended,
     rankedProviders,
     readyForResults,
+    isTyping: bridgeState.isTyping,
     sendUserMessage,
     expand,
     

@@ -2,7 +2,7 @@
  * Utilitaires pour le moteur conversationnel V2
  */
 
-import { ConversationEngineState } from "./v2-types";
+import { ConversationEngineState, SlotState } from "./v2-types";
 import { getSlotsSummary, getSlotValue } from "./slots-engine";
 import { getDialogueStats } from "./dialogue-memory";
 import { enableV2, isV2Enabled, getEngineVersionInfo } from "./migration-v2";
@@ -139,7 +139,7 @@ export function analyzeConversationEfficiency(state: ConversationEngineState): {
 export function exportConversationSummary(state: ConversationEngineState): string {
   const slots = Object.entries(state.slots)
     .filter(([_, slot]) => slot.status === "resolved")
-    .map(([field, slot]) => `${field}: ${JSON.stringify(getSlotValue(slot))}`)
+    .map(([field, slot]) => `${field}: ${JSON.stringify(getSlotValue(slot as SlotState<unknown>))}`)
     .join('\n');
     
   const messages = state.messages

@@ -24,7 +24,7 @@ type AssistantAction =
   | { type: "SET_TYPING"; payload: boolean }
   | { type: "RESTORE_STATE"; payload: AssistantState };
 
-type AssistantState = {
+export type AssistantState = {
   messages: ChatMessage[];
   brief: EventBrief;
   qualification: QualificationState;

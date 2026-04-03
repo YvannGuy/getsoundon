@@ -15,7 +15,9 @@ import { EventType } from "./types";
 // SCÉNARIOS DE TEST PRÉ-DÉFINIS
 // ============================================================================
 
-export const MATCHING_TEST_SCENARIOS = {
+type MatchingTestScenario = { name: string; input: MatchingInputV2 };
+
+export const MATCHING_TEST_SCENARIOS: Record<string, MatchingTestScenario> = {
   conference_paris: {
     name: "Conférence 120p Paris - Priorité parole",
     input: {
@@ -23,7 +25,7 @@ export const MATCHING_TEST_SCENARIOS = {
       guestCount: 120,
       location: { city: 'Paris' },
       requiredEquipment: [
-        { category: 'sound', subcategory: 'speakers', quantity: 4, label: '4 enceintes moyennes', description: 'Diffusion parole', priority: 'essential' as const, reasoning: 'Conference clarity' },
+        { category: 'sound_system', subcategory: 'speakers', quantity: 4, label: '4 enceintes moyennes', description: 'Diffusion parole', priority: 'essential' as const, reasoning: 'Conference clarity' },
         { category: 'microphones', subcategory: 'handheld', quantity: 3, label: '3 micros HF', description: 'Prises de parole multiples', priority: 'essential' as const, reasoning: 'Speaker rotation' }
       ],
       requiredServices: [
@@ -42,8 +44,8 @@ export const MATCHING_TEST_SCENARIOS = {
       guestCount: 80,
       location: { city: 'Paris' },
       requiredEquipment: [
-        { category: 'sound', subcategory: 'speakers', quantity: 4, label: '4 enceintes + caisson', description: 'Diffusion danse', priority: 'essential' as const, reasoning: 'Dance floor power' },
-        { category: 'dj', subcategory: 'controller', quantity: 1, label: 'Setup DJ complet', description: 'Animation musicale', priority: 'essential' as const, reasoning: 'DJ performance' },
+        { category: 'sound_system', subcategory: 'speakers', quantity: 4, label: '4 enceintes + caisson', description: 'Diffusion danse', priority: 'essential' as const, reasoning: 'Dance floor power' },
+        { category: 'dj_setup', subcategory: 'controller', quantity: 1, label: 'Setup DJ complet', description: 'Animation musicale', priority: 'essential' as const, reasoning: 'DJ performance' },
         { category: 'lighting', subcategory: 'wash', quantity: 6, label: '6 projecteurs LED', description: 'Ambiance colorée', priority: 'recommended' as const, reasoning: 'Party atmosphere' }
       ],
       requiredServices: [
@@ -60,7 +62,7 @@ export const MATCHING_TEST_SCENARIOS = {
       guestCount: 200,
       location: { city: 'Paris' },
       requiredEquipment: [
-        { category: 'sound', subcategory: 'speakers', quantity: 6, label: '6 enceintes premium', description: 'Diffusion uniforme', priority: 'essential' as const, reasoning: 'Corporate quality' },
+        { category: 'sound_system', subcategory: 'speakers', quantity: 6, label: '6 enceintes premium', description: 'Diffusion uniforme', priority: 'essential' as const, reasoning: 'Corporate quality' },
         { category: 'microphones', subcategory: 'handheld', quantity: 4, label: '4 micros HF', description: 'Interventions multiples', priority: 'essential' as const, reasoning: 'Panel discussions' },
         { category: 'video', subcategory: 'led_screen', quantity: 1, label: 'Écran LED 6m²', description: 'Projection corporate', priority: 'essential' as const, reasoning: 'Visual support' }
       ],
@@ -81,7 +83,7 @@ export const MATCHING_TEST_SCENARIOS = {
       location: { city: 'Paris' },
       indoorOutdoor: 'outdoor' as const,
       requiredEquipment: [
-        { category: 'sound', subcategory: 'speakers', quantity: 8, label: '8 enceintes outdoor', description: 'Diffusion plein air', priority: 'essential' as const, reasoning: 'Outdoor dispersion' },
+        { category: 'sound_system', subcategory: 'speakers', quantity: 8, label: '8 enceintes outdoor', description: 'Diffusion plein air', priority: 'essential' as const, reasoning: 'Outdoor dispersion' },
         { category: 'lighting', subcategory: 'wash', quantity: 12, label: '12 projecteurs étanches', description: 'Éclairage extérieur', priority: 'essential' as const, reasoning: 'Evening event' }
       ],
       requiredServices: [
@@ -98,7 +100,7 @@ export const MATCHING_TEST_SCENARIOS = {
       guestCount: 50,
       location: { city: 'Paris' },
       requiredEquipment: [
-        { category: 'sound', subcategory: 'speakers', quantity: 2, label: '2 enceintes simples', description: 'Ambiance musicale', priority: 'essential' as const, reasoning: 'Background music' }
+        { category: 'sound_system', subcategory: 'speakers', quantity: 2, label: '2 enceintes simples', description: 'Ambiance musicale', priority: 'essential' as const, reasoning: 'Background music' }
       ],
       requiredServices: [
         { service: 'delivery' as const, description: 'Livraison uniquement', reasoning: 'Cost saving', priority: 'required' as const }
@@ -555,5 +557,3 @@ Status: ${debugAPI.getSystemStatus().v2Enabled ? '✅ V2 Actif' : '⚠️  V1 Ac
     `);
   }
 }
-
-export { MatchingDebugAPI };

@@ -3,7 +3,7 @@
  * Conversion des données et migration transparente
  */
 
-import { EventBrief, MatchingProvider, UiRecommendedSetups } from "./types";
+import { EventBrief, MatchingProvider, ProviderScoreBreakdown, UiRecommendedSetups } from "./types";
 import { SetupRecommendationV2, EquipmentLineItem, ServiceLineItem } from "./production-types";
 import { ConversationEngineState } from "./v2-types";
 import { 
@@ -11,7 +11,8 @@ import {
   MatchingInputV2, 
   MatchingResultsV2, 
   MatchResult,
-  MatchingConfigV2 
+  MatchingConfigV2,
+  ProviderAvailability,
 } from "./matching-types-v2";
 import { defaultMatchingEngineV2 } from "./matching-engine-v2";
 import { DEFAULT_MATCHING_CONFIG } from "./matching-rules-v2";
@@ -192,6 +193,21 @@ function inferCoverageArea(provider: MatchingProvider) {
     deliveryFee: 50,
     freeDeliveryThreshold: 500
   };
+}
+
+function inferAvailability(_provider: MatchingProvider): ProviderAvailability {
+  return {
+    blockedDates: [],
+    advanceNotice: 1,
+    workingDays: [true, true, true, true, true, true, true],
+  };
+}
+
+function inferCertifications(provider: MatchingProvider): string[] {
+  if ((provider.rating ?? 0) >= 4.5 && (provider.ratingCount ?? 0) >= 10) {
+    return ["highly_rated"];
+  }
+  return [];
 }
 
 function inferSpecializations(provider: MatchingProvider) {
@@ -578,18 +594,12 @@ export function enableMatchingV2(enable: boolean = true): void {
   }
 }
 
-// Import fallback V1 dynamique
-let rankProvidersV1: (brief: EventBrief, setup: UiRecommendedSetups, providers: MatchingProvider[]) => any;
-
-if (typeof window !== "undefined") {
-  import("./matching").then(module => {
-    rankProvidersV1 = module.rankProviders;
-  });
-}
-
-// Fallback sécurisé
-function safeFallbackV1(brief: EventBrief, setup: UiRecommendedSetups, providers: MatchingProvider[]) {
-  // Simple tri par rating si import V1 échoue
+// Fallback sécurisé (assigné par défaut ; remplacé côté client par le module V1 si chargé)
+function safeFallbackV1(
+  _brief: EventBrief,
+  _setup: UiRecommendedSetups,
+  providers: MatchingProvider[]
+): Array<{ provider: MatchingProvider; score: ProviderScoreBreakdown }> {
   return providers
     .sort((a, b) => (b.rating || 0) - (a.rating || 0))
     .map(provider => ({
@@ -611,6 +621,14 @@ function safeFallbackV1(brief: EventBrief, setup: UiRecommendedSetups, providers
     }));
 }
 
-if (!rankProvidersV1) {
-  rankProvidersV1 = safeFallbackV1;
+let rankProvidersV1: (
+  brief: EventBrief,
+  setup: UiRecommendedSetups,
+  providers: MatchingProvider[]
+) => Array<{ provider: MatchingProvider; score: ProviderScoreBreakdown }> = safeFallbackV1;
+
+if (typeof window !== "undefined") {
+  import("./matching").then(module => {
+    rankProvidersV1 = module.rankProviders;
+  });
 }

@@ -335,7 +335,9 @@ export function calculateSpecializationBonus(
     religious_service: ['conference', 'wedding'],
     product_launch: ['corporate', 'showcase'],
     screening: ['corporate', 'product_launch'],
-    outdoor_event: ['showcase', 'dj_set']
+    outdoor_event: ['showcase', 'dj_set'],
+    other: [],
+    unknown: [],
   };
   
   const related = relatedTypes[eventType] || [];

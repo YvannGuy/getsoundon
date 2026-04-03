@@ -122,7 +122,7 @@ export type ConversationEngineState = {
   slots: {
     eventType: SlotState<EventType>;
     guestCount: SlotState<number>;
-    location: SlotState<{ label: string; city?: string; district?: string; lat?: number; lng?: number }>;
+    location: SlotState<{ label: string; city?: string; district?: string; address?: string; lat?: number; lng?: number }>;
     venueType: SlotState<VenueType>;
     indoorOutdoor: SlotState<IndoorOutdoor>;
     eventDate: SlotState<{ raw: string; isoDate?: string; isApproximate?: boolean }>;
@@ -175,5 +175,10 @@ export interface ConversationPolicy {
   minTurnsBetweenSameQuestion: number;  
   maxConversationTurns: number;
   minConfidenceThreshold: number;
-  antiRepetitionStrategy: "alternative_phrasing" | "skip_question" | "context_switch";
+  antiRepetitionStrategy:
+    | "alternative_phrasing"
+    | "skip_question"
+    | "context_switch"
+    | "skip_to_next"
+    | "reformulate";
 }

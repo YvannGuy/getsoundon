@@ -48,7 +48,6 @@ function useV2Hook(): UnifiedAssistantReturn {
     ...v2Result,
     version: "v2",
     canUpgrade: false, // Already on V2
-    
     // V2 specific data
     engineState: v2Result.engineState,
     dialogueStats: v2Result.dialogueStats

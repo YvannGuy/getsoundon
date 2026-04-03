@@ -15,6 +15,7 @@ import {
   Volume2,
   Users,
   Wifi,
+  Lock as LockIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -239,7 +240,7 @@ export default async function SalleDetailPage({
                         Réponse rapide des propriétaires
                       </span>
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700">
-                        <Lock className="h-3.5 w-3.5 text-slate-400" />
+                        <LockIcon className="h-3.5 w-3.5 text-slate-400" />
                         Lieu et coordonnées convenus via la messagerie après accord
                       </span>
                     </div>
@@ -468,7 +469,7 @@ export default async function SalleDetailPage({
               <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="flex justify-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gs-orange/10">
-                    <Lock className="h-6 w-6 text-gs-orange" />
+                    <LockIcon className="h-6 w-6 text-gs-orange" />
                   </div>
                 </div>
                 <h3 className="mt-4 text-center text-lg font-semibold text-black">

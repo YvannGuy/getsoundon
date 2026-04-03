@@ -170,7 +170,7 @@ export type DimensionScore = {
   score: number; // 0-100
   weight: number; // pondération dans le score final
   rationale: string;
-  details?: Record<string, number | string>;
+  details?: Record<string, unknown>;
 };
 
 export type ScoringBreakdownV2 = {

@@ -283,7 +283,7 @@ describe.skip('Assistant V2 - Scénarios Conversationnels Complets', () => {
       const locationCandidate = result.updatedState.slots.location.candidates[0];
       const indoorCandidate = result.updatedState.slots.indoorOutdoor.candidates[0];
       
-      expect(dateCandidate.value.rawLabel).toContain('12 avril');
+      expect(dateCandidate.value.raw).toContain('12 avril');
       expect(locationCandidate.value.label?.toLowerCase()).toContain('montreuil');
       expect(indoorCandidate.value).toBe('indoor');
       

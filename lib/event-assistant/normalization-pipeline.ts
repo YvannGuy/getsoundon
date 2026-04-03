@@ -92,7 +92,8 @@ function findNegationScope(text: string, startPos: number): number {
   // Cherche jusqu'à la prochaine ponctuation forte ou fin de phrase
   const remaining = text.substring(startPos);
   const match = remaining.match(/[.!?;]|\bet\b|\bou\b|\bmais\b/);
-  return match ? startPos + match.index : text.length;
+  const idx = match?.index;
+  return idx !== undefined ? startPos + idx : text.length;
 }
 
 function extractAffectedConcepts(scopeText: string): string[] {

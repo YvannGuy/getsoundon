@@ -138,7 +138,7 @@ describe('Moteur de Matching V2 - Hard Filtering + Scoring Explicable', () => {
       
       const input = createMatchingInput({
         requiredEquipment: [
-          { category: 'sound', subcategory: 'speakers', quantity: 6, label: '6 enceintes', description: 'Setup large', priority: 'essential', reasoning: 'Test' },
+          { category: 'sound_system', subcategory: 'speakers', quantity: 6, label: '6 enceintes', description: 'Setup large', priority: 'essential', reasoning: 'Test' },
           { category: 'microphones', subcategory: 'handheld', quantity: 4, label: '4 micros', description: 'Multiples prises de parole', priority: 'essential', reasoning: 'Test' }
         ]
       });
@@ -357,7 +357,7 @@ describe('Moteur de Matching V2 - Hard Filtering + Scoring Explicable', () => {
         eventType: 'conference',
         guestCount: 100,
         requiredEquipment: [
-          { category: 'sound', subcategory: 'speakers', quantity: 4, label: '4 enceintes', description: 'Son principal', priority: 'essential', reasoning: 'Conference' },
+          { category: 'sound_system', subcategory: 'speakers', quantity: 4, label: '4 enceintes', description: 'Son principal', priority: 'essential', reasoning: 'Conference' },
           { category: 'microphones', subcategory: 'handheld', quantity: 3, label: '3 micros HF', description: 'Prises de parole', priority: 'essential', reasoning: 'Conference' }
         ]
       });
@@ -412,8 +412,8 @@ describe('Moteur de Matching V2 - Hard Filtering + Scoring Explicable', () => {
         eventType: 'birthday',
         guestCount: 80,
         requiredEquipment: [
-          { category: 'sound', subcategory: 'speakers', quantity: 4, label: '4 enceintes', description: 'Diffusion danse', priority: 'essential', reasoning: 'Birthday' },
-          { category: 'dj', subcategory: 'controller', quantity: 1, label: 'Setup DJ', description: 'Animation', priority: 'essential', reasoning: 'Birthday' }
+          { category: 'sound_system', subcategory: 'speakers', quantity: 4, label: '4 enceintes', description: 'Diffusion danse', priority: 'essential', reasoning: 'Birthday' },
+          { category: 'dj_setup', subcategory: 'controller', quantity: 1, label: 'Setup DJ', description: 'Animation', priority: 'essential', reasoning: 'Birthday' }
         ]
       });
 
@@ -446,7 +446,7 @@ describe('Moteur de Matching V2 - Hard Filtering + Scoring Explicable', () => {
 
       const input = createMatchingInput({
         requiredEquipment: [
-          { category: 'sound', subcategory: 'speakers', quantity: 4, label: '4 enceintes', description: 'Son', priority: 'essential', reasoning: 'Test' },
+          { category: 'sound_system', subcategory: 'speakers', quantity: 4, label: '4 enceintes', description: 'Son', priority: 'essential', reasoning: 'Test' },
           { category: 'microphones', subcategory: 'handheld', quantity: 3, label: '3 micros', description: 'Micros', priority: 'essential', reasoning: 'Test' },
           { category: 'lighting', subcategory: 'wash', quantity: 6, label: '6 projecteurs', description: 'Éclairage', priority: 'essential', reasoning: 'Test' }
         ]

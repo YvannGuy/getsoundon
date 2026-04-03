@@ -303,15 +303,15 @@ export function applyCandidatesToSlots(
 export function resolveAllSlotConflicts(
   slots: ConversationEngineState['slots']
 ): ConversationEngineState['slots'] {
-  const updatedSlots = { ...slots };
+  const updatedSlots = { ...slots } as Record<QuestionField, SlotState<unknown>>;
   
   for (const [key, slot] of Object.entries(slots)) {
     if (slot.status === "conflicted") {
-      updatedSlots[key as QuestionField] = resolveSlotConflicts(slot) as any;
+      updatedSlots[key as QuestionField] = resolveSlotConflicts(slot as SlotState<unknown>);
     }
   }
   
-  return updatedSlots;
+  return updatedSlots as ConversationEngineState["slots"];
 }
 
 // ============================================================================

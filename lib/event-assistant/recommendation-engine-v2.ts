@@ -9,6 +9,7 @@ import {
   EventProductionProfile,
   VenueContext,
   EquipmentLineItem,
+  EquipmentCategory,
   ServiceLineItem,
   RecommendationEngineV2,
   ConversationalContext,
@@ -25,25 +26,38 @@ import {
 } from "./event-production-rules";
 import { ExplicitEquipmentRequest } from "./nlp-types";
 
-const MUSIC_IMPORTANCE_RANK: Record<string, number> = {
+/** Sections tableau d'équipement dans SetupRecommendationV2 → catégorie catalogue */
+const RECOMMENDATION_SECTION_TO_EQUIPMENT = {
+  soundSystem: "sound_system",
+  microphones: "microphones",
+  djSetup: "dj_setup",
+  lighting: "lighting",
+  video: "video",
+  infrastructure: "infrastructure",
+  accessories: "accessories",
+} as const satisfies Record<string, EquipmentCategory>;
+
+type RecommendationEquipmentSection = keyof typeof RECOMMENDATION_SECTION_TO_EQUIPMENT;
+
+type MusicImportanceLevel = EventProductionProfile["musicImportance"];
+
+const MUSIC_IMPORTANCE_RANK: Record<MusicImportanceLevel, number> = {
   none: 0,
   low: 1,
   medium: 2,
   high: 3,
-  critical: 4
+  critical: 4,
 };
 
 function bumpMusicImportance(
-  current: string | undefined,
-  minimum: keyof typeof MUSIC_IMPORTANCE_RANK
-): keyof typeof MUSIC_IMPORTANCE_RANK {
-  const curKey =
-    current != null && MUSIC_IMPORTANCE_RANK[current] !== undefined
-      ? current
-      : "none";
-  const a = MUSIC_IMPORTANCE_RANK[curKey] ?? 0;
-  const b = MUSIC_IMPORTANCE_RANK[minimum] ?? 0;
-  return (a >= b ? curKey : minimum) as keyof typeof MUSIC_IMPORTANCE_RANK;
+  current: MusicImportanceLevel | undefined,
+  minimum: MusicImportanceLevel
+): MusicImportanceLevel {
+  const curKey: MusicImportanceLevel =
+    current != null && MUSIC_IMPORTANCE_RANK[current] !== undefined ? current : "none";
+  const a = MUSIC_IMPORTANCE_RANK[curKey];
+  const b = MUSIC_IMPORTANCE_RANK[minimum];
+  return a >= b ? curKey : minimum;
 }
 
 // ============================================================================
@@ -126,6 +140,10 @@ export class RecommendationEngineV2Impl implements RecommendationEngineV2 {
       if (input.livePerformance) {
         profile.professionalStaffing = true;
       }
+    }
+
+    if (input.presentationNeed !== undefined) {
+      profile.presentationNeed = input.presentationNeed;
     }
     
     // Ajuster selon contraintes opérationnelles
@@ -743,34 +761,34 @@ export class RecommendationEngineV2Impl implements RecommendationEngineV2 {
     request: ExplicitEquipmentRequest
   ): boolean {
     // Mapper catégorie équipement → section recommandation
-    const sectionMap: Record<string, keyof SetupRecommendationV2> = {
-      'speakers': 'soundSystem',
-      'microphones': 'microphones',
-      'mixing': 'soundSystem',
-      'lighting': 'lighting',
-      'screens': 'video',
-      'dj_equipment': 'djSetup',
-      'video': 'video'
+    const sectionMap: Record<string, RecommendationEquipmentSection> = {
+      speakers: "soundSystem",
+      microphones: "microphones",
+      mixing: "soundSystem",
+      lighting: "lighting",
+      screens: "video",
+      dj_equipment: "djSetup",
+      video: "video",
     };
-    
+
     const section = sectionMap[request.category];
     if (!section) return false;
     
     const equipmentSection = recommendation[section] as EquipmentLineItem[];
+    const sub = request.subcategory;
     
     // Adapter quantité si spécifiée
     if (request.quantity && request.quantity.kind === "exact") {
-      const relevantItem = (request.subcategory
+      const relevantItem = (sub
         ? equipmentSection.find(
             item =>
-              item.subcategory === request.subcategory ||
-              item.subcategory.includes(request.subcategory)
+              item.subcategory === sub ||
+              item.subcategory.includes(sub)
           )
         : undefined) ??
         equipmentSection.find(
           item =>
-            item.category === section ||
-            (request.subcategory ? item.subcategory.includes(request.subcategory) : false)
+            sub != null && item.subcategory.includes(sub)
         );
 
       if (relevantItem) {
@@ -783,7 +801,7 @@ export class RecommendationEngineV2Impl implements RecommendationEngineV2 {
     // Ajouter équipement si pas présent
     if (request.subcategory || request.brand) {
       const newItem: EquipmentLineItem = {
-        category: section as any,
+        category: RECOMMENDATION_SECTION_TO_EQUIPMENT[section],
         subcategory: request.subcategory || request.category,
         quantity: request.quantity?.kind === "exact" ? request.quantity.value : 1,
         label: this.formatEquipmentLabel(request),

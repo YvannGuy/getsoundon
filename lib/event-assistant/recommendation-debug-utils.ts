@@ -12,12 +12,15 @@ import {
 } from "./recommendation-bridge";
 import { createEmptyBrief } from "./brief";
 import { RecommendationInput } from "./production-types";
+import type { ServiceNeed } from "./types";
 
 // ============================================================================
 // SCÉNARIOS DE TEST PRÉ-DÉFINIS
 // ============================================================================
 
-export const TEST_SCENARIOS = {
+type RecommendationTestScenario = { name: string; input: RecommendationInput };
+
+export const TEST_SCENARIOS: Record<string, RecommendationTestScenario> = {
   conference: {
     name: "Conférence 120p intérieur",
     input: {
@@ -49,7 +52,7 @@ export const TEST_SCENARIOS = {
       indoorOutdoor: 'indoor' as const,
       venueType: 'private_home' as const,
       dancingExpected: true,
-      serviceNeeds: ['sound', 'dj', 'lighting']
+      serviceNeeds: ['sound', 'dj', 'lighting'] satisfies ServiceNeed[]
     }
   },
 
@@ -62,7 +65,7 @@ export const TEST_SCENARIOS = {
       venueType: 'church' as const,
       speechExpected: true,
       livePerformance: true,
-      serviceNeeds: ['sound', 'microphones']
+      serviceNeeds: ['sound', 'microphones'] satisfies ServiceNeed[]
     }
   },
 
@@ -74,7 +77,7 @@ export const TEST_SCENARIOS = {
       indoorOutdoor: 'outdoor' as const,
       isCovered: true,
       livePerformance: true,
-      serviceNeeds: ['sound', 'lighting', 'technician']
+      serviceNeeds: ['sound', 'lighting', 'technician'] satisfies ServiceNeed[]
     }
   },
 
@@ -85,7 +88,7 @@ export const TEST_SCENARIOS = {
       guestCount: 60,
       indoorOutdoor: 'indoor' as const,
       venueType: 'apartment' as const,
-      serviceNeeds: ['sound', 'microphones'],
+      serviceNeeds: ['sound', 'microphones'] satisfies ServiceNeed[],
       simplicityPreference: 'simple' as const
     }
   },
@@ -130,7 +133,7 @@ export const TEST_SCENARIOS = {
       livePerformance: true,
       technicianNeeded: true,
       installationNeeded: true,
-      serviceNeeds: ['sound', 'microphones', 'dj', 'lighting', 'led_screen']
+      serviceNeeds: ['sound', 'microphones', 'dj', 'lighting', 'led_screen'] satisfies ServiceNeed[]
     }
   }
 };
@@ -256,14 +259,15 @@ export class RecommendationDebugAPI {
 
     // Créer un brief équivalent
     const brief = createEmptyBrief();
-    brief.eventType.value = scenario.input.eventType || null;
-    brief.guestCount.value = scenario.input.guestCount || null;
-    brief.indoorOutdoor.value = scenario.input.indoorOutdoor || null;
-    brief.venueType.value = scenario.input.venueType || null;
-    brief.serviceNeeds.value = scenario.input.serviceNeeds || null;
-    brief.deliveryNeeded.value = scenario.input.deliveryNeeded || null;
-    brief.installationNeeded.value = scenario.input.installationNeeded || null;
-    brief.technicianNeeded.value = scenario.input.technicianNeeded || null;
+    const inp: RecommendationInput = scenario.input;
+    brief.eventType.value = inp.eventType ?? null;
+    brief.guestCount.value = inp.guestCount ?? null;
+    brief.indoorOutdoor.value = inp.indoorOutdoor ?? null;
+    brief.venueType.value = inp.venueType ?? null;
+    brief.serviceNeeds.value = inp.serviceNeeds ?? null;
+    brief.deliveryNeeded.value = inp.deliveryNeeded ?? null;
+    brief.installationNeeded.value = inp.installationNeeded ?? null;
+    brief.technicianNeeded.value = inp.technicianNeeded ?? null;
 
     const comparison = compareV1VsV2Recommendations(brief);
 
@@ -383,5 +387,3 @@ Ou 'testReco("conference")' pour un test rapide
     `);
   }
 }
-
-export { RecommendationDebugAPI };
