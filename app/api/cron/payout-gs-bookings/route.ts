@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getProviderNetTransferCents } from "@/lib/gs-booking-platform-fee";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -11,9 +12,10 @@ function isAuthorized(request: Request): boolean {
 }
 
 /**
- * Cron J+3 — Versement des providers pour les réservations matériel (gs_bookings).
- * Conditions : status = "accepted" ou "completed", payout_status = "pending" | "scheduled" | "blocked",
- * payout_due_at <= now, stripe_payment_intent_id présent, provider a un compte Connect actif.
+ * Cron — Versement Connect des prestataires (réservations matériel `gs_bookings`).
+ * Échéance : `payout_due_at` (calculée fin de location + 2 jours en checkout).
+ * Montant transféré : net prestataire (~85 % du brut), pas le montant total encaissé.
+ * Conditions : status accepted|completed, payout pending|scheduled|blocked, pas d’incident bloquant, etc.
  */
 export async function POST(request: Request) {
   if (!isAuthorized(request)) {
@@ -26,7 +28,9 @@ export async function POST(request: Request) {
 
   const { data: bookings } = await admin
     .from("gs_bookings")
-    .select("id, provider_id, customer_id, total_price, payout_due_at, payout_status, stripe_payment_intent_id, incident_status, deposit_claim_status")
+    .select(
+      "id, provider_id, customer_id, total_price, provider_net_eur, payout_due_at, payout_status, stripe_payment_intent_id, incident_status, deposit_claim_status"
+    )
     .in("status", ["accepted", "completed"])
     .in("payout_status", ["pending", "scheduled", "blocked"])
     .lte("payout_due_at", nowIso)
@@ -43,6 +47,7 @@ export async function POST(request: Request) {
       provider_id: string;
       customer_id: string;
       total_price: number | string;
+      provider_net_eur?: number | string | null;
       payout_status: string | null;
       stripe_payment_intent_id: string | null;
       incident_status: string | null;
@@ -74,8 +79,8 @@ export async function POST(request: Request) {
       continue;
     }
 
-    const totalEur = Number(row.total_price);
-    if (!Number.isFinite(totalEur) || totalEur <= 0) {
+    const payoutAmountCents = getProviderNetTransferCents(row);
+    if (payoutAmountCents === null || payoutAmountCents <= 0) {
       blocked += 1;
       await admin
         .from("gs_bookings")
@@ -83,8 +88,6 @@ export async function POST(request: Request) {
         .eq("id", row.id);
       continue;
     }
-
-    const payoutAmountCents = Math.round(totalEur * 100);
 
     const { data: providerProfile } = await admin
       .from("profiles")
@@ -105,7 +108,8 @@ export async function POST(request: Request) {
     }
 
     try {
-      await stripe.transfers.create(
+      const paidAt = new Date().toISOString();
+      const transfer = await stripe.transfers.create(
         {
           amount: payoutAmountCents,
           currency: "eur",
@@ -116,14 +120,19 @@ export async function POST(request: Request) {
             customer_id: row.customer_id,
             source: "cron_payout_gs_bookings",
           },
-          description: `Versement provider J+3 réservation matériel ${row.id}`,
+          description: `Versement net prestataire (J+2 fin location) ${row.id}`,
         },
         { idempotencyKey: `payout-gs-bookings-${row.id}` }
       );
 
       await admin
         .from("gs_bookings")
-        .update({ payout_status: "paid", updated_at: new Date().toISOString() })
+        .update({
+          payout_status: "paid",
+          payout_transfer_id: transfer.id,
+          payout_paid_at: paidAt,
+          updated_at: paidAt,
+        })
         .eq("id", row.id);
 
       paid += 1;

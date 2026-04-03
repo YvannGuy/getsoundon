@@ -48,12 +48,13 @@ export default async function ProprietaireLayout({
       }));
   if (userType === "admin") redirect("/admin");
 
-  const { data: mySalles } = await supabase
-    .from("salles")
+  const { data: myListings } = await supabase
+    .from("gs_listings")
     .select("id")
-    .eq("owner_id", user.id);
-  const hasSalles = (mySalles ?? []).length > 0;
-  const canAccessOwner = canAccessOwnerDashboard(userType, hasSalles);
+    .eq("owner_id", user.id)
+    .limit(1);
+  const hasCatalogListings = (myListings ?? []).length > 0;
+  const canAccessOwner = canAccessOwnerDashboard(userType, hasCatalogListings);
   if (!canAccessOwner) redirect("/dashboard");
 
   const displayName =

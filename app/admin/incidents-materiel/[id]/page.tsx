@@ -18,6 +18,9 @@ type BookingFull = {
   start_date: string;
   end_date: string;
   total_price: number | string;
+  checkout_total_eur: number | string | null;
+  service_fee_eur: number | string | null;
+  provider_net_eur: number | string | null;
   deposit_amount: number | string | null;
   status: string;
   payout_status: string | null;
@@ -100,7 +103,7 @@ export default async function AdminIncidentDetailPage({
   const { data: raw } = await admin
     .from("gs_bookings")
     .select(
-      "id, listing_id, customer_id, provider_id, start_date, end_date, total_price, deposit_amount, status, payout_status, payout_due_at, stripe_payment_intent_id, deposit_hold_status, deposit_payment_intent_id, deposit_release_due_at, check_in_status, check_in_at, check_in_comment, check_out_status, check_out_at, check_out_comment, incident_status, incident_at, incident_deadline_at, incident_comment, incident_amount_requested, deposit_claim_status, deposit_captured_amount, deposit_decision_at, deposit_decision_reason, created_at"
+      "id, listing_id, customer_id, provider_id, start_date, end_date, total_price, checkout_total_eur, service_fee_eur, provider_net_eur, deposit_amount, status, payout_status, payout_due_at, stripe_payment_intent_id, deposit_hold_status, deposit_payment_intent_id, deposit_release_due_at, check_in_status, check_in_at, check_in_comment, check_out_status, check_out_at, check_out_comment, incident_status, incident_at, incident_deadline_at, incident_comment, incident_amount_requested, deposit_claim_status, deposit_captured_amount, deposit_decision_at, deposit_decision_reason, created_at"
     )
     .eq("id", bookingId)
     .maybeSingle();
@@ -119,7 +122,15 @@ export default async function AdminIncidentDetailPage({
   const provider = providerRaw as ProfileRow | null;
   const listing = listingRaw as ListingRow | null;
 
-  const totalEur = Number(booking.total_price);
+  const locationEur = Number(booking.total_price);
+  const checkoutTotalEur =
+    booking.checkout_total_eur != null && booking.checkout_total_eur !== ""
+      ? Number(booking.checkout_total_eur)
+      : locationEur;
+  const providerNetEur =
+    booking.provider_net_eur != null && booking.provider_net_eur !== ""
+      ? Number(booking.provider_net_eur)
+      : null;
   const depositEur = Number(booking.deposit_amount ?? 0);
   const amountRequested = Number(booking.incident_amount_requested ?? 0);
   const isOpen = booking.incident_status === "open";
@@ -261,7 +272,19 @@ export default async function AdminIncidentDetailPage({
               <h2 className="font-bold text-slate-900">Payout prestataire</h2>
             </div>
             <dl className="space-y-1.5 text-sm">
-              <Row label="Montant" value={Number.isFinite(totalEur) ? `${totalEur} €` : "—"} />
+              <Row
+                label="Montant location (réf.)"
+                value={Number.isFinite(locationEur) ? `${locationEur} €` : "—"}
+              />
+              {Number.isFinite(checkoutTotalEur) && checkoutTotalEur !== locationEur ? (
+                <Row label="Total encaissé locataire (PI principal)" value={`${checkoutTotalEur} €`} />
+              ) : null}
+              <Row
+                label="Net prestataire (versement Connect)"
+                value={
+                  providerNetEur != null && Number.isFinite(providerNetEur) ? `${providerNetEur} €` : "—"
+                }
+              />
               <Row
                 label="Statut"
                 value={PAYOUT_LABEL[booking.payout_status ?? ""] ?? booking.payout_status ?? "—"}
@@ -304,7 +327,10 @@ export default async function AdminIncidentDetailPage({
               {fmtDate(booking.start_date)} — {fmtDate(booking.end_date)}
             </p>
             <p className="mt-1 text-sm text-slate-500">
-              {Number.isFinite(totalEur) ? `${totalEur} €` : "—"}
+              Location {Number.isFinite(locationEur) ? `${locationEur} €` : "—"}
+              {Number.isFinite(checkoutTotalEur) && checkoutTotalEur !== locationEur
+                ? ` · Payé ${checkoutTotalEur} €`
+                : ""}
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {booking.check_in_status === "confirmed" && (

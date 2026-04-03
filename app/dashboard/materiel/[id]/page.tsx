@@ -31,6 +31,7 @@ import {
   type GsBookingForCancellationEligibility,
   type GsCancellationRequestRow,
 } from "@/lib/gs-booking-cancellation";
+import { computeGsBookingCheckoutTotals } from "@/lib/gs-booking-platform-fee";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,8 @@ type BookingFull = {
   end_date: string;
   total_price: number | string;
   deposit_amount: number | string | null;
+  service_fee_eur: number | string | null;
+  checkout_total_eur: number | string | null;
   status: string;
   payout_status: string | null;
   stripe_payment_intent_id: string | null;
@@ -137,7 +140,7 @@ export default async function DashboardMaterielDetailPage({
   const { data: raw } = await admin
     .from("gs_bookings")
     .select(
-      "id, listing_id, customer_id, provider_id, start_date, end_date, total_price, deposit_amount, status, payout_status, stripe_payment_intent_id, deposit_hold_status, deposit_release_due_at, check_in_status, check_in_at, check_in_comment, check_out_status, check_out_at, check_out_comment, incident_status, incident_at, incident_deadline_at, incident_comment, incident_amount_requested, deposit_claim_status, deposit_captured_amount, created_at"
+      "id, listing_id, customer_id, provider_id, start_date, end_date, total_price, deposit_amount, service_fee_eur, checkout_total_eur, status, payout_status, stripe_payment_intent_id, deposit_hold_status, deposit_release_due_at, check_in_status, check_in_at, check_in_comment, check_out_status, check_out_at, check_out_comment, incident_status, incident_at, incident_deadline_at, incident_comment, incident_amount_requested, deposit_claim_status, deposit_captured_amount, created_at"
     )
     .eq("id", bookingId)
     .eq("customer_id", user.id) // Sécurité : locataire uniquement
@@ -171,9 +174,37 @@ export default async function DashboardMaterielDetailPage({
   const provider = providerRaw as ProfileRow | null;
   const listing = listingRaw as ListingRow | null;
 
-  const totalEur = Number(booking.total_price);
+  const locationEur = Number(booking.total_price);
   const depositEur = Number(booking.deposit_amount ?? 0);
   const isPaid = !!booking.stripe_payment_intent_id;
+  const serviceFeeFromDb =
+    booking.service_fee_eur != null && booking.service_fee_eur !== ""
+      ? Number(booking.service_fee_eur)
+      : null;
+  const checkoutTotalFromDb =
+    booking.checkout_total_eur != null && booking.checkout_total_eur !== ""
+      ? Number(booking.checkout_total_eur)
+      : null;
+  let serviceFeePreview: number | null = null;
+  let checkoutTotalPreview: number | null = null;
+  if (Number.isFinite(locationEur) && locationEur > 0) {
+    try {
+      const t = computeGsBookingCheckoutTotals(locationEur);
+      serviceFeePreview = t.serviceFeeEur;
+      checkoutTotalPreview = t.checkoutTotalEur;
+    } catch {
+      serviceFeePreview = null;
+      checkoutTotalPreview = null;
+    }
+  }
+  const displayServiceFee =
+    isPaid && serviceFeeFromDb != null && Number.isFinite(serviceFeeFromDb)
+      ? serviceFeeFromDb
+      : serviceFeePreview;
+  const displayCheckoutTotal =
+    isPaid && checkoutTotalFromDb != null && Number.isFinite(checkoutTotalFromDb)
+      ? checkoutTotalFromDb
+      : checkoutTotalPreview;
   const isAcceptedUnpaid = booking.status === "accepted" && !isPaid;
   const isCompleted = booking.status === "completed";
 
@@ -264,12 +295,34 @@ export default async function DashboardMaterielDetailPage({
             <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
               <dt className="flex items-center gap-2 text-sm text-slate-500">
                 <CreditCard className="h-4 w-4 shrink-0 text-slate-400" />
-                Montant total
+                {displayServiceFee != null && displayServiceFee > 0 ? "Location" : "Total à payer"}
               </dt>
               <dd className="text-lg font-bold text-slate-900">
-                {Number.isFinite(totalEur) ? `${totalEur} €` : "—"}
+                {Number.isFinite(locationEur) ? `${locationEur.toFixed(2)} €` : "—"}
               </dd>
             </div>
+            {displayServiceFee != null && Number.isFinite(displayServiceFee) && displayServiceFee > 0 ? (
+              <>
+                <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
+                  <dt className="text-sm text-slate-500">Frais de service</dt>
+                  <dd className="text-right text-sm font-semibold text-slate-800">
+                    {displayServiceFee.toFixed(2)} €
+                  </dd>
+                </div>
+                {displayCheckoutTotal != null && Number.isFinite(displayCheckoutTotal) ? (
+                  <div className="flex flex-col gap-1 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <dt className="text-sm font-medium text-slate-600">Total à payer</dt>
+                      <dd className="text-lg font-bold text-slate-900">{displayCheckoutTotal.toFixed(2)} €</dd>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-slate-500">
+                      Les frais de service couvrent le traitement sécurisé du paiement et le fonctionnement de la
+                      plateforme.
+                    </p>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
             <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80">
               <dt className="flex items-center gap-2 text-sm text-slate-500">
                 <Wallet className="h-4 w-4 shrink-0 text-slate-400" />

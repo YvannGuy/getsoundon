@@ -5,6 +5,10 @@ import {
   sendGsBookingPaymentConfirmedLocataireEmail,
   sendGsBookingPaymentConfirmedPrestataireEmail,
 } from "@/lib/email";
+import {
+  computeGsBookingCheckoutTotals,
+  computeGsBookingPaymentSplit,
+} from "@/lib/gs-booking-platform-fee";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -36,8 +40,8 @@ function gsBookingCautionHtmlPrestataire(cents: number, hold: string): string | 
  * Paiement marketplace MVP (tables gs_bookings / gs_payments).
  * Montant toujours relu depuis la base ; metadata sert à lier session → booking.
  * Après paiement :
- *  - gs_bookings → status "accepted", stripe_payment_intent_id, payout_due_at, deposit_hold
- *  - gs_payments → insert
+ *  - gs_bookings → accepted, PI, payout_due_at, deposit_hold, commission/net sur la location, service_fee_eur, checkout_total_eur
+ *  - gs_payments → amount = total Checkout (location + frais service), traçabilité explicite
  *  - Si deposit_amount_cents > 0 → PaymentIntent d'autorisation (empreinte caution)
  */
 export async function handleGsBookingCheckoutCompleted(
@@ -91,14 +95,38 @@ export async function handleGsBookingCheckoutCompleted(
     return;
   }
 
-  const expectedCents = Math.round(totalEur * 100);
+  let checkout: ReturnType<typeof computeGsBookingCheckoutTotals>;
+  try {
+    checkout = computeGsBookingCheckoutTotals(totalEur);
+  } catch {
+    console.error("[webhook] gs_booking: montants checkout invalides", bookingId);
+    return;
+  }
+
   const paidCents = session.amount_total ?? 0;
-  if (paidCents !== expectedCents) {
-    console.error("[webhook] gs_booking: montant session != total booking", {
+  const expectedCheckoutCents = checkout.checkoutTotalCents;
+  const legacyLocationOnlyCents = checkout.grossCents;
+  const isLegacyLocationOnly =
+    paidCents === legacyLocationOnlyCents && paidCents !== expectedCheckoutCents;
+
+  if (paidCents !== expectedCheckoutCents && !isLegacyLocationOnly) {
+    console.error("[webhook] gs_booking: montant session != total attendu", {
       bookingId,
       paidCents,
-      expectedCents,
+      expectedCheckoutCents,
+      legacyLocationOnlyCents,
     });
+    return;
+  }
+
+  const serviceFeeEur = isLegacyLocationOnly ? 0 : checkout.serviceFeeEur;
+  const checkoutTotalEur = isLegacyLocationOnly ? totalEur : checkout.checkoutTotalEur;
+
+  let split: ReturnType<typeof computeGsBookingPaymentSplit>;
+  try {
+    split = computeGsBookingPaymentSplit(totalEur);
+  } catch {
+    console.error("[webhook] gs_booking: split commission impossible", bookingId);
     return;
   }
 
@@ -126,6 +154,10 @@ export async function handleGsBookingCheckoutCompleted(
       payout_due_at: resolvedPayoutDueAt,
       deposit_release_due_at: resolvedDepositReleaseDueAt,
       payout_status: "pending",
+      platform_fee_eur: split.platformFeeEur,
+      provider_net_eur: split.providerNetEur,
+      service_fee_eur: serviceFeeEur,
+      checkout_total_eur: checkoutTotalEur,
       updated_at: now,
     })
     .eq("id", bookingId)
@@ -144,9 +176,13 @@ export async function handleGsBookingCheckoutCompleted(
 
   const { error: payError } = await supabase.from("gs_payments").insert({
     booking_id: bookingId,
-    amount: totalEur,
+    amount: checkoutTotalEur,
     status: "paid",
     stripe_payment_id: paymentIntentId ?? session.id,
+    platform_fee_eur: split.platformFeeEur,
+    provider_net_eur: split.providerNetEur,
+    service_fee_eur: serviceFeeEur,
+    checkout_total_eur: checkoutTotalEur,
     updated_at: now,
   });
 
@@ -290,7 +326,9 @@ export async function handleGsBookingCheckoutCompleted(
 
     const title =
       (listingRow as { title?: string } | null)?.title?.trim() || "Annonce matériel";
-    const amountEur = totalEur.toFixed(2);
+    const locationEurStr = totalEur.toFixed(2);
+    const checkoutTotalStr = checkoutTotalEur.toFixed(2);
+    const serviceFeeStr = serviceFeeEur.toFixed(2);
     const finalB = bookingFinal as {
       deposit_amount_cents?: number | null;
       deposit_hold_status?: string | null;
@@ -314,9 +352,16 @@ export async function handleGsBookingCheckoutCompleted(
         sendGsBookingPaymentConfirmedLocataireEmail(
           customerEmail,
           title,
-          amountEur,
+          checkoutTotalStr,
           `${siteBase}/dashboard/materiel/${bookingId}`,
-          locataireCaution
+          locataireCaution,
+          isLegacyLocationOnly
+            ? null
+            : {
+                locationEur: locationEurStr,
+                serviceFeeEur: serviceFeeStr,
+                totalEur: checkoutTotalStr,
+              }
         )
       );
     }
@@ -325,9 +370,15 @@ export async function handleGsBookingCheckoutCompleted(
         sendGsBookingPaymentConfirmedPrestataireEmail(
           providerEmail,
           title,
-          amountEur,
+          locationEurStr,
           `${siteBase}/proprietaire/materiel/${bookingId}`,
-          prestataireCaution
+          prestataireCaution,
+          {
+            platformFeeEur: split.platformFeeEur.toFixed(2),
+            providerNetEur: split.providerNetEur.toFixed(2),
+            serviceFeePaidByCustomerEur: isLegacyLocationOnly ? undefined : serviceFeeStr,
+            checkoutTotalEur: isLegacyLocationOnly ? undefined : checkoutTotalStr,
+          }
         )
       );
     }

@@ -59,6 +59,12 @@ create table if not exists public.gs_bookings (
   end_date date not null,
   total_price numeric(12,2) not null check (total_price >= 0),
   deposit_amount numeric(12,2) not null default 0 check (deposit_amount >= 0),
+  platform_fee_eur numeric(12,2),
+  provider_net_eur numeric(12,2),
+  service_fee_eur numeric(12,2),
+  checkout_total_eur numeric(12,2),
+  payout_transfer_id text,
+  payout_paid_at timestamptz,
   status text not null default 'pending'
     check (status in ('pending', 'accepted', 'refused', 'cancelled', 'completed')),
   created_at timestamptz not null default now(),
@@ -80,6 +86,10 @@ create table if not exists public.gs_payments (
   id uuid primary key default gen_random_uuid(),
   booking_id uuid not null references public.gs_bookings(id) on delete restrict,
   amount numeric(12,2) not null check (amount >= 0),
+  platform_fee_eur numeric(12,2),
+  provider_net_eur numeric(12,2),
+  service_fee_eur numeric(12,2),
+  checkout_total_eur numeric(12,2),
   status text not null default 'pending'
     check (status in ('pending', 'paid', 'failed', 'refunded', 'cancelled')),
   stripe_payment_id text unique,

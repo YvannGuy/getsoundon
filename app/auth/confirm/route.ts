@@ -26,7 +26,7 @@ async function resolvePostConfirmationTarget(userId: string): Promise<string> {
   // Heuristique d'onboarding propriétaire: aucune annonce publiée => onboarding à faire.
   if (userType === "owner") {
     const { count } = await supabase
-      .from("salles")
+      .from("gs_listings")
       .select("id", { count: "exact", head: true })
       .eq("owner_id", userId);
 

@@ -28,12 +28,12 @@ export async function resolvePublishListingHref(
         user_type: (profile as { user_type?: string | null } | null)?.user_type ?? "seeker",
       }));
 
-  const { data: mySalles } = await supabase
-    .from("salles")
+  const { data: myListings } = await supabase
+    .from("gs_listings")
     .select("id")
     .eq("owner_id", user.id)
     .limit(1);
-  const hasSalles = (mySalles ?? []).length > 0;
+  const hasCatalogListings = (myListings ?? []).length > 0;
 
-  return getPublishMaterialListingHref(userType, hasSalles, true);
+  return getPublishMaterialListingHref(userType, hasCatalogListings, true);
 }

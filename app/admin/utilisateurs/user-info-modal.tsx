@@ -14,8 +14,7 @@ type User = {
   user_type: string;
   created_at: string;
   suspended?: boolean;
-  salles_count?: number;
-  demandes_count?: number;
+  listings_count?: number;
 };
 
 type Props = {
@@ -80,16 +79,10 @@ export function UserInfoModal({ user, open, onOpenChange }: Props) {
               )}
             </p>
           </div>
-          {user.salles_count !== undefined && (
+          {user.listings_count !== undefined && (
             <div>
-              <p className="text-sm font-medium text-slate-500">Annonces</p>
-              <p className="text-black">{user.salles_count}</p>
-            </div>
-          )}
-          {user.demandes_count !== undefined && (
-            <div>
-              <p className="text-sm font-medium text-slate-500">Demandes de visites</p>
-              <p className="text-black">{user.demandes_count}</p>
+              <p className="text-sm font-medium text-slate-500">Annonces catalogue (matériel)</p>
+              <p className="text-black">{user.listings_count}</p>
             </div>
           )}
         </div>

@@ -13,6 +13,7 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { computeGsBookingPaymentSplit } from "@/lib/gs-booking-platform-fee";
 import { getGsMaterialUnreadByBookingIds } from "@/lib/gs-material-messages";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
@@ -37,6 +38,12 @@ type BookingFull = {
   end_date: string;
   total_price: number | string;
   deposit_amount: number | string | null;
+  platform_fee_eur: number | string | null;
+  provider_net_eur: number | string | null;
+  service_fee_eur: number | string | null;
+  checkout_total_eur: number | string | null;
+  payout_transfer_id: string | null;
+  payout_paid_at: string | null;
   status: string;
   payout_status: string | null;
   payout_due_at: string | null;
@@ -146,7 +153,7 @@ export default async function ProprietaireMaterielDetailPage({
   const { data: raw } = await admin
     .from("gs_bookings")
     .select(
-      "id, listing_id, customer_id, provider_id, start_date, end_date, total_price, deposit_amount, status, payout_status, payout_due_at, stripe_payment_intent_id, deposit_hold_status, deposit_release_due_at, check_in_status, check_in_at, check_in_comment, check_out_status, check_out_at, check_out_comment, incident_status, incident_at, incident_deadline_at, incident_comment, incident_amount_requested, deposit_claim_status, deposit_captured_amount, created_at"
+      "id, listing_id, customer_id, provider_id, start_date, end_date, total_price, deposit_amount, platform_fee_eur, provider_net_eur, service_fee_eur, checkout_total_eur, payout_transfer_id, payout_paid_at, status, payout_status, payout_due_at, stripe_payment_intent_id, deposit_hold_status, deposit_release_due_at, check_in_status, check_in_at, check_in_comment, check_out_status, check_out_at, check_out_comment, incident_status, incident_at, incident_deadline_at, incident_comment, incident_amount_requested, deposit_claim_status, deposit_captured_amount, created_at"
     )
     .eq("id", bookingId)
     .eq("provider_id", user.id) // Sécurité : prestataire uniquement
@@ -167,6 +174,24 @@ export default async function ProprietaireMaterielDetailPage({
   const totalEur = Number(booking.total_price);
   const depositEur = Number(booking.deposit_amount ?? 0);
   const isPaid = !!booking.stripe_payment_intent_id;
+  const splitFromTotal =
+    isPaid && Number.isFinite(totalEur) && totalEur > 0
+      ? (() => {
+          try {
+            return computeGsBookingPaymentSplit(totalEur);
+          } catch {
+            return null;
+          }
+        })()
+      : null;
+  const platformFeeEur =
+    booking.platform_fee_eur != null && booking.platform_fee_eur !== ""
+      ? Number(booking.platform_fee_eur)
+      : splitFromTotal?.platformFeeEur;
+  const providerNetEur =
+    booking.provider_net_eur != null && booking.provider_net_eur !== ""
+      ? Number(booking.provider_net_eur)
+      : splitFromTotal?.providerNetEur;
   const isActive = booking.status === "accepted" && isPaid;
   const isCompleted = booking.status === "completed";
   const materielUnreadMap = isPaid
@@ -205,12 +230,49 @@ export default async function ProprietaireMaterielDetailPage({
             <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
               <dt className="flex items-center gap-2 text-sm text-slate-500">
                 <CreditCard className="h-4 w-4 shrink-0 text-slate-400" />
-                Montant de la location
+                Montant de la location (votre annonce)
               </dt>
               <dd className="text-lg font-bold text-slate-900">
-                {Number.isFinite(totalEur) ? `${totalEur} €` : "—"}
+                {Number.isFinite(totalEur) ? `${totalEur.toFixed(2)} €` : "—"}
               </dd>
             </div>
+            {isPaid &&
+              booking.service_fee_eur != null &&
+              booking.service_fee_eur !== "" &&
+              Number(booking.service_fee_eur) > 0 &&
+              booking.checkout_total_eur != null &&
+              booking.checkout_total_eur !== "" && (
+                <>
+                  <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
+                    <dt className="text-sm text-slate-500">Frais de service (facturés au locataire)</dt>
+                    <dd className="text-right text-sm font-medium text-slate-800">
+                      {Number(booking.service_fee_eur).toFixed(2)} €
+                    </dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
+                    <dt className="text-sm text-slate-500">Total payé par le locataire (hors caution)</dt>
+                    <dd className="text-right text-sm font-medium text-slate-800">
+                      {Number(booking.checkout_total_eur).toFixed(2)} €
+                    </dd>
+                  </div>
+                </>
+              )}
+            {isPaid &&
+              platformFeeEur != null &&
+              providerNetEur != null &&
+              Number.isFinite(platformFeeEur) &&
+              Number.isFinite(providerNetEur) && (
+                <>
+                  <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
+                    <dt className="text-sm text-slate-500">Commission plateforme (15&nbsp;%)</dt>
+                    <dd className="text-right text-sm font-medium text-slate-800">{platformFeeEur} €</dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
+                    <dt className="text-sm text-slate-500">Votre net (versement Connect)</dt>
+                    <dd className="text-right text-sm font-semibold text-emerald-800">{providerNetEur} €</dd>
+                  </div>
+                </>
+              )}
             <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
               <dt className="text-sm text-slate-500">Locataire</dt>
               <dd className="text-right text-sm font-medium text-slate-800">
@@ -234,6 +296,18 @@ export default async function ProprietaireMaterielDetailPage({
               <dt className="text-sm text-slate-500">Versement prévu</dt>
               <dd className="text-right text-sm font-medium text-slate-800">{fmt(booking.payout_due_at)}</dd>
             </div>
+            {booking.payout_status === "paid" && booking.payout_paid_at && (
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
+                <dt className="text-sm text-slate-500">Versement effectué le</dt>
+                <dd className="text-right text-sm font-medium text-slate-800">{fmtFull(booking.payout_paid_at)}</dd>
+              </div>
+            )}
+            {booking.payout_transfer_id ? (
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
+                <dt className="text-sm text-slate-500">Réf. transfert Stripe</dt>
+                <dd className="text-right font-mono text-xs text-slate-700">{booking.payout_transfer_id}</dd>
+              </div>
+            ) : null}
             <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
               <dt className="text-sm text-slate-500">Statut réservation</dt>
               <dd className="text-right text-sm font-medium text-slate-800">

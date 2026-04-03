@@ -5,7 +5,6 @@ import { Banknote } from "lucide-react";
 import { ConnectLoginButton } from "@/components/paiement/connect-login-button";
 import { ConnectOnboardingButton } from "@/components/paiement/connect-onboarding-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const PRODUCT_LABEL: Record<string, string> = {
@@ -56,30 +55,13 @@ export default async function ProprietairePaiementPage({
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: payments }, { data: profile }, { data: receivedReservations }] = await Promise.all([
+  const [{ data: payments }, { data: profile }] = await Promise.all([
     supabase
       .from("payments")
       .select("id, product_type, amount, status, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
     supabase.from("profiles").select("stripe_account_id").eq("id", user.id).single(),
-    (async () => {
-        const adminSupabase = createAdminClient();
-        const { data: paidOffers } = await adminSupabase
-          .from("offers")
-          .select("id")
-          .eq("owner_id", user.id)
-          .eq("status", "paid");
-        const offerIds = (paidOffers ?? []).map((o) => (o as { id: string }).id);
-        if (offerIds.length === 0) return { data: [] };
-        const { data } = await adminSupabase
-          .from("payments")
-          .select("id, product_type, amount, status, created_at")
-          .in("offer_id", offerIds)
-          .eq("product_type", "reservation")
-          .order("created_at", { ascending: false });
-        return { data: data ?? [] };
-      })(),
   ]);
 
   const recentPayments = (payments ?? []).slice(0, 5);
@@ -113,8 +95,7 @@ export default async function ProprietairePaiementPage({
               <div>
                 <p className="font-semibold text-emerald-800">Paiements activés !</p>
                 <p className="mt-0.5 text-sm text-emerald-700">
-                  Vous pouvez encaisser les paiements liés aux réservations (parcours historique offres / matériel selon
-                  vos annonces).
+                  Vous pouvez encaisser les paiements liés aux réservations catalogue (matériel).
                 </p>
               </div>
             </div>
@@ -163,77 +144,6 @@ export default async function ProprietairePaiementPage({
           )}
         </CardContent>
       </Card>
-
-      {/* Réservations reçues */}
-      {(receivedReservations?.length ?? 0) > 0 && (
-        <Card className="mt-10 border-0 shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Banknote className="h-5 w-5" />
-              Réservations reçues
-            </CardTitle>
-            <CardDescription>
-              Paiements des locataires pour vos offres acceptées
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 md:hidden">
-              {receivedReservations!.map((p) => (
-                <article key={p.id} className="rounded-xl border border-slate-200 p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium text-black">
-                      {PRODUCT_LABEL[p.product_type] ?? p.product_type}
-                    </p>
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                        STATUS_BADGE[p.status] ?? "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {STATUS_LABEL[p.status] ?? p.status}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-lg font-semibold text-black">{(p.amount / 100).toFixed(2)} €</p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {format(new Date(p.created_at), "d MMM yyyy", { locale: fr })}
-                  </p>
-                </article>
-              ))}
-            </div>
-            <div className="hidden -mx-4 overflow-x-auto sm:mx-0 md:block">
-              <table className="w-full min-w-[400px]">
-                <thead>
-                  <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
-                    <th className="pb-3 pr-3">Date</th>
-                    <th className="pb-3 pr-3">Type</th>
-                    <th className="pb-3 pr-3">Montant</th>
-                    <th className="pb-3">Statut</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {receivedReservations!.map((p) => (
-                    <tr key={p.id}>
-                      <td className="py-3 pr-3 text-sm text-slate-600">
-                        {format(new Date(p.created_at), "d MMM yyyy", { locale: fr })}
-                      </td>
-                      <td className="py-3 pr-3 text-sm text-slate-600">
-                        {PRODUCT_LABEL[p.product_type] ?? p.product_type}
-                      </td>
-                      <td className="py-3 pr-3 text-sm text-slate-600">
-                        {(p.amount / 100).toFixed(2)} €
-                      </td>
-                      <td className="py-3">
-                        <span className={`text-sm font-medium ${STATUS_COLOR[p.status] ?? "text-slate-600"}`}>
-                          • {STATUS_LABEL[p.status] ?? p.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Historique */}
       <Card className="mt-10 border-0 shadow-sm">

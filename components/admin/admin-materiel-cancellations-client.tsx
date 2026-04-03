@@ -13,6 +13,7 @@ import {
   CANCELLATION_STATUS_LABELS,
   POLICY_LABELS,
 } from "@/lib/gs-booking-cancellation";
+import { getCheckoutTotalPaidCents } from "@/lib/gs-booking-platform-fee";
 
 const decideInitial: GsCancellationActionState = {};
 
@@ -29,7 +30,11 @@ function DecisionForm({ row }: { row: AdminCancellationRow }) {
   const [decision, setDecision] = useState<string>("reject");
   const b = row.booking;
 
-  const totalEur = Number(b.total_price);
+  const maxRefundableCents = getCheckoutTotalPaidCents({
+    total_price: b.total_price,
+    checkout_total_eur: b.checkout_total_eur,
+  });
+  const maxRefundableEur = maxRefundableCents != null ? maxRefundableCents / 100 : 0;
   const paid = !!b.stripe_payment_intent_id;
 
   return (
@@ -86,9 +91,9 @@ function DecisionForm({ row }: { row: AdminCancellationRow }) {
             name="partialRefundEur"
             step="0.01"
             min="0.01"
-            max={totalEur}
+            max={maxRefundableEur}
             className="mt-1 block w-40 rounded border border-slate-200 px-2 py-1 text-sm"
-            placeholder={`max ${totalEur.toFixed(2)}`}
+            placeholder={`max ${maxRefundableEur.toFixed(2)}`}
           />
         </div>
       ) : null}
@@ -145,8 +150,16 @@ export function AdminMaterielCancellationsClient({ rows }: { rows: AdminCancella
                       {fmtDate(row.booking.end_date)}
                     </p>
                     <p className="mt-1 text-sm text-slate-600">
-                      Montant : {Number(row.booking.total_price).toFixed(2)} € ·{" "}
-                      {row.booking.stripe_payment_intent_id ? "Payé (Stripe)" : "Non payé"}
+                      Location : {Number(row.booking.total_price).toFixed(2)} €
+                      {row.booking.checkout_total_eur != null &&
+                      row.booking.checkout_total_eur !== "" &&
+                      Number(row.booking.checkout_total_eur) !== Number(row.booking.total_price) ? (
+                        <>
+                          {" "}
+                          · Total payé (hors caution) : {Number(row.booking.checkout_total_eur).toFixed(2)} €
+                        </>
+                      ) : null}{" "}
+                      · {row.booking.stripe_payment_intent_id ? "Payé (Stripe)" : "Non payé"}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
                       Check-in : {row.booking.check_in_status ?? "—"} · Check-out :{" "}

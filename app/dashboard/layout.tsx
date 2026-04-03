@@ -53,13 +53,14 @@ export default async function DashboardLayout({
       }));
   if (userType === "admin") redirect("/admin");
 
-  const { data: mySalles } = await supabase
-    .from("salles")
+  const { data: myListings } = await supabase
+    .from("gs_listings")
     .select("id")
-    .eq("owner_id", user.id);
-  const hasSalles = (mySalles ?? []).length > 0;
-  const canAccessOwner = canAccessOwnerDashboard(userType, hasSalles);
-  const publishMaterialHref = getPublishMaterialListingHref(userType, hasSalles, true);
+    .eq("owner_id", user.id)
+    .limit(1);
+  const hasCatalogListings = (myListings ?? []).length > 0;
+  const canAccessOwner = canAccessOwnerDashboard(userType, hasCatalogListings);
+  const publishMaterialHref = getPublishMaterialListingHref(userType, hasCatalogListings, true);
 
   if (userType === "owner") {
     const cookieStore = await cookies();

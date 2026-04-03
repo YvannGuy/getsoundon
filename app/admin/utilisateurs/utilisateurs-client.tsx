@@ -43,8 +43,7 @@ type UserRow = {
   user_type: string;
   created_at: string;
   suspended?: boolean;
-  salles_count?: number;
-  demandes_count?: number;
+  listings_count?: number;
   stripe_account_id?: string | null;
 };
 
@@ -109,7 +108,7 @@ function getStatusBadge(suspended: boolean | undefined) {
   );
 }
 
-function getTypeBadge(type: string, sallesCount?: number) {
+function getTypeBadge(type: string, listingsCount?: number) {
   if (type === "admin") {
     return (
       <span className="inline-flex rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
@@ -117,7 +116,7 @@ function getTypeBadge(type: string, sallesCount?: number) {
       </span>
     );
   }
-  if (type === "owner" || (sallesCount ?? 0) > 0) {
+  if (type === "owner" || (listingsCount ?? 0) > 0) {
     return (
       <span className="inline-flex rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-medium text-violet-700">
         Propriétaire
@@ -371,7 +370,7 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
                   </div>
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  {getTypeBadge(u.user_type, u.salles_count)}
+                  {getTypeBadge(u.user_type, u.listings_count)}
                   {getStatusBadge(u.suspended)}
                 </div>
                 <div className="mt-2 text-xs text-slate-500">
@@ -463,7 +462,7 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
                     <td className="px-4 py-3">
                       <p className="text-sm text-slate-700">{u.email}</p>
                     </td>
-                    <td className="px-4 py-3">{getTypeBadge(u.user_type, u.salles_count)}</td>
+                    <td className="px-4 py-3">{getTypeBadge(u.user_type, u.listings_count)}</td>
                     <td className="px-4 py-3">
                       <p className="text-sm text-slate-700">
                         {formatDate(u.created_at)}

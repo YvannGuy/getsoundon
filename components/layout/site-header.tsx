@@ -25,13 +25,13 @@ export async function SiteHeader() {
 
   let publishMaterialHref = "/auth?tab=signup&userType=owner";
   if (user) {
-    const { data: mySalles } = await supabase
-      .from("salles")
+    const { data: myListings } = await supabase
+      .from("gs_listings")
       .select("id")
       .eq("owner_id", user.id)
       .limit(1);
-    const hasSalles = (mySalles ?? []).length > 0;
-    publishMaterialHref = getPublishMaterialListingHref(userType, hasSalles, true);
+    const hasCatalogListings = (myListings ?? []).length > 0;
+    publishMaterialHref = getPublishMaterialListingHref(userType, hasCatalogListings, true);
   }
 
   return (

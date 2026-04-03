@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getGsMaterialUnreadTotalCount } from "@/lib/gs-material-messages";
 
-/** Compteurs badges nav — flux matériel `gs_*` uniquement (legacy offres / messagerie retirés). */
+/** Compteurs badges nav — flux matériel `gs_*` uniquement. */
 export type BadgeCounts = {
   demandeCount: number;
   visiteCount: number;
@@ -64,28 +64,15 @@ export async function getOwnerBadgeCounts(
   userId: string
 ): Promise<BadgeCounts> {
   try {
-    const [{ data: mySalles }, { data: profile }, materielUnreadCount] = await Promise.all([
-      supabase.from("salles").select("id").eq("owner_id", userId),
+    const [{ data: profile }, { data: listingsHead }, materielUnreadCount] = await Promise.all([
       supabase.from("profiles").select("stripe_account_id").eq("id", userId).maybeSingle(),
+      supabase.from("gs_listings").select("id").eq("owner_id", userId).limit(1),
       getGsMaterialUnreadTotalCount(userId),
     ]);
 
-    const salleIds = (mySalles ?? []).map((s) => s.id);
-    let contractCount = 0;
-    if (salleIds.length > 0) {
-      try {
-        const { count } = await supabase
-          .from("salles")
-          .select("id", { count: "exact", head: true })
-          .eq("owner_id", userId)
-          .eq("has_contract_template", false);
-        contractCount = count ?? 0;
-      } catch {
-        contractCount = 0;
-      }
-    }
+    const hasListings = (listingsHead ?? []).length > 0;
     const hasStripeAccount = !!(profile as { stripe_account_id?: string | null } | null)?.stripe_account_id;
-    const paymentCount = salleIds.length > 0 && !hasStripeAccount ? 1 : 0;
+    const paymentCount = hasListings && !hasStripeAccount ? 1 : 0;
 
     return {
       demandeCount: 0,
@@ -96,7 +83,7 @@ export async function getOwnerBadgeCounts(
       reservationCount: 0,
       edlCount: 0,
       cautionCount: 0,
-      contractCount,
+      contractCount: 0,
     };
   } catch (err: unknown) {
     logBadgeFailure("getOwnerBadgeCounts", err);

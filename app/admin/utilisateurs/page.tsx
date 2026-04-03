@@ -18,8 +18,7 @@ export default async function AdminUtilisateursPage({
 
   const [
     { data: profiles, count: totalCount },
-    { data: sallesByOwner },
-    { data: demandesBySeeker },
+    { data: listingsByOwner },
     { count: totalActifs },
     { count: totalOwners },
     { count: nouveaux7jCount },
@@ -29,8 +28,7 @@ export default async function AdminUtilisateursPage({
       .select("id, email, full_name, user_type, created_at, suspended, stripe_account_id", { count: "exact" })
       .order("created_at", { ascending: false })
       .range(from, to),
-    supabase.from("salles").select("owner_id"),
-    supabase.from("demandes_visite").select("seeker_id"),
+    supabase.from("gs_listings").select("owner_id"),
     supabase.from("profiles").select("id", { count: "exact", head: true }).is("suspended", null),
     supabase.from("profiles").select("id", { count: "exact", head: true }).eq("user_type", "owner"),
     (() => {
@@ -43,23 +41,17 @@ export default async function AdminUtilisateursPage({
     })(),
   ]);
 
-  const sallesCount = new Map<string, number>();
-  (sallesByOwner ?? []).forEach((s) => {
-    if (s.owner_id) {
-      sallesCount.set(s.owner_id, (sallesCount.get(s.owner_id) ?? 0) + 1);
-    }
-  });
-  const demandesCount = new Map<string, number>();
-  (demandesBySeeker ?? []).forEach((d) => {
-    if (d.seeker_id) {
-      demandesCount.set(d.seeker_id, (demandesCount.get(d.seeker_id) ?? 0) + 1);
+  const listingsCount = new Map<string, number>();
+  (listingsByOwner ?? []).forEach((s) => {
+    const oid = (s as { owner_id: string }).owner_id;
+    if (oid) {
+      listingsCount.set(oid, (listingsCount.get(oid) ?? 0) + 1);
     }
   });
 
   const profilesList = (profiles ?? []).map((p) => ({
     ...p,
-    salles_count: sallesCount.get(p.id) ?? 0,
-    demandes_count: demandesCount.get(p.id) ?? 0,
+    listings_count: listingsCount.get(p.id) ?? 0,
   }));
 
   const total = totalCount ?? 0;
@@ -76,14 +68,16 @@ export default async function AdminUtilisateursPage({
   return (
     <div className="p-4 pb-24 md:p-8 md:pb-8">
       <UtilisateursClient users={profilesList} stats={stats} highlightUserId={userId} />
-      <Pagination
-        baseUrl="/admin/utilisateurs"
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={total}
-        pageSize={PAGE_SIZE}
-        queryParams={userId ? `&userId=${userId}` : ""}
-      />
+      {totalPages > 1 && (
+        <Pagination
+          baseUrl="/admin/utilisateurs"
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={total}
+          pageSize={PAGE_SIZE}
+          queryParams={userId ? `&userId=${encodeURIComponent(userId)}` : ""}
+        />
+      )}
     </div>
   );
 }

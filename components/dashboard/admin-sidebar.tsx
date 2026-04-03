@@ -4,22 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Bell,
-  Building2,
-  Camera,
+  Ban,
   ChevronLeft,
   ChevronRight,
-  CreditCard,
-  FileText,
-  Flag,
   Headphones,
   Home,
-  Package,
-  Ban,
-  Scale,
   Menu,
+  Package,
   Settings,
-  Shield,
   Users,
   X,
 } from "lucide-react";
@@ -28,60 +20,19 @@ import { signOutAdminAction } from "@/app/actions/auth-admin";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
+export type AdminSidebarBadgeCounts = {
+  utilisateurs: number;
+  conciergeRequests: number;
+  incidentsMateriel: number;
+};
+
 type AdminSidebarProps = {
-  badgeCounts: {
-    pendingAnnonces: number;
-    signalements: number;
-    demandesVisite: number;
-    reservations: number;
-    utilisateurs: number;
-    paiements: number;
-    cautions: number;
-    etatsDesLieux: number;
-    litiges: number;
-    conciergeRequests: number;
-    incidentsMateriel: number;
-  };
+  badgeCounts: AdminSidebarBadgeCounts;
   userEmail?: string | null;
 };
 
-const navItems = (
-  counts: AdminSidebarProps["badgeCounts"]
-) => [
+const navItems = (counts: AdminSidebarBadgeCounts) => [
   { href: "/admin", label: "Dashboard", icon: Home },
-  {
-    href: "/admin/annonces-a-valider",
-    label: "Annonces lieux à valider (legacy)",
-    icon: Bell,
-    badgeKey: "pendingAnnonces",
-    badge: counts.pendingAnnonces,
-    badgeTone: "warning" as const,
-  },
-  { href: "/admin/annonces", label: "Annonces lieux (legacy)", icon: Building2 },
-  {
-    href: "/admin/signalements",
-    label: "Signalements",
-    icon: Flag,
-    badgeKey: "signalements",
-    badge: counts.signalements,
-    badgeTone: "danger" as const,
-  },
-  {
-    href: "/admin/demandes",
-    label: "Demandes lieux (legacy)",
-    icon: FileText,
-    badgeKey: "demandesVisite",
-    badge: counts.demandesVisite,
-    badgeTone: "warning" as const,
-  },
-  {
-    href: "/admin/reservations",
-    label: "Réservations",
-    icon: FileText,
-    badgeKey: "reservations",
-    badge: counts.reservations,
-    badgeTone: "warning" as const,
-  },
   {
     href: "/admin/utilisateurs",
     label: "Utilisateurs",
@@ -89,38 +40,6 @@ const navItems = (
     badgeKey: "utilisateurs",
     badge: counts.utilisateurs,
     badgeTone: "info" as const,
-  },
-  {
-    href: "/admin/paiements",
-    label: "Paiements",
-    icon: CreditCard,
-    badgeKey: "paiements",
-    badge: counts.paiements,
-    badgeTone: "info" as const,
-  },
-  {
-    href: "/admin/cautions",
-    label: "Cautions",
-    icon: Shield,
-    badgeKey: "cautions",
-    badge: counts.cautions,
-    badgeTone: "danger" as const,
-  },
-  {
-    href: "/admin/etats-des-lieux",
-    label: "États des lieux — legacy",
-    icon: Camera,
-    badgeKey: "etatsDesLieux",
-    badge: counts.etatsDesLieux,
-    badgeTone: "warning" as const,
-  },
-  {
-    href: "/admin/litiges",
-    label: "Litiges",
-    icon: Scale,
-    badgeKey: "litiges",
-    badge: counts.litiges,
-    badgeTone: "danger" as const,
   },
   {
     href: "/admin/incidents-materiel",
@@ -142,7 +61,7 @@ const navItems = (
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ];
 
-const ADMIN_BADGE_STORAGE_KEY = "admin_nav_seen_badges_v2";
+const ADMIN_BADGE_STORAGE_KEY = "admin_nav_seen_badges_v3";
 
 export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
   const pathname = usePathname();
@@ -153,16 +72,9 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
   const items = navItems(badgeCounts);
 
   const rawByKey: Record<string, number> = {
-    pendingAnnonces: badgeCounts.pendingAnnonces,
-    signalements: badgeCounts.signalements,
-    demandesVisite: badgeCounts.demandesVisite,
-    reservations: badgeCounts.reservations,
     utilisateurs: badgeCounts.utilisateurs,
-    paiements: badgeCounts.paiements,
-    cautions: badgeCounts.cautions,
-    etatsDesLieux: badgeCounts.etatsDesLieux,
-    litiges: badgeCounts.litiges,
     conciergeRequests: badgeCounts.conciergeRequests,
+    incidentsMateriel: badgeCounts.incidentsMateriel,
   };
 
   useEffect(() => {
@@ -189,7 +101,6 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
     });
   };
 
-  /** Affiche un compteur "non lu" qui reste à 0 après consultation, jusqu'à nouvel élément. */
   const displayBadge = (item: { badgeKey?: string }, isActive: boolean) => {
     if (isActive) return 0;
     if (!item.badgeKey) return 0;
@@ -202,7 +113,13 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
     const activeItem = items.find((item) => item.href === pathname && item.badgeKey);
     if (!activeItem?.badgeKey) return;
     markSeen(activeItem.badgeKey, rawByKey[activeItem.badgeKey] ?? 0);
-  }, [items, pathname, badgeCounts.pendingAnnonces, badgeCounts.signalements, badgeCounts.demandesVisite, badgeCounts.reservations, badgeCounts.utilisateurs, badgeCounts.paiements, badgeCounts.cautions, badgeCounts.etatsDesLieux, badgeCounts.litiges, badgeCounts.conciergeRequests]);
+  }, [
+    items,
+    pathname,
+    badgeCounts.utilisateurs,
+    badgeCounts.conciergeRequests,
+    badgeCounts.incidentsMateriel,
+  ]);
 
   const sidebarContent = (
     <>
@@ -219,7 +136,7 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
             onClick={() => setMobileOpen(false)}
           >
             <span className="truncate text-base font-bold text-black">{siteConfig.name}</span>
-            <span className="truncate text-xs text-slate-500">Admin Dashboard</span>
+            <span className="truncate text-xs text-slate-500">Admin · flux matériel</span>
           </Link>
         )}
         <button
@@ -266,7 +183,7 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
                             ? "bg-red-100 text-red-700"
                             : item.badgeTone === "info"
                               ? "bg-blue-100 text-blue-700"
-                            : "bg-amber-100 text-amber-700"
+                              : "bg-amber-100 text-amber-700"
                       )}
                     >
                       {badge > 99 ? "99+" : badge}
@@ -313,7 +230,6 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
 
   return (
     <>
-      {/* Bouton menu mobile */}
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
@@ -323,7 +239,6 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
         <Menu className="h-5 w-5 text-slate-700" />
       </button>
 
-      {/* Overlay mobile */}
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/30 lg:hidden"
@@ -332,7 +247,6 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
         />
       )}
 
-      {/* Sidebar desktop (toujours visible) */}
       <aside
         className={cn(
           "hidden shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 lg:flex",
@@ -342,7 +256,6 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
         {sidebarContent}
       </aside>
 
-      {/* Sidebar mobile (drawer) */}
       <aside
         className={cn(
           "fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-200 lg:hidden",
@@ -354,7 +267,7 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
             <Link href="/admin" className="text-base font-bold text-black" onClick={() => setMobileOpen(false)}>
               {siteConfig.name}
             </Link>
-            <p className="text-xs text-slate-500">Admin Dashboard</p>
+            <p className="text-xs text-slate-500">Admin</p>
           </div>
           <button
             type="button"
@@ -380,9 +293,7 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
                 }}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-blue-600 text-white"
-                    : "text-slate-700 hover:bg-slate-100 hover:text-black"
+                  isActive ? "bg-blue-600 text-white" : "text-slate-700 hover:bg-slate-100 hover:text-black"
                 )}
               >
                 <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-white" : "text-slate-600")} />
@@ -397,7 +308,7 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
                           ? "bg-red-100 text-red-700"
                           : item.badgeTone === "info"
                             ? "bg-blue-100 text-blue-700"
-                          : "bg-amber-100 text-amber-700"
+                            : "bg-amber-100 text-amber-700"
                     )}
                   >
                     {badge > 99 ? "99+" : badge}

@@ -24,6 +24,7 @@ import {
   getCancellationPolicyLabel,
   getCancellationPolicySummaryLines,
 } from "@/lib/gs-cancellation-policy-ui";
+import { computeGsBookingCheckoutTotals } from "@/lib/gs-booking-platform-fee";
 import { DEMO_PROVIDER_SLUG } from "@/lib/provider-storefront-demo";
 import { cn } from "@/lib/utils";
 
@@ -231,6 +232,15 @@ export function ListingDetailPremiumView({
     if (days <= 0) return 0;
     return Math.round(listing.price_per_day * days * 100) / 100;
   }, [estimatedDays, listing]);
+
+  const checkoutPreview = useMemo(() => {
+    if (rentalSubtotalOnline <= 0) return null;
+    try {
+      return computeGsBookingCheckoutTotals(rentalSubtotalOnline);
+    } catch {
+      return null;
+    }
+  }, [rentalSubtotalOnline]);
 
   const optionsExtraIndicative =
     (optDelivery ? OPTION_DELIVERY : 0) +
@@ -504,9 +514,17 @@ export function ListingDetailPremiumView({
                       {estimatedDays !== 1 ? "s" : ""}, 1 unité)
                     </span>
                     <span className="font-semibold text-gs-dark">
-                      {estimatedDays > 0 ? `${rentalSubtotalOnline} €` : "—"}
+                      {estimatedDays > 0 ? `${checkoutPreview ? checkoutPreview.grossEur.toFixed(2) : rentalSubtotalOnline} €` : "—"}
                     </span>
                   </div>
+                  {checkoutPreview && estimatedDays > 0 ? (
+                    <div className="flex justify-between text-[#555]">
+                      <span>Frais de service</span>
+                      <span className="font-semibold text-gs-dark">
+                        {checkoutPreview.serviceFeeEur.toFixed(2)} €
+                      </span>
+                    </div>
+                  ) : null}
                   {optDelivery || optInstall || optTech ? (
                     <div className="rounded-md border border-dashed border-gs-line bg-slate-50/80 px-2.5 py-2 text-[12px] text-[#666]">
                       <p className="font-medium text-[#555]">Options (hors total en ligne)</p>
@@ -550,10 +568,18 @@ export function ListingDetailPremiumView({
                       </p>
                     </>
                   ) : null}
+                  {checkoutPreview && estimatedDays > 0 ? (
+                    <p className="text-[11px] leading-relaxed text-[#888]">
+                      Les frais de service couvrent le traitement sécurisé du paiement et le fonctionnement de la
+                      plateforme.
+                    </p>
+                  ) : null}
                   <div className="flex items-center justify-between border-t border-gs-line pt-4">
-                    <span className="text-base font-bold text-black">Total réservable en ligne</span>
+                    <span className="text-base font-bold text-black">Total à payer</span>
                     <span className="text-2xl font-bold text-gs-orange">
-                      {estimatedDays > 0 ? `${rentalSubtotalOnline} €` : "—"}
+                      {estimatedDays > 0
+                        ? `${checkoutPreview ? checkoutPreview.checkoutTotalEur.toFixed(2) : rentalSubtotalOnline} €`
+                        : "—"}
                     </span>
                   </div>
                 </div>

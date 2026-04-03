@@ -2,8 +2,8 @@
 
 import { getPlatformSettings } from "@/app/actions/admin-settings";
 import {
-  sendNewSallePendingAdminNotification,
-  sendNewSallePublishedAdminNotification,
+  sendNewCatalogListingPendingAdminNotification,
+  sendNewCatalogListingPublishedAdminNotification,
 } from "@/lib/email";
 import {
   sendAdminPendingSalleTelegramNotification,
@@ -403,24 +403,18 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com";
-  const validationUrl = `${siteUrl}/admin/annonces-a-valider`;
-  const salleName = (mapped.name ?? nom) || "Ma salle";
-  const salleCity = mapped.city ?? ville;
+  const adminDashboardUrl = `${siteUrl}/admin`;
 
   if (adminEmails.length > 0) {
     if (status === "pending") {
       await Promise.allSettled([
-        sendNewSallePendingAdminNotification(
+        sendNewCatalogListingPendingAdminNotification(
           adminEmails,
-          salleName,
-          salleCity,
-          validationUrl
+          listingTitle,
+          listingLocation,
+          adminDashboardUrl
         ),
-        sendAdminPendingSalleTelegramNotification(
-          salleName,
-          salleCity,
-          validationUrl
-        ),
+        sendAdminPendingSalleTelegramNotification(listingTitle, listingLocation, adminDashboardUrl),
       ]).then((results) =>
         results.forEach((r, i) => {
           if (r.status === "rejected")
@@ -433,17 +427,13 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
       );
     } else {
       await Promise.allSettled([
-        sendNewSallePublishedAdminNotification(
+        sendNewCatalogListingPublishedAdminNotification(
           adminEmails,
-          salleName,
-          salleCity,
-          validationUrl
+          listingTitle,
+          listingLocation,
+          adminDashboardUrl
         ),
-        sendAdminPublishedSalleTelegramNotification(
-          salleName,
-          salleCity,
-          validationUrl
-        ),
+        sendAdminPublishedSalleTelegramNotification(listingTitle, listingLocation, adminDashboardUrl),
       ]).then((results) =>
         results.forEach((r, i) => {
           if (r.status === "rejected")

@@ -153,16 +153,3 @@ export async function removeAdminAction(userId: string) {
   return { success: true };
 }
 
-export async function deleteAllSallesAction() {
-  const auth = await requireAdmin();
-  if (!auth.ok) return { error: auth.error };
-  const supabase = createAdminClient();
-  const { data: ids } = await supabase.from("salles").select("id");
-  if (ids && ids.length > 0) {
-    const { error } = await supabase.from("salles").delete().in("id", ids.map((r) => r.id));
-    if (error) return { error: error.message };
-  }
-  revalidatePath("/admin");
-  revalidatePath("/admin/annonces");
-  return { success: true };
-}

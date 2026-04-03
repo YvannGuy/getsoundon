@@ -12,6 +12,7 @@ import {
   type GsBookingForCancellationEligibility,
   type GsCancellationRequestRow,
 } from "@/lib/gs-booking-cancellation";
+import { getCheckoutTotalPaidCents } from "@/lib/gs-booking-platform-fee";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
@@ -155,7 +156,7 @@ export async function decideGsBookingCancellationRequest(
   const { data: bookingRaw } = await admin
     .from("gs_bookings")
     .select(
-      "id, total_price, stripe_payment_intent_id, deposit_payment_intent_id, deposit_hold_status, status",
+      "id, total_price, checkout_total_eur, payout_status, stripe_payment_intent_id, deposit_payment_intent_id, deposit_hold_status, status",
     )
     .eq("id", request.booking_id)
     .maybeSingle();
@@ -165,14 +166,23 @@ export async function decideGsBookingCancellationRequest(
   const booking = bookingRaw as {
     id: string;
     total_price: number | string;
+    checkout_total_eur?: number | string | null;
+    payout_status: string | null;
     stripe_payment_intent_id: string | null;
     deposit_payment_intent_id: string | null;
     deposit_hold_status: string | null;
     status: string;
   };
 
-  const totalEur = Number(booking.total_price);
-  const totalCents = Math.round(totalEur * 100);
+  const totalCents =
+    getCheckoutTotalPaidCents({
+      total_price: booking.total_price,
+      checkout_total_eur: booking.checkout_total_eur,
+    }) ?? 0;
+  if (totalCents <= 0) {
+    return { error: "Montant encaissé invalide pour cette réservation." };
+  }
+  const totalEur = totalCents / 100;
   const now = new Date().toISOString();
   const stripe = getStripe();
 
@@ -223,6 +233,12 @@ export async function decideGsBookingCancellationRequest(
     newStatus === "approved_no_refund" ? 0 : Math.round((refundEur ?? 0) * 100);
 
   if (refundCents > 0) {
+    if (booking.payout_status === "paid") {
+      return {
+        error:
+          "Le versement prestataire (Connect) est déjà effectué. Remboursement automatique désactivé — à traiter manuellement (reverse transfer / support Stripe).",
+      };
+    }
     if (!booking.stripe_payment_intent_id) {
       return { error: "Aucun paiement Stripe sur cette réservation : remboursement impossible." };
     }
@@ -319,6 +335,7 @@ export type AdminCancellationRow = {
     start_date: string;
     end_date: string;
     total_price: number | string;
+    checkout_total_eur?: number | string | null;
     status: string;
     stripe_payment_intent_id: string | null;
     check_in_status: string | null;
@@ -357,7 +374,7 @@ export async function getGsCancellationRequestsForAdmin(): Promise<AdminCancella
   const { data: bookings } = await admin
     .from("gs_bookings")
     .select(
-      "id, start_date, end_date, total_price, status, stripe_payment_intent_id, check_in_status, check_out_status, incident_status, payout_status, listing_id",
+      "id, start_date, end_date, total_price, checkout_total_eur, status, stripe_payment_intent_id, check_in_status, check_out_status, incident_status, payout_status, listing_id",
     )
     .in("id", bookingIds);
 
@@ -368,6 +385,7 @@ export async function getGsCancellationRequestsForAdmin(): Promise<AdminCancella
       start_date: row.start_date,
       end_date: row.end_date,
       total_price: row.total_price,
+      checkout_total_eur: row.checkout_total_eur,
       status: row.status,
       stripe_payment_intent_id: row.stripe_payment_intent_id,
       check_in_status: row.check_in_status,

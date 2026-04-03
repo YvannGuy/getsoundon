@@ -1,4 +1,5 @@
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com";
+
 export type NotificationChannel = "email" | "telegram" | "both";
 
 function getTelegramConfig() {
@@ -25,14 +26,14 @@ export async function sendAdminPendingSalleTelegramNotification(
     return { success: false, skipped: true as const };
   }
 
-  const safeSalleName = salleName || "Ma salle";
-  const safeSalleCity = salleCity || "Ville non renseignée";
-  const fallbackValidationUrl = validationUrl || `${siteUrl}/admin/annonces-a-valider`;
+  const safeSalleName = salleName || "Annonce";
+  const safeSalleCity = salleCity || "Lieu non renseigné";
+  const fallbackValidationUrl = validationUrl || `${siteUrl}/admin`;
   const message = [
-    "Nouvelle annonce à valider",
-    `Salle: ${safeSalleName}`,
-    `Ville: ${safeSalleCity}`,
-    `Ouvrir admin: ${fallbackValidationUrl}`,
+    "Nouvelle annonce catalogue à valider",
+    `Titre: ${safeSalleName}`,
+    `Zone: ${safeSalleCity}`,
+    `Admin: ${fallbackValidationUrl}`,
   ].join("\n");
 
   const endpoint = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -52,13 +53,13 @@ export async function sendAdminPublishedSalleTelegramNotification(
     return { success: false, skipped: true as const };
   }
 
-  const safeSalleName = salleName || "Ma salle";
-  const safeSalleCity = salleCity || "Ville non renseignée";
+  const safeSalleName = salleName || "Annonce";
+  const safeSalleCity = salleCity || "Lieu non renseigné";
   const message = [
-    "Nouvelle annonce publiée (auto)",
-    `Salle: ${safeSalleName}`,
-    `Ville: ${safeSalleCity}`,
-    `Voir: ${annoncesUrl}`,
+    "Nouvelle annonce catalogue publiée (auto)",
+    `Titre: ${safeSalleName}`,
+    `Zone: ${safeSalleCity}`,
+    `Admin: ${annoncesUrl}`,
   ].join("\n");
 
   const endpoint = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -84,7 +85,7 @@ export async function sendAdminPaymentTelegramNotification(params: {
     ? (params.amountCents / 100).toFixed(2)
     : "0.00";
   const currency = (params.currency ?? "eur").toUpperCase();
-  const adminPaymentsUrl = `${siteUrl}/admin/paiements`;
+  const adminPaymentsUrl = `${siteUrl}/admin`;
   const offerPart = params.offerId ? `Offre: ${params.offerId}` : "Offre: n/a";
   const userPart = params.userId ? `Utilisateur: ${params.userId}` : "Utilisateur: n/a";
   const message = [

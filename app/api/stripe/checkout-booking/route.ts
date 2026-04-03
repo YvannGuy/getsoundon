@@ -3,6 +3,7 @@ import { z } from "zod";
 import type Stripe from "stripe";
 
 import { siteConfig } from "@/config/site";
+import { computeGsBookingCheckoutTotals } from "@/lib/gs-booking-platform-fee";
 import { providerStripeCanReceivePayments } from "@/lib/gs-provider-stripe-connect";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -109,7 +110,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Montant de reservation invalide." }, { status: 400 });
     }
 
-    const totalCents = Math.round(totalEur * 100);
+    let totals: ReturnType<typeof computeGsBookingCheckoutTotals>;
+    try {
+      totals = computeGsBookingCheckoutTotals(totalEur);
+    } catch {
+      return NextResponse.json({ error: "Montant de reservation invalide." }, { status: 400 });
+    }
+
+    const checkoutTotalCents = totals.checkoutTotalCents;
     const depositEur = Number(row.deposit_amount ?? 0);
     const depositCents = Number.isFinite(depositEur) && depositEur > 0 ? Math.round(depositEur * 100) : 0;
 
@@ -130,14 +138,27 @@ export async function POST(request: Request) {
         price_data: {
           currency: "eur",
           product_data: {
-            name: `Reservation — ${listingTitle}`,
+            name: `Location — ${listingTitle}`,
             description: `${row.start_date} → ${row.end_date}`,
           },
-          unit_amount: totalCents,
+          unit_amount: totals.grossCents,
         },
         quantity: 1,
       },
     ];
+    if (totals.serviceFeeCents > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "eur",
+          product_data: {
+            name: "Frais de service",
+            description: "Traitement sécurisé du paiement et fonctionnement de la plateforme",
+          },
+          unit_amount: totals.serviceFeeCents,
+        },
+        quantity: 1,
+      });
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -151,6 +172,9 @@ export async function POST(request: Request) {
           deposit_amount_cents: String(depositCents),
           payout_due_at: payoutDueAt,
           deposit_release_due_at: depositReleaseDueAt,
+          location_amount_cents: String(totals.grossCents),
+          service_fee_cents: String(totals.serviceFeeCents),
+          checkout_total_cents: String(checkoutTotalCents),
         },
       },
       line_items: lineItems,
@@ -160,13 +184,16 @@ export async function POST(request: Request) {
         product_type: "gs_booking",
         booking_id: bookingId,
         user_id: user.id,
-        amount_cents: String(totalCents),
+        amount_cents: String(checkoutTotalCents),
         listing_id: row.listing_id,
         provider_id: row.provider_id,
         provider_stripe_account_id: stripeAccountId,
         deposit_amount_cents: String(depositCents),
         payout_due_at: payoutDueAt,
         deposit_release_due_at: depositReleaseDueAt,
+        location_amount_cents: String(totals.grossCents),
+        service_fee_cents: String(totals.serviceFeeCents),
+        checkout_total_cents: String(checkoutTotalCents),
       },
       // Customer attaché ou créé pour garantir pi.customer non-null dans le webhook (empreinte caution)
       ...(existingStripeCustomerId

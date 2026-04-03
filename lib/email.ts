@@ -188,70 +188,64 @@ export async function sendWelcomeOwnerEmail(to: string, _fullName: string) {
   return { success: !error, error: error?.message };
 }
 
-/**
- * Notifie les admins lors d’une soumission depuis l’onboarding prestataire (fiche lieu + sync annonce matériel).
- * Wording neutre « annonce » ; validation admin inchangée.
- */
-export async function sendNewSallePendingAdminNotification(
+/** Notif admin — nouvelle annonce catalogue (onboarding / flux matériel), en attente de validation. */
+export async function sendNewCatalogListingPendingAdminNotification(
   adminEmails: string[],
-  salleName: string,
-  salleCity: string,
-  validationUrl: string
+  listingTitle: string,
+  locationLabel: string,
+  adminDashboardUrl: string
 ) {
   if (!process.env.RESEND_API_KEY) {
-    console.warn("[email] RESEND_API_KEY non configuré, notification nouvelle salle (à valider) non envoyée");
+    console.warn("[email] RESEND_API_KEY non configuré, notification annonce catalogue (à valider) non envoyée");
     return { success: false };
   }
   if (adminEmails.length === 0) {
     return { success: false };
   }
-  const to = adminEmails;
   const { error } = await resend.emails.send({
     from,
-    to,
-    subject: `[GetSoundOn] Nouvelle annonce a valider : ${salleName}`,
+    to: adminEmails,
+    subject: `[GetSoundOn] Nouvelle annonce à valider : ${listingTitle}`,
     html: renderEmailLayout({
-      title: "Nouvelle annonce à valider",
+      title: "Nouvelle annonce catalogue à valider",
       intro:
-        "Une nouvelle annonce a été soumise depuis l’espace prestataire et nécessite votre validation.",
+        "Une annonce matériel a été soumise depuis l’espace prestataire (sync catalogue). Traitez-la depuis l’administration.",
       sections: [
-        `<p><strong>${escapeHtml(salleName)}</strong> — ${escapeHtml(salleCity)}</p>`,
+        `<p><strong>${escapeHtml(listingTitle)}</strong> — ${escapeHtml(locationLabel)}</p>`,
       ],
-      ctaLabel: "Voir et valider l'annonce",
-      ctaUrl: validationUrl,
+      ctaLabel: "Ouvrir l’administration",
+      ctaUrl: adminDashboardUrl,
     }),
   });
   return { success: !error, error: error?.message };
 }
 
-/** Admin — publication auto onboarding prestataire (fiche + annonce matériel). */
-export async function sendNewSallePublishedAdminNotification(
+/** Notif admin — annonce catalogue publiée (auto). */
+export async function sendNewCatalogListingPublishedAdminNotification(
   adminEmails: string[],
-  salleName: string,
-  salleCity: string,
-  annoncesUrl: string
+  listingTitle: string,
+  locationLabel: string,
+  adminDashboardUrl: string
 ) {
   if (!process.env.RESEND_API_KEY) {
-    console.warn("[email] RESEND_API_KEY non configuré, notification nouvelle salle (publiée) non envoyée");
+    console.warn("[email] RESEND_API_KEY non configuré, notification annonce catalogue (publiée) non envoyée");
     return { success: false };
   }
   if (adminEmails.length === 0) {
     return { success: false };
   }
-  const to = adminEmails;
   const { error } = await resend.emails.send({
     from,
-    to,
-    subject: `[GetSoundOn] Nouvelle annonce publiee : ${salleName}`,
+    to: adminEmails,
+    subject: `[GetSoundOn] Nouvelle annonce publiée : ${listingTitle}`,
     html: renderEmailLayout({
-      title: "Nouvelle annonce publiée",
-      intro:
-        "Une nouvelle annonce a été publiée automatiquement depuis l’onboarding prestataire (mode publication auto).",
+      title: "Nouvelle annonce catalogue publiée",
+      intro: "Une annonce matériel a été publiée automatiquement (mode publication auto).",
       sections: [
-        `<p><strong>${escapeHtml(salleName)}</strong> — ${escapeHtml(salleCity)}</p>`,
+        `<p><strong>${escapeHtml(listingTitle)}</strong> — ${escapeHtml(locationLabel)}</p>`,
       ],
-      ctaLabel: "Voir les annonces",
-      ctaUrl: annoncesUrl,
+      ctaLabel: "Ouvrir l’administration",
+      ctaUrl: adminDashboardUrl,
     }),
   });
   return { success: !error, error: error?.message };
@@ -261,14 +255,23 @@ export async function sendNewSallePublishedAdminNotification(
 export async function sendGsBookingPaymentConfirmedLocataireEmail(
   to: string,
   listingTitle: string,
-  amountEur: string,
+  totalPaidEur: string,
   bookingUrl: string,
-  cautionHtml?: string | null
+  cautionHtml?: string | null,
+  breakdown?: { locationEur: string; serviceFeeEur: string; totalEur: string } | null
 ) {
   if (!process.env.RESEND_API_KEY) return { success: false };
-  const sections = [
-    `<p class="tip"><strong>Montant payé :</strong> ${escapeHtml(amountEur)} EUR</p>`,
-  ];
+  const sections: string[] = [];
+  if (breakdown) {
+    sections.push(
+      `<p class="tip"><strong>Location :</strong> ${escapeHtml(breakdown.locationEur)} EUR</p>`,
+      `<p class="tip"><strong>Frais de service :</strong> ${escapeHtml(breakdown.serviceFeeEur)} EUR</p>`,
+      `<p class="tip"><strong>Total payé :</strong> ${escapeHtml(breakdown.totalEur)} EUR</p>`,
+      `<p class="tip"><small style="color:#666">Les frais de service couvrent le traitement sécurisé du paiement et le fonctionnement de la plateforme.</small></p>`
+    );
+  } else {
+    sections.push(`<p class="tip"><strong>Montant payé :</strong> ${escapeHtml(totalPaidEur)} EUR</p>`);
+  }
   if (cautionHtml) sections.push(cautionHtml);
   const { error } = await resend.emails.send({
     from,
@@ -289,14 +292,30 @@ export async function sendGsBookingPaymentConfirmedLocataireEmail(
 export async function sendGsBookingPaymentConfirmedPrestataireEmail(
   to: string,
   listingTitle: string,
-  amountEur: string,
+  locationAmountEur: string,
   bookingUrl: string,
-  cautionHtml?: string | null
+  cautionHtml?: string | null,
+  split?: {
+    platformFeeEur: string;
+    providerNetEur: string;
+    serviceFeePaidByCustomerEur?: string;
+    checkoutTotalEur?: string;
+  } | null
 ) {
   if (!process.env.RESEND_API_KEY) return { success: false };
   const sections = [
-    `<p class="tip"><strong>Montant encaissé côté plateforme (réservation) :</strong> ${escapeHtml(amountEur)} EUR</p>`,
+    `<p class="tip"><strong>Montant de la location (votre annonce) :</strong> ${escapeHtml(locationAmountEur)} EUR</p>`,
   ];
+  if (split?.serviceFeePaidByCustomerEur && split?.checkoutTotalEur) {
+    sections.push(
+      `<p class="tip"><strong>Frais de service (facturés au locataire, hors votre rémunération) :</strong> ${escapeHtml(split.serviceFeePaidByCustomerEur)} EUR — <strong>total encaissé sur le paiement :</strong> ${escapeHtml(split.checkoutTotalEur)} EUR.</p>`
+    );
+  }
+  if (split) {
+    sections.push(
+      `<p class="tip"><strong>Commission plateforme (15&nbsp;%) :</strong> ${escapeHtml(split.platformFeeEur)} EUR — <strong>votre net après commission :</strong> ${escapeHtml(split.providerNetEur)} EUR (versé sur votre compte Connect selon l’échéance J+2 après fin de location).</p>`
+    );
+  }
   if (cautionHtml) sections.push(cautionHtml);
   const { error } = await resend.emails.send({
     from,

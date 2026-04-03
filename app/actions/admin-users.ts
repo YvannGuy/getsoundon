@@ -32,8 +32,7 @@ async function requireAdmin() {
 }
 
 /**
- * Suspend un utilisateur : ses annonces ne sont plus actives sur le site.
- * (Les salles restent en DB, le filtre profiles.suspended les exclut côté public.)
+ * Suspend un utilisateur (profiles.suspended) — à combiner avec vos règles catalogue / RLS.
  */
 export async function suspendUserAction(userId: string) {
   if (!userId) return { error: "ID manquant" };
@@ -49,7 +48,7 @@ export async function suspendUserAction(userId: string) {
   if (error) return { error: error.message };
 
   revalidatePath("/admin/utilisateurs");
-  revalidatePath("/admin/annonces");
+  revalidatePath("/admin");
   return { success: true };
 }
 
@@ -67,7 +66,7 @@ export async function reactivateUserAction(userId: string) {
   if (error) return { error: error.message };
 
   revalidatePath("/admin/utilisateurs");
-  revalidatePath("/admin/annonces");
+  revalidatePath("/admin");
   return { success: true };
 }
 
@@ -83,7 +82,7 @@ export async function deleteUserAction(userId: string) {
   if (error) return { error: error.message };
 
   revalidatePath("/admin/utilisateurs");
-  revalidatePath("/admin/annonces");
+  revalidatePath("/admin");
   return { success: true };
 }
 
@@ -102,7 +101,7 @@ export async function deleteUsersBulkAction(userIds: string[]) {
   }
 
   revalidatePath("/admin/utilisateurs");
-  revalidatePath("/admin/annonces");
+  revalidatePath("/admin");
 
   if (errors.length > 0) {
     return { error: `Échec pour ${errors.length} utilisateur(s): ${errors.join("; ")}` };

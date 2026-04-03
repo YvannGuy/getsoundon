@@ -47,29 +47,26 @@ export function getDashboardHref(type: EffectiveUserType): string {
 }
 
 /**
- * L'utilisateur peut accéder à l'espace propriétaire si :
- * - user_type = 'owner' OU
- * - il possède au moins une salle (owner_id)
+ * Accès espace prestataire : profil owner ou au moins une annonce catalogue (`gs_listings`).
  */
 export function canAccessOwnerDashboard(
   userType: EffectiveUserType | null,
-  hasSalles: boolean
+  hasCatalogListings: boolean
 ): boolean {
   if (!userType || userType === "admin") return false;
-  return userType === "owner" || hasSalles;
+  return userType === "owner" || hasCatalogListings;
 }
 
 /**
  * Lien « publier une annonce matériel » : espace prestataire si éligible, sinon inscription loueur.
- * (Ne pointe pas vers les routes legacy onboarding salles exposées au public.)
  */
 export function getPublishMaterialListingHref(
   userType: EffectiveUserType | null,
-  hasSalles: boolean,
+  hasCatalogListings: boolean,
   isLoggedIn: boolean,
 ): string {
   if (!isLoggedIn) return "/auth?tab=signup&userType=owner";
-  if (canAccessOwnerDashboard(userType, hasSalles)) {
+  if (canAccessOwnerDashboard(userType, hasCatalogListings)) {
     return "/proprietaire/ajouter-annonce";
   }
   return "/auth?tab=signup&userType=owner";
