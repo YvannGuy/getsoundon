@@ -13,18 +13,15 @@ import { enableV2, isV2Enabled, getEngineVersionInfo } from "./migration-v2";
 
 export function enableAssistantV2(): void {
   enableV2(true);
-  console.log("✅ Assistant V2 activé. Rechargez la page pour appliquer les changements.");
 }
 
 export function disableAssistantV2(): void {
   enableV2(false);
-  console.log("✅ Assistant V2 désactivé. Rechargement vers V1 au prochain refresh.");
 }
 
 export function toggleAssistantVersion(): void {
   const currentlyV2 = isV2Enabled();
   enableV2(!currentlyV2);
-  console.log(`✅ Basculé vers ${!currentlyV2 ? "V2" : "V1"}. Rechargez la page.`);
 }
 
 // ============================================================================
@@ -32,54 +29,10 @@ export function toggleAssistantVersion(): void {
 // ============================================================================
 
 export function debugConversationState(state: ConversationEngineState): void {
-  console.group("🤖 Assistant V2 Debug");
-  
-  // Basic info
-  console.log("📊 Session:", {
-    id: state.sessionId,
-    créé: new Date(state.createdAt).toLocaleString(),
-    derniereMàj: new Date(state.lastUpdatedAt).toLocaleString(),
-    status: state.status
-  });
-  
-  // Messages
-  console.log("💬 Messages:", {
-    total: state.messages.length,
-    utilisateur: state.messages.filter(m => m.role === "user").length,
-    assistant: state.messages.filter(m => m.role === "assistant").length
-  });
-  
-  // Slots
-  const slotsSummary = getSlotsSummary(state.slots);
-  console.log("🎯 Slots:", {
-    résolus: slotsSummary.resolved.length,
-    conflictuels: slotsSummary.conflicted.length,
-    vides: slotsSummary.empty.length,
-    àConfirmer: slotsSummary.needingConfirmation.length
-  });
-  
-  // Dialogue stats
-  const dialogueStats = getDialogueStats(state.dialogue);
-  console.log("🗣️ Dialogue:", dialogueStats);
-  
-  // Qualification
-  console.log("✅ Qualification:", {
-    étape: state.qualification.stage,
-    score: `${state.qualification.completionScore}%`,
-    prêtÀRecommander: state.qualification.readyToRecommend,
-    champsCritiquesManquants: state.qualification.missingCriticalFields
-  });
-  
-  // Extractions
-  console.log("🔍 Extractions:", {
-    total: state.extractionLog.length,
-    parExtracteur: state.extractionLog.reduce((acc, e) => {
-      acc[e.extractor] = (acc[e.extractor] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>)
-  });
-  
-  console.groupEnd();
+  // Logs de debug supprimés volontairement (nettoyage). Pas d'effet runtime.
+  void getSlotsSummary;
+  void getDialogueStats;
+  void state;
 }
 
 export function analyzeConversationEfficiency(state: ConversationEngineState): {

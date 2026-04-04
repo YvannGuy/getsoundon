@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+/** `pass` est lu pour compatibilité / futur UI ; l’enregistrement depuis l’admin ne touche pas à cette clé. */
 const DEFAULT_SETTINGS = {
   pass: {
     price_24h: 499,
@@ -80,15 +81,7 @@ export async function savePlatformSettingsAction(formData: FormData) {
   if (!auth.ok) return { error: auth.error };
   const supabase = createAdminClient();
 
-  const pass = {
-    price_24h: Math.round(parseFloat(String(formData.get("pass_price_24h") ?? 4.99)) * 100),
-    price_48h: Math.round(parseFloat(String(formData.get("pass_price_48h") ?? 9.99)) * 100),
-    price_abonnement: Math.round(parseFloat(String(formData.get("pass_price_abonnement") ?? 19.99)) * 100),
-    demandes_gratuites: parseInt(String(formData.get("pass_demandes_gratuites") ?? "2"), 10),
-    pass_24h_enabled: formData.get("pass_24h_enabled") === "on",
-    pass_48h_enabled: formData.get("pass_48h_enabled") === "on",
-    abonnement_enabled: formData.get("pass_abonnement_enabled") === "on",
-  };
+  /* P0 : ne pas réécrire la clé `pass` depuis ce formulaire — pas d’UI pass ; évite les réécritures fantômes. */
 
   const validation = {
     validation_manuelle: formData.get("validation_manuelle") === "on",
@@ -104,7 +97,6 @@ export async function savePlatformSettingsAction(formData: FormData) {
 
   try {
     for (const [key, value] of Object.entries({
-      pass,
       validation,
       commission,
     })) {

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useId, useMemo, useState, useTransition } from "react";
 import { Loader2, ShoppingCart } from "lucide-react";
 
 import { clearGsDraftCartAction } from "@/app/actions/gs-orders";
@@ -39,6 +39,7 @@ type Props = {
 
 export function HeaderCartDropdown({ serverPreview, isAuthenticated, className }: Props) {
   const router = useRouter();
+  const popoverId = useId();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [clearError, setClearError] = useState<string | null>(null);
@@ -94,6 +95,7 @@ export function HeaderCartDropdown({ serverPreview, isAuthenticated, className }
             className
           )}
           aria-label="Panier"
+          aria-controls={open ? popoverId : undefined}
         >
           <ShoppingCart className="h-5 w-5" />
           {units > 0 ? (
@@ -103,7 +105,11 @@ export function HeaderCartDropdown({ serverPreview, isAuthenticated, className }
           ) : null}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[min(100vw-2rem,20rem)] p-0 shadow-lg">
+      <PopoverContent
+        id={popoverId}
+        align="end"
+        className="w-[min(100vw-2rem,20rem)] p-0 shadow-lg"
+      >
         <div className="border-b border-slate-100 px-3 py-2">
           <p className="text-sm font-semibold text-slate-900">Panier</p>
           {!isAuthenticated && hasLines ? (

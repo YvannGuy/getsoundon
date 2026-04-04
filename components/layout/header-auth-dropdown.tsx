@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useId } from "react";
 import { ChevronDown, LogOut, User } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
@@ -17,9 +18,9 @@ import {
 import type { EffectiveUserType } from "@/lib/auth-utils";
 import { cn } from "@/lib/utils";
 
-/** Style harmonisé avec la charte GetSoundOn (fond blanc + liseré chaud + accent orange). */
-const pillBorder = "border border-[#e8e3dc]";
-const textAccount = "text-gs-dark";
+/** Style harmonisé avec la charte GetSoundOn (fond orange plein + accent blanc). */
+const pillBorder = "shadow-[0_2px_10px_-6px_rgba(0,0,0,0.35)]";
+const textAccount = "text-white";
 
 function HeaderAccountAvatar({
   avatarUrl,
@@ -36,7 +37,7 @@ function HeaderAccountAvatar({
   if (source) {
     return (
       <span
-        className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-stone-200 ring-1 ring-inset ring-black/[0.05]"
+        className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-white ring-1 ring-inset ring-white/70"
         aria-hidden
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- URLs OAuth / diverses hors remotePatterns */}
@@ -50,27 +51,12 @@ function HeaderAccountAvatar({
     );
   }
 
-  const label = displayName?.trim() || email?.split("@")[0]?.trim() || "";
-  const initialMatch = label.match(/\p{L}/u);
-  const initial = (initialMatch?.[0] ?? label[0] ?? "").toUpperCase();
-
-  if (initial) {
-    return (
-      <span
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#4a4a4a] text-[11px] font-semibold tracking-tight text-white ring-1 ring-inset ring-black/[0.06]"
-        aria-hidden
-      >
-        {initial}
-      </span>
-    );
-  }
-
   return (
     <span
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-stone-200 text-stone-600 ring-1 ring-inset ring-black/[0.05]"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-white ring-1 ring-inset ring-white/30"
       aria-hidden
     >
-      <User className="h-4 w-4" strokeWidth={1.5} />
+      <User className="h-4 w-4" strokeWidth={1.6} />
     </span>
   );
 }
@@ -95,6 +81,7 @@ export function HeaderAuthDropdown({
   email?: string | null;
 }) {
   const router = useRouter();
+  const popoverId = useId();
   const items = getHeaderAccountMenuItems(userType);
   const spaceLabel = getHeaderAccountSpaceLabel(userType);
 
@@ -115,10 +102,10 @@ export function HeaderAuthDropdown({
     >
       <div
         className={cn(
-          "flex h-10 max-h-10 min-h-10 items-stretch overflow-hidden rounded-full bg-white shadow-none",
+          "flex h-10 max-h-10 min-h-10 items-stretch overflow-hidden rounded-full bg-gs-orange shadow-sm",
           pillBorder,
           "transition-[background-color,border-color] duration-150",
-          "hover:bg-[#fdfbf8] hover:border-gs-orange/50",
+          "hover:brightness-105",
           fullWidth ? "w-full" : ""
         )}
       >
@@ -128,7 +115,7 @@ export function HeaderAuthDropdown({
           className={cn(
             "flex min-w-0 flex-1 items-center gap-2.5 py-1 pl-2 pr-1 sm:pl-2.5 sm:pr-2",
             "rounded-l-full",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400/35 focus-visible:ring-offset-0",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0",
             textAccount
           )}
           aria-label="Mon compte — accueil de l’espace"
@@ -147,21 +134,22 @@ export function HeaderAuthDropdown({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className={cn(
-                "flex w-9 shrink-0 items-center justify-center rounded-r-full border-l border-[#EDEAE6]",
-                "text-gs-dark",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-stone-400/40"
-              )}
+            className={cn(
+              "flex w-9 shrink-0 items-center justify-center rounded-r-full border-l border-white/35",
+              "text-white",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/60"
+            )}
               aria-label="Ouvrir le menu des raccourcis"
+              aria-controls={popoverId}
             >
               <ChevronDown
-                className="h-3.5 w-3.5 shrink-0 text-gs-orange"
+              className="h-3.5 w-3.5 shrink-0 text-white"
                 strokeWidth={1.75}
                 aria-hidden
               />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-64 p-0">
+          <PopoverContent id={popoverId} align="end" className="w-64 p-0">
             <div className="border-b border-slate-100 px-3 py-2">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{spaceLabel}</p>
             </div>

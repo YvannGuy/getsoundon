@@ -103,13 +103,7 @@ export function ParametresClient({
     setPending(true);
     setSaveError(null);
     const fd = new FormData();
-    fd.append("pass_price_24h", String(formState.pass.price_24h / 100));
-    fd.append("pass_price_48h", String(formState.pass.price_48h / 100));
-    fd.append("pass_price_abonnement", String(formState.pass.price_abonnement / 100));
-    fd.append("pass_demandes_gratuites", String(formState.pass.demandes_gratuites));
-    fd.append("pass_24h_enabled", formState.pass.pass_24h_enabled ? "on" : "");
-    fd.append("pass_48h_enabled", formState.pass.pass_48h_enabled ? "on" : "");
-    fd.append("pass_abonnement_enabled", formState.pass.abonnement_enabled ? "on" : "");
+    /* Pass : non géré par cette UI — conservé tel quel en base (voir savePlatformSettingsAction). */
     fd.append("validation_manuelle", formState.validation.validation_manuelle ? "on" : "");
     fd.append("validation_mode", formState.validation.mode_publication);
     fd.append("commission_fixed_fee_eur", String((formState.commission.fixed_fee_cents ?? 1500) / 100));
@@ -250,7 +244,7 @@ export function ParametresClient({
             </div>
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-700">Appliquer sur événement ponctuel</span>
+                <span className="text-sm text-slate-700">Appliquer sur location ponctuelle</span>
                 <Toggle
                   checked={formState.commission.ponctuel}
                   onChange={(v) =>
@@ -262,7 +256,7 @@ export function ParametresClient({
                 />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-700">Appliquer sur événement mensuel</span>
+                <span className="text-sm text-slate-700">Appliquer sur abonnement (mensuel)</span>
                 <Toggle
                   checked={formState.commission.mensuel}
                   onChange={(v) =>
@@ -275,12 +269,12 @@ export function ParametresClient({
               </div>
             </div>
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-              Ponctuel:{" "}
+              Location ponctuelle :{" "}
               <span className="font-medium text-slate-800">
                 {formState.commission.ponctuel ? "Activé" : "Désactivé"}
               </span>
               {" · "}
-              Mensuel:{" "}
+              Abonnement :{" "}
               <span className="font-medium text-slate-800">
                 {formState.commission.mensuel ? "Activé" : "Désactivé"}
               </span>
@@ -368,7 +362,12 @@ export function ParametresClient({
                       <p className="mt-1 text-xs text-slate-500">{a.role}</p>
                     </div>
                     {a.isOwner ? (
-                      <span className="text-xs text-slate-500">Propriétaire</span>
+                      <span
+                        className="text-xs text-slate-500"
+                        title="Email présent dans ADMIN_EMAILS (serveur) — compte fondateur / super admin"
+                      >
+                        Super admin
+                      </span>
                     ) : (
                       <Button
                         type="button"
@@ -410,7 +409,12 @@ export function ParametresClient({
                     <td className="py-3 text-sm">{a.role}</td>
                     <td className="py-3">
                       {a.isOwner ? (
-                        <span className="text-xs text-slate-500">Propriétaire</span>
+                        <span
+                          className="text-xs text-slate-500"
+                          title="Email présent dans ADMIN_EMAILS (serveur) — compte fondateur / super admin"
+                        >
+                          Super admin
+                        </span>
                       ) : (
                         <Button
                           type="button"
@@ -431,6 +435,11 @@ export function ParametresClient({
             </div>
           </CardContent>
         </Card>
+
+        <p className="text-xs text-slate-500">
+          Les éventuels réglages « pass » en base ne sont pas modifiés depuis cette page (pas d’interface
+          dédiée pour l’instant).
+        </p>
 
         <div className="sticky bottom-4 flex flex-col items-end gap-2">
           {saveError && (

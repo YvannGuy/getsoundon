@@ -24,9 +24,9 @@ type LoginSchema = z.infer<typeof loginSchema>;
 const initialState: AuthFormState = {};
 
 const features = [
-  "Gestion des annonces et du catalogue matériel",
-  "Modération et support opérationnel",
-  "Accès sécurisé réservé à l’équipe",
+  "Utilisateurs, suspension et rôles",
+  "Incidents et annulations sur les réservations matériel",
+  "Conciergerie et paramètres plateforme",
 ];
 
 function AdminAuthPageContent() {
@@ -91,7 +91,8 @@ function AdminAuthPageContent() {
             </Link>
           </h2>
           <p className="font-landing-body mt-3 max-w-md text-sm leading-relaxed text-white/90">
-            Connexion réservée aux administrateurs pour gérer la plateforme et valider les contenus.
+            Connexion réservée à l’équipe : suivi des comptes, litiges location matériel, demandes
+            d’accompagnement et configuration.
           </p>
         </div>
         <ul className="relative z-10 space-y-3">

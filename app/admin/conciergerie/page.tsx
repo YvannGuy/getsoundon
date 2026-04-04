@@ -18,7 +18,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const SOURCE_LABELS: Record<string, string> = {
   homepage: "Homepage",
-  search_zero_results: "0 résultat recherche",
+  search_zero_results: "Recherche catalogue sans résultat",
   other: "Autre",
 };
 
@@ -82,7 +82,7 @@ export default async function AdminConciergeriePage({
     <div className="space-y-6">
       <AdminPageHeader
         title="Demandes conciergerie"
-        subtitle="Briefs de recherche confiés par les utilisateurs"
+        subtitle="Demandes d’accompagnement ou de brief laissées par les utilisateurs"
       />
 
       <div className="flex flex-wrap gap-2">

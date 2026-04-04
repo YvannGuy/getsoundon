@@ -1,4 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
 import { ADMIN_SUBDOMAIN_HOST, getRequestHostname } from "@/lib/admin-host";
 import {
@@ -8,9 +10,45 @@ import {
 } from "@/lib/prelaunch-gate";
 import { updateSession } from "@/lib/supabase/middleware";
 
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+const ratelimit =
+  redisUrl && redisToken
+    ? new Ratelimit({
+        redis: new Redis({ url: redisUrl, token: redisToken }),
+        limiter: Ratelimit.fixedWindow(20, "1 m"), // 20 req / minute / IP
+      })
+    : null;
+
+const rateLimitedPaths = ["/auth/admin", "/api/stripe/checkout-booking"];
+
+function shouldRateLimit(pathname: string) {
+  return rateLimitedPaths.some((p) => pathname.startsWith(p));
+}
+
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const hostname = getRequestHostname(request);
+
+  if (ratelimit && shouldRateLimit(pathname)) {
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ip =
+      request.headers.get("x-real-ip") ||
+      (forwarded ? forwarded.split(",")[0]?.trim() : null) ||
+      "anonymous";
+
+    const { success, limit, remaining, reset } = await ratelimit.limit(ip);
+    if (!success) {
+      return new NextResponse("Too Many Requests", {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": limit.toString(),
+          "X-RateLimit-Remaining": remaining.toString(),
+          "X-RateLimit-Reset": reset.toString(),
+        },
+      });
+    }
+  }
 
   /**
    * Legacy lieux publics (Lot B) : recherche lieux → catalogue ; fiches /salles/* → 410 Gone.
@@ -59,8 +97,12 @@ export async function proxy(request: NextRequest) {
   return updateSession(request);
 }
 
+export default proxy;
+
 export const config = {
   matcher: [
+    "/auth/admin",
+    "/api/stripe/checkout-booking",
     "/((?!api|auth|_next/static|_next/image|favicon|.well-known|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|json)$).*)",
   ],
 };

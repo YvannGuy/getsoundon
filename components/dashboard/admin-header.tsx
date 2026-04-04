@@ -37,7 +37,8 @@ export function AdminHeader({ title, subtitle }: AdminHeaderProps) {
         </a>
         <h1 className="text-xl font-bold text-black">{title ?? "Dashboard Admin"}</h1>
         <p className="text-sm text-slate-600">
-          {subtitle ?? "Vue d'ensemble de votre plateforme"}
+          {subtitle ??
+            "Opérations GetSoundOn : comptes, incidents & annulations matériel, conciergerie, réglages."}
         </p>
       </div>
       <div className="flex items-center gap-4">

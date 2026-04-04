@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -7,9 +8,13 @@ import {
   Ban,
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
+  FileText,
   Headphones,
   Home,
   Menu,
+  Wallet,
+  Megaphone,
   Package,
   Settings,
   Users,
@@ -41,6 +46,8 @@ const navItems = (counts: AdminSidebarBadgeCounts) => [
     badge: counts.utilisateurs,
     badgeTone: "info" as const,
   },
+  { href: "/admin/annonces-materiel", label: "Annonces", icon: Megaphone },
+  { href: "/admin/reservations-materiel", label: "Réservations", icon: ClipboardList },
   {
     href: "/admin/incidents-materiel",
     label: "Incidents matériel",
@@ -50,14 +57,8 @@ const navItems = (counts: AdminSidebarBadgeCounts) => [
     badgeTone: "danger" as const,
   },
   { href: "/admin/materiel-annulations", label: "Annulations matériel", icon: Ban },
-  {
-    href: "/admin/conciergerie",
-    label: "Conciergerie",
-    icon: Headphones,
-    badgeKey: "conciergeRequests",
-    badge: counts.conciergeRequests,
-    badgeTone: "warning" as const,
-  },
+  { href: "/admin/factures", label: "Factures", icon: FileText },
+  { href: "/admin/paiements-virements", label: "Paiements & virements", icon: Wallet },
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ];
 
@@ -125,18 +126,27 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
     <>
       <div
         className={cn(
-          "flex h-16 items-center border-b border-slate-200",
+          "flex h-16 items-center border-b border-slate-200 bg-white",
           collapsed ? "justify-center px-2" : "justify-between px-4"
         )}
       >
         {!collapsed && (
           <Link
             href="/admin"
-            className="flex flex-col justify-center overflow-hidden"
+            className="flex items-center gap-3 overflow-hidden"
             onClick={() => setMobileOpen(false)}
           >
-            <span className="truncate text-base font-bold text-black">{siteConfig.name}</span>
-            <span className="truncate text-xs text-slate-500">Admin · flux matériel</span>
+            <Image
+              src="/images/logosound.png"
+              alt={siteConfig.name}
+              width={32}
+              height={32}
+              className="h-10 w-10 shrink-0 rounded-full object-cover"
+            />
+            <div className="flex flex-col justify-center">
+              <span className="truncate text-base font-bold text-gs-orange">{siteConfig.name}</span>
+              <span className="truncate text-xs font-medium text-slate-500">Admin · matériel</span>
+            </div>
           </Link>
         )}
         <button
@@ -165,7 +175,7 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
                 "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 collapsed ? "justify-center px-2" : "",
                 isActive
-                  ? "bg-blue-600 text-white"
+                  ? "bg-gs-orange text-white"
                   : "text-slate-700 hover:bg-slate-100 hover:text-black"
               )}
             >
@@ -293,7 +303,7 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
                 }}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  isActive ? "bg-blue-600 text-white" : "text-slate-700 hover:bg-slate-100 hover:text-black"
+                  isActive ? "bg-gs-orange text-white" : "text-slate-700 hover:bg-slate-100 hover:text-black"
                 )}
               >
                 <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-white" : "text-slate-600")} />

@@ -10,7 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const SOURCE_LABELS: Record<string, string> = {
   homepage: "Homepage",
-  search_zero_results: "0 résultat recherche",
+  search_zero_results: "Recherche catalogue sans résultat",
   other: "Autre",
 };
 
@@ -80,13 +80,13 @@ export default async function AdminConciergerieDetailPage({
           )}
           {payload.capacite && (
             <div>
-              <dt className="font-medium text-slate-500">Capacité</dt>
+              <dt className="font-medium text-slate-500">Effectif indiqué</dt>
               <dd className="text-slate-800">{String(payload.capacite)} personnes</dd>
             </div>
           )}
           {payload.type && (
             <div>
-              <dt className="font-medium text-slate-500">Type</dt>
+              <dt className="font-medium text-slate-500">Type de besoin</dt>
               <dd className="text-slate-800">{String(payload.type)}</dd>
             </div>
           )}

@@ -29,7 +29,11 @@ export default async function AdminUtilisateursPage({
       .order("created_at", { ascending: false })
       .range(from, to),
     supabase.from("gs_listings").select("owner_id"),
-    supabase.from("profiles").select("id", { count: "exact", head: true }).is("suspended", null),
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      /* Actif = non suspendu : réactivation met suspended=false, les comptes jamais flaggés peuvent être null */
+      .or("suspended.is.null,suspended.eq.false"),
     supabase.from("profiles").select("id", { count: "exact", head: true }).eq("user_type", "owner"),
     (() => {
       const d = new Date();

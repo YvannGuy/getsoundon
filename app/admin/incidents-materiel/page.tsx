@@ -92,7 +92,7 @@ export default async function AdminIncidentsMaterielPage({
         <AlertTriangle className="h-6 w-6 text-amber-500" />
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Incidents matériel</h1>
-          <p className="text-sm text-slate-500">Gestion des incidents signalés sur les gs_bookings</p>
+          <p className="text-sm text-slate-500">Incidents signalés sur les réservations matériel</p>
         </div>
       </div>
 
