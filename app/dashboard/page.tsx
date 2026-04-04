@@ -5,36 +5,19 @@ import { Package } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SearchModalButton } from "@/components/search/search-modal";
-import { WelcomeOnboardingBanner } from "@/components/dashboard/welcome-onboarding-banner";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardPage() {
-  /** PDF d’onboarding — renommer le fichier dans /public/pdf quand l’asset GetSoundOn sera prêt */
-  const onboardingGuideUrl = "/pdf/salledeculte.com_bien_debuter.pdf";
-
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const seekerId = user.id;
-  const { data: seekerProfile } = await supabase
-    .from("profiles")
-    .select("first_name, full_name")
-    .eq("id", seekerId)
-    .maybeSingle();
-  const seekerFirstName =
-    (seekerProfile as { first_name?: string | null } | null)?.first_name ??
-    ((seekerProfile as { full_name?: string | null } | null)?.full_name
-      ?.trim()
-      .split(/\s+/)
-      .filter(Boolean)[0] ?? null);
-
   const { count: bookings30 } = await supabase
     .from("gs_bookings")
     .select("id", { count: "exact", head: true })
-    .eq("customer_id", seekerId)
+    .eq("customer_id", user.id)
     .gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
 
   return (
@@ -45,14 +28,6 @@ export default async function DashboardPage() {
           Suivez vos locations matériel sur GetSoundOn
         </p>
       </div>
-
-      <WelcomeOnboardingBanner
-        userId={user.id}
-        dashboard="seeker"
-        firstName={seekerFirstName}
-        videoUrl="https://www.youtube.com/watch?v=ysz5S6PUM-U"
-        tourUrl={onboardingGuideUrl}
-      />
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <Card className="border-0 shadow-sm">

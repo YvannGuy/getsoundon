@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Banknote } from "lucide-react";
 
@@ -6,43 +6,10 @@ import { ConnectLoginButton } from "@/components/paiement/connect-login-button";
 import { ConnectOnboardingButton } from "@/components/paiement/connect-onboarding-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
-
-const PRODUCT_LABEL: Record<string, string> = {
-  pass_24h: "Pass 24h",
-  pass_48h: "Pass 48h",
-  abonnement: "Abonnement mensuel",
-  reservation: "Réservation",
-  autre: "Autre",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  paid: "Payé",
-  pending: "En cours",
-  failed: "Échoué",
-  refunded: "Remboursé",
-  active: "Actif",
-  canceled: "Annulé",
-};
+import { createAdminClient } from "@/lib/supabase/admin";
+import { computeGsBookingPaymentSplit } from "@/lib/gs-booking-platform-fee";
 
 export const dynamic = "force-dynamic";
-
-const STATUS_COLOR: Record<string, string> = {
-  paid: "text-emerald-600",
-  pending: "text-amber-600",
-  failed: "text-red-600",
-  refunded: "text-slate-500",
-  active: "text-emerald-600",
-  canceled: "text-slate-500",
-};
-
-const STATUS_BADGE: Record<string, string> = {
-  paid: "bg-emerald-100 text-emerald-700",
-  pending: "bg-amber-100 text-amber-700",
-  failed: "bg-red-100 text-red-700",
-  refunded: "bg-slate-100 text-slate-600",
-  active: "bg-emerald-100 text-emerald-700",
-  canceled: "bg-slate-100 text-slate-600",
-};
 
 export default async function ProprietairePaiementPage({
   searchParams,
@@ -55,25 +22,89 @@ export default async function ProprietairePaiementPage({
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: payments }, { data: profile }] = await Promise.all([
-    supabase
-      .from("payments")
-      .select("id, product_type, amount, status, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false }),
+  const [{ data: profile }, { data: bookings }] = await Promise.all([
     supabase.from("profiles").select("stripe_account_id").eq("id", user.id).single(),
+    createAdminClient()
+      .from("gs_bookings")
+      .select(
+        "id, listing_id, start_date, end_date, status, total_price, checkout_total_eur, service_fee_eur, payout_status, stripe_payment_intent_id, incident_status, updated_at"
+      )
+      .eq("provider_id", user.id)
+      .not("stripe_payment_intent_id", "is", null)
+      .order("end_date", { ascending: false })
+      .limit(50),
   ]);
 
-  const recentPayments = (payments ?? []).slice(0, 5);
   const hasConnectAccount = !!(profile as { stripe_account_id?: string | null } | null)?.stripe_account_id;
+
+  const bookingRows = (bookings ?? []) as Array<{
+    id: string;
+    listing_id: string | null;
+    start_date: string;
+    end_date: string;
+    status: string;
+    total_price: number | string | null;
+    checkout_total_eur?: number | string | null;
+    service_fee_eur?: number | string | null;
+    payout_status: string | null;
+    stripe_payment_intent_id: string | null;
+    incident_status: string | null;
+    updated_at?: string | null;
+  }>;
+
+  const pendingPayouts = bookingRows.filter(
+    (b) =>
+      b.stripe_payment_intent_id &&
+      (b.payout_status === null || b.payout_status === "pending") &&
+      b.incident_status !== "open" &&
+      (b.status === "accepted" || b.status === "completed")
+  );
+  const paidPayouts = bookingRows
+    .filter((b) => b.payout_status === "paid")
+    .sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime());
+
+  const formatEur = (n: number) =>
+    new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 2 }).format(n);
+
+  const sumNet = (rows: typeof bookingRows) =>
+    rows.reduce((sum, r) => {
+      const gross = Number(r.checkout_total_eur ?? r.total_price ?? 0);
+      if (!Number.isFinite(gross)) return sum;
+      try {
+        return sum + computeGsBookingPaymentSplit(gross).providerNetEur;
+      } catch {
+        return sum;
+      }
+    }, 0);
+
+  const gainsEnAttente = sumNet(pendingPayouts);
+
+  const nextPayoutDate =
+    pendingPayouts.length > 0
+      ? addDays(
+          pendingPayouts
+            .map((r) => new Date(r.end_date))
+            .sort((a, b) => a.getTime() - b.getTime())[0],
+          2
+        )
+      : null;
+
+  const lastPaid = paidPayouts[0] ?? null;
+  const lastPaidAmount = lastPaid ? sumNet([lastPaid]) : 0;
+
+  const historyPaid = paidPayouts.slice(0, 8);
+  const waitingList = pendingPayouts.slice(0, 8);
   const params = await searchParams;
   const connectSuccess = params.connect === "success";
   const connectRefresh = params.connect === "refresh";
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="text-2xl font-bold text-black">Paiement</h1>
-      <p className="mt-2 text-slate-500">Recevez les paiements de vos réservations et consultez l&apos;historique</p>
+      <h1 className="text-2xl font-bold text-black">Paiements</h1>
+      <p className="mt-2 text-slate-500">
+        Encaissements Stripe Connect pour vos réservations matériel. Virements automatiques J+2 après fin d&apos;événement
+        (hors incidents/caution).
+      </p>
 
       {/* Recevoir les paiements (Stripe Connect) */}
       <Card id="recevoir-paiements" className="mt-8 border-0 shadow-sm scroll-mt-8">
@@ -145,75 +176,178 @@ export default async function ProprietairePaiementPage({
         </CardContent>
       </Card>
 
-      {/* Historique */}
+      {/* Synthèse paiements */}
+      <div className="mt-10 grid gap-4 lg:grid-cols-3">
+        <Card className="border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base">Gains en attente</CardTitle>
+            <CardDescription>Réservations payées mais pas encore virées</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-2xl font-bold text-black">{formatEur(gainsEnAttente)}</p>
+            <p className="text-sm text-slate-500">
+              Virement automatique J+2 après fin d&apos;événement, sauf incident ou caution bloquée.
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base">Prochain virement</CardTitle>
+            <CardDescription>Estimation</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {pendingPayouts.length === 0 ? (
+              <p className="text-sm text-slate-500">Aucun virement prévu.</p>
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-black">{formatEur(gainsEnAttente)}</p>
+                <p className="text-sm text-slate-600">
+                  {nextPayoutDate
+                    ? `Envoi estimé autour du ${format(nextPayoutDate, "d MMM yyyy", { locale: fr })}`
+                    : "Envoi automatique après validation et délai de sécurité."}
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base">Dernier virement</CardTitle>
+            <CardDescription>Dernier paiement envoyé</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {lastPaid ? (
+              <>
+                <p className="text-2xl font-bold text-black">{formatEur(lastPaidAmount)}</p>
+                <p className="text-sm text-slate-600">
+                  Événement du {format(new Date(lastPaid.end_date), "d MMM yyyy", { locale: fr })}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-slate-500">Aucun virement envoyé pour l’instant.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Réservations en attente de libération */}
       <Card className="mt-10 border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg">Historique</CardTitle>
+          <CardTitle className="text-lg">Réservations en attente de libération</CardTitle>
+          <CardDescription>
+            Montants payés qui seront virés automatiquement après le délai J+2 (hors incidents).
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {recentPayments.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-500">Aucune transaction</p>
+          {waitingList.length === 0 ? (
+            <p className="py-6 text-center text-sm text-slate-500">Aucune réservation en attente de virement.</p>
           ) : (
-            <>
-              <div className="space-y-3 md:hidden">
-                {recentPayments.map((p) => (
-                  <article key={p.id} className="rounded-xl border border-slate-200 p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-medium text-black">
-                        {PRODUCT_LABEL[p.product_type] ?? p.product_type}
-                      </p>
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                          STATUS_BADGE[p.status] ?? "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        {STATUS_LABEL[p.status] ?? p.status}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-lg font-semibold text-black">{(p.amount / 100).toFixed(2)} €</p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {format(new Date(p.created_at), "d MMM yyyy", { locale: fr })}
+            <div className="space-y-3 md:hidden">
+              {waitingList.map((b) => {
+                const gross = Number(b.total_price ?? 0);
+                const net = computeGsBookingPaymentSplit(gross).providerNetEur;
+                const eta = addDays(new Date(b.end_date), 2);
+                return (
+                  <article key={b.id} className="rounded-xl border border-slate-200 p-4">
+                    <p className="text-sm font-semibold text-black">{formatEur(net)}</p>
+                    <p className="text-sm text-slate-600">
+                      Fin le {format(new Date(b.end_date), "d MMM yyyy", { locale: fr })}
                     </p>
+                    <p className="text-xs text-slate-500">Virement estimé vers le {format(eta, "d MMM yyyy", { locale: fr })}</p>
                   </article>
-                ))}
-              </div>
-              <div className="hidden -mx-4 overflow-x-auto sm:mx-0 md:block">
-                <table className="w-full min-w-[400px]">
+                );
+              })}
+            </div>
+          )}
+
+          {waitingList.length > 0 && (
+            <div className="hidden -mx-4 overflow-x-auto sm:mx-0 md:block">
+              <table className="w-full min-w-[480px]">
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
-                    <th className="pb-3 pr-3">Date</th>
-                    <th className="pb-3 pr-3">Type</th>
-                    <th className="pb-3 pr-3">Montant</th>
-                    <th className="pb-3">Statut</th>
+                    <th className="pb-3 pr-3">Fin</th>
+                    <th className="pb-3 pr-3">Montant net</th>
+                    <th className="pb-3 pr-3">Statut</th>
+                    <th className="pb-3">Virement estimé</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {recentPayments.map((p) => (
-                    <tr key={p.id}>
-                      <td className="py-3 pr-3 text-sm text-slate-600">
-                        {format(new Date(p.created_at), "d MMM yyyy", { locale: fr })}
-                      </td>
-                      <td className="py-3 pr-3 text-sm text-slate-600">
-                        {PRODUCT_LABEL[p.product_type] ?? p.product_type}
-                      </td>
-                      <td className="py-3 pr-3 text-sm text-slate-600">
-                        {(p.amount / 100).toFixed(2)} €
-                      </td>
-                      <td className="py-3">
-                        <span className={`text-sm font-medium ${STATUS_COLOR[p.status] ?? "text-slate-600"}`}>
-                          • {STATUS_LABEL[p.status] ?? p.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {waitingList.map((b) => {
+                    const net = computeGsBookingPaymentSplit(Number(b.total_price ?? 0)).providerNetEur;
+                    const eta = addDays(new Date(b.end_date), 2);
+                    return (
+                      <tr key={b.id}>
+                        <td className="py-3 pr-3 text-sm text-slate-600">
+                          {format(new Date(b.end_date), "d MMM yyyy", { locale: fr })}
+                        </td>
+                        <td className="py-3 pr-3 text-sm font-semibold text-slate-800">{formatEur(net)}</td>
+                        <td className="py-3 pr-3 text-sm text-slate-600">
+                          {b.status === "accepted" ? "Réservation en cours" : "Terminée"}
+                        </td>
+                        <td className="py-3 text-sm text-slate-600">{format(eta, "d MMM yyyy", { locale: fr })}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Historique des virements */}
+      <Card className="mt-6 border-0 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg">Historique des virements</CardTitle>
+          <CardDescription>Virements déjà envoyés (réservations payées)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {historyPaid.length === 0 ? (
+            <p className="py-6 text-center text-sm text-slate-500">Aucun virement envoyé pour l’instant.</p>
+          ) : (
+            <>
+              <div className="space-y-3 md:hidden">
+                {historyPaid.map((b) => {
+                  const net = computeGsBookingPaymentSplit(Number(b.total_price ?? 0)).providerNetEur;
+                  return (
+                    <article key={b.id} className="rounded-xl border border-slate-200 p-4">
+                      <p className="text-sm font-semibold text-black">{formatEur(net)}</p>
+                      <p className="text-sm text-slate-600">
+                        Événement du {format(new Date(b.end_date), "d MMM yyyy", { locale: fr })}
+                      </p>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="hidden -mx-4 overflow-x-auto sm:mx-0 md:block">
+                <table className="w-full min-w-[480px]">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                      <th className="pb-3 pr-3">Fin</th>
+                      <th className="pb-3 pr-3">Montant net</th>
+                      <th className="pb-3">Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {historyPaid.map((b) => {
+                      const net = computeGsBookingPaymentSplit(Number(b.total_price ?? 0)).providerNetEur;
+                      return (
+                        <tr key={b.id}>
+                          <td className="py-3 pr-3 text-sm text-slate-600">
+                            {format(new Date(b.end_date), "d MMM yyyy", { locale: fr })}
+                          </td>
+                          <td className="py-3 pr-3 text-sm font-semibold text-slate-800">{formatEur(net)}</td>
+                          <td className="py-3 text-sm font-medium text-emerald-700">Virement envoyé</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </>
           )}
         </CardContent>
       </Card>
-
     </div>
   );
 }

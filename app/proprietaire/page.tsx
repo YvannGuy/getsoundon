@@ -10,7 +10,6 @@ import { ConnectOnboardingButton } from "@/components/paiement/connect-onboardin
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { WelcomeOnboardingBanner } from "@/components/dashboard/welcome-onboarding-banner";
 import { computeGsBookingPaymentSplit } from "@/lib/gs-booking-platform-fee";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -41,7 +40,6 @@ export default async function ProprietaireDashboardPage({
 }) {
   const params = await searchParams;
   const openAddAnnonce = params?.openAddAnnonce === "1";
-  const onboardingGuideUrl = "/pdf/salledeculte.com_bien_debuter.pdf";
 
   const supabase = await createClient();
   const {
@@ -129,21 +127,6 @@ export default async function ProprietaireDashboardPage({
         <h1 className="font-landing-heading text-2xl font-bold text-gs-dark">Prestataire · Tableau de bord</h1>
         <p className="font-landing-body mt-1 text-slate-600">Annonces catalogue, réservations matériel et paiements</p>
       </div>
-
-      <WelcomeOnboardingBanner
-        userId={user.id}
-        dashboard="owner"
-        firstName={
-          (profile as { first_name?: string | null } | null)?.first_name ??
-          ((profile as { full_name?: string | null } | null)?.full_name
-            ?.trim()
-            .split(/\s+/)
-            .filter(Boolean)[0] ?? null)
-        }
-        videoUrl="https://www.youtube.com/watch?v=ysz5S6PUM-U"
-        videoDurationLabel="4:07"
-        tourUrl={onboardingGuideUrl}
-      />
 
       <Card id="recevoir-paiements" className="mt-6 border-0 shadow-sm scroll-mt-24">
         <CardContent className="p-5">
