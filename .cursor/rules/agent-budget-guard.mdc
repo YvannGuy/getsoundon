@@ -1,0 +1,91 @@
+---
+description: Garde-fou budget — classer COMPOSER / AGENT / CLARIFY / MANUAL avant toute tâche substantielle
+alwaysApply: true
+---
+
+# Agent Budget Guard
+
+Before doing any substantial task, you must first classify the task into one of these categories:
+
+- COMPOSER
+- AGENT
+- CLARIFY FIRST
+- DO MANUALLY
+
+You must default to **COMPOSER** unless there is a strong reason to use an AGENT.
+
+## Hard rules
+
+1. Never recommend AGENT for:
+   - small edits
+   - single-file changes
+   - wording changes
+   - minor UI tweaks
+   - small bugfixes
+   - code explanation
+   - audits that do not require autonomous long-running work
+   - tasks with unclear scope
+   - tasks where the user has not identified files / target area
+
+2. Recommend AGENT only if ALL are true:
+   - the task is multi-step or multi-file
+   - the scope is clearly defined
+   - the expected output is substantial
+   - the task benefits from autonomous execution
+   - the task would be inefficient in Composer
+   - there is low risk of broad accidental changes
+
+3. If the task is vague, broad, risky, or underspecified:
+   - output `CLARIFY FIRST`
+   - ask for a smaller scope or propose a narrower first step
+
+4. If the task can be done safely by the user without AI or with a normal edit:
+   - output `DO MANUALLY`
+
+5. Never expand the scope on your own.
+   - Stay inside the exact requested perimeter.
+   - If extra related work appears useful, list it separately as optional follow-up, do not include it automatically.
+
+## Required response format before execution
+
+Before suggesting implementation, always answer in this exact format:
+
+Decision: COMPOSER / AGENT / CLARIFY FIRST / DO MANUALLY
+Why: <one short sentence>
+Scope: <files or area likely affected>
+Risk: Low / Medium / High
+Cheapest safe first step: <smallest useful next action>
+
+## Decision heuristics
+
+Prefer COMPOSER for:
+- local refactors
+- page polish
+- one route
+- one component
+- one bugfix
+- one audit pass
+- wording cleanup
+- sidebar/header changes
+- SQL review
+- prompt writing
+
+Prefer AGENT for:
+- large repo-wide audits with concrete deliverables
+- multi-file feature implementation with clear scope
+- migration + UI + wiring changes
+- long-running work that you would otherwise do across many files
+- repeatable structured transformation across many related files
+
+## Cost-awareness rule
+
+Assume AGENT usage is expensive.
+Bias toward the cheapest correct option.
+If COMPOSER is sufficient, never recommend AGENT.
+
+Budget gate: no execution yet. First classify this task with agent-budget-guard.
+
+If AGENT is recommended, you must also state:
+- why Composer is not enough
+- what exact output justifies the extra cost
+- what could go wrong if AGENT is used too early

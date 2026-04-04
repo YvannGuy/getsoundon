@@ -13,6 +13,7 @@ import {
   type GsCancellationRequestRow,
 } from "@/lib/gs-booking-cancellation";
 import { getCheckoutTotalPaidCents } from "@/lib/gs-booking-platform-fee";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
@@ -91,6 +92,14 @@ export async function requestGsBookingCancellation(
     console.error("[requestGsBookingCancellation]", insErr);
     return { error: "Impossible d’enregistrer la demande. Réessayez ou contactez le support." };
   }
+
+  const posthog = getPostHogClient();
+  posthog.capture({
+    distinctId: user.id,
+    event: "booking_cancellation_requested",
+    properties: { booking_id: booking.id, booking_status: booking.status },
+  });
+  await posthog.shutdown();
 
   revalidatePath("/dashboard/materiel");
   revalidatePath(`/dashboard/materiel/${booking.id}`);

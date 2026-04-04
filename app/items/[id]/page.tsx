@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import posthog from "posthog-js";
 
 import { addToGsCartAction, clearGsDraftCartAction } from "@/app/actions/gs-orders";
 import { createClient } from "@/lib/supabase/client";
@@ -41,7 +42,14 @@ export default function ItemDetailPage() {
         const json = (await res.json()) as { data?: ListingDetailModel; error?: string };
         if (!res.ok) throw new Error(json.error ?? "Impossible de charger le listing.");
         if (!json.data) throw new Error("Cette annonce n'existe pas ou n'est plus disponible.");
-        if (!cancelled) setListing(json.data);
+        if (!cancelled) {
+          setListing(json.data);
+          posthog.capture("listing_viewed", {
+            listing_id: json.data.id,
+            listing_title: json.data.title,
+            price_per_day: json.data.price_per_day,
+          });
+        }
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : "Erreur inattendue.");
       } finally {
@@ -112,6 +120,16 @@ export default function ItemDetailPage() {
       bookingId = bookingJson.data?.id ?? null;
       if (!bookingId) throw new Error("Réservation créée mais identifiant manquant.");
 
+      posthog.capture("instant_booking_initiated", {
+        listing_id: listing.id,
+        listing_title: listing.title,
+        booking_id: bookingId,
+        start_date: startDate,
+        end_date: endDate,
+        estimated_days: estimatedDays,
+        price_per_day: listing.price_per_day,
+      });
+
       // Persistance pour reprendre si le tab se ferme avant le redirect
       try { sessionStorage.setItem(`gs_pending_booking_${listing.id}`, bookingId); } catch {}
       setLastBookingId(bookingId);
@@ -155,6 +173,15 @@ export default function ItemDetailPage() {
       if (!res.ok) throw new Error(json.error ?? "Réservation impossible.");
       const bookingId = json.data?.id ?? null;
       setLastBookingId(bookingId);
+      posthog.capture("booking_request_submitted", {
+        listing_id: listing.id,
+        listing_title: listing.title,
+        booking_id: bookingId,
+        start_date: startDate,
+        end_date: endDate,
+        estimated_days: estimatedDays,
+        price_per_day: listing.price_per_day,
+      });
       setBookingFeedback(
         "Demande envoyée au prestataire. Tu recevras une réponse sous peu."
       );
@@ -191,6 +218,14 @@ export default function ItemDetailPage() {
           setCartFeedback(res.error);
           return;
         }
+        posthog.capture("item_added_to_cart", {
+          listing_id: listing.id,
+          listing_title: listing.title,
+          quantity,
+          start_date: startDate,
+          end_date: endDate,
+          price_per_day: listing.price_per_day,
+        });
         setCartFeedback("Ajouté au panier. Tu peux continuer tes achats ou ouvrir le panier.");
         router.refresh();
         return;
@@ -224,6 +259,15 @@ export default function ItemDetailPage() {
         setCartFeedback(res.error);
         return;
       }
+      posthog.capture("item_added_to_cart", {
+        listing_id: listing.id,
+        listing_title: listing.title,
+        quantity,
+        start_date: startDate,
+        end_date: endDate,
+        price_per_day: listing.price_per_day,
+        guest: true,
+      });
       setCartFeedback("Ajouté au panier. Connecte-toi sur la page panier pour régler.");
       router.refresh();
     } finally {

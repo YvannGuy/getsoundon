@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 
 import { siteConfig } from "@/config/site";
 import { computeGsBookingCheckoutTotals } from "@/lib/gs-booking-platform-fee";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { providerStripeCanReceivePayments } from "@/lib/gs-provider-stripe-connect";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -203,6 +204,23 @@ export async function POST(request: Request) {
             customer_creation: "always" as const,
           }),
     });
+
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: user.id,
+      event: "booking_checkout_session_created",
+      properties: {
+        booking_id: bookingId,
+        listing_id: row.listing_id,
+        listing_title: listingTitle,
+        start_date: row.start_date,
+        end_date: row.end_date,
+        checkout_total_eur: checkoutTotalCents / 100,
+        deposit_eur: depositCents / 100,
+        stripe_session_id: session.id,
+      },
+    });
+    await posthog.shutdown();
 
     return NextResponse.json({ url: session.url, sessionId: session.id });
   } catch (error) {

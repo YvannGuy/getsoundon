@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { getPostHogClient } from "@/lib/posthog-server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { sendUserNotification } from "@/lib/user-notifications";
@@ -75,6 +76,14 @@ export async function acceptGsBookingAction(
     sendEmail: async () => Promise.resolve(),
   }).catch(() => null);
 
+  const posthog = getPostHogClient();
+  posthog.capture({
+    distinctId: user.id,
+    event: "booking_accepted",
+    properties: { booking_id: bookingId, listing_id: row.listing_id, customer_id: row.customer_id },
+  });
+  await posthog.shutdown();
+
   revalidatePath("/proprietaire/materiel");
   revalidatePath("/dashboard/materiel");
   return { success: true };
@@ -120,6 +129,14 @@ export async function refuseGsBookingAction(
     telegramText: `❌ Ta demande de location matériel n'a pas pu être acceptée par le prestataire. Tu peux chercher d'autres équipements sur GetSoundOn.`,
     sendEmail: async () => Promise.resolve(),
   }).catch(() => null);
+
+  const posthogRefuse = getPostHogClient();
+  posthogRefuse.capture({
+    distinctId: user.id,
+    event: "booking_refused",
+    properties: { booking_id: bookingId, listing_id: row.listing_id, customer_id: row.customer_id },
+  });
+  await posthogRefuse.shutdown();
 
   revalidatePath("/proprietaire/materiel");
   revalidatePath("/dashboard/materiel");
@@ -385,6 +402,18 @@ export async function reportIncidentAction(
     telegramText: `⚠️ Le prestataire a signalé un incident concernant ta location matériel. Un administrateur va examiner le dossier.`,
     sendEmail: async () => Promise.resolve(),
   }).catch(() => null);
+
+  const posthogIncident = getPostHogClient();
+  posthogIncident.capture({
+    distinctId: user.id,
+    event: "incident_reported",
+    properties: {
+      booking_id: bookingId,
+      amount_requested_eur: safeAmount,
+      customer_id: row.customer_id,
+    },
+  });
+  await posthogIncident.shutdown();
 
   revalidatePath("/proprietaire/materiel");
   revalidatePath("/dashboard/materiel");

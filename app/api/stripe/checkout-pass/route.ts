@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 
 import { getPlatformSettings } from "@/app/actions/admin-settings";
 import { siteConfig } from "@/config/site";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 
@@ -107,6 +108,20 @@ export async function POST(request: Request) {
         };
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
+
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: user.id,
+      event: "pass_checkout_session_created",
+      properties: {
+        pass_type: passType,
+        pass_name: plan.name,
+        price_cents: plan.price,
+        is_subscription: isSubscription,
+        stripe_session_id: session.id,
+      },
+    });
+    await posthog.shutdown();
 
     return NextResponse.json({ sessionId: session.id, url: session.url });
   } catch (error) {

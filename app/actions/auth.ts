@@ -7,6 +7,7 @@ import type { EffectiveUserType } from "@/lib/auth-utils";
 import { sendWelcomeOwnerEmail } from "@/lib/email";
 import { getDashboardHref, getEffectiveUserType } from "@/lib/auth-utils";
 import { fetchAuthProfileRow } from "@/lib/fetch-auth-profile";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthFormState = {
@@ -54,6 +55,11 @@ export async function loginAction(_: AuthFormState, formData: FormData): Promise
   }
 
   revalidatePath("/", "layout");
+
+  const posthog = getPostHogClient();
+  posthog.identify({ distinctId: user.id, properties: { email: user.email } });
+  posthog.capture({ distinctId: user.id, event: "user_logged_in", properties: { email: user.email } });
+  await posthog.shutdown();
 
   const profileRow = await fetchAuthProfileRow(user.id, supabase);
   const userType = await getEffectiveUserType(user, async () =>
@@ -106,6 +112,10 @@ export async function signupAction(_: AuthFormState, formData: FormData): Promis
     await sendWelcomeOwnerEmail(email, fullName).catch((e) =>
       console.error("[auth] welcome owner email:", e)
     );
+    const posthogSignup = getPostHogClient();
+    posthogSignup.identify({ distinctId: data.user!.id, properties: { email, full_name: fullName, user_type: "owner" } });
+    posthogSignup.capture({ distinctId: data.user!.id, event: "user_signed_up", properties: { email, full_name: fullName, user_type: "owner" } });
+    await posthogSignup.shutdown();
     return {
       success: "Félicitations, votre compte est créé.",
       redirectTo:
