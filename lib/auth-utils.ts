@@ -52,10 +52,8 @@ export function getDashboardHref(type: EffectiveUserType): string {
   switch (type) {
     case "admin":
       return "/admin";
-    case "owner":
-      return "/proprietaire";
     default:
-      return "/dashboard";
+      return "/proprietaire";
   }
 }
 
@@ -78,9 +76,6 @@ export function getPublishMaterialListingHref(
   hasCatalogListings: boolean,
   isLoggedIn: boolean,
 ): string {
-  if (!isLoggedIn) return "/auth?tab=signup&userType=owner";
-  if (canAccessOwnerDashboard(userType, hasCatalogListings)) {
-    return "/proprietaire/ajouter-annonce";
-  }
-  return "/auth?tab=signup&userType=owner";
+  if (!isLoggedIn) return "/auth?tab=signup";
+  return "/proprietaire/ajouter-annonce";
 }

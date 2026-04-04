@@ -123,7 +123,7 @@ export default async function ProprietaireDashboardPage({
   ];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="mx-auto max-w-5xl px-4 pb-8 pt-6 sm:px-6 lg:px-8">
       <AddSalleAutoOpen initialOpen={openAddAnnonce} />
       <div className="mb-8">
         <h1 className="font-landing-heading text-2xl font-bold text-gs-dark">Prestataire · Tableau de bord</h1>

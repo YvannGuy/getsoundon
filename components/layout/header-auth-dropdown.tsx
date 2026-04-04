@@ -17,9 +17,9 @@ import {
 import type { EffectiveUserType } from "@/lib/auth-utils";
 import { cn } from "@/lib/utils";
 
-/** Bordure gris chaud très légère, texte brun-charbon (réf. maquette « Mon compte »). */
-const pillBorder = "border border-[#E6E4E1]";
-const textAccount = "text-[#3a342f]";
+/** Style harmonisé avec la charte GetSoundOn (fond blanc + liseré chaud + accent orange). */
+const pillBorder = "border border-[#e8e3dc]";
+const textAccount = "text-gs-dark";
 
 function HeaderAccountAvatar({
   avatarUrl,
@@ -117,8 +117,8 @@ export function HeaderAuthDropdown({
         className={cn(
           "flex h-10 max-h-10 min-h-10 items-stretch overflow-hidden rounded-full bg-white shadow-none",
           pillBorder,
-          "transition-[background-color] duration-150",
-          "hover:bg-[#FAFAF9]",
+          "transition-[background-color,border-color] duration-150",
+          "hover:bg-[#fdfbf8] hover:border-gs-orange/50",
           fullWidth ? "w-full" : ""
         )}
       >
@@ -149,12 +149,16 @@ export function HeaderAuthDropdown({
               type="button"
               className={cn(
                 "flex w-9 shrink-0 items-center justify-center rounded-r-full border-l border-[#EDEAE6]",
-                textAccount,
+                "text-gs-dark",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-stone-400/40"
               )}
               aria-label="Ouvrir le menu des raccourcis"
             >
-              <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-80" strokeWidth={1.75} aria-hidden />
+              <ChevronDown
+                className="h-3.5 w-3.5 shrink-0 text-gs-orange"
+                strokeWidth={1.75}
+                aria-hidden
+              />
             </button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-64 p-0">

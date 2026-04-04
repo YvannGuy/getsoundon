@@ -7,7 +7,7 @@ import { useActionState, useTransition, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CheckCircle2, Eye, EyeOff, Package, Warehouse, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, ArrowLeft } from "lucide-react";
 
 import { loginAction, signupAction, type AuthFormState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -47,12 +47,10 @@ const features = [
 function AuthPageContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const userTypeParam = searchParams.get("userType");
   const redirectedFrom = searchParams.get("redirectedFrom") ?? "";
   const suspended = searchParams.get("suspended") === "1";
   const resetSuccess = searchParams.get("reset") === "success";
   const authErrorCode = searchParams.get("error");
-  const initialUserType = userTypeParam === "owner" ? "owner" : undefined;
   const [activeTab, setActiveTab] = useState<"login" | "signup">(
     tabParam === "signup" ? "signup" : "login"
   );
@@ -170,7 +168,6 @@ function AuthPageContent() {
           <SignupFormContent
             redirectedFrom={redirectedFrom}
             onSwitchToLogin={() => setActiveTab("login")}
-            initialUserType={initialUserType}
           />
         )}
         </>
@@ -273,11 +270,9 @@ function LoginFormContent({
 function SignupFormContent({
   redirectedFrom,
   onSwitchToLogin,
-  initialUserType,
 }: {
   redirectedFrom: string;
   onSwitchToLogin: () => void;
-  initialUserType?: "seeker" | "owner";
 }) {
   const router = useRouter();
   const [state, formAction] = useActionState(signupAction, initialState);
@@ -285,7 +280,6 @@ function SignupFormContent({
   const [submitLocked, setSubmitLocked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [userType, setUserType] = useState<"seeker" | "owner">(initialUserType ?? "seeker");
 
   useEffect(() => {
     if (state.redirectTo) {
@@ -317,7 +311,7 @@ function SignupFormContent({
     fd.append("fullName", `${values.firstName} ${values.lastName}`);
     fd.append("email", values.email);
     fd.append("password", values.password);
-    fd.append("userType", userType);
+    fd.append("userType", "owner");
     if (redirectedFrom) fd.append("redirectedFrom", redirectedFrom);
     startTransition(() => formAction(fd));
   };
@@ -393,49 +387,6 @@ function SignupFormContent({
         {form.formState.errors.confirmPassword && (
           <p className="text-xs text-red-600">{form.formState.errors.confirmPassword.message}</p>
         )}
-      </div>
-      <div className="mt-4 space-y-3">
-        <span className="font-landing-nav block text-sm font-medium text-gs-dark">
-          Vous utilisez GetSoundOn pour&nbsp;:
-        </span>
-        <div className="flex flex-row flex-wrap items-center gap-x-8 gap-y-3">
-          <label className="flex cursor-pointer items-center gap-2">
-            <input
-              type="radio"
-              name="userType"
-              checked={userType === "seeker"}
-              onChange={() => setUserType("seeker")}
-              className="h-4 w-4 shrink-0 border-gs-line accent-gs-orange focus:outline-none focus:ring-2 focus:ring-gs-orange/40"
-            />
-            <Package className="h-4 w-4 shrink-0 text-gs-muted" aria-hidden />
-            <span>
-              <span className="font-landing-body block text-sm font-medium leading-snug text-gs-dark">
-                Réserver du matériel
-              </span>
-              <span className="font-landing-body block text-xs leading-snug text-gs-muted">
-                Organisateur, besoin ponctuel
-              </span>
-            </span>
-          </label>
-          <label className="flex cursor-pointer items-center gap-2">
-            <input
-              type="radio"
-              name="userType"
-              checked={userType === "owner"}
-              onChange={() => setUserType("owner")}
-              className="h-4 w-4 shrink-0 border-gs-line accent-gs-orange focus:outline-none focus:ring-2 focus:ring-gs-orange/40"
-            />
-            <Warehouse className="h-4 w-4 shrink-0 text-gs-muted" aria-hidden />
-            <span>
-              <span className="font-landing-body block text-sm font-medium leading-snug text-gs-dark">
-                Proposer mon matériel
-              </span>
-              <span className="font-landing-body block text-xs leading-snug text-gs-muted">
-                Annonces, revenus
-              </span>
-            </span>
-          </label>
-        </div>
       </div>
       <p className="font-landing-body mt-5 text-xs leading-relaxed text-gs-dark/80 sm:text-sm">
         En créant mon compte, j&apos;accepte les{" "}

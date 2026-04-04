@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { OwnerSidebar } from "@/components/dashboard/owner-sidebar";
-import { canAccessOwnerDashboard, getEffectiveUserType } from "@/lib/auth-utils";
+import { getEffectiveUserType } from "@/lib/auth-utils";
 import { fetchAuthProfileRow } from "@/lib/fetch-auth-profile";
 import { EMPTY_BADGE_COUNTS, getOwnerBadgeCounts } from "@/lib/notification-counts";
 import { getUserOrNull } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Espace prestataire | GetSoundOn",
+  title: "Tableau de bord | GetSoundOn",
   robots: { index: false, follow: false },
 };
 /** Rafraîchit les compteurs de badges à chaque requête (pas de cache layout). */
@@ -45,15 +45,6 @@ export default async function ProprietaireLayout({
       );
   if (userType === "admin") redirect("/admin");
 
-  const { data: myListings } = await supabase
-    .from("gs_listings")
-    .select("id")
-    .eq("owner_id", user.id)
-    .limit(1);
-  const hasCatalogListings = (myListings ?? []).length > 0;
-  const canAccessOwner = canAccessOwnerDashboard(userType, hasCatalogListings);
-  if (!canAccessOwner) redirect("/dashboard");
-
   const displayName =
     profile?.full_name?.trim() ||
     profile?.first_name?.trim() ||
@@ -62,6 +53,14 @@ export default async function ProprietaireLayout({
   let materielUnreadCount: number;
   let paymentCount: number;
   let contractCount: number;
+  // Compteurs badges
+  let reservationPending = 0;
+  let reservationAccepted = 0;
+  let reservationRefused = 0;
+  let listingOnline = 0;
+  let listingPending = 0;
+  let listingExpired = 0;
+
   try {
     const c = await getOwnerBadgeCounts(supabase, user.id);
     materielUnreadCount = c.materielUnreadCount;
@@ -77,6 +76,56 @@ export default async function ProprietaireLayout({
     contractCount = EMPTY_BADGE_COUNTS.contractCount;
   }
 
+  try {
+    const [
+      { count: pendingCount },
+      { count: acceptedCount },
+      { count: refusedCount },
+      { count: onlineCount },
+      { count: pendingListingCount },
+      { count: expiredCount },
+    ] = await Promise.all([
+      supabase
+        .from("gs_bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("provider_id", user.id)
+        .eq("status", "pending"),
+      supabase
+        .from("gs_bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("provider_id", user.id)
+        .eq("status", "accepted"),
+      supabase
+        .from("gs_bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("provider_id", user.id)
+        .in("status", ["refused", "cancelled"]),
+      supabase
+        .from("gs_listings")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", user.id)
+        .eq("is_active", true),
+      supabase
+        .from("gs_listings")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", user.id)
+        .is("is_active", null),
+      supabase
+        .from("gs_listings")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", user.id)
+        .eq("is_active", false),
+    ]);
+    reservationPending = pendingCount ?? 0;
+    reservationAccepted = acceptedCount ?? 0;
+    reservationRefused = refusedCount ?? 0;
+    listingOnline = onlineCount ?? 0;
+    listingPending = pendingListingCount ?? 0;
+    listingExpired = expiredCount ?? 0;
+  } catch (err: unknown) {
+    console.error("[layout] app/proprietaire/layout.tsx badge counts bookings/listings", err);
+  }
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gs-beige lg:flex-row">
       <OwnerSidebar
@@ -84,7 +133,17 @@ export default async function ProprietaireLayout({
         materielUnreadCount={materielUnreadCount}
         paymentCount={paymentCount}
         contractCount={contractCount}
-        canAccessSeeker={true}
+        canAccessSeeker={false}
+        reservationCounts={{
+          pending: reservationPending,
+          accepted: reservationAccepted,
+          refused: reservationRefused,
+        }}
+        listingCounts={{
+          online: listingOnline,
+          pending: listingPending,
+          expired: listingExpired,
+        }}
       />
       <main className="font-landing-body flex-1 overflow-auto text-gs-dark">{children}</main>
     </div>

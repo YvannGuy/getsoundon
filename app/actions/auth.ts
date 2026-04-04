@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import type { EffectiveUserType } from "@/lib/auth-utils";
-import { sendWelcomeOwnerEmail, sendWelcomeSeekerEmail } from "@/lib/email";
+import { sendWelcomeOwnerEmail } from "@/lib/email";
 import { getDashboardHref, getEffectiveUserType } from "@/lib/auth-utils";
 import { fetchAuthProfileRow } from "@/lib/fetch-auth-profile";
 import { createClient } from "@/lib/supabase/server";
@@ -79,8 +79,7 @@ export async function signupAction(_: AuthFormState, formData: FormData): Promis
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
   const fullName = String(formData.get("fullName") ?? "");
-  const raw = String(formData.get("userType") ?? "seeker");
-  const userType = raw === "owner" ? "owner" : "seeker";
+  const userType: EffectiveUserType = "owner"; // Dashboard unique basé sur /proprietaire
   const redirectedFrom = String(formData.get("redirectedFrom") ?? "").trim();
 
   const supabase = await createClient();
@@ -103,17 +102,7 @@ export async function signupAction(_: AuthFormState, formData: FormData): Promis
   // Session disponible = pas de confirmation email requise → redirection immédiate
   const hasSession = !!data.session;
 
-  if (hasSession && userType === "seeker") {
-    await sendWelcomeSeekerEmail(email, fullName).catch((e) =>
-      console.error("[auth] welcome seeker email:", e)
-    );
-    return {
-      success: "Compte créé.",
-      redirectTo: redirectedFrom && redirectedFrom.startsWith("/") ? redirectedFrom : "/dashboard",
-    };
-  }
-
-  if (hasSession && userType === "owner") {
+  if (hasSession) {
     await sendWelcomeOwnerEmail(email, fullName).catch((e) =>
       console.error("[auth] welcome owner email:", e)
     );

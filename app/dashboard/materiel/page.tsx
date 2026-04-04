@@ -141,7 +141,7 @@ export default async function DashboardMaterielPage({
     : null;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Bannière de confirmation */}
       {paidParam && (
         <div className="mb-6 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4">
@@ -182,11 +182,11 @@ export default async function DashboardMaterielPage({
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Mes locations matériel</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Mes commandes</h1>
           <p className="mt-1 text-sm text-slate-500">
             {rows.length === 0
-              ? "Aucune réservation pour le moment."
-              : `${rows.length} réservation${rows.length > 1 ? "s" : ""}`}
+              ? "Aucune commande passée pour le moment."
+              : `${rows.length} commande${rows.length > 1 ? "s" : ""} de matériel`}
           </p>
         </div>
         <Link
@@ -328,7 +328,7 @@ export default async function DashboardMaterielPage({
                         Payée
                       </span>
                       <Link
-                        href={`/dashboard/materiel/${booking.id}`}
+                        href={`/proprietaire/commandes/${booking.id}`}
                         className="text-[11px] text-slate-400 underline-offset-2 hover:underline"
                       >
                         Voir le détail →

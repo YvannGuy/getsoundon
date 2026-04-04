@@ -20,6 +20,5 @@ export default async function SignupPage({ searchParams }: Props) {
   const qs = new URLSearchParams();
   qs.set("tab", "signup");
   appendParam(qs, "redirectedFrom", sp.redirectedFrom);
-  appendParam(qs, "userType", sp.userType);
   redirect(`/auth?${qs.toString()}`);
 }

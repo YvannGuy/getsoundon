@@ -6,9 +6,11 @@ import {
   Home,
   LayoutGrid,
   Package,
-  Search,
+  PackageCheck,
+  PlusCircle,
+  Receipt,
   Settings,
-  ShoppingCart,
+  Truck,
   Users,
 } from "lucide-react";
 
@@ -21,8 +23,8 @@ export type HeaderAccountMenuItem = {
 };
 
 const spaceLabel: Record<EffectiveUserType, string> = {
-  seeker: "Espace locataire",
-  owner: "Espace prestataire",
+  seeker: "Tableau de bord",
+  owner: "Tableau de bord",
   admin: "Administration",
 };
 
@@ -33,10 +35,13 @@ export function getHeaderAccountMenuItems(role: EffectiveUserType): HeaderAccoun
   switch (role) {
     case "owner":
       return [
-        { href: "/proprietaire", label: "Vue d'ensemble", icon: Home },
+        { href: "/proprietaire", label: "Tableau de bord", icon: Home },
         { href: "/proprietaire/annonces", label: "Mes annonces", icon: LayoutGrid },
-        { href: "/proprietaire/materiel", label: "Locations matériel", icon: Package },
+        { href: "/proprietaire/ajouter-annonce", label: "Ajouter une annonce", icon: PlusCircle },
+        { href: "/proprietaire/materiel", label: "Réservations reçues", icon: Package },
+        { href: "/proprietaire/commandes", label: "Mes commandes", icon: PackageCheck },
         { href: "/proprietaire/paiement", label: "Paiements", icon: CreditCard },
+        { href: "/proprietaire/contrat", label: "Modèles & factures", icon: Receipt },
         { href: "/proprietaire/parametres", label: "Paramètres", icon: Settings },
       ];
     case "admin":
@@ -49,13 +54,16 @@ export function getHeaderAccountMenuItems(role: EffectiveUserType): HeaderAccoun
         { href: "/admin/parametres", label: "Paramètres", icon: Settings },
       ];
     default:
+      // Dashboard unique : même navigation que l’espace propriétaire
       return [
-        { href: "/dashboard", label: "Vue d'ensemble", icon: Home },
-        { href: "/catalogue", label: "Catalogue matériel", icon: Search },
-        { href: "/panier", label: "Panier", icon: ShoppingCart },
-        { href: "/dashboard/materiel", label: "Mes locations matériel", icon: Package },
-        { href: "/dashboard/paiement", label: "Paiements & carte", icon: CreditCard },
-        { href: "/dashboard/parametres", label: "Paramètres", icon: Settings },
+        { href: "/proprietaire", label: "Tableau de bord", icon: Home },
+        { href: "/proprietaire/annonces", label: "Mes annonces", icon: LayoutGrid },
+        { href: "/proprietaire/ajouter-annonce", label: "Ajouter une annonce", icon: PlusCircle },
+        { href: "/proprietaire/materiel", label: "Réservations reçues", icon: Package },
+        { href: "/proprietaire/commandes", label: "Mes commandes", icon: PackageCheck },
+        { href: "/proprietaire/paiement", label: "Paiements", icon: CreditCard },
+        { href: "/proprietaire/contrat", label: "Modèles & factures", icon: Receipt },
+        { href: "/proprietaire/parametres", label: "Paramètres", icon: Settings },
       ];
   }
 }

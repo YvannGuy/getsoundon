@@ -13,7 +13,7 @@ import { loginAdminAction, type AuthFormState } from "@/app/actions/auth-admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { siteConfig } from "@/config/site";
-import { cn } from "@/lib/utils";
+import { LANDING_HERO_IMAGE_URL } from "@/lib/landing-assets";
 
 const loginSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -24,9 +24,9 @@ type LoginSchema = z.infer<typeof loginSchema>;
 const initialState: AuthFormState = {};
 
 const features = [
-  "Annonces vérifiées",
-  "Informations claires",
-  "Demandes rapides",
+  "Gestion des annonces et du catalogue matériel",
+  "Modération et support opérationnel",
+  "Accès sécurisé réservé à l’équipe",
 ];
 
 function AdminAuthPageContent() {
@@ -50,75 +50,92 @@ function AdminAuthPageContent() {
 
   return (
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-[0.95fr_1.05fr]">
-      <div className="relative flex flex-col justify-start gap-8 bg-slate-100 p-8 md:p-10">
-        <div className="absolute inset-0 overflow-hidden">
+      <div className="relative flex min-h-[280px] flex-col justify-start gap-8 overflow-hidden bg-gs-beige p-8 md:min-h-0 md:p-10">
+        <div className="absolute inset-0">
           <Image
-            src="/img.png"
+            src={LANDING_HERO_IMAGE_URL}
             alt=""
             fill
-            className="object-cover opacity-20"
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority
           />
         </div>
+        <div className="landing-hero-overlay absolute inset-0" aria-hidden />
         <div className="relative z-10">
-          <a
-            href={siteConfig.url}
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-black"
+          <Link
+            href="/"
+            className="font-landing-nav inline-flex items-center gap-2 text-sm font-medium text-white/90 transition hover:text-white"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 shrink-0" />
             Retour à l&apos;accueil
-          </a>
-          <p className="mt-6 text-lg font-semibold text-black">{siteConfig.name}</p>
-          <div className="mt-1 h-0.5 w-12 bg-gs-orange" />
-          <h2 className="mt-6 flex items-center gap-2 text-2xl font-bold text-black">
-            <Shield className="h-7 w-7" />
-            Espace administrateur
+          </Link>
+          <h2 className="font-landing-heading mt-6 flex flex-nowrap items-center gap-2 text-lg font-bold text-white sm:gap-2.5 sm:text-xl md:text-2xl">
+            <span className="inline-flex shrink-0 items-center gap-2">
+              <Shield className="h-7 w-7 shrink-0 text-white/95" strokeWidth={1.75} aria-hidden />
+              <span className="whitespace-nowrap">Administration</span>
+            </span>
+            <span className="hidden text-white/40 sm:inline">·</span>
+            <Link
+              href="/"
+              className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap leading-none transition hover:opacity-95"
+            >
+              <Image
+                src="/images/logosound.png"
+                alt=""
+                width={48}
+                height={48}
+                className="h-9 w-9 shrink-0 rounded-full object-cover sm:h-10 sm:w-10 md:h-12 md:w-12"
+              />
+              <span className="font-landing-logo-mark text-gs-orange">{siteConfig.name.toUpperCase()}</span>
+            </Link>
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-slate-600">
-            Connexion réservée aux administrateurs pour gérer et valider les annonces.
+          <p className="font-landing-body mt-3 max-w-md text-sm leading-relaxed text-white/90">
+            Connexion réservée aux administrateurs pour gérer la plateforme et valider les contenus.
           </p>
         </div>
         <ul className="relative z-10 space-y-3">
           {features.map((f) => (
-            <li key={f} className="flex items-center gap-2 text-sm text-slate-700">
-              <CheckCircle2 className="h-4 w-4 text-[#3b82f6]" />
+            <li key={f} className="font-landing-body flex items-center gap-2 text-sm text-white/95">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-gs-orange" aria-hidden />
               {f}
             </li>
           ))}
         </ul>
       </div>
 
-      <div className="relative flex flex-col justify-center bg-white p-6 md:p-10">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto flex max-w-md flex-col">
-          <h3 className="text-xl font-bold text-black">Connexion admin</h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Utilisez vos identifiants administrateur
+      <div className="relative flex min-h-0 flex-col justify-center overflow-y-auto bg-gs-beige p-6 md:p-10">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto flex w-full max-w-md flex-col">
+          <h3 className="font-landing-heading text-xl font-bold text-gs-dark sm:text-2xl">Connexion admin</h3>
+          <p className="font-landing-body mt-1 text-sm text-gs-muted">
+            Identifiants administrateur uniquement
           </p>
-          <div className="mt-6 space-y-4">
+          <div className="mt-8 space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Email</label>
+              <label className="font-landing-nav text-sm font-medium text-gs-dark">Email</label>
               <Input
                 placeholder="admin@getsoundon.com"
                 {...form.register("email")}
-                className="h-11 border-slate-200"
+                className="h-11 border-gs-line bg-white"
               />
               {form.formState.errors.email && (
                 <p className="text-xs text-red-600">{form.formState.errors.email.message}</p>
               )}
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Mot de passe</label>
+              <label className="font-landing-nav text-sm font-medium text-gs-dark">Mot de passe</label>
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   {...form.register("password")}
-                  className="h-11 pr-10 border-slate-200"
+                  className="h-11 border-gs-line bg-white pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -131,11 +148,17 @@ function AdminAuthPageContent() {
           {state.error && <p className="mt-3 text-sm text-red-600">{state.error}</p>}
           <Button
             type="submit"
-            className="mt-5 h-11 w-full bg-gs-orange hover:brightness-95"
+            className="font-landing-btn mt-5 h-11 w-full bg-gs-orange text-white transition hover:brightness-105"
             disabled={isPending}
           >
             {isPending ? "Connexion..." : "Se connecter"}
           </Button>
+          <p className="font-landing-body mt-6 text-center text-sm text-gs-muted">
+            Accès utilisateur ?{" "}
+            <Link href="/auth" className="font-semibold text-gs-orange hover:underline">
+              Connexion classique
+            </Link>
+          </p>
         </form>
       </div>
     </div>
@@ -144,15 +167,16 @@ function AdminAuthPageContent() {
 
 export default function AdminAuthPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="grid min-h-screen grid-cols-1 md:grid-cols-[0.95fr_1.05fr]">
-          <div className="bg-slate-100" />
-          <div className="bg-white" />
-        </div>
-      }
-    >
-      <AdminAuthPageContent />
-    </Suspense>
+    <div className="min-h-screen bg-gs-beige">
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-gs-beige font-landing-body text-gs-muted">
+            Chargement...
+          </div>
+        }
+      >
+        <AdminAuthPageContent />
+      </Suspense>
+    </div>
   );
 }

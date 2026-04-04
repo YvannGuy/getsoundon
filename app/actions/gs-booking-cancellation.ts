@@ -94,6 +94,8 @@ export async function requestGsBookingCancellation(
 
   revalidatePath("/dashboard/materiel");
   revalidatePath(`/dashboard/materiel/${booking.id}`);
+  revalidatePath("/proprietaire/commandes");
+  revalidatePath(`/proprietaire/commandes/${booking.id}`);
   revalidatePath("/admin/materiel-annulations");
   return { ok: true };
 }
@@ -208,6 +210,7 @@ export async function decideGsBookingCancellationRequest(
     if (error) return { error: error.message };
     revalidatePath("/admin/materiel-annulations");
     revalidatePath(`/dashboard/materiel/${booking.id}`);
+    revalidatePath(`/proprietaire/commandes/${booking.id}`);
     return { ok: true };
   }
 
@@ -316,6 +319,8 @@ export async function decideGsBookingCancellationRequest(
   revalidatePath("/admin/materiel-annulations");
   revalidatePath(`/dashboard/materiel/${booking.id}`);
   revalidatePath("/dashboard/materiel");
+  revalidatePath(`/proprietaire/commandes/${booking.id}`);
+  revalidatePath("/proprietaire/commandes");
   revalidatePath("/proprietaire/materiel");
   return { ok: true };
 }

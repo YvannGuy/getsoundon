@@ -126,7 +126,7 @@ export async function POST(request: Request) {
     const payoutDueAt = new Date(endDate.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString();
     const depositReleaseDueAt = new Date(endDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    const successUrl = `${siteConfig.url}/dashboard/materiel/orders/${orderId}?paid=1`;
+    const successUrl = `${siteConfig.url}/proprietaire/commandes/orders/${orderId}?paid=1`;
     const cancelUrl = `${siteConfig.url}/panier?orderCancel=1`;
 
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [

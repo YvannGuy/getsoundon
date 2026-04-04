@@ -2,18 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   CreditCard,
   Home,
   LayoutGrid,
   LogOut,
   Menu,
   Package,
+  PackageCheck,
   Receipt,
   Settings,
   Truck,
@@ -41,10 +43,11 @@ const ownerNavItems: OwnerNavItem[] = [
   { href: "/proprietaire", label: "Tableau de bord", icon: Home },
   { href: "/proprietaire/annonces", label: "Mes annonces", icon: LayoutGrid },
   { href: "/proprietaire/ajouter-annonce", label: "Ajouter une annonce", icon: PlusCircle },
-  { href: "/proprietaire/materiel", label: "Locations matériel", icon: Package, badgeKey: "materiel_chat" },
+  { href: "/proprietaire/materiel", label: "Réservations", icon: Package, badgeKey: "materiel_chat" },
+  { href: "/proprietaire/commandes", label: "Mes commandes", icon: PackageCheck },
   { href: "/proprietaire/logistique", label: "Livraisons & retraits", icon: Truck },
   { href: "/proprietaire/paiement", label: "Paiements", icon: CreditCard, badgeKey: "paiement" },
-  { href: "/proprietaire/contrat", label: "Modèles & factures", icon: Receipt, badgeKey: "contrat" },
+  { href: "/proprietaire/contrat", label: "Factures", icon: Receipt, badgeKey: "contrat" },
   { href: "/proprietaire/parametres", label: "Paramètres", icon: Settings },
 ];
 
@@ -54,8 +57,8 @@ const ownerNavSections: { title: string; itemHrefs: string[] }[] = [
     itemHrefs: ["/proprietaire", "/proprietaire/annonces", "/proprietaire/ajouter-annonce"],
   },
   {
-    title: "Locations",
-    itemHrefs: ["/proprietaire/materiel", "/proprietaire/logistique"],
+    title: "Activité",
+    itemHrefs: ["/proprietaire/materiel", "/proprietaire/commandes", "/proprietaire/logistique"],
   },
   { title: "Finances & documents", itemHrefs: ["/proprietaire/paiement", "/proprietaire/contrat"] },
   { title: "Compte", itemHrefs: ["/proprietaire/parametres"] },
@@ -77,6 +80,8 @@ function NavContent({
   materielUnreadCount,
   paymentCount,
   contractCount,
+  reservationCounts,
+  listingCounts,
   collapsed = false,
   onItemClick,
   canAccessSeeker = false,
@@ -88,12 +93,24 @@ function NavContent({
   materielUnreadCount: number;
   paymentCount: number;
   contractCount: number;
+  reservationCounts: { pending: number; accepted: number; refused: number };
+  listingCounts: { online: number; pending: number; expired: number };
   collapsed?: boolean;
   onItemClick?: () => void;
   canAccessSeeker?: boolean;
   tourLock?: boolean;
 }) {
   const [seenByKey, setSeenByKey] = useState<Record<string, number>>({});
+  const searchParams = useSearchParams();
+  const bookingStatus = searchParams?.get("status") ?? "";
+  const bookingView = searchParams?.get("view") ?? "";
+  const listingStatus = searchParams?.get("listingStatus") ?? "";
+  const [openReservations, setOpenReservations] = useState(() =>
+    pathname.startsWith("/proprietaire/materiel")
+  );
+  const [openListings, setOpenListings] = useState(() =>
+    pathname.startsWith("/proprietaire/annonces")
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -138,6 +155,25 @@ function NavContent({
       default:
         return 0;
     }
+  };
+
+  const Badge = ({ count, tone }: { count: number; tone: "sky" | "emerald" | "red" | "amber" | "slate" }) => {
+    if (!count || count <= 0) return null;
+    const toneCls =
+      tone === "sky"
+        ? "bg-sky-100 text-sky-800"
+        : tone === "emerald"
+          ? "bg-emerald-100 text-emerald-700"
+          : tone === "red"
+            ? "bg-red-100 text-red-700"
+            : tone === "amber"
+              ? "bg-amber-100 text-amber-800"
+              : "bg-slate-100 text-slate-600";
+    return (
+      <span className={cn("flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold", toneCls)}>
+        {count > 99 ? "99+" : count}
+      </span>
+    );
   };
 
   useEffect(() => {
@@ -191,86 +227,185 @@ function NavContent({
                 const isActive = isOwnerNavActive(pathname, item.href);
                 const Icon = item.icon;
                 const displayCount = getDisplayCount(item.badgeKey, isActive);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    data-tour-nav={item.href}
-                    onClick={() => {
-                      if (item.badgeKey) {
-                        const rawValue =
-                          item.badgeKey === "materiel_chat"
-                            ? materielUnreadCount
-                            : item.badgeKey === "paiement"
-                              ? paymentCount
-                              : item.badgeKey === "contrat"
-                                ? contractCount
-                                : 0;
-                        markSeen(item.badgeKey, rawValue);
-                      }
-                      onItemClick?.();
-                    }}
-                    className={cn(
-                      "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                      collapsed ? "justify-center px-2" : "",
-                      isActive
-                        ? "bg-gs-orange text-white"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-black"
-                    )}
-                    title={collapsed ? item.label : undefined}
-                  >
+                const isReservations = item.href === "/proprietaire/materiel";
+                const isListings = item.href === "/proprietaire/annonces";
+                const isExpandable = isReservations || isListings;
+                const expanded = isReservations ? openReservations : isListings ? openListings : false;
+                const ParentContent = (
+                  <>
                     <Icon className="h-5 w-5 shrink-0" />
                     {!collapsed && (
                       <>
                         <span className="flex-1 truncate">{item.label}</span>
+                        {isExpandable && (
+                          <ChevronDown
+                            className={cn(
+                              "h-4 w-4 shrink-0 text-slate-400 transition",
+                              expanded ? "rotate-180" : ""
+                            )}
+                          />
+                        )}
                         {item.badgeKey === "materiel_chat" && displayCount > 0 && (
-                    <span
-                      className={cn(
-                        "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                        isActive ? "bg-white/20 text-white" : "bg-sky-100 text-sky-800"
-                      )}
-                    >
-                      {displayCount > 99 ? "99+" : displayCount}
-                    </span>
+                          <Badge count={displayCount} tone="sky" />
                         )}
                         {item.badgeKey === "paiement" && displayCount > 0 && (
-                    <span
-                      className={cn(
-                        "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                        isActive ? "bg-white/20 text-white" : "bg-amber-100 text-amber-700"
-                      )}
-                    >
-                      {displayCount > 99 ? "99+" : displayCount}
-                    </span>
+                          <Badge count={displayCount} tone="amber" />
                         )}
                         {item.badgeKey === "contrat" && displayCount > 0 && (
-                    <span
-                      className={cn(
-                        "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                        isActive ? "bg-white/20 text-white" : "bg-orange-100 text-orange-700"
-                      )}
-                    >
-                      {displayCount > 99 ? "99+" : displayCount}
-                    </span>
+                          <Badge count={displayCount} tone="amber" />
                         )}
                       </>
                     )}
                     {collapsed && item.badgeKey === "materiel_chat" && displayCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-sky-500 px-1 text-[10px] font-semibold text-white">
-                  {displayCount > 99 ? "99+" : displayCount}
-                </span>
+                      <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-sky-500 px-1 text-[10px] font-semibold text-white">
+                        {displayCount > 99 ? "99+" : displayCount}
+                      </span>
                     )}
                     {collapsed && item.badgeKey === "paiement" && displayCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white">
-                  {displayCount > 99 ? "99+" : displayCount}
-                </span>
+                      <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white">
+                        {displayCount > 99 ? "99+" : displayCount}
+                      </span>
                     )}
                     {collapsed && item.badgeKey === "contrat" && displayCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-semibold text-white">
-                  {displayCount > 99 ? "99+" : displayCount}
-                </span>
+                      <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-semibold text-white">
+                        {displayCount > 99 ? "99+" : displayCount}
+                      </span>
                     )}
-                  </Link>
+                  </>
+                );
+
+                const commonClass = cn(
+                  "relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  collapsed ? "justify-center px-2" : "",
+                  isActive ? "bg-gs-orange text-white" : "text-slate-600 hover:bg-slate-100 hover:text-black"
+                );
+
+                return (
+                  <div key={item.href} className="space-y-1">
+                    {isExpandable ? (
+                      <button
+                        type="button"
+                        data-tour-nav={item.href}
+                        onClick={() => {
+                          if (isReservations) setOpenReservations((v) => !v);
+                          else if (isListings) setOpenListings((v) => !v);
+                        }}
+                        className={commonClass}
+                        title={collapsed ? item.label : undefined}
+                      >
+                        {ParentContent}
+                      </button>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        data-tour-nav={item.href}
+                        onClick={() => {
+                          if (item.badgeKey) {
+                            const rawValue =
+                              item.badgeKey === "materiel_chat"
+                                ? materielUnreadCount
+                                : item.badgeKey === "paiement"
+                                  ? paymentCount
+                                  : item.badgeKey === "contrat"
+                                    ? contractCount
+                                    : 0;
+                            markSeen(item.badgeKey, rawValue);
+                          }
+                          onItemClick?.();
+                        }}
+                        className={commonClass}
+                        title={collapsed ? item.label : undefined}
+                      >
+                        {ParentContent}
+                      </Link>
+                    )}
+
+                    {!collapsed && isReservations && expanded && (
+                      <div className="ml-10 space-y-0.5 border-l border-slate-100 pl-3">
+                        <Link
+                          href="/proprietaire/materiel?view=calendar"
+                          onClick={onItemClick}
+                          className={cn(
+                            "flex items-center justify-between rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100",
+                            bookingView === "calendar" && "bg-gs-orange/10 text-gs-dark"
+                          )}
+                        >
+                          <span>Vue calendrier</span>
+                        </Link>
+                        <Link
+                          href="/proprietaire/materiel?status=pending"
+                          onClick={onItemClick}
+                          className={cn(
+                            "flex items-center justify-between rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100",
+                            bookingStatus === "pending" && "bg-gs-orange/10 text-gs-dark"
+                          )}
+                        >
+                          <span>En attente</span>
+                          <Badge count={reservationCounts.pending} tone="sky" />
+                        </Link>
+                        <Link
+                          href="/proprietaire/materiel?status=accepted"
+                          onClick={onItemClick}
+                          className={cn(
+                            "flex items-center justify-between rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100",
+                            bookingStatus === "accepted" && "bg-gs-orange/10 text-gs-dark"
+                          )}
+                        >
+                          <span>Acceptées</span>
+                          <Badge count={reservationCounts.accepted} tone="emerald" />
+                        </Link>
+                        <Link
+                          href="/proprietaire/materiel?status=refused"
+                          onClick={onItemClick}
+                          className={cn(
+                            "flex items-center justify-between rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100",
+                            bookingStatus === "refused" && "bg-gs-orange/10 text-gs-dark"
+                          )}
+                        >
+                          <span>Refusées / supprimées</span>
+                          <Badge count={reservationCounts.refused} tone="red" />
+                        </Link>
+                      </div>
+                    )}
+
+                    {!collapsed && isListings && expanded && (
+                      <div className="ml-10 space-y-0.5 border-l border-slate-100 pl-3">
+                        <Link
+                          href="/proprietaire/annonces?listingStatus=online"
+                          onClick={onItemClick}
+                          className={cn(
+                            "flex items-center justify-between rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100",
+                            listingStatus === "online" && "bg-gs-orange/10 text-gs-dark"
+                          )}
+                        >
+                          <span>En ligne</span>
+                          <Badge count={listingCounts.online} tone="emerald" />
+                        </Link>
+                        <Link
+                          href="/proprietaire/annonces?listingStatus=pending"
+                          onClick={onItemClick}
+                          className={cn(
+                            "flex items-center justify-between rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100",
+                            listingStatus === "pending" && "bg-gs-orange/10 text-gs-dark"
+                          )}
+                        >
+                          <span>En attente</span>
+                          <Badge count={listingCounts.pending} tone="amber" />
+                        </Link>
+                        <Link
+                          href="/proprietaire/annonces?listingStatus=expired"
+                          onClick={onItemClick}
+                          className={cn(
+                            "flex items-center justify-between rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100",
+                            listingStatus === "expired" && "bg-gs-orange/10 text-gs-dark"
+                          )}
+                        >
+                          <span>Expirées</span>
+                          <Badge count={listingCounts.expired} tone="slate" />
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -319,12 +454,16 @@ export function OwnerSidebar({
   paymentCount = 0,
   contractCount = 0,
   canAccessSeeker = false,
+  reservationCounts = { pending: 0, accepted: 0, refused: 0 },
+  listingCounts = { online: 0, pending: 0, expired: 0 },
 }: {
   user: { email?: string | null; displayName?: string };
   materielUnreadCount?: number;
   paymentCount?: number;
   contractCount?: number;
   canAccessSeeker?: boolean;
+  reservationCounts?: { pending: number; accepted: number; refused: number };
+  listingCounts?: { online: number; pending: number; expired: number };
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
@@ -463,6 +602,8 @@ export function OwnerSidebar({
             materielUnreadCount={materielUnreadCount}
             paymentCount={paymentCount}
             contractCount={contractCount}
+            reservationCounts={reservationCounts}
+            listingCounts={listingCounts}
             onItemClick={() => setMobileOpen(false)}
             canAccessSeeker={canAccessSeeker}
             tourLock={tourLock}
@@ -514,6 +655,8 @@ export function OwnerSidebar({
           materielUnreadCount={materielUnreadCount}
           paymentCount={paymentCount}
           contractCount={contractCount}
+          reservationCounts={reservationCounts}
+          listingCounts={listingCounts}
           collapsed={collapsed}
           canAccessSeeker={canAccessSeeker}
           tourLock={false}

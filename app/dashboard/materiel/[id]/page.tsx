@@ -271,11 +271,11 @@ export default async function DashboardMaterielDetailPage({
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
           <Link
-            href="/dashboard/materiel"
+            href="/proprietaire/commandes"
             className="mt-0.5 flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
           >
             <ArrowLeft className="h-4 w-4" />
-            Mes locations
+            Mes commandes
           </Link>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">

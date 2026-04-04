@@ -19,7 +19,6 @@ export default async function LoginPage({ searchParams }: Props) {
   const sp = await searchParams;
   const qs = new URLSearchParams();
   appendParam(qs, "redirectedFrom", sp.redirectedFrom);
-  appendParam(qs, "userType", sp.userType);
   const suffix = qs.toString();
   redirect(suffix ? `/auth?${suffix}` : "/auth");
 }

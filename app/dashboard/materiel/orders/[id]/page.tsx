@@ -19,7 +19,7 @@ export default async function DashboardMaterielOrderPage({
 
   const { user } = await getUserOrNull();
   if (!user) {
-    redirect(`/auth?tab=login&next=/dashboard/materiel/orders/${id}`);
+    redirect(`/auth?tab=login&next=/proprietaire/commandes/orders/${id}`);
   }
 
   const vm = await loadGsOrderDetailForViewer(id, user.id);
@@ -31,8 +31,8 @@ export default async function DashboardMaterielOrderPage({
     <GsOrderDetailView
       vm={vm}
       paidQuery={paid}
-      backHref="/dashboard/materiel"
-      backLabel="Mes locations matériel"
+      backHref="/proprietaire/commandes"
+      backLabel="Mes commandes"
     />
   );
 }
