@@ -4,7 +4,7 @@ import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { HowItWorksView } from "@/components/landing/HowItWorksView";
 import { buildCanonical } from "@/lib/seo";
-import { resolvePublishListingHref } from "@/lib/landing-publish-href";
+import { getLandingHeaderProps } from "@/lib/landing-publish-href";
 import { getUserOrNull } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -16,11 +16,11 @@ export const metadata: Metadata = {
 
 export default async function CommentCaMarchePage() {
   const { user, supabase } = await getUserOrNull();
-  const publishListingHref = await resolvePublishListingHref(user, supabase);
+  const { publishListingHref, dashboardHref } = await getLandingHeaderProps(user, supabase);
 
   return (
     <div className="font-landing-body min-h-screen bg-gs-beige text-[#222]">
-      <LandingHeader />
+      <LandingHeader publishListingHref={publishListingHref} dashboardHref={dashboardHref} />
       <HowItWorksView />
       <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
     </div>

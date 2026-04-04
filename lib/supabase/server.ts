@@ -9,16 +9,47 @@ export async function getUserOrNull(): Promise<{
 }> {
   const supabase = await createClient();
   try {
-    const { data } = await supabase.auth.getUser();
-    return { user: data.user, supabase };
+    const { data, error } = await supabase.auth.getUser();
+    const user = data.user ?? null;
+
+    if (!error) {
+      return { user, supabase };
+    }
+
+    const code = error.code;
+    if (process.env.AUTH_DEBUG === "1") {
+      console.warn("[getUserOrNull] getUser error", { code, message: error.message });
+    }
+
+    if (code === "refresh_token_not_found") {
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        /* ignore */
+      }
+      return { user: null, supabase };
+    }
+
+    if (code === "refresh_token_already_used") {
+      return { user: null, supabase };
+    }
+
+    console.error("[getUserOrNull] auth.getUser:", error.message, code);
+    return { user: null, supabase };
   } catch (err: unknown) {
-    if (
-      err &&
-      typeof err === "object" &&
-      "code" in err &&
-      (err as { code?: string }).code === "refresh_token_not_found"
-    ) {
-      await supabase.auth.signOut();
+    const code =
+      err && typeof err === "object" && "code" in err
+        ? (err as { code?: string }).code
+        : undefined;
+    if (code === "refresh_token_not_found") {
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        /* ignore */
+      }
+      return { user: null, supabase };
+    }
+    if (code === "refresh_token_already_used") {
       return { user: null, supabase };
     }
     console.error("[getUserOrNull] auth.getUser failed:", err);

@@ -10,7 +10,7 @@ import { ProviderStoreHero } from "@/components/storefront/provider-store-hero";
 import { ProviderStorefrontBody } from "@/components/storefront/provider-storefront-body";
 import { siteConfig } from "@/config/site";
 import { DEMO_PROVIDER_SLUG, demoProvider } from "@/lib/provider-storefront-demo";
-import { resolvePublishListingHref } from "@/lib/landing-publish-href";
+import { getLandingHeaderProps } from "@/lib/landing-publish-href";
 import { buildCanonical } from "@/lib/seo";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
@@ -95,12 +95,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ProviderStorefrontPage({ params }: PageProps) {
   const { slug } = await params;
   const { user, supabase } = await getUserOrNull();
-  const publishListingHref = await resolvePublishListingHref(user, supabase);
+  const { publishListingHref, dashboardHref } = await getLandingHeaderProps(user, supabase);
 
   if (slug === DEMO_PROVIDER_SLUG) {
     return (
       <div className="font-landing-body min-h-screen bg-gs-beige text-[#222]">
-        <LandingHeader />
+        <LandingHeader publishListingHref={publishListingHref} dashboardHref={dashboardHref} />
         <main>
           <ProviderStoreHero
             name={demoProvider.name}
@@ -132,7 +132,7 @@ export default async function ProviderStorefrontPage({ params }: PageProps) {
 
   return (
     <div className="font-landing-body min-h-screen bg-gs-beige text-[#222]">
-      <LandingHeader />
+      <LandingHeader publishListingHref={publishListingHref} dashboardHref={dashboardHref} />
       <main>
         <ProviderStoreHero
           name={displayName}

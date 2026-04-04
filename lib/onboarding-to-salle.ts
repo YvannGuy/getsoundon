@@ -1,6 +1,6 @@
 /**
- * Mapping des données onboarding → structure page annonce (`salles`).
- * Table Postgres inchangée : `public.salles` = catalogue matériel / pack en v1.
+ * Mapping des données wizard onboarding → champs utiles pour publier une annonce catalogue.
+ * Le runtime enregistre dans `gs_listings` / `gs_listing_images` uniquement (plus de ligne `salles`).
  */
 
 import { FEATURE_TO_SALLE, INCLUSION_LABELS } from "./salle-features";

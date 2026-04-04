@@ -1,5 +1,7 @@
 # GetSoundOn — Plan MVP premium (moteur legacy conservé)
 
+> **Note (historique / obsolète)** : ce plan décrit une orientation produit et un moteur legacy **non alignés** avec l’état actuel du dépôt (flow **matériel `gs_*`** en runtime). Conservé pour archive. Des fichiers cités ci-dessous (`lib/types/offer.ts`, etc.) ont été **retirés** du repo lors du ménage 2026.
+
 **Décision figée :** conserver le **moteur transactionnel legacy** (`offers`, `payments`, `conversations`, `messages`, Stripe Connect, caution, webhooks, crons) comme **v1**. Ne **pas** basculer le parcours principal sur `gs_*` (les routes `gs_*` peuvent coexister pour expérimentation mais ne sont pas le cœur produit décrit ici).
 
 **Objectif :** réorienter le **métier** de « salle / lieu » vers **matériel, packs et location événementielle premium**, en **réutilisant** tables et workflows existants.
@@ -13,7 +15,7 @@
 | Élément | Fichiers / usage |
 |---------|------------------|
 | Table **`salles`** + colonnes (`name`, `city`, `capacity`, `jours_visite`, `visite_*`, features type « scène », « PMR ») | Toute la chaîne publication / fiche / recherche |
-| **`offers.salle_id`** | `lib/types/offer.ts`, `app/actions/offers.ts`, checkout-offer, webhook, réservations, EDL, litiges |
+| **`offers.salle_id`** | Legacy — types `offer.ts` / actions `offers` **retirés** du repo ; référence historique uniquement |
 | **`demandes.salle_id`**, champs **`nb_personnes`**, **`type_evenement`**, créneaux « visite » | `create-demande.ts`, `demande-owner.ts`, pages demandes |
 | **`demandes_visite`** + `salle_id` | Flux visite physique du lieu |
 | **`conversations`** liées à `demande_id` / `demande_visite_id` + `salle_id` | `messagerie.ts`, `dashboard/messagerie`, `proprietaire/messagerie` |

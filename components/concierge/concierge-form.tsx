@@ -268,7 +268,7 @@ export function ConciergeForm({ initialValues, isLoggedIn, source }: ConciergeFo
           Décrivez votre besoin en 2–3 phrases <span className="text-rose-500">*</span>
         </label>
         <Textarea
-          placeholder="Ex: Nous recherchons une salle pour un culte régulier le dimanche matin, capacité 80–100 personnes, avec sono et parking."
+          placeholder="Ex: Soirée 120 personnes en Île-de-France : sono complète + micros, idéalement avec livraison le vendredi et reprise le lundi."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={4}

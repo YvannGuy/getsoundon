@@ -1,6 +1,6 @@
 /**
- * Type « annonce » — la table Postgres reste `public.salles` (catalogue matériel / pack en v1 GetSoundOn).
- * Les champs optionnels gear_* / listing_kind supposent la migration `scripts/supabase-salles-gear-listing.sql`.
+ * Shape intermédiaire « annonce » pour le wizard onboarding (voir `mapOnboardingToSalle`).
+ * La persistance catalogue se fait dans `gs_listings` ; ce type n’implique plus d’écriture dans `salles`.
  */
 export type ListingKind = "equipment" | "pack" | "service" | "venue";
 

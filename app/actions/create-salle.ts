@@ -97,7 +97,6 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
   const ville = String(formData.get("ville") ?? "").trim();
   const capacite = String(formData.get("capacite") ?? "");
   const adresse = String(formData.get("adresse") ?? "").trim();
-  const cautionRequise = formData.get("cautionRequise") === "1";
   const postalCode = String(formData.get("postalCode") ?? "").trim();
   const department = postalCode ? postalCode.slice(0, 2) : null;
   const latStr = String(formData.get("lat") ?? "").trim();
@@ -257,77 +256,7 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
   const status =
     !validation_manuelle || mode_publication === "auto" ? "approved" : "pending";
 
-  const firstJour = joursEffectifs[0];
-  const firstHoraire = firstJour ? horairesEffectifs[firstJour] : null;
-
-  const { data: insertedSalle, error } = await supabase
-    .from("salles")
-    .insert({
-      owner_id: user.id,
-      slug,
-      name: (mapped.name ?? nom) || "Annonce matériel",
-      city: mapped.city ?? ville,
-      address: mapped.address ?? (adresse ? `${adresse}, ${ville}`.trim() : ville),
-      postal_code: postalCode || null,
-      department: department || null,
-      contact_phone: null,
-      display_contact_phone: false,
-      caution_requise: cautionRequise,
-      lat: lat ?? null,
-      lng: lng ?? null,
-      capacity: mapped.capacity ?? (parseInt(capacite, 10) || 0),
-      price_per_day: mapped.pricePerDay ?? (parseInt(tarifParJour, 10) || 0),
-      price_per_month: mapped.pricePerMonth ?? (parseInt(tarifMensuel, 10) || null),
-      price_per_hour: mapped.pricePerHour ?? (parseInt(tarifHoraire, 10) || null),
-      description: mapped.description ?? "",
-      images: mapped.images ?? imageUrls,
-      video_url: null,
-      features: mapped.features ?? [],
-      conditions: mapped.conditions ?? [],
-      pricing_inclusions: mapped.pricingInclusions ?? [],
-      listing_kind: listing_kind,
-      gear_category: gearCategory || null,
-      gear_brand: gearBrand || null,
-      gear_model: gearModel || null,
-      heure_debut: firstHoraire?.debut ?? "08:00",
-      heure_fin: firstHoraire?.fin ?? "22:00",
-      horaires_par_jour: Object.keys(horairesEffectifs).length > 0 ? horairesEffectifs : {},
-      jours_ouverture: joursEffectifs.length > 0 ? joursEffectifs : [],
-      jours_visite: proposeVisite && joursVisite.length > 0 ? joursVisite : null,
-      visite_dates:
-        proposeVisite && visiteDates.length > 0 ? visiteDates : null,
-      visite_horaires_par_date:
-        proposeVisite &&
-        visiteDates.length > 0 &&
-        Object.keys(visiteHorairesParDate).length > 0
-          ? visiteHorairesParDate
-          : null,
-      evenements_acceptes: evenementsAcceptes.length > 0 ? evenementsAcceptes : [],
-      places_parking: placesParking ? parseInt(placesParking, 10) || null : null,
-      status,
-    })
-    .select("id")
-    .single();
-
-  if (error) {
-    const code = (error as { code?: string }).code;
-    return {
-      success: false,
-      error: error.message,
-      ...(code ? { errorCode: code } : {}),
-    };
-  }
-
-  const salleId = (insertedSalle as { id: string } | null)?.id;
-  if (!salleId) {
-    return {
-      success: false,
-      error: "Publication enregistrée mais identifiant annonce manquant. Contactez le support.",
-      errorCode: "SALLE_ID_MISSING",
-    };
-  }
-
-  // Annonce catalogue matériel (`gs_listings`) — alignée sur la même publication (hors flow salles legacy UI).
+  /** Catalogue matériel natif `gs_*` — plus d’insertion dans `salles` (Lot G). */
   const gsDeposit = Math.max(0, Number.parseFloat(String(formData.get("gsListingDepositEur") ?? "0")) || 0);
   const gsImmediate = formData.get("gsListingImmediateConfirmation") === "1";
   const gsPolicyRaw = String(formData.get("gsListingCancellationPolicy") ?? "moderate").toLowerCase();
@@ -341,60 +270,74 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
   const listingDescription = (mapped.description ?? description ?? "").trim() || listingTitle;
   const priceDay = Number((mapped.pricePerDay ?? parseInt(tarifParJour, 10)) || 0);
 
-  try {
-    const admin = createAdminClient();
-    const { data: gsp } = await admin.from("gs_users_profile").select("id, role").eq("id", user.id).maybeSingle();
-    if (!gsp) {
-      await admin.from("gs_users_profile").insert({
-        id: user.id,
-        role: "provider",
-        email: user.email ?? "",
-      });
-    } else if ((gsp as { role?: string }).role === "customer") {
-      await admin.from("gs_users_profile").update({ role: "provider" }).eq("id", user.id);
+  const admin = createAdminClient();
+  const { data: gsp } = await admin.from("gs_users_profile").select("id, role").eq("id", user.id).maybeSingle();
+  if (!gsp) {
+    const { error: insProfErr } = await admin.from("gs_users_profile").insert({
+      id: user.id,
+      role: "provider",
+      email: user.email ?? "",
+    });
+    if (insProfErr) {
+      return {
+        success: false,
+        error: insProfErr.message,
+        errorCode: (insProfErr as { code?: string }).code ?? "GS_PROFILE_INSERT",
+      };
     }
+  } else if ((gsp as { role?: string }).role === "customer") {
+    await admin.from("gs_users_profile").update({ role: "provider" }).eq("id", user.id);
+  }
 
-    const gsPayload = {
-      owner_id: user.id,
-      source_salle_id: salleId,
-      title: listingTitle,
-      description: listingDescription,
-      category: gsCategory,
-      price_per_day: priceDay,
-      location: listingLocation,
-      lat: lat ?? null,
-      lng: lng ?? null,
-      is_active: status === "approved",
-      deposit_amount: gsDeposit,
-      immediate_confirmation: gsImmediate,
-      cancellation_policy: gsCancellationPolicy,
+  const gsPayload = {
+    owner_id: user.id,
+    title: listingTitle,
+    description: listingDescription,
+    category: gsCategory,
+    price_per_day: priceDay,
+    location: listingLocation,
+    lat: lat ?? null,
+    lng: lng ?? null,
+    is_active: status === "approved",
+    deposit_amount: gsDeposit,
+    immediate_confirmation: gsImmediate,
+    cancellation_policy: gsCancellationPolicy,
+  };
+
+  const { data: insListing, error: gsListingError } = await admin
+    .from("gs_listings")
+    .insert(gsPayload)
+    .select("id")
+    .single();
+
+  if (gsListingError || !insListing?.id) {
+    console.error("[createSalleFromOnboarding] gs_listings insert:", gsListingError?.message);
+    return {
+      success: false,
+      error: gsListingError?.message ?? "Impossible d'enregistrer l'annonce catalogue.",
+      errorCode: (gsListingError as { code?: string } | null)?.code ?? "GS_LISTING_INSERT",
     };
+  }
 
-    const { data: insListing, error: gsListingError } = await admin
-      .from("gs_listings")
-      .upsert(gsPayload, { onConflict: "source_salle_id" })
-      .select("id")
-      .maybeSingle();
-
-    if (gsListingError) {
-      console.error("[createSalleFromOnboarding] gs_listings upsert:", gsListingError.message);
-    } else if (insListing?.id) {
-      const lid = (insListing as { id: string }).id;
-      const { error: delImgErr } = await admin.from("gs_listing_images").delete().eq("listing_id", lid);
-      if (delImgErr) console.error("[createSalleFromOnboarding] gs_listing_images delete:", delImgErr.message);
-      if (imageUrls.length > 0) {
-        const rows = imageUrls.map((url, i) => ({
-          listing_id: lid,
-          url,
-          position: i,
-          is_cover: i === 0,
-        }));
-        const { error: imgErr } = await admin.from("gs_listing_images").insert(rows);
-        if (imgErr) console.error("[createSalleFromOnboarding] gs_listing_images insert:", imgErr.message);
-      }
+  const lid = (insListing as { id: string }).id;
+  if (imageUrls.length > 0) {
+    const rows = imageUrls.map((url, i) => ({
+      listing_id: lid,
+      url,
+      position: i,
+      is_cover: i === 0,
+    }));
+    const { error: imgErr } = await admin.from("gs_listing_images").insert(rows);
+    if (imgErr) {
+      console.error("[createSalleFromOnboarding] gs_listing_images insert:", imgErr.message);
+      await admin.from("gs_listings").delete().eq("id", lid);
+      return {
+        success: false,
+        error: "L'annonce a été créée mais l'enregistrement des photos a échoué. Réessayez.",
+        errorCode: "GS_LISTING_IMAGES_INSERT",
+        errorDetails: imgErr.message,
+      };
     }
-  } catch (e) {
-    console.error("[createSalleFromOnboarding] sync gs_listings:", e instanceof Error ? e.message : e);
   }
 
   // Notification admin à chaque nouvelle annonce (pending = à valider, approved = publiée)

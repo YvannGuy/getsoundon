@@ -58,8 +58,8 @@ export default function ConfidentialitePage() {
             annonces)
           </li>
           <li>
-            <strong className="text-black">Données relatives aux annonces</strong> : description des salles, photos,
-            capacité, équipements (propriétaires)
+            <strong className="text-black">Données relatives aux annonces</strong> : description du matériel mis en
+            location, photos, tarifs, options (retrait, livraison, zone), équipements (loueurs / prestataires)
           </li>
           <li>
             <strong className="text-black">Données de navigation</strong> : adresse IP, type de navigateur, pages visitées
@@ -84,7 +84,7 @@ export default function ConfidentialitePage() {
         <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
           <li>Gestion des comptes utilisateurs</li>
           <li>Mise en relation entre organisateurs et propriétaires</li>
-          <li>Publication et gestion des annonces de salles</li>
+          <li>Publication et gestion des annonces de matériel (catalogue)</li>
           <li>Exécution des paiements de réservation et frais de service</li>
           <li>Envoi de communications relatives au service (confirmations, rappels)</li>
           <li>Prévention des fraudes et respect des obligations légales</li>

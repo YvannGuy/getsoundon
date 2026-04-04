@@ -2,6 +2,8 @@
 > Staff Product Engineer + Senior Full-Stack Architect  
 > Périmètre : **flow matériel uniquement** (`gs_*`). Le flow salles (legacy `offers`) n'est pas touché.
 
+> **Note (historique)** : certaines sections mentionnent encore `salles`, `offers` ou écarts par rapport au catalogue matériel : elles reflètent **l’état au moment de l’audit**, pas une vérité figée. Pour l’état actuel du repo, se fier au code et au schéma SQL de référence.
+
 ---
 
 ## Table des matières

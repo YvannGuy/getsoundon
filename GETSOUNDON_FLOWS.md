@@ -1,6 +1,8 @@
 # GetSoundOn — Flows complets (Utilisateur & Propriétaire)
 
-> Document de référence produit — à jour avec le code en production.
+> **Note (historique / obsolète en partie)** : ce document mélange d’anciens parcours (lieux, messagerie « salle », réservation via `offers`) et le **catalogue matériel** (`gs_*`). Le périmètre produit actuel est centré sur le **matériel** ; les sections « réserver une salle » et assimilées ne décrivent plus le runtime principal. **Référence opérationnelle** : code applicatif et `config/supabase-getsoundon-schema.sql`.
+
+> Document historique conservé pour contexte — ne pas prendre toutes les sections comme spec à jour.
 
 ---
 

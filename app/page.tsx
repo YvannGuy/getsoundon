@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   alternates: { canonical: buildCanonical("/") },
 };
 
+/** Évite une page d’accueil servie sans tenir compte des cookies de session. */
+export const dynamic = "force-dynamic";
+
 export default function HomePage() {
   return <Home />;
 }

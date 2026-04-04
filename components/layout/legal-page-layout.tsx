@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
-import { resolvePublishListingHref } from "@/lib/landing-publish-href";
+import { getLandingHeaderProps } from "@/lib/landing-publish-href";
 import { getUserOrNull } from "@/lib/supabase/server";
 
 export async function LegalPageLayout({
@@ -13,11 +13,11 @@ export async function LegalPageLayout({
   title: string;
 }) {
   const { user, supabase } = await getUserOrNull();
-  const publishListingHref = await resolvePublishListingHref(user, supabase);
+  const { publishListingHref, dashboardHref } = await getLandingHeaderProps(user, supabase);
 
   return (
     <div className="font-landing-body min-h-screen bg-gs-beige text-[#222]">
-      <LandingHeader />
+      <LandingHeader publishListingHref={publishListingHref} dashboardHref={dashboardHref} />
       <main className="landing-container max-w-[800px] py-14 sm:py-16 md:py-20">
         <Link
           href="/"

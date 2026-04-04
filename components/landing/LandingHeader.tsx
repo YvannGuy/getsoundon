@@ -2,17 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
 
+import { HeaderAuthDropdown } from "@/components/layout/header-auth-dropdown";
 import { siteConfig } from "@/config/site";
 
-const centerNavItems = [
-  { href: "/catalogue", label: "Catalogue" },
-  { href: "/comment-ca-marche", label: "Comment ça marche" },
-  { href: "/auth?tab=signup&userType=owner", label: "Louer mon matériel" },
-] as const;
+const DEFAULT_PUBLISH_LISTING_HREF = "/auth?tab=signup&userType=owner";
 
 const navLinkClass =
   "font-landing-nav text-gs-dark underline-offset-4 hover:underline";
@@ -20,10 +17,27 @@ const navLinkClass =
 const mobileMenuIconBtnClass =
   "flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-transparent text-gs-dark transition hover:bg-white/60";
 
-export function LandingHeader() {
+export function LandingHeader({
+  publishListingHref = DEFAULT_PUBLISH_LISTING_HREF,
+  dashboardHref,
+}: {
+  publishListingHref?: string;
+  /** Si défini, l’utilisateur est connecté : afficher le menu tableau de bord (comme le reste du site). */
+  dashboardHref?: string;
+} = {}) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const closeMobile = () => setMobileOpen(false);
+
+  const centerNavItems = useMemo(
+    () =>
+      [
+        { href: "/catalogue", label: "Catalogue" },
+        { href: "/comment-ca-marche", label: "Comment ça marche" },
+        { href: publishListingHref, label: "Louer mon matériel" },
+      ] as const,
+    [publishListingHref],
+  );
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -75,9 +89,23 @@ export function LandingHeader() {
         </nav>
 
         <div className="relative z-10 flex shrink-0 items-center gap-2 md:gap-4">
-          <Link href="/auth?tab=signup" className={`${navLinkClass} hidden md:inline`}>
-            Inscription
-          </Link>
+          {dashboardHref ? (
+            <div className="hidden md:block">
+              <HeaderAuthDropdown dashboardHref={dashboardHref} />
+            </div>
+          ) : (
+            <>
+              <Link href="/auth?tab=signup" className={`${navLinkClass} hidden md:inline`}>
+                Inscription
+              </Link>
+              <Link
+                href="/auth"
+                className="font-landing-btn hidden rounded-md bg-gs-orange px-3 py-2 text-white transition hover:brightness-105 md:inline-flex sm:px-7 sm:py-3"
+              >
+                Connexion
+              </Link>
+            </>
+          )}
 
           <button
             type="button"
@@ -89,13 +117,6 @@ export function LandingHeader() {
           >
             <Menu className="h-[22px] w-[22px]" strokeWidth={2.25} aria-hidden />
           </button>
-
-          <Link
-            href="/auth"
-            className="font-landing-btn hidden rounded-md bg-gs-orange px-3 py-2 text-white transition hover:brightness-105 md:inline-flex sm:px-7 sm:py-3"
-          >
-            Connexion
-          </Link>
         </div>
       </div>
 
@@ -154,20 +175,30 @@ export function LandingHeader() {
                   ))}
 
                   <div className="border-t border-gs-line px-4 pb-7 pt-5">
-                    <Link
-                      href="/auth?tab=signup"
-                      className="font-landing-btn flex w-full items-center justify-center rounded-lg bg-gs-orange py-4 text-white transition hover:brightness-105"
-                      onClick={closeMobile}
-                    >
-                      Inscription
-                    </Link>
-                    <Link
-                      href="/auth"
-                      className="font-landing-nav mt-4 block pb-1 text-center text-base text-gs-dark underline-offset-4 hover:underline"
-                      onClick={closeMobile}
-                    >
-                      Connexion
-                    </Link>
+                    {dashboardHref ? (
+                      <HeaderAuthDropdown
+                        dashboardHref={dashboardHref}
+                        fullWidth
+                        onNavigate={closeMobile}
+                      />
+                    ) : (
+                      <>
+                        <Link
+                          href="/auth?tab=signup"
+                          className="font-landing-btn flex w-full items-center justify-center rounded-lg bg-gs-orange py-4 text-white transition hover:brightness-105"
+                          onClick={closeMobile}
+                        >
+                          Inscription
+                        </Link>
+                        <Link
+                          href="/auth"
+                          className="font-landing-nav mt-4 block pb-1 text-center text-base text-gs-dark underline-offset-4 hover:underline"
+                          onClick={closeMobile}
+                        >
+                          Connexion
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </nav>
               </div>

@@ -1,6 +1,10 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 
-import { getEffectiveUserType, getPublishMaterialListingHref } from "@/lib/auth-utils";
+import {
+  getDashboardHref,
+  getEffectiveUserType,
+  getPublishMaterialListingHref,
+} from "@/lib/auth-utils";
 
 /** Pour footer / shell landing : même règle que la sidebar dashboard (prestataire vs inscription). */
 export async function resolvePublishListingHref(
@@ -36,4 +40,23 @@ export async function resolvePublishListingHref(
   const hasCatalogListings = (myListings ?? []).length > 0;
 
   return getPublishMaterialListingHref(userType, hasCatalogListings, true);
+}
+
+/** Header landing : lien « publier » + tableau de bord si connecté (aligné sur le footer). */
+export async function getLandingHeaderProps(
+  user: User | null,
+  supabase: SupabaseClient,
+): Promise<{ publishListingHref: string; dashboardHref?: string }> {
+  const publishListingHref = await resolvePublishListingHref(user, supabase);
+  if (!user) return { publishListingHref };
+
+  const userType = await getEffectiveUserType(user, async (userId) => {
+    const { data } = await supabase.from("profiles").select("user_type").eq("id", userId).maybeSingle();
+    return data;
+  });
+
+  return {
+    publishListingHref,
+    dashboardHref: getDashboardHref(userType ?? "seeker"),
+  };
 }

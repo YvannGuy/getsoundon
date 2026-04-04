@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ConciergeForm, type ConciergeInitialValues } from "@/components/concierge/concierge-form";
 import { buildCanonical } from "@/lib/seo";
 import { siteConfig } from "@/config/site";
-import { resolvePublishListingHref } from "@/lib/landing-publish-href";
+import { getLandingHeaderProps } from "@/lib/landing-publish-href";
 import { getUserOrNull } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -39,7 +39,7 @@ export default async function ConciergeriePage({
   const type = typeof params.type === "string" ? params.type : undefined;
 
   const { user, supabase } = await getUserOrNull();
-  const publishListingHref = await resolvePublishListingHref(user, supabase);
+  const { publishListingHref, dashboardHref } = await getLandingHeaderProps(user, supabase);
 
   const initialValues: ConciergeInitialValues = {
     ville,
@@ -56,7 +56,7 @@ export default async function ConciergeriePage({
 
   return (
     <div className="font-landing-body min-h-screen bg-gs-beige text-[#222]">
-      <LandingHeader />
+      <LandingHeader publishListingHref={publishListingHref} dashboardHref={dashboardHref} />
       <main className="landing-container max-w-[800px] px-4 py-12">
         <section className="text-center">
           <h1 className="text-[32px] font-bold leading-tight text-black sm:text-[40px]">
