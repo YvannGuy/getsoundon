@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { generateInvoicesForCompletedBookings } from "@/app/actions/generate-invoices";
-
-function isAuthorized(request: Request): boolean {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-  const authHeader = request.headers.get("authorization") ?? "";
-  return authHeader === `Bearer ${secret}`;
-}
+import { verifyCronRequest } from "@/lib/cron/auth";
 
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
+  const authorized = await verifyCronRequest(request);
+  if (!authorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

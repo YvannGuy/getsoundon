@@ -3,13 +3,7 @@ import { NextResponse } from "next/server";
 import { getProviderNetTransferCents } from "@/lib/gs-booking-platform-fee";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-function isAuthorized(request: Request): boolean {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-  const authHeader = request.headers.get("authorization") ?? "";
-  return authHeader === `Bearer ${secret}`;
-}
+import { verifyCronRequest } from "@/lib/cron/auth";
 
 /**
  * Cron — Versement Connect des prestataires (réservations matériel `gs_bookings`).
@@ -18,7 +12,8 @@ function isAuthorized(request: Request): boolean {
  * Conditions : status accepted|completed, payout pending|scheduled|blocked, pas d’incident bloquant, etc.
  */
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
+  const authorized = await verifyCronRequest(request);
+  if (!authorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

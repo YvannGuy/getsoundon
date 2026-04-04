@@ -20,7 +20,14 @@ const ratelimit =
       })
     : null;
 
-const rateLimitedPaths = ["/auth/admin", "/api/stripe/checkout-booking"];
+const rateLimitedPaths = [
+  "/auth/admin",
+  "/auth",
+  "/api/stripe/checkout-booking",
+  "/api/stripe/webhook",
+  "/api/cron/",
+  "/api/messages",
+];
 
 function shouldRateLimit(pathname: string) {
   return rateLimitedPaths.some((p) => pathname.startsWith(p));
@@ -101,8 +108,12 @@ export default proxy;
 
 export const config = {
   matcher: [
+    "/auth",
     "/auth/admin",
     "/api/stripe/checkout-booking",
+    "/api/stripe/webhook",
+    "/api/cron/:path*",
+    "/api/messages",
     "/((?!api|auth|_next/static|_next/image|favicon|.well-known|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|json)$).*)",
   ],
 };

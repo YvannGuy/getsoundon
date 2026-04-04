@@ -3,19 +3,14 @@ import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendUserNotification } from "@/lib/user-notifications";
-
-function isAuthorized(request: Request): boolean {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-  const authHeader = request.headers.get("authorization") ?? "";
-  return authHeader === `Bearer ${secret}`;
-}
+import { verifyCronRequest } from "@/lib/cron/auth";
 
 /**
  * Lot D — Libération cautions matériel uniquement (bloc legacy `offers` retiré).
  */
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
+  const authorized = await verifyCronRequest(request);
+  if (!authorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

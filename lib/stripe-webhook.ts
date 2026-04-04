@@ -3,31 +3,10 @@ import Stripe from "stripe";
 import { handleGsBookingCheckoutCompleted } from "@/lib/stripe-webhook-gs-booking";
 import { handleGsOrderCheckoutCompleted } from "@/lib/stripe-webhook-gs-order";
 
-const processedEventIds = new Map<string, number>();
-const WEBHOOK_EVENT_TTL_MS = 1000 * 60 * 60 * 24;
-
-function shouldProcessEvent(eventId: string): boolean {
-  const now = Date.now();
-  for (const [id, ts] of processedEventIds) {
-    if (now - ts > WEBHOOK_EVENT_TTL_MS) {
-      processedEventIds.delete(id);
-    }
-  }
-  if (processedEventIds.has(eventId)) {
-    return false;
-  }
-  processedEventIds.set(eventId, now);
-  return true;
-}
-
 /**
  * Webhook Stripe — Lot E : branche `gs_booking` conservée ; `product_type=reservation` ignorée (décommission).
  */
 export async function handleStripeWebhook(event: Stripe.Event) {
-  if (!shouldProcessEvent(event.id)) {
-    return { type: event.type, ignored: true, reason: "duplicate_event" };
-  }
-
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
