@@ -2,23 +2,41 @@ import Link from "next/link";
 
 import { HeaderAuthDropdown } from "@/components/layout/header-auth-dropdown";
 import { getDashboardHref, getEffectiveUserType } from "@/lib/auth-utils";
+import { fetchAuthProfileRow } from "@/lib/fetch-auth-profile";
 import { getUserOrNull } from "@/lib/supabase/server";
 
 export async function HeaderAuth() {
   const { user, supabase } = await getUserOrNull();
 
   if (user) {
-    const getProfile = async (userId: string) => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("id", userId)
-        .maybeSingle();
-      return data;
-    };
-    const userType = await getEffectiveUserType(user, getProfile);
-    const dashboardHref = getDashboardHref(userType ?? "seeker");
-    return <HeaderAuthDropdown dashboardHref={dashboardHref} />;
+    const profileRow = await fetchAuthProfileRow(user.id, supabase);
+
+    const userType = await getEffectiveUserType(user, async () =>
+      profileRow ? { user_type: profileRow.user_type } : null,
+    );
+    const effective = userType ?? "seeker";
+    const dashboardHref = getDashboardHref(effective);
+
+    const meta = user.user_metadata as Record<string, unknown> | undefined;
+    const avatarUrl =
+      (typeof meta?.avatar_url === "string" && meta.avatar_url.trim()) ||
+      (typeof meta?.picture === "string" && meta.picture.trim()) ||
+      null;
+    const displayName =
+      profileRow?.full_name?.trim() ||
+      profileRow?.first_name?.trim() ||
+      (typeof meta?.full_name === "string" ? meta.full_name.trim() : null) ||
+      null;
+
+    return (
+      <HeaderAuthDropdown
+        dashboardHref={dashboardHref}
+        userType={effective}
+        avatarUrl={avatarUrl}
+        displayName={displayName}
+        email={user.email ?? null}
+      />
+    );
   }
 
   return (

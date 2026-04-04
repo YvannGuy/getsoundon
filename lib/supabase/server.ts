@@ -34,6 +34,16 @@ export async function getUserOrNull(): Promise<{
       return { user: null, supabase };
     }
 
+    const msg = (error.message ?? "").toLowerCase();
+    const noSessionExpected =
+      msg.includes("session missing") ||
+      msg.includes("no session") ||
+      code === "session_not_found";
+
+    if (noSessionExpected) {
+      return { user: null, supabase };
+    }
+
     console.error("[getUserOrNull] auth.getUser:", error.message, code);
     return { user: null, supabase };
   } catch (err: unknown) {
@@ -50,6 +60,11 @@ export async function getUserOrNull(): Promise<{
       return { user: null, supabase };
     }
     if (code === "refresh_token_already_used") {
+      return { user: null, supabase };
+    }
+    const errMsg =
+      err instanceof Error ? err.message.toLowerCase() : String(err).toLowerCase();
+    if (errMsg.includes("session missing") || errMsg.includes("no session")) {
       return { user: null, supabase };
     }
     console.error("[getUserOrNull] auth.getUser failed:", err);

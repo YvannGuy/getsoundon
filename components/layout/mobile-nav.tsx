@@ -5,12 +5,17 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
 import { HeaderAuthDropdown } from "@/components/layout/header-auth-dropdown";
+import { HeaderMobilePanierLink } from "@/components/layout/header-mobile-panier-link";
 
 interface MobileNavProps {
   isLoggedIn: boolean;
   userType?: "seeker" | "owner" | "admin" | null;
   dashboardHref?: string;
   addSalleHref: string;
+  accountAvatarUrl?: string | null;
+  accountDisplayName?: string | null;
+  accountEmail?: string | null;
+  cartServerUnits?: number;
 }
 
 const navLinks = [
@@ -20,7 +25,16 @@ const navLinks = [
   { label: "Publier mon materiel", isAddSalle: true as const },
 ];
 
-export function MobileNav({ isLoggedIn, userType, dashboardHref, addSalleHref }: MobileNavProps) {
+export function MobileNav({
+  isLoggedIn,
+  userType,
+  dashboardHref,
+  addSalleHref,
+  accountAvatarUrl,
+  accountDisplayName,
+  accountEmail,
+  cartServerUnits = 0,
+}: MobileNavProps) {
   const [open, setOpen] = useState(false);
 
   const handleClose = () => setOpen(false);
@@ -59,11 +73,21 @@ export function MobileNav({ isLoggedIn, userType, dashboardHref, addSalleHref }:
                   {link.label}
                 </Link>
               ))}
+              <HeaderMobilePanierLink
+                isAuthenticated={isLoggedIn}
+                serverUnits={cartServerUnits}
+                onNavigate={handleClose}
+                className="flex items-center justify-between border-b border-slate-100 px-6 py-3 text-[15px] font-medium text-slate-700 hover:bg-slate-50 hover:text-black"
+              />
               <div className="mt-2 border-t border-slate-200 px-6 py-4">
                 {isLoggedIn && dashboardHref ? (
                   <div className="w-full px-0" onClick={(e) => e.stopPropagation()}>
                     <HeaderAuthDropdown
                       dashboardHref={dashboardHref}
+                      userType={userType ?? "seeker"}
+                      avatarUrl={accountAvatarUrl}
+                      displayName={accountDisplayName}
+                      email={accountEmail}
                       onNavigate={handleClose}
                       fullWidth
                     />
@@ -80,7 +104,7 @@ export function MobileNav({ isLoggedIn, userType, dashboardHref, addSalleHref }:
                     onClick={handleClose}
                     className="flex w-full items-center justify-center rounded-md bg-gs-orange py-3 text-[14px] font-medium text-white hover:brightness-95"
                   >
-                    Tableau de bord
+                    Mon compte
                   </Link>
                 ) : (
                   <div className="flex flex-col gap-2">

@@ -39,7 +39,15 @@ export default async function ConciergeriePage({
   const type = typeof params.type === "string" ? params.type : undefined;
 
   const { user, supabase } = await getUserOrNull();
-  const { publishListingHref, dashboardHref } = await getLandingHeaderProps(user, supabase);
+  const {
+    publishListingHref,
+    dashboardHref,
+    userType,
+    draftCartPreview,
+    accountAvatarUrl,
+    accountDisplayName,
+    accountEmail,
+  } = await getLandingHeaderProps(user, supabase);
 
   const initialValues: ConciergeInitialValues = {
     ville,
@@ -56,7 +64,15 @@ export default async function ConciergeriePage({
 
   return (
     <div className="font-landing-body min-h-screen bg-gs-beige text-[#222]">
-      <LandingHeader publishListingHref={publishListingHref} dashboardHref={dashboardHref} />
+      <LandingHeader
+        publishListingHref={publishListingHref}
+        dashboardHref={dashboardHref}
+        userType={userType}
+        draftCartPreview={draftCartPreview}
+        accountAvatarUrl={accountAvatarUrl}
+        accountDisplayName={accountDisplayName}
+        accountEmail={accountEmail}
+      />
       <main className="landing-container max-w-[800px] px-4 py-12">
         <section className="text-center">
           <h1 className="text-[32px] font-bold leading-tight text-black sm:text-[40px]">

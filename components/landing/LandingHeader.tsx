@@ -7,7 +7,11 @@ import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
 
 import { HeaderAuthDropdown } from "@/components/layout/header-auth-dropdown";
+import { HeaderCartDropdown } from "@/components/layout/header-cart-dropdown";
+import { HeaderMobilePanierLink } from "@/components/layout/header-mobile-panier-link";
 import { siteConfig } from "@/config/site";
+import type { EffectiveUserType } from "@/lib/auth-utils";
+import type { DraftCartPreview } from "@/lib/gs-draft-cart-preview";
 
 const DEFAULT_PUBLISH_LISTING_HREF = "/auth?tab=signup&userType=owner";
 
@@ -20,10 +24,21 @@ const mobileMenuIconBtnClass =
 export function LandingHeader({
   publishListingHref = DEFAULT_PUBLISH_LISTING_HREF,
   dashboardHref,
+  userType = "seeker",
+  draftCartPreview = null,
+  accountAvatarUrl = null,
+  accountDisplayName = null,
+  accountEmail = null,
 }: {
   publishListingHref?: string;
   /** Si défini, l’utilisateur est connecté : afficher le menu tableau de bord (comme le reste du site). */
   dashboardHref?: string;
+  userType?: EffectiveUserType;
+  /** Aperçu panier matériel serveur (connecté locataire). */
+  draftCartPreview?: DraftCartPreview | null;
+  accountAvatarUrl?: string | null;
+  accountDisplayName?: string | null;
+  accountEmail?: string | null;
 } = {}) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -89,9 +104,19 @@ export function LandingHeader({
         </nav>
 
         <div className="relative z-10 flex shrink-0 items-center gap-2 md:gap-4">
+          <HeaderCartDropdown
+            serverPreview={draftCartPreview ?? null}
+            isAuthenticated={!!dashboardHref}
+          />
           {dashboardHref ? (
             <div className="hidden md:block">
-              <HeaderAuthDropdown dashboardHref={dashboardHref} />
+              <HeaderAuthDropdown
+                dashboardHref={dashboardHref}
+                userType={userType}
+                avatarUrl={accountAvatarUrl}
+                displayName={accountDisplayName}
+                email={accountEmail}
+              />
             </div>
           ) : (
             <>
@@ -174,10 +199,20 @@ export function LandingHeader({
                     </Link>
                   ))}
 
+                  <HeaderMobilePanierLink
+                    isAuthenticated={!!dashboardHref}
+                    serverUnits={draftCartPreview?.units ?? 0}
+                    onNavigate={closeMobile}
+                  />
+
                   <div className="border-t border-gs-line px-4 pb-7 pt-5">
                     {dashboardHref ? (
                       <HeaderAuthDropdown
                         dashboardHref={dashboardHref}
+                        userType={userType}
+                        avatarUrl={accountAvatarUrl}
+                        displayName={accountDisplayName}
+                        email={accountEmail}
                         fullWidth
                         onNavigate={closeMobile}
                       />

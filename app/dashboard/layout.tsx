@@ -8,6 +8,7 @@ import {
   getEffectiveUserType,
   getPublishMaterialListingHref,
 } from "@/lib/auth-utils";
+import { fetchAuthProfileRow } from "@/lib/fetch-auth-profile";
 import { EMPTY_BADGE_COUNTS, getSeekerBadgeCounts } from "@/lib/notification-counts";
 import { getUserOrNull } from "@/lib/supabase/server";
 
@@ -36,21 +37,17 @@ export default async function DashboardLayout({
   const isAdminByEnv =
     adminEmails.length > 0 && adminEmails.includes(user.email?.toLowerCase() ?? "");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("suspended, full_name, user_type")
-    .eq("id", user.id)
-    .maybeSingle();
+  const profile = await fetchAuthProfileRow(user.id, supabase);
 
-  if ((profile as { suspended?: boolean } | null)?.suspended) {
+  if (profile?.suspended) {
     redirect("/auth?suspended=1");
   }
 
   const userType = isAdminByEnv
     ? "admin"
-    : await getEffectiveUserType(user, async () => ({
-        user_type: (profile as { user_type?: string | null } | null)?.user_type ?? "seeker",
-      }));
+    : await getEffectiveUserType(user, async () =>
+        profile ? { user_type: profile.user_type } : null,
+      );
   if (userType === "admin") redirect("/admin");
 
   const { data: myListings } = await supabase
@@ -70,7 +67,11 @@ export default async function DashboardLayout({
     }
   }
 
-  const displayName = (profile as { full_name?: string | null } | null)?.full_name ?? user.user_metadata?.full_name ?? "Utilisateur";
+  const displayName =
+    profile?.full_name?.trim() ||
+    profile?.first_name?.trim() ||
+    (typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : null) ||
+    "Utilisateur";
 
   let materielUnreadCount: number;
   try {

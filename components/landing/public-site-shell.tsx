@@ -8,10 +8,26 @@ import { getUserOrNull } from "@/lib/supabase/server";
  */
 export async function PublicSiteShell({ children }: { children: React.ReactNode }) {
   const { user, supabase } = await getUserOrNull();
-  const { publishListingHref, dashboardHref } = await getLandingHeaderProps(user, supabase);
+  const {
+    publishListingHref,
+    dashboardHref,
+    userType,
+    draftCartPreview,
+    accountAvatarUrl,
+    accountDisplayName,
+    accountEmail,
+  } = await getLandingHeaderProps(user, supabase);
   return (
     <div className="font-landing-body min-h-screen bg-gs-beige text-[#222]">
-      <LandingHeader publishListingHref={publishListingHref} dashboardHref={dashboardHref} />
+      <LandingHeader
+        publishListingHref={publishListingHref}
+        dashboardHref={dashboardHref}
+        userType={userType}
+        draftCartPreview={draftCartPreview}
+        accountAvatarUrl={accountAvatarUrl}
+        accountDisplayName={accountDisplayName}
+        accountEmail={accountEmail}
+      />
       {children}
       <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
     </div>

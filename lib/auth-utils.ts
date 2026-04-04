@@ -2,15 +2,18 @@ import type { User } from "@supabase/supabase-js";
 
 export type EffectiveUserType = "admin" | "owner" | "seeker";
 
+function normalizeUserType(raw: string | null | undefined): string {
+  return (raw ?? "").trim().toLowerCase();
+}
+
 /**
  * Détermine le type effectif de l'utilisateur (admin, owner, seeker).
- * Admin : ADMIN_EMAILS ou profiles.user_type = 'admin'
- * Owner : profiles.user_type = 'owner' ou user_metadata.user_type = 'owner'
- * Seeker : par défaut
+ * La source de vérité pour le menu header / dashboard est **`profiles.user_type`** dès qu’une ligne profil existe.
+ * Les métadonnées auth ne peuvent **pas** promouvoir « owner » si un profil existe (corrige locataires avec ancien tab prestataire).
  */
 export async function getEffectiveUserType(
   user: User | null,
-  getProfile: (userId: string) => Promise<{ user_type: string } | null>
+  getProfile: (userId: string) => Promise<{ user_type: string | null } | null>
 ): Promise<EffectiveUserType | null> {
   if (!user) return null;
 
@@ -23,14 +26,24 @@ export async function getEffectiveUserType(
     return "admin";
   }
 
-  // 2. Admin ou owner par profil
   const profile = await getProfile(user.id);
-  if (profile?.user_type === "admin") return "admin";
-  if (profile?.user_type === "owner") return "owner";
+  const fromDb = normalizeUserType(profile?.user_type ?? undefined);
 
-  // 3. Fallback user_metadata (inscription)
-  const meta = user.user_metadata?.user_type;
+  if (fromDb === "admin") return "admin";
+  if (fromDb === "owner") return "owner";
+  if (fromDb === "seeker") return "seeker";
+
+  // Ligne `profiles` présente mais user_type vide ou inattendu → locataire (pas de repli metadata « owner »)
+  if (profile != null) {
+    return "seeker";
+  }
+
+  // Aucune ligne profil (fenêtre très courte après signup, avant trigger) : métadonnées uniquement
+  const meta = normalizeUserType(
+    typeof user.user_metadata?.user_type === "string" ? user.user_metadata.user_type : undefined
+  );
   if (meta === "owner") return "owner";
+  if (meta === "admin") return "admin";
 
   return "seeker";
 }

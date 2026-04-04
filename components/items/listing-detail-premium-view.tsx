@@ -37,6 +37,9 @@ export type ListingDetailImage = {
 
 export type ListingDetailModel = {
   id: string;
+  /** Prestataire catalogue (panier mono-prestataire). */
+  owner_id?: string;
+  owner_display_name?: string | null;
   title: string;
   description: string;
   category: "sound" | "dj" | "lighting" | "services";
@@ -182,6 +185,13 @@ type ListingDetailPremiumViewProps = {
   onReserve: () => void;
   onPay: () => void;
   estimatedDays: number;
+  /** Panier mono-prestataire (optionnel) : ajoute la ligne avec la quantité sélectionnée dans le bloc réservation. */
+  cartLoading?: boolean;
+  cartFeedback?: string | null;
+  onAddToCart?: (quantity: number) => void;
+  cartProviderMismatch?: boolean;
+  cartClearLoading?: boolean;
+  onClearCartMismatch?: () => void;
 };
 
 export function ListingDetailPremiumView({
@@ -199,6 +209,12 @@ export function ListingDetailPremiumView({
   onReserve,
   onPay,
   estimatedDays,
+  cartLoading = false,
+  cartFeedback = null,
+  onAddToCart,
+  cartProviderMismatch = false,
+  cartClearLoading = false,
+  onClearCartMismatch,
 }: ListingDetailPremiumViewProps) {
   const todayIso = useMemo(() => format(startOfDay(new Date()), "yyyy-MM-dd"), []);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -604,6 +620,34 @@ export function ListingDetailPremiumView({
                       ? "Réserver maintenant"
                       : "Envoyer la demande"}
                 </button>
+
+                {onAddToCart ? (
+                  <button
+                    type="button"
+                    onClick={() => onAddToCart(quantity)}
+                    disabled={
+                      listingUnavailable || cartLoading || bookingLoading || payLoading || !startDate || !endDate
+                    }
+                    className="font-landing-btn mt-3 flex h-12 w-full items-center justify-center rounded-lg border-2 border-slate-300 bg-white text-slate-800 transition hover:border-gs-orange hover:text-gs-orange disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {cartLoading ? "Ajout…" : "Ajouter au panier"}
+                  </button>
+                ) : null}
+
+                {cartFeedback ? (
+                  <p className="mt-2 text-center text-[12px] text-slate-600">{cartFeedback}</p>
+                ) : null}
+
+                {cartProviderMismatch && onClearCartMismatch ? (
+                  <button
+                    type="button"
+                    disabled={cartClearLoading}
+                    onClick={onClearCartMismatch}
+                    className="mt-2 w-full rounded-lg border border-slate-300 py-2 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    {cartClearLoading ? "…" : "Vider le panier et continuer"}
+                  </button>
+                ) : null}
 
                 {connectMissing ? (
                   <p className="mt-2 text-center text-[12px] leading-relaxed text-amber-700">

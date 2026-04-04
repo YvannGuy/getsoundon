@@ -78,14 +78,21 @@ export async function GET(_: Request, context: RouteContext) {
     };
     const { data: ownerProfile } = await admin
       .from("profiles")
-      .select("stripe_account_id, boutique_slug")
+      .select("stripe_account_id, boutique_slug, full_name, boutique_name")
       .eq("id", listingRow.owner_id)
       .maybeSingle();
 
-    const stripeAccountId =
-      (ownerProfile as { stripe_account_id?: string | null } | null)?.stripe_account_id ?? null;
+    const op = ownerProfile as {
+      stripe_account_id?: string | null;
+      boutique_slug?: string | null;
+      full_name?: string | null;
+      boutique_name?: string | null;
+    } | null;
+    const stripeAccountId = op?.stripe_account_id ?? null;
     const hasConnect = !!stripeAccountId;
-    const boutique_slug = (ownerProfile as { boutique_slug?: string | null } | null)?.boutique_slug ?? null;
+    const boutique_slug = op?.boutique_slug ?? null;
+    const owner_display_name =
+      op?.boutique_name?.trim() || op?.full_name?.trim() || null;
     const immediateConfirmation = listingRow.immediate_confirmation === true;
     const listingActive = listingRow.is_active === true;
 
@@ -99,6 +106,7 @@ export async function GET(_: Request, context: RouteContext) {
         ...listing,
         images: images ?? [],
         owner_boutique_slug: boutique_slug,
+        owner_display_name,
         has_connect: hasConnect,
         can_accept_instant_booking: listingActive && immediateConfirmation && connectReceives,
       },

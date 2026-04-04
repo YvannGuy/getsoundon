@@ -1,14 +1,18 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { addToGsCartAction, clearGsDraftCartAction } from "@/app/actions/gs-orders";
+import { createClient } from "@/lib/supabase/client";
+import { addLineToGuestCart, clearGuestCartStorage } from "@/lib/guest-cart";
 import {
   ListingDetailPremiumView,
   type ListingDetailModel,
 } from "@/components/items/listing-detail-premium-view";
 
 export default function ItemDetailPage() {
+  const router = useRouter();
   const params = useParams<{ id: string }>();
   const listingId = params?.id;
   const [listing, setListing] = useState<ListingDetailModel | null>(null);
@@ -20,6 +24,10 @@ export default function ItemDetailPage() {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
   const [lastBookingId, setLastBookingId] = useState<string | null>(null);
+  const [cartLoading, setCartLoading] = useState(false);
+  const [cartFeedback, setCartFeedback] = useState<string | null>(null);
+  const [cartProviderMismatch, setCartProviderMismatch] = useState(false);
+  const [cartClearLoading, setCartClearLoading] = useState(false);
 
   // Charger l'annonce
   useEffect(() => {
@@ -158,6 +166,101 @@ export default function ItemDetailPage() {
   };
 
   // Retry checkout si le booking est créé mais la redirection a échoué
+  const addToCart = async (quantity: number) => {
+    if (!listing || listing.is_active === false) return;
+    setCartLoading(true);
+    setCartFeedback(null);
+    setCartProviderMismatch(false);
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const res = await addToGsCartAction({
+          listingId: listing.id,
+          startDate,
+          endDate,
+          quantity,
+        });
+        if (!res.ok) {
+          if (res.code === "PROVIDER_MISMATCH") {
+            setCartProviderMismatch(true);
+          }
+          setCartFeedback(res.error);
+          return;
+        }
+        setCartFeedback("Ajouté au panier. Tu peux continuer tes achats ou ouvrir le panier.");
+        router.refresh();
+        return;
+      }
+
+      const ownerId = listing.owner_id;
+      if (!ownerId) {
+        setCartFeedback("Impossible d’ajouter au panier : prestataire introuvable.");
+        return;
+      }
+      const coverUrl =
+        listing.images?.find((i) => i.is_cover)?.url ?? listing.images?.[0]?.url ?? null;
+      const res = addLineToGuestCart({
+        listing: {
+          id: listing.id,
+          owner_id: ownerId,
+          title: listing.title,
+          price_per_day: listing.price_per_day,
+          deposit_amount: listing.deposit_amount,
+          cover_url: coverUrl,
+          owner_display_name: listing.owner_display_name ?? null,
+        },
+        startDate,
+        endDate,
+        quantity,
+      });
+      if (!res.ok) {
+        if (res.code === "PROVIDER_MISMATCH") {
+          setCartProviderMismatch(true);
+        }
+        setCartFeedback(res.error);
+        return;
+      }
+      setCartFeedback("Ajouté au panier. Connecte-toi sur la page panier pour régler.");
+      router.refresh();
+    } finally {
+      setCartLoading(false);
+    }
+  };
+
+  const clearCartAndRetryHint = async () => {
+    setCartClearLoading(true);
+    setCartFeedback(null);
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        clearGuestCartStorage();
+        setCartProviderMismatch(false);
+        setCartFeedback("Panier vidé. Tu peux ajouter à nouveau cet article.");
+        router.refresh();
+        return;
+      }
+
+      const res = await clearGsDraftCartAction();
+      if (!res.ok) {
+        setCartFeedback(res.error);
+        return;
+      }
+      setCartProviderMismatch(false);
+      setCartFeedback("Panier vidé. Tu peux ajouter à nouveau cet article.");
+      router.refresh();
+    } finally {
+      setCartClearLoading(false);
+    }
+  };
+
   const retryCheckout = async () => {
     if (!lastBookingId || listing?.is_active === false) return;
     setPayLoading(true);
@@ -204,6 +307,12 @@ export default function ItemDetailPage() {
       onReserve={isInstantBooking ? reserveInstant : submitRequest}
       onPay={retryCheckout}
       estimatedDays={estimatedDays}
+      cartLoading={cartLoading}
+      cartFeedback={cartFeedback}
+      onAddToCart={addToCart}
+      cartProviderMismatch={cartProviderMismatch}
+      cartClearLoading={cartClearLoading}
+      onClearCartMismatch={clearCartAndRetryHint}
     />
   );
 }

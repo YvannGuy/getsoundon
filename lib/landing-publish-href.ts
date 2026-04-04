@@ -1,10 +1,14 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 
+import type { EffectiveUserType } from "@/lib/auth-utils";
 import {
   getDashboardHref,
   getEffectiveUserType,
   getPublishMaterialListingHref,
 } from "@/lib/auth-utils";
+import { fetchAuthProfileRow } from "@/lib/fetch-auth-profile";
+import type { DraftCartPreview } from "@/lib/gs-draft-cart-preview";
+import { getDraftCartPreviewForUser } from "@/lib/gs-draft-cart-preview";
 
 /** Pour footer / shell landing : même règle que la sidebar dashboard (prestataire vs inscription). */
 export async function resolvePublishListingHref(
@@ -20,17 +24,13 @@ export async function resolvePublishListingHref(
   const isAdminByEnv =
     adminEmails.length > 0 && adminEmails.includes(user.email?.toLowerCase() ?? "");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("user_type")
-    .eq("id", user.id)
-    .maybeSingle();
+  const profileRow = await fetchAuthProfileRow(user.id, supabase);
 
   const userType = isAdminByEnv
     ? "admin"
-    : await getEffectiveUserType(user, async () => ({
-        user_type: (profile as { user_type?: string | null } | null)?.user_type ?? "seeker",
-      }));
+    : await getEffectiveUserType(user, async () =>
+        profileRow ? { user_type: profileRow.user_type } : null,
+      );
 
   const { data: myListings } = await supabase
     .from("gs_listings")
@@ -46,17 +46,46 @@ export async function resolvePublishListingHref(
 export async function getLandingHeaderProps(
   user: User | null,
   supabase: SupabaseClient,
-): Promise<{ publishListingHref: string; dashboardHref?: string }> {
+): Promise<{
+  publishListingHref: string;
+  dashboardHref?: string;
+  userType?: EffectiveUserType;
+  draftCartPreview?: DraftCartPreview | null;
+  accountAvatarUrl?: string | null;
+  accountDisplayName?: string | null;
+  accountEmail?: string | null;
+}> {
   const publishListingHref = await resolvePublishListingHref(user, supabase);
   if (!user) return { publishListingHref };
 
-  const userType = await getEffectiveUserType(user, async (userId) => {
-    const { data } = await supabase.from("profiles").select("user_type").eq("id", userId).maybeSingle();
-    return data;
-  });
+  const profileRow = await fetchAuthProfileRow(user.id, supabase);
+
+  const userType = await getEffectiveUserType(user, async () =>
+    profileRow ? { user_type: profileRow.user_type } : null,
+  );
+
+  const effective = (userType ?? "seeker") as EffectiveUserType;
+
+  const draftCartPreview = await getDraftCartPreviewForUser(user.id);
+
+  const meta = user.user_metadata as Record<string, unknown> | undefined;
+  const avatarFromMeta =
+    (typeof meta?.avatar_url === "string" && meta.avatar_url.trim()) ||
+    (typeof meta?.picture === "string" && meta.picture.trim()) ||
+    null;
+  const accountDisplayName =
+    profileRow?.full_name?.trim() ||
+    profileRow?.first_name?.trim() ||
+    (typeof meta?.full_name === "string" ? meta.full_name.trim() : null) ||
+    null;
 
   return {
     publishListingHref,
-    dashboardHref: getDashboardHref(userType ?? "seeker"),
+    dashboardHref: getDashboardHref(effective),
+    userType: effective,
+    draftCartPreview,
+    accountAvatarUrl: avatarFromMeta,
+    accountDisplayName,
+    accountEmail: user.email ?? null,
   };
 }

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { OwnerSidebar } from "@/components/dashboard/owner-sidebar";
 import { canAccessOwnerDashboard, getEffectiveUserType } from "@/lib/auth-utils";
+import { fetchAuthProfileRow } from "@/lib/fetch-auth-profile";
 import { EMPTY_BADGE_COUNTS, getOwnerBadgeCounts } from "@/lib/notification-counts";
 import { getUserOrNull } from "@/lib/supabase/server";
 
@@ -31,21 +32,17 @@ export default async function ProprietaireLayout({
   const isAdminByEnv =
     adminEmails.length > 0 && adminEmails.includes(user.email?.toLowerCase() ?? "");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("suspended, full_name, user_type")
-    .eq("id", user.id)
-    .maybeSingle();
+  const profile = await fetchAuthProfileRow(user.id, supabase);
 
-  if ((profile as { suspended?: boolean } | null)?.suspended) {
+  if (profile?.suspended) {
     redirect("/auth?suspended=1");
   }
 
   const userType = isAdminByEnv
     ? "admin"
-    : await getEffectiveUserType(user, async () => ({
-        user_type: (profile as { user_type?: string | null } | null)?.user_type ?? "seeker",
-      }));
+    : await getEffectiveUserType(user, async () =>
+        profile ? { user_type: profile.user_type } : null,
+      );
   if (userType === "admin") redirect("/admin");
 
   const { data: myListings } = await supabase
@@ -58,8 +55,9 @@ export default async function ProprietaireLayout({
   if (!canAccessOwner) redirect("/dashboard");
 
   const displayName =
-    (profile as { full_name?: string | null } | null)?.full_name ??
-    user.user_metadata?.full_name ??
+    profile?.full_name?.trim() ||
+    profile?.first_name?.trim() ||
+    (typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : null) ||
     "Utilisateur";
   let materielUnreadCount: number;
   let paymentCount: number;

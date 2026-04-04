@@ -16,11 +16,27 @@ export const metadata: Metadata = {
 
 export default async function CommentCaMarchePage() {
   const { user, supabase } = await getUserOrNull();
-  const { publishListingHref, dashboardHref } = await getLandingHeaderProps(user, supabase);
+  const {
+    publishListingHref,
+    dashboardHref,
+    userType,
+    draftCartPreview,
+    accountAvatarUrl,
+    accountDisplayName,
+    accountEmail,
+  } = await getLandingHeaderProps(user, supabase);
 
   return (
     <div className="font-landing-body min-h-screen bg-gs-beige text-[#222]">
-      <LandingHeader publishListingHref={publishListingHref} dashboardHref={dashboardHref} />
+      <LandingHeader
+        publishListingHref={publishListingHref}
+        dashboardHref={dashboardHref}
+        userType={userType}
+        draftCartPreview={draftCartPreview}
+        accountAvatarUrl={accountAvatarUrl}
+        accountDisplayName={accountDisplayName}
+        accountEmail={accountEmail}
+      />
       <HowItWorksView />
       <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
     </div>

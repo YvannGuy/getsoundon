@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 
 import { handleGsBookingCheckoutCompleted } from "@/lib/stripe-webhook-gs-booking";
+import { handleGsOrderCheckoutCompleted } from "@/lib/stripe-webhook-gs-order";
 
 const processedEventIds = new Map<string, number>();
 const WEBHOOK_EVENT_TTL_MS = 1000 * 60 * 60 * 24;
@@ -35,6 +36,15 @@ export async function handleStripeWebhook(event: Stripe.Event) {
 
       if (productType === "gs_booking" && metadata?.booking_id && metadata?.user_id) {
         await handleGsBookingCheckoutCompleted(session, metadata);
+        return {
+          type: event.type,
+          customerEmail: session.customer_details?.email ?? null,
+          sessionId: session.id,
+        };
+      }
+
+      if (productType === "gs_order" && metadata?.order_id && metadata?.user_id) {
+        await handleGsOrderCheckoutCompleted(session, metadata);
         return {
           type: event.type,
           customerEmail: session.customer_details?.email ?? null,

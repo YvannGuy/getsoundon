@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import type { EffectiveUserType } from "@/lib/auth-utils";
 import { sendWelcomeOwnerEmail, sendWelcomeSeekerEmail } from "@/lib/email";
 import { getDashboardHref, getEffectiveUserType } from "@/lib/auth-utils";
+import { fetchAuthProfileRow } from "@/lib/fetch-auth-profile";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthFormState = {
@@ -54,15 +55,10 @@ export async function loginAction(_: AuthFormState, formData: FormData): Promise
 
   revalidatePath("/", "layout");
 
-  const getProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("user_type")
-      .eq("id", userId)
-      .maybeSingle();
-    return data;
-  };
-  const userType = await getEffectiveUserType(user, getProfile);
+  const profileRow = await fetchAuthProfileRow(user.id, supabase);
+  const userType = await getEffectiveUserType(user, async () =>
+    profileRow ? { user_type: profileRow.user_type } : null,
+  );
   const target =
     redirectedFrom && redirectedFrom.startsWith("/")
       ? resolveRedirectForUser(redirectedFrom, userType)
