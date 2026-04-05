@@ -7,6 +7,7 @@ import { getAuthUserEmail } from "@/lib/auth-user-email";
 import { sendGsInvoiceAvailableEmail } from "@/lib/email";
 import { computeGsBookingPaymentSplit } from "@/lib/gs-booking-platform-fee";
 import { assertSafeStorageObjectPath, STORAGE_BUCKETS } from "@/lib/storage";
+import { auditLog } from "@/lib/security/audit-log";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type BookingRow = {
@@ -196,6 +197,20 @@ export async function generateInvoicesForCompletedBookings() {
         currency: "EUR",
       });
       if (insertError) throw insertError;
+
+      auditLog({
+        action: "invoice_generated",
+        actorUserId: null,
+        actorRole: "system",
+        targetType: "gs_booking",
+        targetId: b.id,
+        source: "cron",
+        meta: {
+          invoiceNumber,
+          invoiceTotalEur: net,
+          providerId: b.provider_id,
+        },
+      });
 
       const siteBase = siteConfig.url.replace(/\/$/, "");
       const listingTitle = b.listing_id ? listingMap.get(b.listing_id)?.title?.trim() : undefined;

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { siteConfig } from "@/config/site";
 import { getAuthUserEmail } from "@/lib/auth-user-email";
 import { sendGsBookingThreadMessageEmail } from "@/lib/email";
+import { rateLimitByKey, rateLimitByRequest } from "@/lib/security/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { sendUserNotification } from "@/lib/user-notifications";
@@ -40,6 +41,12 @@ async function getBookingParticipants(
 
 export async function GET(request: Request) {
   try {
+    const ipLimited = await rateLimitByRequest(request, {
+      limiterPrefix: "api-messages-get-ip",
+      max: 200,
+    });
+    if (ipLimited) return ipLimited;
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -48,6 +55,12 @@ export async function GET(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "Authentification requise." }, { status: 401 });
     }
+
+    const userLimited = await rateLimitByKey(user.id, {
+      limiterPrefix: "api-messages-get-user",
+      max: 120,
+    });
+    if (userLimited) return userLimited;
 
     const { searchParams } = new URL(request.url);
     const parsedQuery = querySchema.parse({
@@ -125,6 +138,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const ipLimited = await rateLimitByRequest(request, {
+      limiterPrefix: "api-messages-post-ip",
+      max: 90,
+    });
+    if (ipLimited) return ipLimited;
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -133,6 +152,12 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "Authentification requise." }, { status: 401 });
     }
+
+    const userLimited = await rateLimitByKey(user.id, {
+      limiterPrefix: "api-messages-post-user",
+      max: 30,
+    });
+    if (userLimited) return userLimited;
 
     const payload = sendMessageSchema.parse(await request.json());
     const participants = await getBookingParticipants(supabase, payload.bookingId);

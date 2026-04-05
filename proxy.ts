@@ -26,7 +26,7 @@ const rateLimitedPaths = [
   "/api/stripe/checkout-booking",
   "/api/stripe/webhook",
   "/api/cron/",
-  "/api/messages",
+  // /api/messages : limites fines par méthode dans la route (GET vs POST + user)
   "/api/reports",
 ];
 
@@ -114,7 +114,6 @@ export const config = {
     "/api/stripe/checkout-booking",
     "/api/stripe/webhook",
     "/api/cron/:path*",
-    "/api/messages",
     "/((?!api|auth|_next/static|_next/image|favicon|.well-known|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|json)$).*)",
   ],
 };

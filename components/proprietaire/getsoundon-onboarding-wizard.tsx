@@ -735,7 +735,7 @@ export function GetSoundOnOnboardingWizard({
         return;
       }
       const path = `${user.id}/${Date.now()}-${i}.jpg`;
-      const { error } = await supabaseClient.storage.from("salle-photos").upload(path, blob, {
+      const { error } = await supabaseClient.storage.from(STORAGE_BUCKETS.sallePhotos).upload(path, blob, {
         contentType: "image/jpeg",
         upsert: false,
       });
@@ -745,7 +745,7 @@ export function GetSoundOnOnboardingWizard({
         setIsSubmitting(false);
         return;
       }
-      const { data: urlData } = supabaseClient.storage.from("salle-photos").getPublicUrl(path);
+      const { data: urlData } = supabaseClient.storage.from(STORAGE_BUCKETS.sallePhotos).getPublicUrl(path);
       imageUrls.push(urlData.publicUrl);
     }
     setUploadProgress(null);

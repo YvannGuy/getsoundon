@@ -2,6 +2,7 @@
 
 import sharp from "sharp";
 
+import { createFixedWindowLimiter, rateLimitServerActionMessage } from "@/lib/security/rate-limit";
 import { STORAGE_BUCKETS } from "@/lib/storage";
 import { bufferLooksLikeJpegOrPng } from "@/lib/storage/image-signature";
 import { createClient } from "@/lib/supabase/server";
@@ -33,6 +34,12 @@ export async function uploadSallePhotos(formData: FormData): Promise<UploadPhoto
 
   if (!user) {
     return { success: false, error: "Vous devez être connecté pour ajouter des photos." };
+  }
+
+  const uploadRl = createFixedWindowLimiter("action-upload-salle-photos", 24, "1 m");
+  const rateMsg = await rateLimitServerActionMessage(user.id, uploadRl);
+  if (rateMsg) {
+    return { success: false, error: rateMsg };
   }
 
   const files = formData.getAll("photos") as File[];

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
 import { assertOwnerStripeConnectEligible } from "@/lib/auth/guards";
 import { getStripe } from "@/lib/stripe";
+import { rateLimitByKey } from "@/lib/security/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,6 +19,12 @@ export async function POST() {
     if (!user) {
       return NextResponse.json({ error: "Non authentifié." }, { status: 401 });
     }
+
+    const tooMany = await rateLimitByKey(user.id, {
+      limiterPrefix: "stripe-connect-onboarding-user",
+      max: 10,
+    });
+    if (tooMany) return tooMany;
 
     if (!(await assertOwnerStripeConnectEligible(user, supabase))) {
       return NextResponse.json(

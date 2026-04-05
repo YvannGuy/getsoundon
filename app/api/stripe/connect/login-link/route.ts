@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { assertOwnerStripeConnectEligible } from "@/lib/auth/guards";
 import { getStripe } from "@/lib/stripe";
+import { rateLimitByKey } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST() {
@@ -14,6 +15,12 @@ export async function POST() {
     if (!user) {
       return NextResponse.json({ error: "Non authentifié." }, { status: 401 });
     }
+
+    const tooMany = await rateLimitByKey(user.id, {
+      limiterPrefix: "stripe-connect-login-link-user",
+      max: 15,
+    });
+    if (tooMany) return tooMany;
 
     if (!(await assertOwnerStripeConnectEligible(user, supabase))) {
       return NextResponse.json(

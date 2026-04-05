@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 
 import { searchCompany } from "@/lib/company/company.service";
+import { rateLimitByRequest } from "@/lib/security/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  const ipLimited = await rateLimitByRequest(req, {
+    limiterPrefix: "api-company-search-ip",
+    max: 45,
+  });
+  if (ipLimited) return ipLimited;
+
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") ?? "").trim();
   const limit = parseInt(searchParams.get("limit") ?? "8", 10);

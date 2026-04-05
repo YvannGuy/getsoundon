@@ -8,9 +8,10 @@ import {
   sendGsListingPublishedProviderEmail,
   sendGsListingRejectedProviderEmail,
 } from "@/lib/email";
-import { GS_LISTING_MODERATION } from "@/lib/gs-listing-moderation";
 import { requireAdminOrThrow } from "@/lib/auth/admin-guard";
 import { getAuthUserEmail } from "@/lib/auth-user-email";
+import { GS_LISTING_MODERATION } from "@/lib/gs-listing-moderation";
+import { auditLog } from "@/lib/security/audit-log";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type AdminListingModerationDecision = "publish" | "hide" | "reject";
@@ -24,8 +25,10 @@ export async function moderateGsListingAdminAction(
   decision: AdminListingModerationDecision,
   rejectionReason?: string | null
 ): Promise<{ success: true } | { success: false; error: string }> {
+  let actorUserId: string;
   try {
-    await requireAdminOrThrow();
+    const { user } = await requireAdminOrThrow();
+    actorUserId = user.id;
   } catch {
     return { success: false, error: "Accès refusé." };
   }
@@ -85,6 +88,14 @@ export async function moderateGsListingAdminAction(
     }
 
     revalidatePath("/admin/annonces-materiel");
+    auditLog({
+      action: "moderate_gs_listing",
+      actorUserId,
+      actorRole: "admin",
+      targetType: "gs_listing",
+      targetId: listingId,
+      meta: { decision: "publish", priorModeration: mod, wasActive },
+    });
     return { success: true };
   }
 
@@ -117,6 +128,14 @@ export async function moderateGsListingAdminAction(
     }
 
     revalidatePath("/admin/annonces-materiel");
+    auditLog({
+      action: "moderate_gs_listing",
+      actorUserId,
+      actorRole: "admin",
+      targetType: "gs_listing",
+      targetId: listingId,
+      meta: { decision: "hide", priorModeration: mod },
+    });
     return { success: true };
   }
 
@@ -143,6 +162,18 @@ export async function moderateGsListingAdminAction(
     }
 
     revalidatePath("/admin/annonces-materiel");
+    auditLog({
+      action: "moderate_gs_listing",
+      actorUserId,
+      actorRole: "admin",
+      targetType: "gs_listing",
+      targetId: listingId,
+      meta: {
+        decision: "reject",
+        priorModeration: mod,
+        rejectionReason: reason,
+      },
+    });
     return { success: true };
   }
 

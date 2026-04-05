@@ -12,6 +12,10 @@ export async function handleStripeConnectAccountUpdated(event: Stripe.Event): Pr
   if (event.type !== "account.updated") return;
 
   const account = event.data.object as Stripe.Account;
+  if (!account?.id || typeof account.id !== "string") {
+    console.warn("[webhook] account.updated: compte sans id");
+    return;
+  }
   const prev = event.data.previous_attributes as Record<string, unknown> | undefined;
   const prevCaps = prev?.capabilities as
     | { transfers?: string; legacy_payments?: string }

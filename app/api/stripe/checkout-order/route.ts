@@ -8,6 +8,7 @@ import { getPostHogClient } from "@/lib/posthog-server";
 import { providerStripeCanReceivePayments } from "@/lib/gs-provider-stripe-connect";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { rateLimitByKey } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const bodySchema = z.object({
@@ -24,6 +25,12 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "Connectez-vous pour payer." }, { status: 401 });
     }
+
+    const tooMany = await rateLimitByKey(user.id, {
+      limiterPrefix: "stripe-checkout-order-user",
+      max: 15,
+    });
+    if (tooMany) return tooMany;
 
     const { orderId } = bodySchema.parse(await request.json());
     const admin = createAdminClient();

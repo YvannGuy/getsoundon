@@ -57,7 +57,7 @@ export async function handleGsOrderCheckoutCompleted(
   const { data: order, error: fetchError } = await supabase
     .from("gs_orders")
     .select(
-      "id, customer_id, provider_id, status, location_total_eur, start_date, end_date, deposit_amount_eur"
+      "id, customer_id, provider_id, status, location_total_eur, start_date, end_date, deposit_amount_eur, stripe_checkout_session_id"
     )
     .eq("id", orderId)
     .maybeSingle();
@@ -76,7 +76,13 @@ export async function handleGsOrderCheckoutCompleted(
     start_date: string;
     end_date: string;
     deposit_amount_eur: number | string;
+    stripe_checkout_session_id: string | null;
   };
+
+  if (row.stripe_checkout_session_id && row.stripe_checkout_session_id !== session.id) {
+    console.error("[webhook] gs_order: session Checkout ne correspond pas à la commande", orderId, session.id);
+    return;
+  }
 
   if (row.customer_id !== userId) {
     console.error("[webhook] gs_order: customer_id ne correspond pas", orderId);

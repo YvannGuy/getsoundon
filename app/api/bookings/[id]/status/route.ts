@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { rateLimitByRequest } from "@/lib/security/rate-limit";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const paramsSchema = z.object({
@@ -28,6 +30,13 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (!user) {
       return NextResponse.json({ error: "Authentification requise." }, { status: 401 });
     }
+
+    const tooMany = await rateLimitByRequest(request, {
+      limiterPrefix: "api-booking-status-patch",
+      max: 40,
+      keySuffix: user.id,
+    });
+    if (tooMany) return tooMany;
 
     const { data: booking, error: bookingError } = await supabase
       .from("gs_bookings")
@@ -59,7 +68,8 @@ export async function PATCH(request: Request, context: RouteContext) {
       }
     }
 
-    const { data, error } = await supabase
+    const admin = createAdminClient();
+    const { data, error } = await admin
       .from("gs_bookings")
       .update({ status })
       .eq("id", id)

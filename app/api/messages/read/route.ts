@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { rateLimitByKey } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { markGsMaterialMessagesRead } from "@/lib/gs-material-messages";
 
@@ -31,6 +32,12 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "Authentification requise." }, { status: 401 });
     }
+
+    const tooMany = await rateLimitByKey(user.id, {
+      limiterPrefix: "api-messages-read-user",
+      max: 45,
+    });
+    if (tooMany) return tooMany;
 
     const payload = bodySchema.parse(await request.json());
     const participants = await getBookingParticipants(supabase, payload.bookingId);

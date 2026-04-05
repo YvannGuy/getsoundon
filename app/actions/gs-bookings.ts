@@ -376,6 +376,17 @@ export async function confirmCheckOutAction(
 
   revalidatePath("/proprietaire/materiel");
   revalidatePath("/dashboard/materiel");
+  auditLog({
+    action: "confirm_check_out_provider",
+    actorUserId: user.id,
+    actorRole: "provider",
+    targetType: "gs_booking",
+    targetId: bookingId,
+    meta: {
+      incidentDeadlineAt,
+      hasComment: Boolean(comment?.trim()),
+    },
+  });
   return { success: true };
 }
 
@@ -659,6 +670,9 @@ export async function resolveIncidentAdminAction(
   auditLog({
     action: "resolve_incident_admin",
     actorUserId: user.id,
+    actorRole: "admin",
+    targetType: "gs_booking",
+    targetId: bookingId,
     subject: `gs_booking:${bookingId}`,
     meta: { bookingId, decision, keepBlocked },
   });
@@ -773,6 +787,9 @@ export async function releaseDepositAdminAction(
   auditLog({
     action: "release_deposit_admin",
     actorUserId: user.id,
+    actorRole: "admin",
+    targetType: "gs_booking",
+    targetId: bookingId,
     subject: `gs_booking:${bookingId}`,
     meta: { bookingId, reason: reason?.trim() ?? null },
   });
@@ -900,6 +917,9 @@ export async function captureDepositAdminAction(
   auditLog({
     action: "capture_deposit_admin",
     actorUserId: user.id,
+    actorRole: "admin",
+    targetType: "gs_booking",
+    targetId: bookingId,
     subject: `gs_booking:${bookingId}`,
     meta: { bookingId, amountEur, isPartial, reason: reason?.trim() ?? null },
   });

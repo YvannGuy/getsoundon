@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site";
 import { getStripe } from "@/lib/stripe";
+import { rateLimitByKey } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST() {
@@ -14,6 +15,12 @@ export async function POST() {
     if (!user) {
       return NextResponse.json({ error: "Non authentifié." }, { status: 401 });
     }
+
+    const tooMany = await rateLimitByKey(user.id, {
+      limiterPrefix: "stripe-portal-user",
+      max: 20,
+    });
+    if (tooMany) return tooMany;
 
     const { data: profile } = await supabase
       .from("profiles")

@@ -15,6 +15,7 @@ import {
   sendNewCatalogListingPendingAdminNotification,
   sendNewCatalogListingPublishedAdminNotification,
 } from "@/lib/email";
+import { rateLimitByKey } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const createListingSchema = z.object({
@@ -193,6 +194,12 @@ export async function POST(request: Request) {
     if (role !== "provider" && role !== "admin") {
       return NextResponse.json({ error: "Role provider requis." }, { status: 403 });
     }
+
+    const tooMany = await rateLimitByKey(user.id, {
+      limiterPrefix: "api-listing-create",
+      max: 12,
+    });
+    if (tooMany) return tooMany;
 
     const platformSettings = await getPlatformSettings();
     const { validation_manuelle, mode_publication } = platformSettings.validation;

@@ -6,6 +6,7 @@ import { getPlatformSettings } from "@/app/actions/admin-settings";
 import { siteConfig } from "@/config/site";
 import { getPostHogClient } from "@/lib/posthog-server";
 import { getStripe } from "@/lib/stripe";
+import { rateLimitByKey } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const checkoutPassSchema = z.object({
@@ -23,6 +24,12 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "Connectez-vous pour acheter un Pass." }, { status: 401 });
     }
+
+    const tooMany = await rateLimitByKey(user.id, {
+      limiterPrefix: "stripe-checkout-pass-user",
+      max: 12,
+    });
+    if (tooMany) return tooMany;
 
     const body = await request.json();
     const { passType, returnBase } = checkoutPassSchema.parse(body);

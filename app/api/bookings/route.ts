@@ -5,6 +5,7 @@ import { siteConfig } from "@/config/site";
 import { getAuthUserEmail } from "@/lib/auth-user-email";
 import { sendGsBookingNewDemandProviderEmail } from "@/lib/email";
 import { providerStripeCanReceivePayments } from "@/lib/gs-provider-stripe-connect";
+import { rateLimitByKey } from "@/lib/security/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { sendUserNotification } from "@/lib/user-notifications";
@@ -33,6 +34,13 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "Authentification requise." }, { status: 401 });
     }
+
+    const tooMany = await rateLimitByKey(user.id, {
+      limiterPrefix: "api-booking-create",
+      max: 15,
+      window: "1 m",
+    });
+    if (tooMany) return tooMany;
 
     const { data: customerProfile } = await supabase
       .from("gs_users_profile")

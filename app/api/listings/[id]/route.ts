@@ -13,6 +13,7 @@ import {
 } from "@/lib/email";
 import { providerStripeCanReceivePayments } from "@/lib/gs-provider-stripe-connect";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { rateLimitByKey, rateLimitByRequest } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const listingIdSchema = z.string().uuid();
@@ -138,6 +139,13 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Authentification requise." }, { status: 401 });
     }
 
+    const patchLimited = await rateLimitByRequest(request, {
+      limiterPrefix: "api-listing-patch",
+      max: 45,
+      keySuffix: user.id,
+    });
+    if (patchLimited) return patchLimited;
+
     const updatePayload: Record<string, unknown> = {};
     if (payload.title !== undefined) updatePayload.title = payload.title;
     if (payload.description !== undefined) updatePayload.description = payload.description;
@@ -234,7 +242,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 }
 
-export async function DELETE(_: Request, context: RouteContext) {
+export async function DELETE(request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
     const listingId = listingIdSchema.parse(id);
@@ -246,6 +254,12 @@ export async function DELETE(_: Request, context: RouteContext) {
     if (!user) {
       return NextResponse.json({ error: "Authentification requise." }, { status: 401 });
     }
+
+    const delLimited = await rateLimitByKey(user.id, {
+      limiterPrefix: "api-listing-delete",
+      max: 25,
+    });
+    if (delLimited) return delLimited;
 
     const { data: priorDel } = await supabase
       .from("gs_listings")

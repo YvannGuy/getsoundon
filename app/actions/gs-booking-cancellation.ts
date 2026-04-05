@@ -320,6 +320,9 @@ export async function decideGsBookingCancellationRequest(
     auditLog({
       action: "decide_gs_booking_cancellation",
       actorUserId: user.id,
+      actorRole: "admin",
+      targetType: "gs_booking_cancellation_request",
+      targetId: request.id,
       subject: `gs_booking_cancellation_request:${request.id}`,
       meta: {
         bookingId: booking.id,
@@ -487,6 +490,9 @@ export async function decideGsBookingCancellationRequest(
   auditLog({
     action: "decide_gs_booking_cancellation",
     actorUserId: user.id,
+    actorRole: "admin",
+    targetType: "gs_booking_cancellation_request",
+    targetId: request.id,
     subject: `gs_booking_cancellation_request:${request.id}`,
     meta: {
       bookingId: booking.id,
