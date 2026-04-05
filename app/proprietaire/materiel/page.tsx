@@ -274,11 +274,11 @@ export default async function ProprietaireMaterielPage({
     const todayKey = dateKey(new Date());
 
     return (
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Réservations · Vue calendrier</h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <h1 className="text-2xl font-bold text-black">Réservations · Vue calendrier</h1>
+            <p className="mt-2 text-sm text-slate-500">
               Toutes les réservations reçues, regroupées par date, avec leurs statuts.
             </p>
           </div>
@@ -401,10 +401,10 @@ export default async function ProprietaireMaterielPage({
             : completed;
 
     return (
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">
+            <h1 className="text-2xl font-bold text-black">
               {statusFilter === "pending"
                 ? "Réservations en attente"
                 : statusFilter === "accepted"
@@ -413,7 +413,7 @@ export default async function ProprietaireMaterielPage({
                     ? "Réservations refusées / supprimées"
                     : "Réservations terminées"}
             </h1>
-            <p className="mt-1 text-sm text-slate-500">Vue filtrée par statut.</p>
+            <p className="mt-2 text-sm text-slate-500">Vue filtrée par statut.</p>
           </div>
         </div>
 
@@ -490,10 +490,10 @@ export default async function ProprietaireMaterielPage({
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Réservations reçues</h1>
-        <p className="mt-1 text-sm text-slate-500">Demandes, réservations et suivi opérationnel de tes annonces.</p>
+        <h1 className="text-2xl font-bold text-black">Réservations reçues</h1>
+        <p className="mt-2 text-sm text-slate-500">Demandes, réservations et suivi opérationnel de tes annonces.</p>
       </div>
 
       {myListings.length > 0 && (

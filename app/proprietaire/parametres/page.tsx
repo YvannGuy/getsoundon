@@ -25,7 +25,7 @@ export default async function ParametresPage() {
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-black">Paramètres</h1>
-        <p className="mt-1 text-slate-500">Gérez votre compte</p>
+        <p className="mt-2 text-slate-500">Gérez votre compte</p>
       </div>
       <ParametresContent
         profile={{

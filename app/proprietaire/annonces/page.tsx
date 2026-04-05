@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { Card, CardContent } from "@/components/ui/card";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
 
@@ -62,11 +63,11 @@ export default async function ProprietaireAnnoncesPage({ searchParams }: { searc
         : "Aucune annonce en ligne pour l’instant.";
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-8 pt-6 sm:px-6 lg:px-8">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-black">{heading}</h1>
-          <p className="mt-1 text-slate-500">Filtré par statut : {heading.toLowerCase()}.</p>
+          <p className="mt-2 text-slate-500">Filtré par statut : {heading.toLowerCase()}.</p>
         </div>
         <Link
           href="/proprietaire/ajouter-annonce"
@@ -77,12 +78,17 @@ export default async function ProprietaireAnnoncesPage({ searchParams }: { searc
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-white px-6 py-12 text-center text-slate-600">
-          <p>{emptyText}</p>
-          <Link href="/proprietaire/ajouter-annonce" className="mt-3 inline-block font-semibold text-gs-orange hover:underline">
-            Ajouter une annonce
-          </Link>
-        </div>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <p className="text-slate-600">{emptyText}</p>
+            <Link
+              href="/proprietaire/ajouter-annonce"
+              className="mt-4 font-semibold text-gs-orange hover:underline"
+            >
+              Ajouter une annonce
+            </Link>
+          </CardContent>
+        </Card>
       ) : (
         <ul className="space-y-3">
           {filtered.map((r) => {

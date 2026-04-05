@@ -256,19 +256,19 @@ export default async function ProprietaireDashboardPage({
   ];
 
   return (
-    <div className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <AddSalleAutoOpen initialOpen={openAddAnnonce} />
 
-      {/* 1. En-tête */}
+      {/* 1. En-tête (même rythme que Paiements / Factures) */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-black">Tableau de bord</h1>
-        <p className="mt-1 text-slate-500">
+        <p className="mt-2 text-slate-500">
           Annonces catalogue, réservations reçues, paiements et factures.
         </p>
       </div>
 
-      {/* 2. KPI */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      {/* 2. KPI — grille 3 colonnes comme la synthèse Paiements */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {kpis.map((m) => {
           const Icon = m.icon;
           return (
@@ -290,7 +290,7 @@ export default async function ProprietaireDashboardPage({
 
       {/* 3. À traiter */}
       {(demandesEnAttente > 0 || !hasStripe) && (
-        <div className="mt-6 space-y-3">
+        <div className="mt-8 space-y-3">
           {demandesEnAttente > 0 ? (
             <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-amber-950">
@@ -334,7 +334,7 @@ export default async function ProprietaireDashboardPage({
 
       {/* Stripe connecté : accès rapide (hors grille KPI) */}
       {hasStripe ? (
-        <Card className="mt-6 border-0 shadow-sm">
+        <Card className="mt-8 border-0 shadow-sm">
           <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100">
@@ -353,7 +353,7 @@ export default async function ProprietaireDashboardPage({
       ) : null}
 
       {/* 4. Actions rapides */}
-      <div className="mt-8">
+      <div className="mt-10">
         <h2 className="text-lg font-semibold text-black">Actions rapides</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {quickActions.map((a) => {
@@ -378,7 +378,7 @@ export default async function ProprietaireDashboardPage({
       </div>
 
       {/* Activité récente (léger) */}
-      <Card className="mt-8 border-0 shadow-sm">
+      <Card className="mt-10 border-0 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-lg">Dernière activité</CardTitle>
           <Link

@@ -3,9 +3,9 @@ import { GetSoundOnOnboardingWizard } from "@/components/proprietaire/getsoundon
 export default function ProprietaireAjouterAnnoncePage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-6">
-        <h1 className="font-landing-heading text-2xl font-bold text-gs-dark">Ajouter une annonce</h1>
-        <p className="font-landing-body mt-1 text-slate-600">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-black">Ajouter une annonce</h1>
+        <p className="mt-2 text-slate-500">
           Complétez l&apos;onboarding ci-dessous pour publier une nouvelle annonce.
         </p>
       </div>
