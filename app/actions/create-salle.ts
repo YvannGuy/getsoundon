@@ -12,10 +12,16 @@ import {
   sendAdminPublishedSalleTelegramNotification,
 } from "@/lib/telegram";
 import { mapOnboardingToSalle } from "@/lib/onboarding-to-salle";
+import {
+  isTrustedSallePhotoPublicUrl,
+  MAX_SALLE_PHOTOS_PER_LISTING,
+  STORAGE_BUCKETS,
+} from "@/lib/storage";
+import { bufferLooksLikeJpegOrPng } from "@/lib/storage/image-signature";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
-const BUCKET_NAME = "salle-photos";
+const BUCKET_NAME = STORAGE_BUCKETS.sallePhotos;
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 Mo (aligné sur le bucket)
 const ALLOWED_TYPES = ["image/jpeg", "image/png"];
 
@@ -198,13 +204,38 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     }
   }
 
+  if (imageUrls.length > MAX_SALLE_PHOTOS_PER_LISTING) {
+    return {
+      success: false,
+      error: `Maximum ${MAX_SALLE_PHOTOS_PER_LISTING} photos.`,
+      errorCode: "VALIDATION",
+    };
+  }
+  for (const u of imageUrls) {
+    const isPlaceholder = u === "/img.png";
+    if (!isPlaceholder && !isTrustedSallePhotoPublicUrl(u, user.id)) {
+      return {
+        success: false,
+        error: "Une ou plusieurs URLs de photos ne sont pas autorisées (projet ou dossier incorrect).",
+        errorCode: "UNTRUSTED_PHOTO_URL",
+      };
+    }
+  }
+
   /** MVP GetSoundOn : une photo suffit pour publier vite ; le placeholder reste possible en secours. */
   const MIN_PHOTOS = 1;
   if (imageUrls.length >= MIN_PHOTOS) {
-    // utilise les URLs uploadées côté client
+    // URLs déjà validées : bucket public salle-photos + préfixe user.id
   } else {
     const files = formData.getAll("photos") as File[];
     if (files.length > 0) {
+      if (files.length > MAX_SALLE_PHOTOS_PER_LISTING) {
+        return {
+          success: false,
+          error: `Maximum ${MAX_SALLE_PHOTOS_PER_LISTING} photos.`,
+          errorCode: "VALIDATION",
+        };
+      }
       const validFiles = files.filter(
         (f) => ALLOWED_TYPES.includes(f.type) && f.size <= MAX_FILE_SIZE
       );
@@ -224,6 +255,14 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
         const ext = file.name.match(/\.(jpe?g|png)$/i)?.[1] ?? "jpg";
         const path = `${prefix}/${timestamp}-${i}.${ext}`;
         const buffer = Buffer.from(await file.arrayBuffer());
+        if (!bufferLooksLikeJpegOrPng(buffer)) {
+          return {
+            success: false,
+            error: `Photo ${i + 1} : fichier non reconnu comme image JPEG/PNG.`,
+            errorCode: "VALIDATION",
+            photoIndex: i + 1,
+          };
+        }
 
         const { error } = await supabase.storage.from(BUCKET_NAME).upload(path, buffer, {
           contentType: file.type,

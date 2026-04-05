@@ -1,9 +1,12 @@
 "use server";
 
 import sharp from "sharp";
+
+import { STORAGE_BUCKETS } from "@/lib/storage";
+import { bufferLooksLikeJpegOrPng } from "@/lib/storage/image-signature";
 import { createClient } from "@/lib/supabase/server";
 
-const BUCKET_NAME = "salle-photos";
+const BUCKET_NAME = STORAGE_BUCKETS.sallePhotos;
 const WATERMARK_TEXT = "getsoundon.com";
 
 function createWatermarkSvg(): Buffer {
@@ -15,6 +18,7 @@ function createWatermarkSvg(): Buffer {
   return Buffer.from(svg.trim());
 }
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_FILES_PER_REQUEST = 20;
 const ALLOWED_TYPES = ["image/jpeg", "image/png"];
 
 export type UploadPhotosResult =
@@ -34,6 +38,13 @@ export async function uploadSallePhotos(formData: FormData): Promise<UploadPhoto
   const files = formData.getAll("photos") as File[];
   if (!files.length) {
     return { success: true, urls: [] };
+  }
+
+  if (files.length > MAX_FILES_PER_REQUEST) {
+    return {
+      success: false,
+      error: `Maximum ${MAX_FILES_PER_REQUEST} fichiers par envoi.`,
+    };
   }
 
   const validFiles = files.filter((f) => {
@@ -61,6 +72,12 @@ export async function uploadSallePhotos(formData: FormData): Promise<UploadPhoto
     const path = `${prefix}/${timestamp}-${i}.jpg`;
 
     let buffer = Buffer.from(await file.arrayBuffer());
+    if (!bufferLooksLikeJpegOrPng(buffer)) {
+      return {
+        success: false,
+        error: `Fichier non reconnu comme image JPEG/PNG (${file.name}).`,
+      };
+    }
 
     try {
       const watermarked = await sharp(buffer)

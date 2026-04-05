@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { siteConfig } from "@/config/site";
+import { isUserAdmin } from "@/lib/admin-access";
 import { getAuthUserEmail } from "@/lib/auth-user-email";
 import {
   sendGsBookingAcceptedCustomerEmail,
@@ -12,6 +13,7 @@ import {
   sendGsBookingRefusedCustomerEmail,
 } from "@/lib/email";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { auditLog } from "@/lib/security/audit-log";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { sendUserNotification } from "@/lib/user-notifications";
@@ -322,7 +324,7 @@ export async function confirmCheckOutAction(
   const admin = createAdminClient();
   const { data: booking } = await admin
     .from("gs_bookings")
-    .select("id, provider_id, customer_id, status, check_out_status")
+    .select("id, provider_id, customer_id, status, check_out_status, check_in_status, stripe_payment_intent_id")
     .eq("id", bookingId)
     .maybeSingle();
 
@@ -334,10 +336,16 @@ export async function confirmCheckOutAction(
     customer_id: string;
     status: string;
     check_out_status: string | null;
+    check_in_status: string | null;
+    stripe_payment_intent_id: string | null;
   };
 
   if (row.provider_id !== user.id) return { success: false, error: "Accès refusé." };
   if (row.status !== "accepted") return { success: false, error: "Réservation non active." };
+  if (!row.stripe_payment_intent_id) return { success: false, error: "Paiement non confirmé." };
+  if (row.check_in_status !== "confirmed") {
+    return { success: false, error: "Le check-in doit être confirmé avant la clôture du retour." };
+  }
   if (row.check_out_status) return { success: false, error: "Le retour a déjà été clôturé." };
 
   const now = new Date();
@@ -354,6 +362,8 @@ export async function confirmCheckOutAction(
       updated_at: now.toISOString(),
     })
     .eq("id", bookingId)
+    .eq("status", "accepted")
+    .eq("check_in_status", "confirmed")
     .is("check_out_status", null);
 
   if (error) return { success: false, error: error.message };
@@ -394,7 +404,7 @@ export async function reportIncidentAction(
   const { data: booking } = await admin
     .from("gs_bookings")
     .select(
-      "id, provider_id, customer_id, listing_id, status, incident_status, incident_deadline_at, end_date"
+      "id, provider_id, customer_id, listing_id, status, incident_status, incident_deadline_at, end_date, deposit_amount"
     )
     .eq("id", bookingId)
     .maybeSingle();
@@ -410,6 +420,7 @@ export async function reportIncidentAction(
     incident_status: string | null;
     incident_deadline_at: string | null;
     end_date: string;
+    deposit_amount?: number | string | null;
   };
 
   if (row.provider_id !== user.id) return { success: false, error: "Accès refusé." };
@@ -424,10 +435,19 @@ export async function reportIncidentAction(
     return { success: false, error: "La fenêtre de signalement de 48h est expirée." };
   }
 
-  const safeAmount =
-    amountRequested != null && Number.isFinite(amountRequested) && amountRequested > 0
-      ? Math.round(amountRequested * 100) / 100
-      : null;
+  const depositEur = Math.max(0, Number(row.deposit_amount ?? 0));
+  let safeAmount: number | null = null;
+  if (amountRequested != null && Number.isFinite(amountRequested) && amountRequested > 0) {
+    const rounded = Math.round(amountRequested * 100) / 100;
+    if (depositEur <= 0) {
+      return {
+        success: false,
+        error:
+          "Aucune caution n'est enregistrée sur cette réservation : ne renseignez pas de montant (contactez le support si besoin).",
+      };
+    }
+    safeAmount = Math.min(rounded, Math.round(depositEur * 100) / 100);
+  }
 
   const { error } = await admin
     .from("gs_bookings")
@@ -511,24 +531,11 @@ export async function resolveIncidentAdminAction(
   } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Non connecté." };
 
-  const adminEmails = (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  const isAdminByEnv = adminEmails.includes(user.email?.toLowerCase() ?? "");
+  if (!(await isUserAdmin(user, supabase))) {
+    return { success: false, error: "Accès refusé." };
+  }
 
   const admin = createAdminClient();
-
-  if (!isAdminByEnv) {
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("user_type")
-      .eq("id", user.id)
-      .maybeSingle();
-    if ((profile as { user_type?: string } | null)?.user_type !== "admin") {
-      return { success: false, error: "Accès refusé." };
-    }
-  }
 
   const { data: booking } = await admin
     .from("gs_bookings")
@@ -649,6 +656,12 @@ export async function resolveIncidentAdminAction(
   revalidatePath(`/admin/incidents-materiel/${bookingId}`);
   revalidatePath("/proprietaire/materiel");
   revalidatePath("/dashboard/materiel");
+  auditLog({
+    action: "resolve_incident_admin",
+    actorUserId: user.id,
+    subject: `gs_booking:${bookingId}`,
+    meta: { bookingId, decision, keepBlocked },
+  });
   return { success: true };
 }
 
@@ -670,24 +683,11 @@ export async function releaseDepositAdminAction(
   } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Non connecté." };
 
-  const adminEmails = (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  const isAdminByEnv = adminEmails.includes(user.email?.toLowerCase() ?? "");
+  if (!(await isUserAdmin(user, supabase))) {
+    return { success: false, error: "Accès refusé." };
+  }
 
   const admin = createAdminClient();
-
-  if (!isAdminByEnv) {
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("user_type")
-      .eq("id", user.id)
-      .maybeSingle();
-    if ((profile as { user_type?: string } | null)?.user_type !== "admin") {
-      return { success: false, error: "Accès refusé." };
-    }
-  }
 
   const { data: booking } = await admin
     .from("gs_bookings")
@@ -770,6 +770,12 @@ export async function releaseDepositAdminAction(
   revalidatePath(`/admin/incidents-materiel/${bookingId}`);
   revalidatePath("/proprietaire/materiel");
   revalidatePath("/dashboard/materiel");
+  auditLog({
+    action: "release_deposit_admin",
+    actorUserId: user.id,
+    subject: `gs_booking:${bookingId}`,
+    meta: { bookingId, reason: reason?.trim() ?? null },
+  });
   return { success: true };
 }
 
@@ -793,24 +799,11 @@ export async function captureDepositAdminAction(
   } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Non connecté." };
 
-  const adminEmails = (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  const isAdminByEnv = adminEmails.includes(user.email?.toLowerCase() ?? "");
+  if (!(await isUserAdmin(user, supabase))) {
+    return { success: false, error: "Accès refusé." };
+  }
 
   const admin = createAdminClient();
-
-  if (!isAdminByEnv) {
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("user_type")
-      .eq("id", user.id)
-      .maybeSingle();
-    if ((profile as { user_type?: string } | null)?.user_type !== "admin") {
-      return { success: false, error: "Accès refusé." };
-    }
-  }
 
   const { data: booking } = await admin
     .from("gs_bookings")
@@ -856,6 +849,15 @@ export async function captureDepositAdminAction(
     const { getStripe } = await import("@/lib/stripe");
     const stripe = getStripe();
 
+    const pi = await stripe.paymentIntents.retrieve(row.deposit_payment_intent_id);
+    const capturable = pi.amount_capturable ?? 0;
+    if (captureCents > capturable) {
+      return {
+        success: false,
+        error: `Montant capturable Stripe insuffisant (max ${(capturable / 100).toFixed(2)} €).`,
+      };
+    }
+
     await stripe.paymentIntents.capture(row.deposit_payment_intent_id, {
       amount_to_capture: captureCents,
     });
@@ -895,5 +897,11 @@ export async function captureDepositAdminAction(
   revalidatePath(`/admin/incidents-materiel/${bookingId}`);
   revalidatePath("/proprietaire/materiel");
   revalidatePath("/dashboard/materiel");
+  auditLog({
+    action: "capture_deposit_admin",
+    actorUserId: user.id,
+    subject: `gs_booking:${bookingId}`,
+    meta: { bookingId, amountEur, isPartial, reason: reason?.trim() ?? null },
+  });
   return { success: true };
 }

@@ -6,6 +6,7 @@ import { siteConfig } from "@/config/site";
 import { getAuthUserEmail } from "@/lib/auth-user-email";
 import { sendGsInvoiceAvailableEmail } from "@/lib/email";
 import { computeGsBookingPaymentSplit } from "@/lib/gs-booking-platform-fee";
+import { assertSafeStorageObjectPath, STORAGE_BUCKETS } from "@/lib/storage";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type BookingRow = {
@@ -178,7 +179,8 @@ export async function generateInvoicesForCompletedBookings() {
       const pdfBuffer = Buffer.concat(chunks);
 
       const path = `${b.provider_id}/${invoiceNumber}.pdf`;
-      const { error: uploadError } = await admin.storage.from("invoices").upload(path, pdfBuffer, {
+      assertSafeStorageObjectPath(path);
+      const { error: uploadError } = await admin.storage.from(STORAGE_BUCKETS.invoices).upload(path, pdfBuffer, {
         contentType: "application/pdf",
         upsert: false,
       });

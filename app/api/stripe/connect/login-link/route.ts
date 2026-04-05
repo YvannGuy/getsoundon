@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site";
+import { assertOwnerStripeConnectEligible } from "@/lib/auth/guards";
 import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,6 +13,13 @@ export async function POST() {
 
     if (!user) {
       return NextResponse.json({ error: "Non authentifié." }, { status: 401 });
+    }
+
+    if (!(await assertOwnerStripeConnectEligible(user, supabase))) {
+      return NextResponse.json(
+        { error: "Réservé aux prestataires du catalogue matériel." },
+        { status: 403 },
+      );
     }
 
     const { data: profile } = await supabase

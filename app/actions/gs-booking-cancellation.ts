@@ -22,6 +22,7 @@ import {
 } from "@/lib/gs-booking-cancellation";
 import { getCheckoutTotalPaidCents } from "@/lib/gs-booking-platform-fee";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { auditLog } from "@/lib/security/audit-log";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
@@ -316,6 +317,16 @@ export async function decideGsBookingCancellationRequest(
     revalidatePath("/admin/materiel-annulations");
     revalidatePath(`/dashboard/materiel/${booking.id}`);
     revalidatePath(`/proprietaire/commandes/${booking.id}`);
+    auditLog({
+      action: "decide_gs_booking_cancellation",
+      actorUserId: user.id,
+      subject: `gs_booking_cancellation_request:${request.id}`,
+      meta: {
+        bookingId: booking.id,
+        requestId: request.id,
+        decision: "reject",
+      },
+    });
     return { ok: true };
   }
 
@@ -473,6 +484,18 @@ export async function decideGsBookingCancellationRequest(
   revalidatePath(`/proprietaire/commandes/${booking.id}`);
   revalidatePath("/proprietaire/commandes");
   revalidatePath("/proprietaire/materiel");
+  auditLog({
+    action: "decide_gs_booking_cancellation",
+    actorUserId: user.id,
+    subject: `gs_booking_cancellation_request:${request.id}`,
+    meta: {
+      bookingId: booking.id,
+      requestId: request.id,
+      newStatus,
+      refundEur,
+      stripeRefundId: stripeRefundId ?? null,
+    },
+  });
   return { ok: true };
 }
 

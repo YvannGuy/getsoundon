@@ -6,6 +6,7 @@ import { fr } from "date-fns/locale";
 import { AlertTriangle, ClipboardList, FileText, LinkIcon, Package, Shield, Wallet } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { tryCreateSignedInvoiceReadUrl } from "@/lib/storage";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -128,10 +129,8 @@ export default async function AdminReservationDetailPage({
         .limit(1),
     ]);
 
-  const { data: signedInvoice } =
-    invoice?.invoice_url != null
-      ? await admin.storage.from("invoices").createSignedUrl(invoice.invoice_url, 60 * 60 * 24)
-      : { data: null };
+  const signedInvoiceUrl =
+    invoice?.invoice_url != null ? await tryCreateSignedInvoiceReadUrl(invoice.invoice_url) : null;
 
   const incidentOpen = booking.incident_status === "open";
   const amountTotal = Number(booking.checkout_total_eur ?? booking.total_price ?? 0);
@@ -308,9 +307,9 @@ export default async function AdminReservationDetailPage({
                 <p>
                   Montant : {Number(invoice.invoice_total_eur ?? 0).toFixed(2)} {invoice.currency ?? "EUR"}
                 </p>
-                {signedInvoice?.signedUrl ? (
+                {signedInvoiceUrl ? (
                   <a
-                    href={signedInvoice.signedUrl}
+                    href={signedInvoiceUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center text-sm font-semibold text-gs-orange underline-offset-2 hover:underline"

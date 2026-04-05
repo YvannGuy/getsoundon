@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 import { OwnerSidebar } from "@/components/dashboard/owner-sidebar";
-import { getEffectiveUserType } from "@/lib/auth-utils";
-import { fetchAuthProfileRow } from "@/lib/fetch-auth-profile";
+import { assertProprietaireAreaOrRedirect } from "@/lib/auth/guards";
 import { EMPTY_BADGE_COUNTS, getOwnerBadgeCounts } from "@/lib/notification-counts";
-import { getUserOrNull } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Tableau de bord | GetSoundOn",
@@ -19,31 +16,7 @@ export default async function ProprietaireLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, supabase } = await getUserOrNull();
-
-  if (!user) {
-    redirect("/auth");
-  }
-
-  const adminEmails = (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  const isAdminByEnv =
-    adminEmails.length > 0 && adminEmails.includes(user.email?.toLowerCase() ?? "");
-
-  const profile = await fetchAuthProfileRow(user.id, supabase);
-
-  if (profile?.suspended) {
-    redirect("/auth?suspended=1");
-  }
-
-  const userType = isAdminByEnv
-    ? "admin"
-    : await getEffectiveUserType(user, async () =>
-        profile ? { user_type: profile.user_type } : null,
-      );
-  if (userType === "admin") redirect("/admin");
+  const { user, supabase, profile } = await assertProprietaireAreaOrRedirect();
 
   const displayName =
     profile?.full_name?.trim() ||

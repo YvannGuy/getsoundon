@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 import { AdminHeader } from "@/components/dashboard/admin-header";
 import { AdminSidebar } from "@/components/dashboard/admin-sidebar";
-import { isUserAdmin } from "@/lib/admin-access";
+import { redirectIfNotAdmin } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getUserOrNull } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Administration",
@@ -19,15 +17,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, supabase } = await getUserOrNull();
-
-  if (!user) {
-    redirect("/auth/admin");
-  }
-
-  if (!(await isUserAdmin(user, supabase))) {
-    redirect("/auth/admin");
-  }
+  const { user } = await redirectIfNotAdmin("/auth/admin");
 
   const badgeCounts = {
     utilisateurs: 0,

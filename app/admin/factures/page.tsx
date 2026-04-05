@@ -6,6 +6,7 @@ import { FileText } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
+import { tryCreateSignedInvoiceReadUrl } from "@/lib/storage";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { AdminFacturesFilters } from "./admin-factures-filters";
@@ -217,10 +218,8 @@ export default async function AdminFacturesPage({
 
   const withSigned = await Promise.all(
     rows.map(async (inv) => {
-      const { data: signed } = await admin.storage
-        .from("invoices")
-        .createSignedUrl(inv.invoice_url, 60 * 60 * 24);
-      return { ...inv, signedUrl: signed?.signedUrl ?? null };
+      const signedUrl = await tryCreateSignedInvoiceReadUrl(inv.invoice_url);
+      return { ...inv, signedUrl };
     })
   );
 

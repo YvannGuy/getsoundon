@@ -5,11 +5,13 @@
 
 import "server-only";
 
+import { redirect } from "next/navigation";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 
-import { getEffectiveUserType, type EffectiveUserType } from "@/lib/auth-utils";
+import { isUserAdmin } from "@/lib/admin-access";
+import { canAccessOwnerDashboard, getEffectiveUserType, type EffectiveUserType } from "@/lib/auth-utils";
 import { requireAdminOrThrow, type AdminContext } from "@/lib/auth/admin-guard";
-import { fetchAuthProfileRow } from "@/lib/fetch-auth-profile";
+import { fetchAuthProfileRow, type AuthProfileRow } from "@/lib/fetch-auth-profile";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
 
@@ -65,3 +67,66 @@ export async function requireListingOwner(listingId: string): Promise<AuthContex
   }
   return { ...ctx, listingId };
 }
+
+// ─── Layouts (redirect Next.js, pas d’exception) ─────────────────────────────
+
+/** Admin uniquement — même règle que `isUserAdmin` (env + profil). */
+export async function redirectIfNotAdmin(redirectTo: string = "/auth/admin"): Promise<AuthContext> {
+  const { user, supabase } = await getUserOrNull();
+  if (!user) {
+    redirect(redirectTo);
+  }
+  if (!(await isUserAdmin(user, supabase))) {
+    redirect(redirectTo);
+  }
+  return { user, supabase };
+}
+
+/**
+ * Espace prestataire `/proprietaire` : pas admin pur, pas suspendu, éligible owner (profil ou annonce catalogue).
+ */
+export async function assertProprietaireAreaOrRedirect(): Promise<
+  AuthContext & { profile: AuthProfileRow | null }
+> {
+  const { user, supabase } = await getUserOrNull();
+  if (!user) {
+    redirect("/auth");
+  }
+  if (await isUserAdmin(user, supabase)) {
+    redirect("/admin");
+  }
+  const profile = await fetchAuthProfileRow(user.id, supabase);
+  if (profile?.suspended) {
+    redirect("/auth?suspended=1");
+  }
+  const userType = await getEffectiveUserType(user, async () =>
+    profile ? { user_type: profile.user_type } : null,
+  );
+  const { data: myListings } = await supabase.from("gs_listings").select("id").eq("owner_id", user.id).limit(1);
+  const hasCatalogListings = (myListings ?? []).length > 0;
+  if (!canAccessOwnerDashboard(userType, hasCatalogListings)) {
+    redirect("/dashboard");
+  }
+  return { user, supabase, profile };
+}
+
+/**
+ * Stripe Connect onboarding / login link : réservé aux comptes éligibles espace prestataire catalogue.
+ */
+export async function assertOwnerStripeConnectEligible(
+  user: User,
+  supabase: SupabaseClient,
+): Promise<boolean> {
+  if (await isUserAdmin(user, supabase)) {
+    return false;
+  }
+  const profile = await fetchAuthProfileRow(user.id, supabase);
+  const userType = await getEffectiveUserType(user, async () =>
+    profile ? { user_type: profile.user_type } : null,
+  );
+  const { data: myListings } = await supabase.from("gs_listings").select("id").eq("owner_id", user.id).limit(1);
+  const hasCatalogListings = (myListings ?? []).length > 0;
+  return canAccessOwnerDashboard(userType, hasCatalogListings);
+}
+
+export { isUserAdmin, type EffectiveUserType };

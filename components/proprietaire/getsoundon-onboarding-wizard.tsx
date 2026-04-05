@@ -26,6 +26,7 @@ import { Camera, CheckCircle, ChevronLeft, Clock, Info } from "lucide-react";
 
 import { createSalleFromOnboarding } from "@/app/actions/create-salle";
 import { createClient } from "@/lib/supabase/client";
+import { MAX_SALLE_PHOTOS_PER_LISTING, STORAGE_BUCKETS } from "@/lib/storage/buckets";
 import { compressImage } from "@/lib/compress-image";
 import {
   syncGsWizardToOnboardingPayload,
@@ -701,10 +702,29 @@ export function GetSoundOnOnboardingWizard({
     }
 
     const imageUrls: string[] = [];
+    if (data.photos.length > MAX_SALLE_PHOTOS_PER_LISTING) {
+      setSubmitError(`Maximum ${MAX_SALLE_PHOTOS_PER_LISTING} photos.`);
+      setIsSubmitting(false);
+      return;
+    }
     const totalToUpload = data.photos.length;
+    const maxOriginalBytes = 50 * 1024 * 1024;
+    const allowedMime = ["image/jpeg", "image/png"];
     for (let i = 0; i < data.photos.length; i++) {
       setUploadProgress({ current: i + 1, total: totalToUpload });
       const file = data.photos[i];
+      if (!allowedMime.includes(file.type)) {
+        setSubmitError(`Photo ${i + 1} : format JPG ou PNG uniquement.`);
+        setUploadProgress(null);
+        setIsSubmitting(false);
+        return;
+      }
+      if (file.size > maxOriginalBytes) {
+        setSubmitError(`Photo ${i + 1} : fichier trop volumineux (max 50 Mo).`);
+        setUploadProgress(null);
+        setIsSubmitting(false);
+        return;
+      }
       let blob: Blob;
       try {
         blob = await compressImage(file, { maxSizePx: 1600, quality: 0.75 });
