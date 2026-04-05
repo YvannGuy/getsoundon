@@ -1,0 +1,25 @@
+---
+description: Next.js App Router — limites de confiance et boundaries
+globs: app/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Next.js App Router — GetSoundOn
+
+## Obligations
+
+- **Server Components par défaut** pour données sensibles ; `use client` seulement si nécessaire (interactivité).
+- **Server Actions** : fichier `app/actions/*.ts` avec `"use server"` ; en tête d’action : `requireUser` / `requireAdmin` / `requireRole` selon le cas puis Zod.
+- **Route Handlers** `app/api/**/route.ts` : valider méthode HTTP ; auth sauf webhooks signés ou endpoints explicitement publics documentés.
+- **Rate limiting** : endpoints exposés (auth, messages, reports, checkout, webhooks) — utiliser `lib/security/rate-limit.ts` ou le pattern middleware + garde-fou route.
+
+## Interdictions
+
+- Exposer des helpers utilisant `createAdminClient` dans un module importé par un Client Component.
+- Faire confiance aux **searchParams** ou **cookies** pour l’autorisation sans recouper avec la DB / le rôle serveur.
+- Retourner des messages d’erreur avec stack ou détails DB en prod.
+
+## Références
+
+- Session : `lib/supabase/server.ts` (`getUserOrNull`, `createClient`)
+- Garde-fous : `lib/auth/guards.ts`

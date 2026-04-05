@@ -1,0 +1,26 @@
+---
+description: Stripe & Stripe Connect — checkout, webhooks, Connect
+globs: app/api/stripe/**/*,lib/stripe*.ts,lib/billing/**/*,app/actions/stripe*.ts
+alwaysApply: false
+---
+
+# Stripe — GetSoundOn
+
+## Obligations
+
+- **Montants** : calculés côté serveur à partir des données DB + règles commission (`lib/gs-booking-platform-fee.ts`, etc.) ; jamais se fier au prix envoyé par le client seul.
+- **Checkout Session** : création uniquement côté serveur (`app/api/stripe/*`, actions dédiées).
+- **Webhooks** : `constructStripeWebhookEvent` (`lib/billing/stripe-helpers.ts`) + `STRIPE_WEBHOOK_SECRET` ; idempotence sur `event.id` quand le store est utilisé (`lib/stripe-webhook-store.ts`).
+- **Connect** : onboarding / login links uniquement pour le `user` authentifié concerné ; pas de fuite d’account id entre utilisateurs.
+
+## Interdictions
+
+- Traiter un webhook sans vérification de signature.
+- Utiliser les metadata Stripe comme seule preuve sans recouper booking/order en base.
+- Exposer `STRIPE_SECRET_KEY` ou signing secret au client.
+
+## Références
+
+- Client Stripe serveur : `lib/stripe.ts`
+- Handler agrégé : `lib/stripe-webhook.ts`, `app/api/stripe/webhook/route.ts`
+- Connect : `lib/stripe-webhook-connect.ts`, `lib/gs-provider-stripe-connect.ts`

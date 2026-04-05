@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
+import { constructStripeWebhookEvent } from "@/lib/billing/stripe-helpers";
 import { handleStripeWebhook } from "@/lib/stripe-webhook";
 import { isDuplicateStripeEvent } from "@/lib/stripe-webhook-store";
-import { getStripe } from "@/lib/stripe";
 
 export async function POST(request: Request) {
   const signature = request.headers.get("stripe-signature");
@@ -15,8 +15,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.text();
-    const stripe = getStripe();
-    const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    const event = constructStripeWebhookEvent(body, signature, webhookSecret);
 
     const duplicate = await isDuplicateStripeEvent(event.id, event.type);
     if (duplicate) {

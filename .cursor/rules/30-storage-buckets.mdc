@@ -1,0 +1,25 @@
+---
+description: Supabase Storage — buckets privés et signed URLs
+globs: app/actions/**/*.{ts,tsx},lib/storage/**/*,lib/**/*storage*
+alwaysApply: false
+---
+
+# Storage — GetSoundOn
+
+## Obligations
+
+- Buckets avec données utilisateurs / factures / documents : **privés** ; pas de policy publique en lecture sauf exception marketing explicite.
+- Upload : valider **type MIME**, **taille**, **nom/chemin** ; préfixer par `user.id` ou ID métier contrôlé serveur.
+- Téléchargement : **`createSignedUrl`** avec durée courte (voir `lib/storage/index.ts`).
+- Centraliser les noms de buckets dans `STORAGE_BUCKETS` pour éviter les typos.
+
+## Interdictions
+
+- Bucket sensible en **public** sans revue.
+- Laisser le client choisir un chemin absolu arbitraire (path traversal, écriture sur fichier d’un autre user).
+- URL signée longue durée par défaut pour documents confidentiels.
+
+## Référence
+
+- Exemple upload : `app/actions/upload-photos.ts` (bucket `salle-photos`)
+- Helpers : `lib/storage/index.ts`

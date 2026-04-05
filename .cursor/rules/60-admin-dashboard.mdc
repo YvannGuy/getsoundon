@@ -1,0 +1,23 @@
+---
+description: Dashboard admin — accès et données
+globs: app/admin/**/*,app/actions/admin*.ts,app/actions/*admin*,lib/auth/admin-guard.ts
+alwaysApply: false
+---
+
+# Admin — GetSoundOn
+
+## Obligations
+
+- Toute Server Action ou route sensible sous `/admin` ou réservée aux admins : **`requireAdminOrThrow`** ou **`requireAdmin`** (`lib/auth/guards.ts`) aligné sur **`lib/admin-access.ts`** (`ADMIN_EMAILS` ou `profiles.user_type === 'admin'`).
+- Layout `app/admin/layout.tsx` : conserver la cohérence avec les actions (même règle de vérité).
+- Modération, signalements, utilisateurs : tracer l’action avec **`auditLog`** quand c’est critique.
+
+## Interdictions
+
+- Admin implicite (cookie, paramètre `?admin=1`, header custom non signé).
+- Dupliquer une logique « est admin » différente de `isUserAdmin` / `requireAdminOrThrow`.
+- Exposer listes utilisateurs ou données réservations en API sans garde admin.
+
+## Références
+
+- `lib/auth/admin-guard.ts`, `lib/admin-access.ts`, `app/admin/layout.tsx`

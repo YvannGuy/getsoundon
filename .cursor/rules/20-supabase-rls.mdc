@@ -1,0 +1,25 @@
+---
+description: Supabase — RLS, clients anon vs service_role
+globs: **/*.{ts,tsx,sql}
+alwaysApply: false
+---
+
+# Supabase — GetSoundOn
+
+## Obligations
+
+- **Lecture/écriture utilisateur** : préférer `createClient()` (anon + session) pour respecter **RLS**.
+- **`createAdminClient()`** : uniquement quand nécessaire (cron, webhooks, recoupement ownership, tâches admin) et **après** contrôle d’accès applicatif si la route est user-facing.
+- Nouvelle table : **activer RLS** ; rédiger policies explicites (par `auth.uid()`, rôle métier dans `profiles`, etc.).
+- Migrations SQL dans `supabase/sql/` ; documenter l’impact RLS dans la PR.
+
+## Interdictions
+
+- Désactiver RLS sur une table contenant des données utilisateurs pour « débloquer vite ».
+- Étendre une policy `USING (true)` sur des données privées sans justification reviewée.
+- Exposer la **service_role key** au navigateur ou dans une env `NEXT_PUBLIC_*`.
+
+## Référence
+
+- Client serveur : `lib/supabase/server.ts`, `lib/supabase/admin.ts`
+- Profil pour rôles UI : `lib/fetch-auth-profile.ts`, `lib/auth-utils.ts`

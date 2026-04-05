@@ -1,0 +1,24 @@
+---
+description: Emails transactionnels et webhooks (hors Stripe si besoin)
+globs: lib/email.ts,app/api/**/*.ts,app/api/cron/**/*,lib/cron/**/*
+alwaysApply: false
+---
+
+# Emails & webhooks — GetSoundOn
+
+## Obligations
+
+- **Emails** : pas de pièces jointes contenant des secrets ; liens signés courts si accès fichier.
+- Ne pas inclure de **tokens de session** ou mots de passe dans les emails.
+- **Cron / webhooks internes** : authentifier (ex. `verifyCronRequest` dans `lib/cron/auth.ts`, bearer + HMAC selon config existante) ; ne pas exposer d’action destructive en GET public.
+- **API contact / support** : rate limit + validation Zod (voir routes `app/api/contact/*`).
+
+## Interdictions
+
+- Déclencher un paiement ou une annulation définitive uniquement depuis un email « link » sans token CSRF / sans vérif serveur.
+- Logger le corps complet des webhooks contenant des PII en clair en prod.
+
+## Références
+
+- Cron auth : `lib/cron/auth.ts`
+- Emails : `lib/email.ts`

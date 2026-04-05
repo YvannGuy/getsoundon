@@ -1,0 +1,33 @@
+---
+description: Règles sécurité transverses GetSoundOn (marketplace)
+globs: **/*.{ts,tsx,js,jsx,mjs}
+alwaysApply: true
+---
+
+# Sécurité — noyau
+
+## Obligations
+
+- **Auth ≠ autorisation** : après `getUser` / `requireUser`, vérifier rôle, ownership ou policy métier avant mutation.
+- **Validation serveur** : Zod sur toute entrée externe (body, query, FormData) dans Route Handlers et Server Actions.
+- **Service role** (`createAdminClient`) : uniquement dans code **serveur** ; jamais sous `use client` ni importé par un composant client.
+- **RLS** : toute nouvelle table user-facing = policies avant merge ; documenter qui lit/écrit.
+- **Storage** : buckets sensibles **privés** ; lecture via signed URL courte ; chemins validés (pas de path arbitraire client).
+- **Secrets** : jamais `STRIPE_SECRET`, `SUPABASE_SERVICE_ROLE`, webhook secrets en `NEXT_PUBLIC_*` ni dans le client.
+- **Middleware** : ne pas supposer qu’il suffit à sécuriser une API ; refaire les garde-fous dans la route / l’action.
+
+## Interdictions
+
+- Faire confiance au client pour **prix**, **montants**, **user_id** cible, **owner_id**, **rôle**, **statut** réservation, **permission admin**.
+- Webhook **sans** vérification de signature Stripe (`constructEvent`).
+- Table exposée sans stratégie RLS claire.
+- Bucket privé rendu public pour « simplifier ».
+- Données sensibles (tokens, PII) en **localStorage** pour des flux SSR sécurisés ; pas de secrets en analytics/logs.
+
+## Primitives repo
+
+- `lib/auth/guards.ts` — `requireUser`, `requireAdmin`, `requireRole`, `requireListingOwner`
+- `lib/validation/index.ts` — parse JSON / FormData
+- `lib/security/audit-log.ts` — actions critiques
+- `lib/billing/stripe-helpers.ts` — webhook signé, Stripe serveur
+- `lib/storage/index.ts` — buckets, signed URL

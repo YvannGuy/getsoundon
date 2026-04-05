@@ -21,7 +21,8 @@
     "supabase:init-contract-storage": "node scripts/init-contract-storage.mjs",
     "supabase:init-edl-storage": "node scripts/init-edl-storage.mjs",
     "supabase:bootstrap-admin-auth": "node scripts/bootstrap-admin-auth.mjs",
-    "seo:crawl": "node scripts/crawl-seo.mjs"
+    "seo:crawl": "node scripts/crawl-seo.mjs",
+    "security:check": "npx tsx scripts/check-env-exposure.ts && npx tsx scripts/check-localstorage-sensitive.ts && npx tsx scripts/check-service-role-import.ts && npx tsx scripts/check-client-trusted-price.ts"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.7.5",
@@ -81,6 +82,7 @@
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
     "ts-jest": "^29.4.6",
+    "tsx": "^4.20.5",
     "typescript": "^5"
   }
 }
