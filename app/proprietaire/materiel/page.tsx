@@ -224,7 +224,7 @@ export default async function ProprietaireMaterielPage({
     for (const l of (listings ?? []) as ListingRow[]) listingsMap[l.id] = l;
   }
 
-  // Profils locataires
+  // Profils clients (customer_id)
   const allCustomerIds = [...new Set([...pending, ...active, ...completed, ...refused].map((b) => b.customer_id))];
   let customersMap: Record<string, CustomerRow> = {};
   if (allCustomerIds.length > 0) {

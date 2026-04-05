@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const metadata: Metadata = {
   title: "Tarifs et consultation gratuite",
   description:
-    "GetSoundOn propose une consultation gratuite. Les frais de service sont appliques uniquement lors d'une reservation payee.",
+    "GetSoundOn propose une consultation gratuite. Les frais de service client (3 %) et la commission prestataire (15 %) s’appliquent selon les CGV lors d’une réservation payée.",
   alternates: { canonical: buildCanonical("/pricing") },
 };
 
@@ -22,14 +22,19 @@ export default function PricingPage() {
         <h1 className="text-4xl font-semibold tracking-tight text-black">Tarifs et consultation gratuite</h1>
         <p className="mt-4 text-slate-600">
           Parcourez le catalogue matériel librement et échangez avec les prestataires sans frais. Les tarifs de
-          location sont fixés par annonce ; une fois votre réservation confirmée, des frais de service fixes de 15 €
-          s&apos;ajoutent au moment du paiement pour couvrir la sécurisation des transactions et le support de la
-          plateforme.
+          location sont fixés par annonce ; une fois votre réservation payée, des{" "}
+          <strong className="font-medium text-slate-800">frais de service de 3 %</strong> du prix de location
+          s&apos;ajoutent côté client au moment du paiement, conformément aux{" "}
+          <Link href="/cgv" className="text-gs-orange hover:underline">
+            CGV
+          </Link>
+          .
         </p>
         <p className="mt-3 text-slate-600">
           Comparez les annonces (sono, DJ, lumière, services), envoyez vos demandes et ne payez qu&apos;une fois la
-          réservation acceptée. Les loueurs fixent leurs prix (souvent à la journée) ; le forfait de 15 € est
-          identique quelle que soit la durée.
+          réservation acceptée. Les prestataires perçoivent le prix de location diminué d&apos;une{" "}
+          <strong className="font-medium text-slate-800">commission de 15 %</strong> ; le détail figure dans les
+          CGV.
         </p>
       </div>
 
@@ -77,8 +82,14 @@ export default function PricingPage() {
           <li>
             <strong className="text-slate-800">Quels frais s&apos;appliquent à la réservation ?</strong>
             <p className="mt-1">
-              Un forfait de 15 € de frais de service est ajouté au moment du paiement de la réservation. Le prix
-              de la location est fixé par le prestataire et indiqué sur chaque annonce.
+              Le client paie le prix de location affiché sur l&apos;annonce plus des frais de service de{" "}
+              <strong className="font-medium text-slate-800">3 %</strong> sur ce prix. Le prestataire reçoit le prix
+              de location diminué d&apos;une commission de{" "}
+              <strong className="font-medium text-slate-800">15 %</strong>. Voir les{" "}
+              <Link href="/cgv" className="text-gs-orange hover:underline">
+                CGV
+              </Link>{" "}
+              pour le détail et les arrondis.
             </p>
           </li>
           <li>

@@ -20,7 +20,6 @@ interface MobileNavProps {
 
 const navLinks = [
   { href: "/#categories-evenement", label: "Catégories" },
-  { href: "/blog", label: "Blog" },
   { href: "/avantages", label: "Nos avantages" },
   { label: "Publier mon materiel", isAddSalle: true as const },
 ];

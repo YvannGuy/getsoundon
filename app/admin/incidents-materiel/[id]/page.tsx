@@ -273,14 +273,14 @@ export default async function AdminIncidentDetailPage({
             </div>
             <dl className="space-y-1.5 text-sm">
               <Row
-                label="Montant location (réf.)"
+                label="Montant réservation (réf.)"
                 value={Number.isFinite(locationEur) ? `${locationEur} €` : "—"}
               />
               {Number.isFinite(checkoutTotalEur) && checkoutTotalEur !== locationEur ? (
-                <Row label="Total encaissé locataire (PI principal)" value={`${checkoutTotalEur} €`} />
+                <Row label="Total encaissé client (PI principal)" value={`${checkoutTotalEur} €`} />
               ) : null}
               <Row
-                label="Net prestataire (versement Connect)"
+                label="Net prestataire (virement Connect)"
                 value={
                   providerNetEur != null && Number.isFinite(providerNetEur) ? `${providerNetEur} €` : "—"
                 }
@@ -289,7 +289,7 @@ export default async function AdminIncidentDetailPage({
                 label="Statut"
                 value={PAYOUT_LABEL[booking.payout_status ?? ""] ?? booking.payout_status ?? "—"}
               />
-              <Row label="Versement prévu" value={fmtDate(booking.payout_due_at)} />
+              <Row label="Virement prévu" value={fmtDate(booking.payout_due_at)} />
             </dl>
           </section>
 
@@ -327,7 +327,7 @@ export default async function AdminIncidentDetailPage({
               {fmtDate(booking.start_date)} — {fmtDate(booking.end_date)}
             </p>
             <p className="mt-1 text-sm text-slate-500">
-              Location {Number.isFinite(locationEur) ? `${locationEur} €` : "—"}
+              Réservation {Number.isFinite(locationEur) ? `${locationEur} €` : "—"}
               {Number.isFinite(checkoutTotalEur) && checkoutTotalEur !== locationEur
                 ? ` · Payé ${checkoutTotalEur} €`
                 : ""}
@@ -346,10 +346,10 @@ export default async function AdminIncidentDetailPage({
             </div>
           </section>
 
-          {/* Locataire */}
+          {/* Client */}
           <section className="rounded-xl border border-slate-100 bg-white p-4">
             <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-              Locataire
+              Client
             </h3>
             <p className="font-medium text-slate-900">{customer?.full_name ?? "—"}</p>
             <p className="text-sm text-slate-500">{customer?.email ?? "—"}</p>

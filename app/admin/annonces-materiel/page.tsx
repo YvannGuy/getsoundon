@@ -121,7 +121,7 @@ export default async function AdminAnnoncesPage({
           <h1 className="text-xl font-bold text-black md:text-2xl">Annonces</h1>
           <p className="mt-1 max-w-4xl text-sm text-slate-600">
             Vue admin des annonces matériel : statut actif/inactif, prestataire, prix et publication. Aligné avec l’espace
-            propriétaire.
+            prestataire.
           </p>
         </div>
       </div>

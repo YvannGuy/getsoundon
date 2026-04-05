@@ -118,7 +118,7 @@ export default function ComingSoonPage() {
                 GetSoundOn arrive très bientôt
               </h1>
               <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/70">
-                La marketplace qui connecte organisateurs et pros du spectacle : trouvez du matériel, des
+                La marketplace qui connecte clients et pros du spectacle : trouvez du matériel, des
                 prestations et des techniciens — ou proposez vos équipements avec des parcours clairs et un cadre
                 sérieux.
               </p>
@@ -162,7 +162,7 @@ export default function ComingSoonPage() {
                   </p>
                 </div>
                 <ul className="mt-8 space-y-3 text-sm text-white/70">
-                  {["Recherche par univers technique", "Demandes et messages centralisés", "Parcours loueur & organisateur"].map(
+                  {["Recherche par univers technique", "Demandes et messages centralisés", "Parcours prestataire & client"].map(
                     (t) => (
                       <li key={t} className="flex items-start gap-2">
                         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-gs-orange" aria-hidden />
@@ -192,7 +192,7 @@ export default function ComingSoonPage() {
             />
             <div className="mt-12 grid gap-6 md:grid-cols-2">
               <article className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-xl shadow-black/40 sm:p-8">
-                <h3 className="text-lg font-semibold text-white">Pour les organisateurs</h3>
+                <h3 className="text-lg font-semibold text-white">Pour les clients</h3>
                 <p className="mt-3 text-sm leading-relaxed text-white/65">
                   Comparez son, lumières, DJ, captation et logistique au même endroit. Gagnez du temps sur la
                   prospection, sécurisez vos demandes et avancez avec des interlocuteurs identifiés.
@@ -202,7 +202,7 @@ export default function ComingSoonPage() {
                 <h3 className="text-lg font-semibold text-white">Pour les prestataires</h3>
                 <p className="mt-3 text-sm leading-relaxed text-white/65">
                   Mettez en valeur votre matériel et vos services avec une fiche propre, gérez vos échanges et
-                  touchez des organisateurs qui cherchent concrètement ce que vous proposez.
+                  touchez des clients qui cherchent concrètement ce que vous proposez.
                 </p>
               </article>
             </div>
@@ -291,7 +291,7 @@ export default function ComingSoonPage() {
             </h2>
             <p className="mt-4 text-sm leading-relaxed text-white/65 sm:text-base">
               Nous ouvrons d’abord à une sélection de prestataires et de services pour valider les parcours
-              bout en bout : qualité des annonces, disponibilités, échanges et satisfaction des organisateurs.
+              bout en bout : qualité des annonces, disponibilités, échanges et satisfaction des clients.
               Cette étape nous permet de monter en charge sans compromettre l’expérience.
             </p>
             <p className="mt-4 text-sm text-white/45">
@@ -322,6 +322,9 @@ export default function ComingSoonPage() {
               </a>
               <Link href="/mentions-legales" className="hover:text-white">
                 Mentions légales
+              </Link>
+              <Link href="/cgv" className="hover:text-white">
+                CGV
               </Link>
               <Link href="/confidentialite" className="hover:text-white">
                 Politique de confidentialité

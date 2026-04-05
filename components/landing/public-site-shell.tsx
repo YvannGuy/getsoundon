@@ -29,7 +29,7 @@ export async function PublicSiteShell({ children }: { children: React.ReactNode 
         accountEmail={accountEmail}
       />
       {children}
-      <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
+      <LandingFooter publishListingHref={publishListingHref} />
     </div>
   );
 }

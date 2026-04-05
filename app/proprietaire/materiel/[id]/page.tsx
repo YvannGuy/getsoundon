@@ -128,7 +128,7 @@ function bookingStatusSummaryOwner(b: BookingFull, isPaid: boolean): string {
   if (b.status === "refused") return "Demande refusée";
   if (b.status === "cancelled") return "Annulée";
   if (b.status === "completed") return "Terminée";
-  if (b.status === "accepted") return isPaid ? "Confirmée (payée)" : "Acceptée — paiement locataire en attente";
+  if (b.status === "accepted") return isPaid ? "Confirmée (payée)" : "Acceptée — paiement client en attente";
   return "En attente de votre réponse (accepter / refuser)";
 }
 
@@ -210,7 +210,7 @@ export default async function ProprietaireMaterielDetailPage({
             className="mt-0.5 flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
           >
             <ArrowLeft className="h-4 w-4" />
-            Mes locations
+            Mes réservations
           </Link>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -230,7 +230,7 @@ export default async function ProprietaireMaterielDetailPage({
             <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
               <dt className="flex items-center gap-2 text-sm text-slate-500">
                 <CreditCard className="h-4 w-4 shrink-0 text-slate-400" />
-                Montant de la location (votre annonce)
+                Montant de la réservation (votre annonce)
               </dt>
               <dd className="text-lg font-bold text-slate-900">
                 {Number.isFinite(totalEur) ? `${totalEur.toFixed(2)} €` : "—"}
@@ -244,13 +244,13 @@ export default async function ProprietaireMaterielDetailPage({
               booking.checkout_total_eur !== "" && (
                 <>
                   <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
-                    <dt className="text-sm text-slate-500">Frais de service (facturés au locataire)</dt>
+                    <dt className="text-sm text-slate-500">Frais de service (facturés au client)</dt>
                     <dd className="text-right text-sm font-medium text-slate-800">
                       {Number(booking.service_fee_eur).toFixed(2)} €
                     </dd>
                   </div>
                   <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
-                    <dt className="text-sm text-slate-500">Total payé par le locataire (hors caution)</dt>
+                    <dt className="text-sm text-slate-500">Total payé par le client (hors caution / dépôt de garantie)</dt>
                     <dd className="text-right text-sm font-medium text-slate-800">
                       {Number(booking.checkout_total_eur).toFixed(2)} €
                     </dd>
@@ -268,13 +268,13 @@ export default async function ProprietaireMaterielDetailPage({
                     <dd className="text-right text-sm font-medium text-slate-800">{platformFeeEur} €</dd>
                   </div>
                   <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
-                    <dt className="text-sm text-slate-500">Votre net (versement Connect)</dt>
+                    <dt className="text-sm text-slate-500">Votre net (virement Connect)</dt>
                     <dd className="text-right text-sm font-semibold text-emerald-800">{providerNetEur} €</dd>
                   </div>
                 </>
               )}
             <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
-              <dt className="text-sm text-slate-500">Locataire</dt>
+              <dt className="text-sm text-slate-500">Client</dt>
               <dd className="text-right text-sm font-medium text-slate-800">
                 {customer?.full_name ?? customer?.email ?? "—"}
               </dd>
@@ -282,7 +282,7 @@ export default async function ProprietaireMaterielDetailPage({
             <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80">
               <dt className="flex items-center gap-2 text-sm text-slate-500">
                 <Wallet className="h-4 w-4 shrink-0 text-slate-400" />
-                Versement
+                Virement
               </dt>
               <dd
                 className={`text-right text-sm font-semibold ${
@@ -293,12 +293,12 @@ export default async function ProprietaireMaterielDetailPage({
               </dd>
             </div>
             <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80">
-              <dt className="text-sm text-slate-500">Versement prévu</dt>
+              <dt className="text-sm text-slate-500">Virement prévu</dt>
               <dd className="text-right text-sm font-medium text-slate-800">{fmt(booking.payout_due_at)}</dd>
             </div>
             {booking.payout_status === "paid" && booking.payout_paid_at && (
               <div className="flex items-center justify-between gap-3 rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-slate-200/80 sm:col-span-2">
-                <dt className="text-sm text-slate-500">Versement effectué le</dt>
+                <dt className="text-sm text-slate-500">Virement effectué le</dt>
                 <dd className="text-right text-sm font-medium text-slate-800">{fmtFull(booking.payout_paid_at)}</dd>
               </div>
             )}
@@ -325,7 +325,7 @@ export default async function ProprietaireMaterielDetailPage({
         >
           {!isPaid ? (
             <p className="text-sm leading-relaxed text-slate-600">
-              Une fois le paiement locataire confirmé, le suivi check-in / check-out et les détails apparaîtront ici.
+              Une fois le paiement du client confirmé, le suivi check-in / check-out et les détails apparaîtront ici.
             </p>
           ) : (
             <div className="space-y-4 rounded-xl bg-slate-50/90 p-4 ring-1 ring-slate-100">
@@ -372,8 +372,8 @@ export default async function ProprietaireMaterielDetailPage({
         <MaterielDetailSection
           step={2}
           id="caution-materiel"
-          title="Caution locataire"
-          description="Empreinte, réclamation éventuelle et impact sur le versement."
+          title="Caution / dépôt de garantie (client)"
+          description="Empreinte, réclamation éventuelle et impact sur le virement."
         >
           {depositEur <= 0 ? (
             <p className="text-sm text-slate-600">Aucune caution sur cette réservation.</p>
@@ -419,7 +419,7 @@ export default async function ProprietaireMaterielDetailPage({
                   <p className="font-semibold text-amber-900">{incidentHeadlineProvider(booking.incident_status)}</p>
                   {payoutBlocked ? (
                     <p className="mt-1 text-sm text-amber-800/95">
-                      Le versement est suspendu jusqu’à décision de l’administration.
+                      Le virement est suspendu jusqu’à décision de l’administration.
                     </p>
                   ) : (
                     <p className="mt-1 text-sm text-amber-800/95">
@@ -480,12 +480,12 @@ export default async function ProprietaireMaterielDetailPage({
           )}
           {!canReport && !booking.incident_status && isPaid && (
             <p className="text-sm text-slate-600">
-              Aucun signalement en cours. La fenêtre de signalement s’ouvre après la fin de location (délai affiché dans le
-              formulaire lorsqu’elle est active).
+              Aucun signalement en cours. La fenêtre de signalement s’ouvre après la fin de la réservation (délai affiché
+              dans le formulaire lorsqu’elle est active).
             </p>
           )}
           {!isPaid && (
-            <p className="text-sm text-slate-500">Le signalement d’incident concerne les locations confirmées et terminées.</p>
+            <p className="text-sm text-slate-500">Le signalement d’incident concerne les réservations confirmées et terminées.</p>
           )}
         </MaterielDetailSection>
 
@@ -497,7 +497,7 @@ export default async function ProprietaireMaterielDetailPage({
         >
           {!isPaid ? (
             <p className="text-sm text-slate-600">
-              Les actions check-in / check-out seront disponibles après paiement par le locataire.
+              Les actions check-in / check-out seront disponibles après paiement par le client.
             </p>
           ) : !isActive ? (
             <p className="text-sm text-slate-600">
@@ -510,7 +510,7 @@ export default async function ProprietaireMaterielDetailPage({
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
                   <PackageOpen className="h-4 w-4 text-slate-400" />
-                  Check-in — remise au locataire
+                  Check-in — remise au client
                 </div>
                 <CheckInActions bookingId={booking.id} initialCheckInStatus={booking.check_in_status} />
               </div>
@@ -531,12 +531,12 @@ export default async function ProprietaireMaterielDetailPage({
             step={5}
             id="messagerie-materiel"
             title="Messagerie"
-            description={`Échanges avec ${customer?.full_name ?? "le locataire"} pour cette réservation.`}
+            description={`Échanges avec ${customer?.full_name ?? "le client"} pour cette réservation.`}
           >
             <BookingChat
               key={booking.id}
               bookingId={booking.id}
-              otherPartyLabel={`le locataire${customer?.full_name ? ` (${customer.full_name})` : ""}`}
+              otherPartyLabel={`le client${customer?.full_name ? ` (${customer.full_name})` : ""}`}
               initialUnreadCount={materielUnreadOnBooking}
             />
           </MaterielDetailSection>

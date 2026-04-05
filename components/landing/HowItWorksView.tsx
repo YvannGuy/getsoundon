@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { HowItWorksContactForm } from "@/components/landing/how-it-works-contact-form";
+import { siteConfig } from "@/config/site";
 
 const IMG_HERO =
   "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=900&q=80";
@@ -273,13 +274,13 @@ export function HowItWorksView() {
               <ul className="mt-8 space-y-4">
                 <li>
                   <a
-                    href="mailto:contact@getsoundon.com"
+                    href={`mailto:${siteConfig.supportEmail}`}
                     className="font-landing-body inline-flex items-center gap-3 text-[15px] font-medium text-gs-dark hover:text-gs-orange"
                   >
                     <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-gs-orange/12">
                       <Mail className="h-5 w-5 text-gs-orange" strokeWidth={2} aria-hidden />
                     </span>
-                    contact@getsoundon.com
+                    {siteConfig.supportEmail}
                   </a>
                 </li>
               </ul>

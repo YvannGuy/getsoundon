@@ -18,7 +18,7 @@ const FAQ_GENERAL = [
   },
   {
     q: "Qui peut utiliser la plateforme ?",
-    a: "Les organisateurs d’événements (particuliers ou pros) pour trouver du matériel, et les loueurs / prestataires pour publier des annonces et gérer demandes et réservations.",
+    a: "Les clients (particuliers ou pros) pour trouver du matériel, et les prestataires pour publier des annonces et gérer demandes et réservations.",
   },
   {
     q: "La consultation du catalogue est-elle payante ?",
@@ -42,11 +42,11 @@ const FAQ_GENERAL = [
   },
   {
     q: "Comment contacter le support ?",
-    a: "Écrivez à contact@getsoundon.com ou utilisez le formulaire du centre d’aide. Réponse en général sous 24 à 48 h ouvrées.",
+    a: `Écrivez à ${siteConfig.supportEmail} ou utilisez le formulaire du centre d’aide. Réponse en général sous 24 à 48 h ouvrées.`,
   },
   {
     q: "Où en savoir plus sur le fonctionnement ?",
-    a: "Consultez la page « Comment ça marche » pour le parcours locataires et prestataires, et la FAQ en bas de page d’accueil pour des réponses rapides.",
+    a: "Consultez la page « Comment ça marche » pour le parcours clients et prestataires, et la FAQ en bas de page d’accueil pour des réponses rapides.",
   },
   {
     q: "Puis-je utiliser le site sans compte ?",
@@ -58,7 +58,7 @@ const FAQ_GENERAL = [
   },
   {
     q: "Comment signaler un problème ?",
-    a: "Contactez contact@getsoundon.com en décrivant la situation (annonce, réservation, utilisateur). Nous traitons les signalements dans les meilleurs délais.",
+    a: `Contactez ${siteConfig.supportEmail} en décrivant la situation (annonce, réservation, utilisateur). Nous traitons les signalements dans les meilleurs délais.`,
   },
   {
     q: "Où sont les mentions légales et la politique de confidentialité ?",
@@ -66,7 +66,7 @@ const FAQ_GENERAL = [
   },
   {
     q: "Partenariats ou presse ?",
-    a: "Écrivez à contact@getsoundon.com en indiquant l’objet de votre demande.",
+    a: `Écrivez à ${siteConfig.supportEmail} en indiquant l’objet de votre demande.`,
   },
 ];
 

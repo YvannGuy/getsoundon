@@ -15,7 +15,7 @@ const ITEMS = [
   },
   {
     q: "Qui peut s’inscrire ?",
-    a: "Organisateurs, agences, lieux, associations comme prestataires techniques, loueurs et artisans du spectacle : la plateforme est pensée pour tous les acteurs de l’événementiel qui cherchent ou proposent du matériel et des services.",
+    a: "Clients, agences, associations et prestataires techniques : la plateforme est pensée pour tous les acteurs de l’événementiel qui cherchent ou proposent du matériel et des services.",
   },
   {
     q: "Quels services seront proposés ?",

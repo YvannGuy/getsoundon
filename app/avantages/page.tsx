@@ -11,9 +11,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "Pourquoi lister votre salle | Avantages propriétaires",
+  title: "Pourquoi lister votre matériel | Avantages prestataires",
   description:
-    "Decouvrez les avantages de proposer votre salle sur GetSoundOn. Plateforme pensee pour les proprietaires, gestion simplifiee, paiements securises.",
+    "Découvrez les avantages de proposer votre matériel événementiel sur GetSoundOn : visibilité, demandes qualifiées, paiements sécurisés via Stripe.",
   alternates: { canonical: buildCanonical("/avantages") },
 };
 
@@ -21,40 +21,40 @@ const PLATEFORME_CARDS = [
   {
     number: "1",
     title: "Ciblage pertinent",
-    desc: "Touchez une audience qui cherche un lieu pour des besoins spirituels et cérémoniels.",
+    desc: "Touchez des clients et des pros qui cherchent du matériel sono, DJ, lumière ou services associés.",
   },
   {
     number: "2",
     title: "Cadre structuré",
-    desc: "Demandes, échanges, offres et suivi sont encadrés dans un seul espace.",
+    desc: "Demandes, échanges, réservations et suivi sont encadrés dans un seul espace.",
   },
   {
     number: "3",
     title: "Relation simplifiée",
-    desc: "Une expérience claire pour le propriétaire comme pour l'organisateur.",
+    desc: "Une expérience claire pour le prestataire comme pour le client.",
   },
 ];
 
 const GAINS = [
-  { title: "Visibilité locale ciblée", desc: "Votre salle apparaît auprès d'organisateurs réellement pertinents." },
+  { title: "Visibilité ciblée", desc: "Votre annonce matériel apparaît auprès de clients réellement pertinents." },
   { title: "Gain de temps au quotidien", desc: "Moins d'aller-retours, plus de demandes qualifiées." },
-  { title: "Réservations mieux cadrées", desc: "Offres, contrat et suivi regroupés dans un même parcours." },
-  { title: "Gestion des demandes unifiée", desc: "Tout est centralisé: échanges, statuts et prochaines actions." },
+  { title: "Réservations mieux cadrées", desc: "Conditions de réservation, contrat et suivi regroupés dans un même parcours." },
+  { title: "Gestion des demandes unifiée", desc: "Tout est centralisé : échanges, statuts et prochaines actions." },
   { title: "Paiement optionnel sécurisé", desc: "Encaissements en ligne possibles via Stripe Connect." },
-  { title: "Meilleure expérience client", desc: "Un parcours clair qui inspire confiance aux organisateurs." },
+  { title: "Meilleure expérience client", desc: "Un parcours clair qui inspire confiance aux clients." },
 ];
 
 const ETAPES = [
-  { step: 1, title: "Créez votre annonce", desc: "Ajoutez photos, capacité et règles de location." },
-  { step: 2, title: "Recevez des demandes", desc: "Échangez directement avec les organisateurs intéressés." },
-  { step: 3, title: "Proposez une offre", desc: "Validez le cadre et les conditions de réservation." },
-  { step: 4, title: "Finalisez", desc: "Paiement en ligne optionnel, suivi depuis le dashboard." },
+  { step: 1, title: "Créez votre annonce", desc: "Ajoutez photos, description, tarifs et conditions de location." },
+  { step: 2, title: "Recevez des demandes", desc: "Échangez directement avec les clients intéressés." },
+  { step: 3, title: "Validez la réservation", desc: "Validez le cadre et les conditions de réservation." },
+  { step: 4, title: "Finalisez", desc: "Paiement en ligne optionnel, suivi depuis le tableau de bord." },
 ];
 
 const ANNONCES_TIPS = [
-  "Mise en ligne rapide de votre salle",
+  "Mise en ligne rapide de votre matériel",
   "Espace clair pour gérer les demandes",
-  "Messagerie intégrée avec organisateurs",
+  "Messagerie intégrée avec les clients",
   "Historique des échanges et actions",
   "Possibilité de paiement en ligne",
   "Suivi simplifié des réservations",
@@ -63,7 +63,7 @@ const ANNONCES_TIPS = [
 const PAIEMENTS_PROPRIO = [
   "Encaissement sécurisé via Stripe",
   "Historique des transactions",
-  "Suivi des paiements en dashboard",
+  "Suivi des paiements dans le tableau de bord",
   "Activation uniquement si vous le souhaitez",
 ];
 
@@ -75,10 +75,22 @@ const PAIEMENTS_LOCATAIRES = [
 ];
 
 const FAQ_ITEMS = [
-  { q: "Comment fonctionne la plateforme ?", a: "Vous créez une annonce avec les détails de votre salle. Les organisateurs vous envoient des demandes. Vous répondez, négociez et validez les réservations. Les paiements peuvent passer par la plateforme (optionnel)." },
-  { q: "Quels sont les frais ?", a: "L'inscription et la création d'annonces sont gratuites. Les frais plateforme sont fixes (15 €) et s'appliquent uniquement au moment du paiement d'une réservation." },
-  { q: "Puis-je annuler une réservation ?", a: "Les conditions d'annulation sont définies avec l'organisateur. En cas de force majeure, contactez le support pour trouver une solution." },
-  { q: "Comment contacter le support ?", a: "Notre equipe est joignable par email a contact@getsoundon.com. Nous repondons sous 48h ouvrees." },
+  {
+    q: "Comment fonctionne la plateforme ?",
+    a: "Vous créez une annonce avec les détails de votre matériel. Les clients vous envoient des demandes. Vous répondez, négociez et validez les réservations. Les paiements peuvent passer par la plateforme (optionnel).",
+  },
+  {
+    q: "Quels sont les frais ?",
+    a: "L'inscription et la création d'annonces sont gratuites. Lors d'une réservation payée, le client paie des frais de service de 3 % sur le prix de location ; le prestataire reçoit le prix de location diminué d'une commission de 15 %, conformément aux CGV.",
+  },
+  {
+    q: "Puis-je annuler une réservation ?",
+    a: "Les conditions d'annulation sont définies avec le client et précisées sur l'annonce. En cas de difficulté, contactez le support.",
+  },
+  {
+    q: "Comment contacter le support ?",
+    a: `Notre équipe est joignable par e-mail à ${siteConfig.supportEmail}. Nous répondons en général sous 48 h ouvrées.`,
+  },
 ];
 
 export default async function AvantagesPage() {
@@ -89,17 +101,18 @@ export default async function AvantagesPage() {
           <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
             <div>
               <h1 className="text-[32px] font-bold tracking-tight text-black sm:text-[40px] lg:text-[48px]">
-                Mettez votre salle
+                Mettez votre matériel
                 <br />
                 en location.
                 <span className="block text-gs-orange">On s&apos;occupe du cadre.</span>
               </h1>
               <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-slate-600">
-                Publiez votre salle et recevez des demandes qualifiées. Un parcours clair pour gérer vos échanges, vos offres et vos réservations.
+                Publiez votre matériel et recevez des demandes qualifiées. Un parcours clair pour gérer vos échanges,
+                vos réservations.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <AddSalleLink className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-gs-orange px-6 text-[15px] font-semibold text-white transition hover:brightness-95">
-                  Ajouter ma salle
+                  Publier mon matériel
                   <ChevronRight className="h-5 w-5" />
                 </AddSalleLink>
                 <Link
@@ -120,7 +133,7 @@ export default async function AvantagesPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <span>Dashboard propriétaire simple</span>
+                  <span>Tableau de bord prestataire simple</span>
                 </li>
               </ul>
             </div>
@@ -128,7 +141,7 @@ export default async function AvantagesPage() {
               <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-slate-200">
               <Image
                 src="/images/proprietaire-gestion.png"
-                alt="Aperçu plateforme propriétaire"
+                alt="Aperçu plateforme prestataire"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -184,7 +197,7 @@ export default async function AvantagesPage() {
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
             <div>
               <h2 className="text-[28px] font-bold text-black sm:text-[32px]">
-                Votre espace propriétaire (dashboard)
+                Votre espace prestataire (tableau de bord)
               </h2>
               <ul className="mt-8 space-y-3">
                 {ANNONCES_TIPS.map((text) => (
@@ -201,7 +214,7 @@ export default async function AvantagesPage() {
             <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-slate-100">
               <Image
                 src="/images/avantages-dashboard-owner.png"
-                alt="Aperçu dashboard propriétaire"
+                alt="Aperçu tableau de bord prestataire"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -240,7 +253,7 @@ export default async function AvantagesPage() {
           <div className="mt-12 grid gap-6 sm:grid-cols-2">
             <Card className="border-blue-100 bg-blue-50/40">
               <CardContent className="p-6">
-                <h3 className="text-[18px] font-semibold text-black">Pour vous (propriétaire)</h3>
+                <h3 className="text-[18px] font-semibold text-black">Pour vous (prestataire)</h3>
                 <ul className="mt-4 space-y-3">
                   {PAIEMENTS_PROPRIO.map((item) => (
                     <li key={item} className="flex items-center gap-3">
@@ -253,7 +266,7 @@ export default async function AvantagesPage() {
             </Card>
             <Card className="border-emerald-100 bg-emerald-50/40">
               <CardContent className="p-6">
-                <h3 className="text-[18px] font-semibold text-black">Pour l&apos;organisateur</h3>
+                <h3 className="text-[18px] font-semibold text-black">Pour le client</h3>
                 <ul className="mt-4 space-y-3">
                   {PAIEMENTS_LOCATAIRES.map((item) => (
                     <li key={item} className="flex items-center gap-3">
@@ -296,14 +309,14 @@ export default async function AvantagesPage() {
       <section className="bg-orange-50 py-16">
         <div className="container max-w-[1120px] text-center">
           <h2 className="text-[28px] font-bold text-black sm:text-[32px]">
-            Prêt à proposer votre salle ?
+            Prêt à proposer votre matériel ?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-[16px] leading-relaxed text-slate-600">
             Testez gratuitement et activez ensuite les options selon vos besoins.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <AddSalleLink className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-gs-orange px-8 text-[15px] font-semibold text-white transition hover:brightness-95">
-              Ajouter ma salle
+              Publier mon matériel
             </AddSalleLink>
             <Link
               href="/centre-aide/proprietaire"

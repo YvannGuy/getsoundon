@@ -40,7 +40,7 @@ export type Salle = {
   gearCategory?: string | null;
   gearBrand?: string | null;
   gearModel?: string | null;
-  /** Si true, le locataire peut réserver et payer directement sans passer par la messagerie. */
+  /** Si true, le client peut réserver et payer directement sans passer par la messagerie. */
   instantBookingEnabled?: boolean;
 };
 

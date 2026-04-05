@@ -15,7 +15,7 @@ type AddSalleLinkProps = {
 
 /**
  * Lien "Ajouter mon annonce" :
- * - si connecté -> dashboard propriétaire avec ouverture automatique du wizard intégré
+ * - si connecté -> tableau de bord prestataire avec ouverture automatique du wizard intégré
  * - sinon -> auth signup owner
  */
 export function AddSalleLink({ className, children }: AddSalleLinkProps) {

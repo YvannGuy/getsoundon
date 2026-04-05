@@ -128,7 +128,7 @@ export async function signupAction(_: AuthFormState, formData: FormData): Promis
   // Confirmation email requise : pas de redirection (l'utilisateur n'a pas encore de session)
   return {
     success:
-      "Félicitations ! Votre compte est créé. Vérifiez votre boîte mail pour confirmer l'inscription (pensez à regarder vos dossiers Spam/Indésirables). Une fois confirmé, vous pourrez vous connecter et accéder à votre dashboard.",
+      "Félicitations ! Votre compte est créé. Vérifiez votre boîte mail pour confirmer l'inscription (pensez à regarder vos dossiers Spam/Indésirables). Une fois confirmé, vous pourrez vous connecter et accéder à votre tableau de bord.",
   };
 }
 

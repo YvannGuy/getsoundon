@@ -36,8 +36,8 @@ export function TrialActivatedPopup({ show, freeTotal, userType, basePath }: Pro
 
   const message =
     userType === "seeker"
-      ? `Bravo, votre essai est activé ! Vous avez droit à ${freeTotal} demande${freeTotal > 1 ? "s" : ""} pour contacter les propriétaires.`
-      : `Bravo, votre essai est activé ! Vous avez droit à ${freeTotal} demande${freeTotal > 1 ? "s" : ""} pour découvrir les annonces des autres propriétaires.`;
+      ? `Bravo, votre essai est activé ! Vous avez droit à ${freeTotal} demande${freeTotal > 1 ? "s" : ""} pour contacter les prestataires.`
+      : `Bravo, votre essai est activé ! Vous avez droit à ${freeTotal} demande${freeTotal > 1 ? "s" : ""} pour découvrir les annonces des autres prestataires.`;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>

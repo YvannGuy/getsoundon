@@ -10,7 +10,7 @@ import { getUserOrNull } from "@/lib/supabase/server";
 export const metadata: Metadata = {
   title: "Comment ça marche",
   description:
-    "Découvrez comment louer ou mettre en location du matériel événementiel sur GetSoundOn : étapes pour les prestataires et les locataires, avantages et contact.",
+    "Découvrez comment louer ou mettre en location du matériel événementiel sur GetSoundOn : étapes pour les prestataires et les clients, avantages et contact.",
   alternates: { canonical: buildCanonical("/comment-ca-marche") },
 };
 
@@ -38,7 +38,7 @@ export default async function CommentCaMarchePage() {
         accountEmail={accountEmail}
       />
       <HowItWorksView />
-      <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
+      <LandingFooter publishListingHref={publishListingHref} />
     </div>
   );
 }

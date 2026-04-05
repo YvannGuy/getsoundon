@@ -35,7 +35,7 @@ export function AdminHeader({ title, subtitle }: AdminHeaderProps) {
           <ArrowLeft className="h-4 w-4" />
           Retour vers le site
         </a>
-        <h1 className="text-xl font-bold text-black">{title ?? "Dashboard Admin"}</h1>
+        <h1 className="text-xl font-bold text-black">{title ?? "Tableau de bord admin"}</h1>
         <p className="text-sm text-slate-600">
           {subtitle ??
             "Opérations GetSoundOn : comptes, incidents & annulations matériel, conciergerie, réglages."}

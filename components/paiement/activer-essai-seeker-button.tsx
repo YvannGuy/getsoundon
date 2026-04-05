@@ -64,7 +64,7 @@ export function ActiverEssaiSeekerButton({ freeTotal, freeUsed = 0, className }:
                   {remaining > 1 ? "s" : ""} restante{remaining > 1 ? "s" : ""}
                 </p>
                 <p className="mt-2 text-slate-600">
-                  Envoyez vos demandes aux propriétaires pour vérifier les disponibilités.
+                  Envoyez vos demandes aux prestataires pour vérifier les disponibilités.
                 </p>
               </div>
             </DialogDescription>

@@ -1,6 +1,6 @@
 /**
  * Caractéristiques annonces : v1 wizard = matériel / pack ; édition = matériel + champs lieu historiques.
- * Les ids du wizard doivent exister dans FEATURE_TO_SALLE et FEATURE_EDIT_LIST pour l’édition propriétaire.
+ * Les ids du wizard doivent exister dans FEATURE_TO_SALLE et FEATURE_EDIT_LIST pour l’édition prestataire.
  */
 
 /** Matériel / pack — affichage wizard + mapping JSON `features` */

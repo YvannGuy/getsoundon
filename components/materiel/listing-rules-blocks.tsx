@@ -150,7 +150,7 @@ export function ListingRulesReservationBlock({
           >
             <span className="block font-medium">Réservation instantanée</span>
             <span className="mt-0.5 block text-xs font-normal text-slate-600">
-              Le locataire peut réserver et payer immédiatement en ligne.
+              Le client peut réserver et payer immédiatement en ligne.
             </span>
           </button>
           <button
@@ -160,7 +160,7 @@ export function ListingRulesReservationBlock({
           >
             <span className="block font-medium">Sur demande</span>
             <span className="mt-0.5 block text-xs font-normal text-slate-600">
-              Vous examinez d’abord la demande, puis le locataire paie si vous l’acceptez.
+              Vous examinez d’abord la demande, puis le client paie si vous l’acceptez.
             </span>
           </button>
         </div>
@@ -187,10 +187,10 @@ export function ListingRulesCancellationBlock({
   return (
     <BlockShell
       title="Politique d’annulation"
-      subtitle="Choisissez la politique appliquée à cette annonce en cas de demande d’annulation d’un locataire."
+      subtitle="Choisissez la politique appliquée à cette annonce en cas de demande d’annulation d’un client."
     >
       <p className="text-xs leading-relaxed text-slate-600">
-        Cette politique sert de base de décision à la plateforme. Le locataire ne peut pas annuler directement : il
+        Cette politique sert de base de décision à la plateforme. Le client ne peut pas annuler directement : il
         soumet une demande, puis la plateforme tranche selon votre politique et le contexte réel de la réservation.
       </p>
       <div>

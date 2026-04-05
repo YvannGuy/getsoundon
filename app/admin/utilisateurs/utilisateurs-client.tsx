@@ -61,11 +61,11 @@ type Props = {
 function formatType(type: string) {
   switch (type) {
     case "owner":
-      return "Propriétaire";
+      return "Prestataire";
     case "admin":
       return "Admin";
     default:
-      return "Locataire";
+      return "Client";
   }
 }
 
@@ -119,13 +119,13 @@ function getTypeBadge(type: string, listingsCount?: number) {
   if (type === "owner" || (listingsCount ?? 0) > 0) {
     return (
       <span className="inline-flex rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-medium text-violet-700">
-        Propriétaire
+        Prestataire
       </span>
     );
   }
   return (
     <span className="inline-flex rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
-      Locataire
+      Client
     </span>
   );
 }
@@ -259,8 +259,8 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
               className="h-10 rounded-md border border-slate-200 bg-white px-4 text-sm text-slate-700"
             >
               <option value="all">Tous</option>
-              <option value="seeker">Locataire</option>
-              <option value="owner">Propriétaire</option>
+              <option value="seeker">Client</option>
+              <option value="owner">Prestataire</option>
               <option value="admin">Admin</option>
             </select>
             <select
@@ -291,7 +291,7 @@ export function UtilisateursClient({ users, stats, highlightUserId }: Props) {
           iconClassName="text-emerald-600"
         />
         <AdminKpiCard
-          title="Propriétaires"
+          title="Prestataires"
           value={stats.owners}
           icon={Building2}
           iconWrapClassName="bg-violet-100"

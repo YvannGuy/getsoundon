@@ -35,10 +35,10 @@ export function SwitchToSeekerView({ collapsed }: { collapsed?: boolean }) {
         window.location.assign("/dashboard");
       }}
       className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-black"
-      title={collapsed ? "Voir en tant que locataire" : undefined}
+      title={collapsed ? "Voir en tant que client" : undefined}
     >
       <Search className="h-5 w-5 shrink-0" />
-      {!collapsed && <span className="flex-1 truncate">Voir en tant que locataire</span>}
+      {!collapsed && <span className="flex-1 truncate">Voir en tant que client</span>}
     </button>
   );
 }

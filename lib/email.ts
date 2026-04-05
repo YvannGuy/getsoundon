@@ -16,7 +16,6 @@ const resend: Pick<Resend, "emails"> = resendApiKey
 const from =
   process.env.RESEND_FROM_EMAIL ?? "GetSoundOn <onboarding@resend.dev>";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsoundon.com";
-const contactEmail = "contact@getsoundon.com";
 const instagramUrl = "https://instagram.com/getsoundon";
 const facebookUrl = "https://facebook.com/getsoundon";
 const demoVideoUrl = "https://youtu.be/demo-getsoundon";
@@ -103,7 +102,7 @@ li{margin:6px 0;}
       <div class="footer">
         <p>Nos réseaux sociaux pour ne rien manquer :</p>
         <p><a href="${instagramUrl}">Instagram</a> · <a href="${facebookUrl}">Facebook</a></p>
-        <p>Contact support : <a href="mailto:${contactEmail}">${contactEmail}</a></p>
+        <p>Contact support : <a href="mailto:${siteConfig.supportEmail}">${siteConfig.supportEmail}</a></p>
       </div>
       <p class="signature">A tres bientot,<br>L'equipe GetSoundOn</p>
     </div>
@@ -125,7 +124,7 @@ export async function sendWelcomeSeekerEmail(to: string, fullName: string) {
     html: renderEmailLayout({
       title: `Bienvenue ${firstName} sur GetSoundOn`,
       intro:
-        "Vous venez de rejoindre une plateforme dédiée à la <strong>location de matériel événementiel</strong> (sono, DJ, lumière, services) entre <strong>locataires</strong> et <strong>prestataires</strong> vérifiés.",
+        "Vous venez de rejoindre une plateforme dédiée à la <strong>location de matériel événementiel</strong> (sono, DJ, lumière, services) entre <strong>clients</strong> et <strong>prestataires</strong> vérifiés.",
       sections: [
         `<h2>Un parcours simple et encadré</h2>
          <p>Notre objectif : vous aider à trouver le bon matériel, échanger clairement avec le prestataire, sécuriser la <strong>demande</strong>, la <strong>réservation</strong> et le <strong>paiement</strong> lorsque le flux en ligne est proposé sur l’annonce.</p>`,
@@ -133,7 +132,7 @@ export async function sendWelcomeSeekerEmail(to: string, fullName: string) {
          <ul>
            <li>Parcourir le <a href="${siteUrl}/catalogue">catalogue matériel</a></li>
            <li>Réserver et payer en ligne lorsque l’annonce le propose (paiement sécurisé)</li>
-           <li>Échanger avec le prestataire depuis <strong>Mes locations matériel</strong> (tableau de bord)</li>
+           <li>Échanger avec le prestataire depuis <strong>Mes réservations matériel</strong> (tableau de bord)</li>
            <li>Suivre vos réservations, cautions (empreinte le cas échéant) et demandes d’annulation depuis votre espace</li>
          </ul>`,
         `<h2>Astuce pour bien démarrer</h2>
@@ -166,12 +165,12 @@ export async function sendWelcomeOwnerEmail(to: string, _fullName: string) {
       intro:
         "Merci d’avoir rejoint GetSoundOn en tant que <strong>prestataire</strong>. Vous proposez du <strong>matériel</strong> en location et gérez vos <strong>annonces</strong> et vos <strong>réservations catalogue</strong> depuis un espace dédié.",
       sections: [
-        `<h2>Un outil pensé pour les loueurs</h2>
+        `<h2>Un outil pensé pour les prestataires</h2>
          <p>Publiez vos <strong>annonces</strong> (photos, tarifs, zone, options), gérez les <strong>réservations catalogue</strong> et, lorsque Stripe Connect est activé, encaissez les <strong>paiements</strong> associés.</p>`,
         `<h2>Ce que vous pouvez faire dès maintenant</h2>
          <ul>
            <li>Créer ou compléter une <strong>annonce</strong> matériel</li>
-           <li>Suivre les <strong>locations matériel</strong> et les échanges liés aux réservations</li>
+           <li>Suivre les <strong>réservations matériel</strong> et les échanges associés</li>
            <li>Configurer caution (<strong>empreinte</strong>) et politique d’<strong>annulation</strong> sur l’annonce</li>
            <li>Suivre les <strong>paiements</strong> et les <strong>incidents</strong> matériel le cas échéant</li>
          </ul>`,
@@ -304,11 +303,11 @@ export async function sendGsBookingPaymentConfirmedPrestataireEmail(
 ) {
   if (!process.env.RESEND_API_KEY) return { success: false };
   const sections = [
-    `<p class="tip"><strong>Montant de la location (votre annonce) :</strong> ${escapeHtml(locationAmountEur)} EUR</p>`,
+    `<p class="tip"><strong>Montant de la réservation (votre annonce) :</strong> ${escapeHtml(locationAmountEur)} EUR</p>`,
   ];
   if (split?.serviceFeePaidByCustomerEur && split?.checkoutTotalEur) {
     sections.push(
-      `<p class="tip"><strong>Frais de service (facturés au locataire, hors votre rémunération) :</strong> ${escapeHtml(split.serviceFeePaidByCustomerEur)} EUR — <strong>total encaissé sur le paiement :</strong> ${escapeHtml(split.checkoutTotalEur)} EUR.</p>`
+      `<p class="tip"><strong>Frais de service (facturés au client, hors votre rémunération) :</strong> ${escapeHtml(split.serviceFeePaidByCustomerEur)} EUR — <strong>total encaissé sur le paiement :</strong> ${escapeHtml(split.checkoutTotalEur)} EUR.</p>`
     );
   }
   if (split) {
@@ -323,7 +322,7 @@ export async function sendGsBookingPaymentConfirmedPrestataireEmail(
     subject: `Réservation payée — ${listingTitle}`,
     html: renderEmailLayout({
       title: "Une réservation vient d’être payée",
-      intro: `Un locataire a finalisé le paiement pour votre annonce <strong>${escapeHtml(listingTitle)}</strong>.`,
+      intro: `Un client a finalisé le paiement pour votre annonce <strong>${escapeHtml(listingTitle)}</strong>.`,
       sections,
       ctaLabel: "Voir la réservation",
       ctaUrl: bookingUrl,
@@ -405,7 +404,7 @@ export async function sendSupportContactEmail(params: {
 
   const { error } = await resend.emails.send({
     from,
-    to: contactEmail,
+    to: siteConfig.supportEmail,
     replyTo: params.email.trim(),
     subject: `[Support] ${params.helpType} - ${params.name}`,
     html: renderEmailLayout({
@@ -440,7 +439,7 @@ export async function sendHowItWorksContactEmail(params: {
 
   const { error } = await resend.emails.send({
     from,
-    to: contactEmail,
+    to: siteConfig.supportEmail,
     replyTo: params.email.trim(),
     subject: `[Comment ça marche] ${params.firstName.trim()} ${params.lastName.trim()}`,
     html: renderEmailLayout({
@@ -471,9 +470,9 @@ export async function sendPrelaunchWaitlistEmail(params: {
   const safeEmail = escapeHtml(params.email.trim());
   const profileLabel =
     params.profile === "organisateur"
-      ? "Organisateur / chercheur de matériel"
+      ? "Client (organisateur d’événements / chercheur de matériel)"
       : params.profile === "prestataire"
-        ? "Prestataire / loueur"
+        ? "Prestataire"
         : "Autre";
   const safeProfile = escapeHtml(profileLabel);
   const safeCity = params.city?.trim() ? escapeHtml(params.city.trim()) : "—";

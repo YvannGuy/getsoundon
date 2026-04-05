@@ -38,14 +38,14 @@ type SeekerNavItem = {
 const seekerNavItems: SeekerNavItem[] = [
   { href: "/dashboard", label: "Tableau de bord", icon: Home },
   { href: "/catalogue", label: "Catalogue matériel", icon: Search, opensSearchModal: true },
-  { href: "/dashboard/materiel", label: "Mes locations matériel", icon: Package, badgeKey: "materiel_chat" },
+  { href: "/dashboard/materiel", label: "Mes réservations matériel", icon: Package, badgeKey: "materiel_chat" },
   { href: "/dashboard/paiement", label: "Paiements & carte", icon: CreditCard },
   { href: "/dashboard/parametres", label: "Paramètres", icon: Settings },
 ];
 
 const seekerNavSections: { title: string; itemHrefs: string[] }[] = [
   { title: "Vue d'ensemble", itemHrefs: ["/dashboard", "/catalogue"] },
-  { title: "Locations matériel", itemHrefs: ["/dashboard/materiel"] },
+  { title: "Réservations matériel", itemHrefs: ["/dashboard/materiel"] },
   { title: "Finances", itemHrefs: ["/dashboard/paiement"] },
   { title: "Compte", itemHrefs: ["/dashboard/parametres"] },
 ];

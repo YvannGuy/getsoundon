@@ -28,10 +28,10 @@ function gsBookingCautionHtmlPrestataire(cents: number, hold: string): string | 
   if (!cents || cents <= 0) return null;
   const eur = (cents / 100).toFixed(2);
   if (hold === "authorized") {
-    return `<p>Empreinte de <strong>caution</strong> locataire en place (${eur} EUR), selon les règles de l’annonce.</p>`;
+    return `<p>Empreinte de <strong>caution / dépôt de garantie</strong> côté client en place (${eur} EUR), selon les règles de l’annonce.</p>`;
   }
   if (hold === "failed") {
-    return `<p>L’empreinte de <strong>caution</strong> (${eur} EUR) côté locataire n’a pas pu être finalisée.</p>`;
+    return `<p>L’empreinte de <strong>caution / dépôt de garantie</strong> (${eur} EUR) côté client n’a pas pu être finalisée.</p>`;
   }
   return `<p>Une <strong>caution</strong> de ${eur} EUR est prévue sur cette réservation ; le statut se met à jour automatiquement.</p>`;
 }

@@ -59,7 +59,7 @@ export function GsOrderDetailView({ vm, paidQuery, backHref, backLabel }: Props)
             </dd>
           </div>
           <div>
-            <dt className="text-slate-500">Locataire</dt>
+            <dt className="text-slate-500">Client</dt>
             <dd className="font-medium text-slate-900">{customerLabel}</dd>
           </div>
           <div>

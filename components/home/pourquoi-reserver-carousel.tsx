@@ -28,7 +28,7 @@ const BLOCS = [
   {
     id: "demandes",
     title: "Demandes simples",
-    desc: "Contactez plusieurs propriétaires facilement et recevez des réponses rapides.",
+    desc: "Contactez plusieurs prestataires facilement et recevez des réponses rapides.",
     sub: "Un processus fluide, sans friction.",
     image: "/images/caroussel/demandessimples.png",
   },

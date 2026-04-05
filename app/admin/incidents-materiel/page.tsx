@@ -152,7 +152,7 @@ export default async function AdminIncidentsMaterielPage({
                       {format(new Date(row.end_date), "d MMM yyyy", { locale: fr })}
                     </p>
                     <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[12px] text-slate-500">
-                      <span>Locataire : {customer?.full_name ?? customer?.email ?? "—"}</span>
+                      <span>Client : {customer?.full_name ?? customer?.email ?? "—"}</span>
                       <span>Prestataire : {provider?.full_name ?? provider?.email ?? "—"}</span>
                       <span>Location : {Number.isFinite(totalEur) ? `${totalEur} €` : "—"}</span>
                       {depositEur > 0 && <span>Caution : {depositEur} € ({row.deposit_hold_status ?? "—"})</span>}

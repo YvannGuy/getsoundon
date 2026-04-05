@@ -19,7 +19,7 @@ type FaqItem = {
 const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Comment fonctionne la location sur GetSoundOn ?",
-    intro: "GetSoundOn met en relation locataires et loueurs en quelques étapes simples :",
+    intro: "GetSoundOn met en relation clients et prestataires en quelques étapes simples :",
     bullets: [
       "Recherchez le matériel événementiel dont vous avez besoin (sono, DJ, lumières, etc.).",
       "Échangez avec le prestataire et validez les conditions (dates, retrait ou livraison, options).",
@@ -36,7 +36,7 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: "La location est-elle sécurisée ?",
     paragraph:
-      "Les profils et annonces sont encadrés par la plateforme. Les échanges se font dans votre espace (réservations matériel, messages liés aux locations), les conditions (caution, dépôt, annulation) sont précisées sur l’annonce et dans le contrat. Le paiement suit un parcours sécurisé adapté au modèle GetSoundOn.",
+      "Les profils et annonces sont encadrés par la plateforme. Les échanges se font dans votre espace (réservations matériel, messages liés aux réservations), les conditions (caution / dépôt de garantie, annulation) sont précisées sur l’annonce et dans le cadre contractuel. Le paiement suit un parcours sécurisé sur GetSoundOn.",
   },
   {
     question: "Comment proposer mon matériel en location ?",
@@ -46,7 +46,7 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Quels sont les tarifs et les frais de service ?",
     paragraph:
-      "Le prix affiché sur l’annonce est fixé par le loueur (souvent à la journée ou au forfait). Des frais de plateforme peuvent s’appliquer ; le détail vous est montré avant paiement, sans surprise au moment de valider.",
+      "Le prix affiché sur l’annonce est fixé par le prestataire (souvent à la journée ou au forfait). Des frais de plateforme peuvent s’appliquer ; le détail vous est montré avant paiement, sans surprise au moment de valider.",
   },
   {
     question: "Combien de temps puis-je louer du matériel ?",
@@ -56,22 +56,22 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Comment se déroulent la livraison et la récupération ?",
     paragraph:
-      "C’est défini annonce par annonce : retrait chez le loueur, livraison, ou les deux. Les modalités (créneaux, adresse, installation) sont précisées avant validation pour éviter les malentendus.",
+      "C’est défini annonce par annonce : retrait chez le prestataire, livraison, ou les deux. Les modalités (créneaux, adresse, installation) sont précisées avant validation pour éviter les malentendus.",
   },
   {
     question: "Que faire en cas de problème avec le matériel loué ?",
     paragraph:
-      "Contactez d’abord le loueur depuis votre espace (fil lié à la réservation matériel). En cas de litige persistant, documentez l’échange et sollicitez le support ou les procédures prévues dans les conditions générales et le contrat de location.",
+      "Contactez d’abord le prestataire depuis votre espace (fil lié à la réservation matériel). En cas de litige persistant, documentez l’échange et sollicitez le support ou les procédures prévues dans les conditions générales et le cadre de la réservation.",
   },
   {
     question: "Puis-je annuler ma réservation ?",
     paragraph:
-      "Les règles d’annulation et de remboursement dépendent des conditions affichées sur l’annonce et du moment où vous annulez. Vérifiez-les avant de payer ; elles font partie du contrat entre vous et le loueur.",
+      "Les règles d’annulation et de remboursement dépendent des conditions affichées sur l’annonce et du moment où vous annulez. Vérifiez-les avant de payer ; elles font partie des conditions de réservation entre vous et le prestataire.",
   },
   {
     question: "Qui peut utiliser GetSoundOn ?",
     paragraph:
-      "Les particuliers qui organisent un événement, les DJ, les techniciens, les agences et toute structure pro qui a besoin de matériel ponctuel — ainsi que les loueurs, pros ou passionnés, qui mettent leur équipement à disposition.",
+      "Les particuliers qui organisent un événement, les DJ, les techniciens, les agences et toute structure pro qui a besoin de matériel ponctuel — ainsi que les prestataires, pros ou passionnés, qui mettent leur équipement à disposition.",
   },
   {
     question: "Quels moyens de paiement sont acceptés ?",

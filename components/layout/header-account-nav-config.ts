@@ -41,12 +41,12 @@ export function getHeaderAccountMenuItems(role: EffectiveUserType): HeaderAccoun
         { href: "/proprietaire/materiel", label: "Réservations reçues", icon: Package },
         { href: "/proprietaire/commandes", label: "Mes commandes", icon: PackageCheck },
         { href: "/proprietaire/paiement", label: "Paiements", icon: CreditCard },
-        { href: "/proprietaire/contrat", label: "Modèles & factures", icon: Receipt },
+        { href: "/proprietaire/contrat", label: "Factures", icon: Receipt },
         { href: "/proprietaire/parametres", label: "Paramètres", icon: Settings },
       ];
     case "admin":
       return [
-        { href: "/admin", label: "Dashboard", icon: Home },
+        { href: "/admin", label: "Tableau de bord", icon: Home },
         { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
         { href: "/admin/incidents-materiel", label: "Incidents matériel", icon: Package },
         { href: "/admin/materiel-annulations", label: "Annulations matériel", icon: Ban },
@@ -54,7 +54,7 @@ export function getHeaderAccountMenuItems(role: EffectiveUserType): HeaderAccoun
         { href: "/admin/parametres", label: "Paramètres", icon: Settings },
       ];
     default:
-      // Dashboard unique : même navigation que l’espace propriétaire
+      // Tableau de bord unique : même navigation que l’espace prestataire
       return [
         { href: "/proprietaire", label: "Tableau de bord", icon: Home },
         { href: "/proprietaire/annonces", label: "Mes annonces", icon: LayoutGrid },
@@ -62,7 +62,7 @@ export function getHeaderAccountMenuItems(role: EffectiveUserType): HeaderAccoun
         { href: "/proprietaire/materiel", label: "Réservations reçues", icon: Package },
         { href: "/proprietaire/commandes", label: "Mes commandes", icon: PackageCheck },
         { href: "/proprietaire/paiement", label: "Paiements", icon: CreditCard },
-        { href: "/proprietaire/contrat", label: "Modèles & factures", icon: Receipt },
+        { href: "/proprietaire/contrat", label: "Factures", icon: Receipt },
         { href: "/proprietaire/parametres", label: "Paramètres", icon: Settings },
       ];
   }

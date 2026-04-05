@@ -151,5 +151,4 @@ Endpoints disponibles (protégés via `Authorization: Bearer ${CRON_SECRET}`):
 - `/login`
 - `/signup`
 - `/dashboard` (protégé via middleware)
-- `/api/stripe/checkout`
 - `/api/stripe/webhook`

@@ -99,7 +99,7 @@ function DecisionForm({ row }: { row: AdminCancellationRow }) {
       ) : null}
 
       <div>
-        <label className="text-xs font-medium text-slate-500">Note interne / message locataire (optionnel)</label>
+        <label className="text-xs font-medium text-slate-500">Note interne / message client (optionnel)</label>
         <textarea
           name="adminNote"
           rows={2}
@@ -172,7 +172,7 @@ export function AdminMaterielCancellationsClient({ rows }: { rows: AdminCancella
                   </div>
                 </div>
                 <div className="mt-4 rounded-lg bg-slate-50 p-3">
-                  <p className="text-xs font-medium uppercase text-slate-500">Motif locataire</p>
+                  <p className="text-xs font-medium uppercase text-slate-500">Motif client</p>
                   <p className="mt-1 text-sm text-slate-800 whitespace-pre-wrap">{row.reason}</p>
                 </div>
                 <DecisionForm row={row} />

@@ -32,7 +32,7 @@ export function getCancellationPolicyOptionDescription(policy: GsListingCancella
   }
 }
 
-/** Lignes de résumé « remboursement du montant de location » (affichage locataire / prestataire). */
+/** Lignes de résumé « remboursement du montant de réservation » (affichage client / prestataire). */
 export function getCancellationPolicySummaryLines(policy: string | null | undefined): string[] {
   const p = normalizeCancellationPolicy(policy);
   return [...CANCELLATION_POLICY_REFUND_GRID_LINES[p]];

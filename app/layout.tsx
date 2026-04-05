@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Manrope, Montserrat } from "next/font/google";
-import Script from "next/script";
 import type { Graph, Organization, WebSite, ContactPoint, SearchAction } from "schema-dts";
 
 import { Analytics } from "@/components/Analytics";
 import { CookieProvider } from "@/components/cookies/CookieProvider";
+import { MarketingThirdPartyScripts } from "@/components/cookies/MarketingThirdPartyScripts";
 import { siteConfig } from "@/config/site";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { defaultMetadata } from "@/lib/seo";
@@ -79,9 +79,6 @@ const structuredData: Graph = {
   ],
 };
 
-const googleAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
-const crispWebsiteId = process.env.NEXT_PUBLIC_CRISP_WEBSITE_ID;
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -93,35 +90,15 @@ export default function RootLayout({
         className={`${manrope.variable} ${montserrat.variable} ${inter.variable} font-sans antialiased`}
         suppressHydrationWarning
       >
-        {googleAdsId ? (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${googleAdsId}`}
-              strategy="afterInteractive"
-            />
-            <Script id="gtag-init" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${googleAdsId}');
-              `}
-            </Script>
-          </>
-        ) : null}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
-        {crispWebsiteId ? (
-          <Script id="crisp-chat" strategy="afterInteractive">
-            {`window.$crisp=[];window.CRISP_WEBSITE_ID="${crispWebsiteId}";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();`}
-          </Script>
-        ) : null}
         <CookieProvider>
           {children}
           <ScrollToTop />
           <Analytics />
+          <MarketingThirdPartyScripts />
         </CookieProvider>
       </body>
     </html>

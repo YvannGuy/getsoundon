@@ -37,7 +37,7 @@ type AdminSidebarProps = {
 };
 
 const navItems = (counts: AdminSidebarBadgeCounts) => [
-  { href: "/admin", label: "Dashboard", icon: Home },
+  { href: "/admin", label: "Tableau de bord", icon: Home },
   {
     href: "/admin/utilisateurs",
     label: "Utilisateurs",

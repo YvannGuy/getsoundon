@@ -17,7 +17,7 @@ export default async function AdminMaterielAnnulationsPage() {
     <div className="p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-bold text-slate-900">Demandes d&apos;annulation — matériel</h1>
       <p className="mt-1 max-w-2xl text-sm text-slate-600">
-        Revue des demandes locataires (gs_bookings). La politique affichée provient de l&apos;annonce ; la
+        Revue des demandes clients (gs_bookings). La politique affichée provient de l&apos;annonce ; la
         décision finale reste manuelle.
       </p>
       <div className="mt-8">

@@ -61,7 +61,7 @@ export function ProviderStorefrontBody() {
       {tab === "about" ? (
         <div className="mt-10 max-w-2xl">
           <p className="font-landing-body text-[#444] leading-relaxed">
-            {demoProvider.name} est un loueur professionnel de matériel son, lumière et DJ sur Paris et l’Île-de-France.
+            {demoProvider.name} est un prestataire professionnel de matériel son, lumière et DJ sur Paris et l’Île-de-France.
             Cette section présentera bientôt la présentation détaillée du prestataire, son expérience et ses engagements.
           </p>
         </div>

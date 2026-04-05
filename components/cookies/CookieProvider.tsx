@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { CookieBanner, openCookiePreferences } from "./CookieBanner";
 import { CookiePreferencesModal } from "./CookiePreferencesModal";
+import { PosthogConsentSync } from "./PosthogConsentSync";
 
 export function CookieProvider({ children }: { children: React.ReactNode }) {
   const [preferencesOpen, setPreferencesOpen] = useState(false);
@@ -15,6 +16,7 @@ export function CookieProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <PosthogConsentSync />
       {children}
       <CookieBanner onOpenPreferences={() => setPreferencesOpen(true)} />
       <CookiePreferencesModal

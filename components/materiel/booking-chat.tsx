@@ -15,7 +15,7 @@ type ChatMessage = {
 
 type Props = {
   bookingId: string;
-  /** Label affiché dans le header, ex: "Prestataire" ou "Locataire" */
+  /** Label affiché dans le header, ex: « Prestataire » ou « Client » */
   otherPartyLabel: string;
   /** Non lus côté serveur au chargement (messages reçus non lus). */
   initialUnreadCount?: number;

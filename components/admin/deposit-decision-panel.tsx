@@ -186,7 +186,7 @@ export function DepositDecisionPanel({
       </div>
 
       <p className="mt-3 text-[11px] text-slate-400">
-        Libérer : annule l'empreinte (rien n'est prélevé). Capturer : prélève le montant sur la carte du locataire.
+        Libérer : annule l&apos;empreinte (rien n&apos;est prélevé). Capturer : prélève le montant sur la carte du client.
       </p>
 
       {error && <p className="mt-2 text-sm font-medium text-red-500">{error}</p>}

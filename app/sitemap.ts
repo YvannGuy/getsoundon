@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
 
-import { BLOG_POSTS } from "@/lib/blog-posts";
 import { siteConfig } from "@/config/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -10,7 +9,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: baseUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
     { url: `${baseUrl}/catalogue`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
     { url: `${baseUrl}/comment-ca-marche`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.85 },
-    { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: `${baseUrl}/pricing`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: `${baseUrl}/avantages`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
     { url: `${baseUrl}/conciergerie`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
@@ -26,12 +24,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/plan-du-site`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.4 },
   ];
 
-  const blogRoutes: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => ({
-    url: `${baseUrl}/blog/${post.slug}`,
-    lastModified: new Date(),
-    changeFrequency: "monthly" as const,
-    priority: 0.7,
-  }));
-
-  return [...staticRoutes, ...blogRoutes];
+  return staticRoutes;
 }

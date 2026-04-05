@@ -89,7 +89,7 @@ export async function POST(request: Request) {
 
     const stripe = getStripe();
 
-    // Récupération du stripe_customer_id existant du locataire (même pattern que checkout-offer)
+    // Récupération du stripe_customer_id existant du client (checkout réservation matériel)
     const { data: customerProfile } = await admin
       .from("profiles")
       .select("stripe_customer_id")

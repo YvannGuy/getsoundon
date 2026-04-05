@@ -46,7 +46,7 @@ const FAQ_LOCATAIRE = [
   },
   {
     q: "Comment suivre mes réservations ?",
-    a: "Rendez-vous dans votre tableau de bord (espace locataire) : réservations matériel, documents utiles et suivi y sont centralisés.",
+    a: "Rendez-vous dans votre tableau de bord (espace client) : réservations matériel, documents utiles et suivi y sont centralisés.",
   },
   {
     q: "Pourquoi la zone affichée est-elle approximative ?",
@@ -62,7 +62,7 @@ const FAQ_LOCATAIRE = [
   },
   {
     q: "Comment contacter le support ?",
-    a: "Écrivez à contact@getsoundon.com ou passez par le formulaire du centre d’aide.",
+    a: `Écrivez à ${siteConfig.supportEmail} ou passez par le formulaire du centre d’aide.`,
   },
 ];
 

@@ -143,7 +143,7 @@ export default async function DashboardMaterielDetailPage({
       "id, listing_id, customer_id, provider_id, start_date, end_date, total_price, deposit_amount, service_fee_eur, checkout_total_eur, status, payout_status, stripe_payment_intent_id, deposit_hold_status, deposit_release_due_at, check_in_status, check_in_at, check_in_comment, check_out_status, check_out_at, check_out_comment, incident_status, incident_at, incident_deadline_at, incident_comment, incident_amount_requested, deposit_claim_status, deposit_captured_amount, created_at"
     )
     .eq("id", bookingId)
-    .eq("customer_id", user.id) // Sécurité : locataire uniquement
+    .eq("customer_id", user.id) // Sécurité : compte client uniquement
     .maybeSingle();
 
   if (!raw) notFound();
@@ -343,7 +343,7 @@ export default async function DashboardMaterielDetailPage({
           step={1}
           id="etat-materiel"
           title="État du matériel"
-          description="Remise (check-in), retour (check-out) et fil conducteur de la location une fois le paiement confirmé."
+          description="Remise (check-in), retour (check-out) et fil conducteur de la réservation une fois le paiement confirmé."
         >
           {!isPaid ? (
             <p className="text-sm leading-relaxed text-slate-600">
@@ -518,7 +518,7 @@ export default async function DashboardMaterielDetailPage({
             </p>
           ) : null}
           {!booking.incident_status && !isPaid ? (
-            <p className="text-sm text-slate-500">Les incidents éventuels sont suivis après confirmation de la location.</p>
+            <p className="text-sm text-slate-500">Les incidents éventuels sont suivis après confirmation de la réservation.</p>
           ) : null}
         </MaterielDetailSection>
 

@@ -22,7 +22,7 @@ const FAQ_PRESTATAIRE = [
   },
   {
     q: "Comment recevoir des demandes et réservations ?",
-    a: "Une fois l’annonce en ligne (et validée si un contrôle est requis), les locataires peuvent vous écrire ou réserver selon les options que vous avez activées. Vous êtes notifié par email et dans votre espace prestataire.",
+    a: "Une fois l’annonce en ligne (et validée si un contrôle est requis), les clients peuvent vous écrire ou réserver selon les options que vous avez activées. Vous êtes notifié par email et dans votre espace prestataire.",
   },
   {
     q: "Comment activer les paiements (Stripe Connect) ?",
@@ -30,15 +30,15 @@ const FAQ_PRESTATAIRE = [
   },
   {
     q: "Combien de temps ai-je pour répondre à une demande ?",
-    a: "Répondre sous 24 à 48 h améliore votre taux de conversion et la confiance. Un délai trop long peut décourager les locataires.",
+    a: "Répondre sous 24 à 48 h améliore votre taux de conversion et la confiance. Un délai trop long peut décourager les clients.",
   },
   {
     q: "Puis-je refuser une demande ?",
-    a: "Oui. Indiquez un refus ou proposez une alternative (autres dates, autre matériel) depuis votre espace (réservations / messages liés à la location matériel) pour garder une relation claire avec le client.",
+    a: "Oui. Indiquez un refus ou proposez une alternative (autres dates, autre matériel) depuis votre espace (réservations / messages liés à la réservation matériel) pour garder une relation claire avec le client.",
   },
   {
-    q: "Comment gérer les échanges avec les locataires ?",
-    a: "Ouvrez « Locations matériel » dans votre tableau de bord prestataire : les échanges liés aux réservations matériel y sont regroupés par location.",
+    q: "Comment gérer les échanges avec les clients ?",
+    a: "Ouvrez « Réservations reçues » dans votre tableau de bord prestataire : les échanges liés aux réservations matériel y sont regroupés par réservation.",
   },
   {
     q: "Comment modifier ou désactiver mon annonce ?",
@@ -66,7 +66,7 @@ const FAQ_PRESTATAIRE = [
   },
   {
     q: "Comment contacter le support ?",
-    a: "Écrivez à contact@getsoundon.com ou utilisez le formulaire du centre d’aide pour toute question sur la publication ou la gestion des réservations.",
+    a: `Écrivez à ${siteConfig.supportEmail} ou utilisez le formulaire du centre d’aide pour toute question sur la publication ou la gestion des réservations.`,
   },
 ];
 

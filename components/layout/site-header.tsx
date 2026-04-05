@@ -67,9 +67,6 @@ export async function SiteHeader() {
           <Link href="/#categories-evenement" className="hover:text-black">
             Catégories
           </Link>
-          <Link href="/blog" className="hover:text-black">
-            Blog
-          </Link>
           <Link href="/avantages" className="hover:text-black">
             Nos avantages
           </Link>

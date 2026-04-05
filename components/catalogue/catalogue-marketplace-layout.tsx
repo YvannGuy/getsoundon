@@ -31,7 +31,7 @@ export async function CatalogueMarketplaceLayout({ children }: { children: React
         accountEmail={accountEmail}
       />
       {children}
-      <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
+      <LandingFooter publishListingHref={publishListingHref} />
     </div>
   );
 }

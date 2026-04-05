@@ -93,7 +93,7 @@ export function ComingSoonWaitlistForm({ className }: { className?: string }) {
             defaultValue="organisateur"
           >
             <option value="organisateur">J’organise des événements / je cherche du matériel</option>
-            <option value="prestataire">Je suis prestataire ou loueur</option>
+            <option value="prestataire">Je suis prestataire</option>
             <option value="autre">Autre</option>
           </select>
         </label>

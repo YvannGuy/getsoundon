@@ -31,7 +31,7 @@ function emptyPreview(): DraftCartPreview {
 }
 
 type Props = {
-  /** Panier serveur (connecté locataire). */
+  /** Panier serveur (connecté client). */
   serverPreview: DraftCartPreview | null;
   isAuthenticated: boolean;
   className?: string;

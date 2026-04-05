@@ -23,9 +23,9 @@ export default async function DashboardPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
-        <h1 className="font-landing-heading text-2xl font-bold text-gs-dark">Locataire · Tableau de bord</h1>
+        <h1 className="font-landing-heading text-2xl font-bold text-gs-dark">Client · Tableau de bord</h1>
         <p className="font-landing-body mt-1 text-slate-600">
-          Suivez vos locations matériel sur GetSoundOn
+          Suivez vos réservations matériel sur GetSoundOn
         </p>
       </div>
 
@@ -48,7 +48,7 @@ export default async function DashboardPage() {
                 <Package className="h-6 w-6 text-gs-orange" />
               </div>
               <div>
-                <p className="font-semibold text-black">Locations matériel</p>
+                <p className="font-semibold text-black">Réservations matériel</p>
                 <p className="text-sm text-slate-500">Échanges et détail de chaque réservation</p>
               </div>
             </div>
@@ -100,7 +100,7 @@ export default async function DashboardPage() {
               href="/dashboard/materiel"
               className="mt-4 text-sm font-medium text-gs-orange hover:underline"
             >
-              Ouvrir Mes locations matériel →
+              Ouvrir Mes réservations matériel →
             </Link>
           </div>
         </CardContent>

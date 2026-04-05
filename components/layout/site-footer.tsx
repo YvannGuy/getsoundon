@@ -17,7 +17,7 @@ export function SiteFooter() {
               {siteConfig.name}
             </Link>
             <p className="mt-3 max-w-[240px] text-[12px] leading-[1.6] text-slate-300">
-              Plateforme de mise en relation pour louer du materiel son, DJ et lumiere.
+              Plateforme de mise en relation pour louer du matériel son, DJ et lumière.
             </p>
           </div>
           <div>
@@ -34,11 +34,6 @@ export function SiteFooter() {
                 </AddSalleLink>
               </li>
               <li>
-                <Link href="/blog" className="hover:text-white">
-                  Blog
-                </Link>
-              </li>
-              <li>
                 <Link href="/centre-aide" className="hover:text-white">
                   Centre d&apos;aide
                 </Link>
@@ -50,7 +45,7 @@ export function SiteFooter() {
             <ul className="mt-3 space-y-2 text-[13px] text-slate-300">
               <li>À propos</li>
               <li>
-                <a href="mailto:contact@getsoundon.com" className="hover:text-white">
+                <a href={`mailto:${siteConfig.supportEmail}`} className="hover:text-white">
                   Contact
                 </a>
               </li>
@@ -106,7 +101,9 @@ export function SiteFooter() {
         <div className="mt-8 h-px w-full bg-white/15" />
 
         <div className="mt-6 flex flex-col items-center justify-between gap-4 md:flex-row">
-          <p className="text-[13px] text-slate-300">© 2025 {siteConfig.name}. Tous droits réservés.</p>
+          <p className="text-[13px] text-slate-300">
+            © {new Date().getFullYear()} {siteConfig.name}. Tous droits réservés.
+          </p>
           <div className="flex items-center gap-3">
             <a
               href={siteConfig.facebook}

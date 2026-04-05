@@ -23,7 +23,7 @@ async function resolvePostConfirmationTarget(userId: string): Promise<string> {
 
   const userType = (profile as { user_type?: string | null } | null)?.user_type ?? "seeker";
 
-  // Heuristique d'onboarding propriétaire: aucune annonce publiée => onboarding à faire.
+  // Heuristique d'onboarding prestataire : aucune annonce publiée => onboarding à faire.
   if (userType === "owner") {
     const { count } = await supabase
       .from("gs_listings")

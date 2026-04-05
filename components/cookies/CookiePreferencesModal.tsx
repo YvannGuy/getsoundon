@@ -87,7 +87,7 @@ export function CookiePreferencesModal({
             <div>
               <p className="font-medium text-black">Marketing</p>
               <p className="text-[13px] text-slate-600">
-                Publicités, pixels, réseaux sociaux.
+                Publicité mesurée et pixels de conversion (ex. Google Ads), conformément à la politique cookies.
               </p>
             </div>
             <input

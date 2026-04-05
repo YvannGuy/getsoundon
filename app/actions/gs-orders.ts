@@ -28,7 +28,7 @@ async function requireCustomerUser(): Promise<
 
   const role = (customerProfile as { role?: string } | null)?.role;
   if (role !== "customer" && role !== "admin") {
-    return { ok: false, error: { ok: false, error: "Réservé aux comptes locataire.", code: "FORBIDDEN" } };
+    return { ok: false, error: { ok: false, error: "Réservé aux comptes client.", code: "FORBIDDEN" } };
   }
 
   return { ok: true, userId: user.id, supabase };

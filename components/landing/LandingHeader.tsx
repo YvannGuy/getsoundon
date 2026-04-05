@@ -34,7 +34,7 @@ export function LandingHeader({
   /** Si défini, l’utilisateur est connecté : afficher le menu tableau de bord (comme le reste du site). */
   dashboardHref?: string;
   userType?: EffectiveUserType;
-  /** Aperçu panier matériel serveur (connecté locataire). */
+  /** Aperçu panier matériel serveur (connecté client). */
   draftCartPreview?: DraftCartPreview | null;
   accountAvatarUrl?: string | null;
   accountDisplayName?: string | null;

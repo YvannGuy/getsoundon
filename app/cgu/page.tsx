@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { siteConfig } from "@/config/site";
 import { buildCanonical } from "@/lib/seo";
@@ -6,7 +7,7 @@ import { LegalPageLayout } from "@/components/layout/legal-page-layout";
 
 export const metadata: Metadata = {
   title: "Conditions générales d'utilisation",
-  description: `Conditions générales d'utilisation de la plateforme ${siteConfig.name}, politique d'annulation et politique litiges/caution.`,
+  description: `Conditions générales d'utilisation de ${siteConfig.name} : compte, annonces, réservations et règles d'usage. Les modalités de paiement, d'annulation, de caution et de litiges sont détaillées dans les CGV.`,
   alternates: { canonical: buildCanonical("/cgu") },
 };
 
@@ -14,267 +15,297 @@ export default function CGUPage() {
   return (
     <LegalPageLayout title="Conditions générales d'utilisation (CGU)">
       <p className="lead text-[16px] text-slate-600">
-        <strong className="text-black">1) CGU — Conditions Générales d&apos;Utilisation</strong>
+        <strong className="text-black">Conditions générales d&apos;utilisation</strong> — {siteConfig.name}
       </p>
-      <p className="mt-3 text-sm text-slate-500">Dernière mise à jour : 03 mars 2026 à 22:37</p>
+      <p className="mt-3 text-sm text-slate-500">Dernière mise à jour : 5 avril 2026</p>
       <p className="text-sm text-slate-500">
         Support :{" "}
-        <a href="mailto:contact@getsoundon.com" className="text-gs-orange hover:underline">
-          contact@getsoundon.com
+        <a href="mailto:support@getsoundon.com" className="text-gs-orange hover:underline">
+          support@getsoundon.com
         </a>
       </p>
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-black">1. Objet</h2>
         <p className="mt-3 text-slate-600">
-          Les presentes CGU definissent les regles d&apos;utilisation de GetSoundOn (la « Plateforme »), qui met en relation :
+          Les présentes CGU définissent les conditions d&apos;accès et d&apos;utilisation de la plateforme {siteConfig.name}{" "}
+          (la « Plateforme »), service en ligne de mise en relation entre des personnes proposant du matériel en location
+          (« Prestataires ») et des personnes souhaitant louer ce matériel (« Clients »).
         </p>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>des Propriétaires qui proposent des lieux ;</li>
-          <li>des Organisateurs qui recherchent un lieu.</li>
-        </ul>
         <p className="mt-3 text-slate-600">
-          La Plateforme fournit des outils (annonces, demandes, messagerie, visites, offres, réservations, documents, état des lieux, litiges).
-          Certaines fonctionnalités de paiement en ligne sont optionnelles.
-        </p>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold text-black">2. Création de compte</h2>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>Vous devez fournir des informations exactes et à jour.</li>
-          <li>Vous êtes responsable de la confidentialité de votre compte et de vos accès.</li>
-          <li>Vous vous engagez à ne pas créer de compte frauduleux ni usurper une identité.</li>
-        </ul>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold text-black">3. Rôle de la Plateforme (important)</h2>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>La Plateforme est un intermédiaire technique.</li>
-          <li>Elle ne possède pas les lieux et n&apos;organise pas les événements.</li>
-          <li>Le Propriétaire reste responsable du lieu (disponibilité, conformité, sécurité, accès, règles, etc.).</li>
-          <li>L&apos;Organisateur reste responsable du bon déroulement de son événement et du respect des règles.</li>
-        </ul>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold text-black">4. Règles de publication (Propriétaires)</h2>
-        <p className="mt-3 text-slate-600">En publiant une annonce, vous vous engagez à :</p>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>fournir des informations claires (capacité, adresse/zone, règles, contraintes sonores, horaires),</li>
-          <li>publier des photos représentatives,</li>
-          <li>indiquer un prix cohérent,</li>
-          <li>maintenir vos disponibilités à jour,</li>
-          <li>ne pas publier de contenu trompeur ou illégal.</li>
-        </ul>
-        <p className="mt-3 text-slate-600">La Plateforme peut refuser ou retirer une annonce si elle est mensongère, non conforme, incomplète ou contraire à l&apos;objet du service.</p>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold text-black">5. Règles d&apos;échange (messagerie)</h2>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>Restez respectueux, clair et professionnel.</li>
-          <li>Aucun harcèlement, menace, discrimination, contenu illégal.</li>
-          <li>Évitez de sortir les échanges de la plateforme : les messages servent aussi de preuve en cas de litige.</li>
-        </ul>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold text-black">6. Demandes, visites, offres, réservations</h2>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>L&apos;Organisateur peut envoyer une demande et proposer une visite si l&apos;option est disponible.</li>
-          <li>Le Propriétaire peut accepter ou refuser.</li>
-          <li>Une Offre peut être envoyée via la messagerie (prix, dates, caution, annulation…).</li>
-          <li>Une réservation est confirmée selon les règles de l&apos;Offre et, si applicable, après paiement.</li>
-        </ul>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold text-black">7. Paiement en ligne (optionnel)</h2>
-        <p className="mt-3 text-slate-600">
-          Quand le paiement en ligne est utilisé :
-        </p>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>il est traité via un prestataire de paiement (Stripe Connect),</li>
-          <li>les règles de paiement, d&apos;acompte, de solde, de caution et de délais s&apos;appliquent selon la CGV et la politique litige/caution.</li>
-        </ul>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold text-black">8. Contenus & droits</h2>
-        <p className="mt-3 text-slate-600">
-          Vous restez propriétaire de vos contenus (photos/textes), mais vous accordez à la Plateforme le droit de les afficher pour le fonctionnement du service (site, app, marketing).
-        </p>
-        <p className="mt-3 text-slate-600">Vous garantissez détenir les droits nécessaires sur les contenus publiés.</p>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold text-black">9. Sécurité & fraude</h2>
-        <p className="mt-3 text-slate-600">La Plateforme peut limiter, suspendre ou fermer un compte en cas de :</p>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>fraude ou suspicion,</li>
-          <li>non-respect des CGU/CGV,</li>
-          <li>comportements abusifs,</li>
-          <li>atteinte à la sécurité.</li>
-        </ul>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold text-black">10. Responsabilité</h2>
-        <p className="mt-3 text-slate-600">La Plateforme n&apos;est pas responsable :</p>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>des annulations décidées par les utilisateurs (sauf règles prévues),</li>
-          <li>de l&apos;état réel des lieux,</li>
-          <li>des dommages pendant l&apos;événement,</li>
-          <li>des engagements pris hors plateforme.</li>
-        </ul>
-        <p className="mt-3 text-slate-600">
-          La Plateforme s&apos;engage à fournir un service fonctionnel, mais ne garantit pas l&apos;absence d&apos;interruptions.
-        </p>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold text-black">11. Support</h2>
-        <p className="mt-3 text-slate-600">
-          Contact :{" "}
-          <a href="mailto:contact@getsoundon.com" className="text-gs-orange hover:underline">
-            contact@getsoundon.com
-          </a>
-        </p>
-        <p className="mt-3 text-slate-600">Merci de préciser : lien de l&apos;annonce / référence réservation / captures utiles.</p>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold text-black">12. Modification des CGU</h2>
-        <p className="mt-3 text-slate-600">
-          Les CGU peuvent évoluer. La version applicable est celle publiée sur le site au moment de l&apos;utilisation.
-        </p>
-      </section>
-
-      <section className="mt-14 border-t border-slate-200 pt-10">
-        <h2 className="text-2xl font-semibold text-black">2) Politique d&apos;annulation - GetSoundOn (V1)</h2>
-        <p className="mt-3 text-slate-600">
-          Objectif : une politique claire, standardisée, choisie par le propriétaire et acceptée par l&apos;organisateur avant paiement.
-        </p>
-        <h3 className="mt-5 text-lg font-semibold text-black">Qui choisit la politique ?</h3>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>Le Propriétaire choisit la politique applicable (dans l&apos;annonce ou dans l&apos;Offre).</li>
-          <li>L&apos;Organisateur l&apos;accepte au moment du paiement.</li>
-        </ul>
-        <h3 className="mt-5 text-lg font-semibold text-black">Important</h3>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>Les frais de service (15 €) ne sont pas remboursables, sauf annulation imputable au Propriétaire.</li>
-          <li>Les frais de traitement paiement (frais bancaires) peuvent ne pas être remboursables.</li>
-          <li>La caution n&apos;est jamais une pénalité : si la prestation n&apos;a pas lieu, la caution est remboursée intégralement.</li>
-        </ul>
-        <h3 className="mt-5 text-lg font-semibold text-black">Politique FLEXIBLE</h3>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>Annulation &gt; J-7 : remboursement 100% de la location (acompte inclus)</li>
-          <li>Annulation J-7 à J-2 : remboursement 50% de la location</li>
-          <li>Annulation &lt; J-2 : remboursement 0% de la location</li>
-        </ul>
-        <h3 className="mt-5 text-lg font-semibold text-black">Politique STANDARD</h3>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>Annulation &gt; J-30 : 100%</li>
-          <li>Annulation J-30 à J-15 : 50%</li>
-          <li>Annulation &lt; J-15 : 0%</li>
-        </ul>
-        <h3 className="mt-5 text-lg font-semibold text-black">Politique STRICT</h3>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>Annulation &gt; J-90 : 100%</li>
-          <li>Annulation J-90 à J-30 : 50%</li>
-          <li>Annulation &lt; J-30 : 0%</li>
-        </ul>
-        <h3 className="mt-5 text-lg font-semibold text-black">Cas particuliers</h3>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>No-show (Organisateur ne vient pas) : traité comme annulation tardive (0%).</li>
-          <li>Changement de date : traité comme annulation + nouvelle réservation (pas de report en V1).</li>
-          <li>Annulation par le Propriétaire : remboursement 100% location + 100% caution + frais de service (15 €), et frais de traitement dans la mesure du possible.</li>
-        </ul>
-      </section>
-
-      <section className="mt-14 border-t border-slate-200 pt-10">
-        <h2 className="text-2xl font-semibold text-black">3) Politique Litiges & Caution - GetSoundOn (V1)</h2>
-        <h3 className="mt-5 text-lg font-semibold text-black">Délais à retenir (ponctuel)</h3>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
-          <li>J-7 : prélèvement du solde + caution (si acompte)</li>
-          <li>48h après la fin (heure de fin de l&apos;offre) : délai pour déclarer un incident</li>
-          <li>J+3 : paiement location libéré au propriétaire si aucun incident</li>
-          <li>J+7 : caution remboursée automatiquement si aucun incident</li>
-        </ul>
-
-        <h3 className="mt-6 text-lg font-semibold text-black">A) Caution (dépôt de garantie)</h3>
-        <h4 className="mt-4 font-semibold text-black">À quoi sert la caution ?</h4>
-        <p className="mt-2 text-slate-600">
-          La caution sert à couvrir d&apos;éventuels dommages ou manquements (dégradation, nettoyage exceptionnel, etc.). Ce n&apos;est pas une pénalité.
-        </p>
-        <h4 className="mt-4 font-semibold text-black">Quand est-elle prélevée ?</h4>
-        <ul className="mt-2 list-disc space-y-1 pl-6 text-slate-600">
-          <li>Paiement 100% : caution prélevée au paiement (si prévue)</li>
-          <li>Acompte + solde : caution prélevée à J-7 (avec le solde)</li>
-        </ul>
-        <h4 className="mt-4 font-semibold text-black">Quand est-elle remboursée ?</h4>
-        <ul className="mt-2 list-disc space-y-1 pl-6 text-slate-600">
-          <li>Ponctuel : remboursée automatiquement au plus tard à J+7 si aucun incident déclaré</li>
-          <li>Mensuel : restituée sous 14 jours après fin du contrat mensuel + état des lieux conforme</li>
-        </ul>
-
-        <h3 className="mt-6 text-lg font-semibold text-black">B) Litiges (incidents) — process</h3>
-        <h4 className="mt-4 font-semibold text-black">1) Définition de “fin d&apos;événement”</h4>
-        <p className="mt-2 text-slate-600">La fin d&apos;événement = heure de fin indiquée dans l&apos;Offre. C&apos;est elle qui déclenche le délai.</p>
-        <h4 className="mt-4 font-semibold text-black">2) Délai de déclaration</h4>
-        <p className="mt-2 text-slate-600">Le Propriétaire peut déclarer un incident jusqu&apos;à 48h après la fin d&apos;événement.</p>
-        <h4 className="mt-4 font-semibold text-black">3) Preuves (obligatoires)</h4>
-        <p className="mt-2 text-slate-600">Pour qu&apos;une retenue sur caution soit possible, il faut :</p>
-        <ul className="mt-2 list-disc space-y-1 pl-6 text-slate-600">
-          <li>photos pertinentes (avant/après si possible),</li>
-          <li>explication claire,</li>
-          <li>cohérence avec les échanges dans la messagerie.</li>
-        </ul>
-        <p className="mt-2 text-slate-600">Sans preuve : retenue impossible.</p>
-        <h4 className="mt-4 font-semibold text-black">4) Statuts litige</h4>
-        <ul className="mt-2 list-disc space-y-1 pl-6 text-slate-600">
-          <li>Incident déclaré</li>
-          <li>En discussion</li>
-          <li>Résolu</li>
-          <li>Retenue caution / remboursement</li>
-        </ul>
-
-        <h3 className="mt-6 text-lg font-semibold text-black">C) Paiement propriétaire (payout)</h3>
-        <p className="mt-2 text-slate-600">Paiement de la location (ponctuel) :</p>
-        <ul className="mt-2 list-disc space-y-1 pl-6 text-slate-600">
-          <li>Si aucun incident déclaré sous 48h → paiement location libéré à J+3</li>
-          <li>Si incident déclaré → paiement peut être suspendu jusqu&apos;à résolution</li>
-        </ul>
-
-        <h3 className="mt-6 text-lg font-semibold text-black">D) Checklist simple</h3>
-        <h4 className="mt-4 font-semibold text-black">Organisateur</h4>
-        <ul className="mt-2 list-disc space-y-1 pl-6 text-slate-600">
-          <li>Avant : prendre quelques photos si demandé (ou via l&apos;outil EDL)</li>
-          <li>Après : photos de sortie si possible</li>
-          <li>Garder les échanges dans la messagerie</li>
-        </ul>
-        <h4 className="mt-4 font-semibold text-black">Propriétaire</h4>
-        <ul className="mt-2 list-disc space-y-1 pl-6 text-slate-600">
-          <li>Avant : photos d&apos;entrée (zones sensibles)</li>
-          <li>Après : photos de sortie</li>
-          <li>En cas de souci : déclarer dans les 48h, avec preuves</li>
-        </ul>
-      </section>
-
-      <section className="mt-12">
-        <h2 className="text-xl font-semibold text-black">Liens utiles</h2>
-        <p className="mt-3 text-slate-600">
-          Les conditions financières détaillées restent définies dans les{" "}
-          <a href="/cgv" className="text-gs-orange hover:underline">
-            CGV
-          </a>
-          . La politique de confidentialité est disponible sur{" "}
-          <a href="/confidentialite" className="text-gs-orange hover:underline">
-            /confidentialite
-          </a>
+          La Plateforme permet notamment la publication d&apos;annonces, la recherche de matériel, les échanges entre
+          utilisateurs, la réservation et, le cas échéant, le traitement des paiements via un prestataire tiers. Les
+          conditions commerciales et financières applicables aux réservations sont complétées par les{" "}
+          <Link href="/cgv" className="text-gs-orange hover:underline">
+            conditions générales de vente (CGV)
+          </Link>
           .
+        </p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">2. Définitions</h2>
+        <ul className="mt-3 list-disc space-y-2 pl-6 text-slate-600">
+          <li>
+            <strong className="text-black">Utilisateur</strong> : toute personne disposant d&apos;un compte ou naviguant sur
+            la Plateforme.
+          </li>
+          <li>
+            <strong className="text-black">Prestataire</strong> : Utilisateur qui publie une ou plusieurs annonces de
+            location de matériel et conclut des réservations avec des Clients.
+          </li>
+          <li>
+            <strong className="text-black">Client</strong> : Utilisateur qui effectue une demande ou une réservation de
+            matériel auprès d&apos;un Prestataire.
+          </li>
+          <li>
+            <strong className="text-black">Annonce</strong> : fiche descriptive du matériel, des options, des modalités de
+            retrait ou de livraison et, le cas échéant, du montant de la caution ou des conditions d&apos;annulation
+            affichées sur la Plateforme.
+          </li>
+          <li>
+            <strong className="text-black">Réservation</strong> : engagement contractuel entre Prestataire et Client
+            concernant la location du matériel, tel que formalisé sur la Plateforme (y compris via messagerie ou flux de
+            paiement lorsqu&apos;ils sont proposés).
+          </li>
+        </ul>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">3. Acceptation</h2>
+        <p className="mt-3 text-slate-600">
+          L&apos;utilisation de la Plateforme (navigation, création de compte, publication ou réservation) vaut
+          acceptation sans réserve des présentes CGU et, le cas échéant, des CGV au moment de la réservation ou du
+          paiement. Si vous n&apos;acceptez pas ces documents, vous ne devez pas utiliser le service.
+        </p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">4. Compte utilisateur</h2>
+        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
+          <li>Vous devez fournir des informations exactes, complètes et à jour.</li>
+          <li>Vous êtes responsable de la confidentialité de vos identifiants et de toute activité réalisée depuis votre compte.</li>
+          <li>Il est interdit de créer un compte de manière frauduleuse, d&apos;usurper une identité ou de contourner une mesure de sécurité.</li>
+          <li>La Plateforme peut refuser l&apos;ouverture d&apos;un compte ou demander des justificatifs conformément à ses procédures.</li>
+        </ul>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">5. Services de la Plateforme</h2>
+        <p className="mt-3 text-slate-600">
+          La Plateforme fournit des outils techniques : hébergement d&apos;annonces, mise en relation, messagerie,
+          réservation, et éventuellement paiement en ligne via un prestataire de services de paiement (par ex. Stripe).
+          Les fonctionnalités peuvent évoluer ; une fonction n&apos;est offerte que dans la mesure où elle est effectivement
+          disponible sur le site ou l&apos;application au moment de l&apos;usage.
+        </p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">6. Rôle d&apos;intermédiaire technique</h2>
+        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
+          <li>
+            {siteConfig.name} agit en qualité d&apos;intermédiaire technique : elle ne devient pas propriétaire du
+            matériel mis en location et n&apos;est pas partie au contrat de location conclu entre Prestataire et Client,
+            sauf stipulation contraire expresse dans les CGV ou sur un document contractuel distinct.
+          </li>
+          <li>
+            Le Prestataire demeure seul responsable du matériel (conformité, état, disponibilité, maintenance, assurances
+            éventuellement requises, respect des réglementations applicables à la location du bien).
+          </li>
+          <li>
+            Le Client demeure responsable de l&apos;usage qu&apos;il fait du matériel loué, du respect des consignes du
+            Prestataire et des obligations légales qui lui incombent (transport, sécurité, etc.).
+          </li>
+        </ul>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">7. Annonces et obligations des Prestataires</h2>
+        <p className="mt-3 text-slate-600">En publiant une annonce, le Prestataire garantit notamment :</p>
+        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
+          <li>l&apos;exactitude des informations (matériel, accessoires, état, disponibilités, zone de retrait ou modalités de livraison) ;</li>
+          <li>le droit de proposer ledit matériel à la location ;</li>
+          <li>l&apos;absence de contenu trompeur, illicite ou portant atteinte aux droits de tiers.</li>
+        </ul>
+        <p className="mt-3 text-slate-600">
+          La Plateforme peut retirer ou refuser une annonce non conforme, incomplète, contraire aux présentes CGU ou aux
+          CGV, ou susceptible de porter atteinte à la sécurité ou à la réputation du service.
+        </p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">8. Réservations et exécution</h2>
+        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
+          <li>
+            Une réservation peut résulter d&apos;un processus de confirmation (immédiat ou après acceptation du
+            Prestataire), selon les options proposées sur la Plateforme.
+          </li>
+          <li>
+            Les obligations réciproques du Prestataire et du Client (dates, modalités de remise du Matériel, caution
+            / dépôt de garantie, annulation, etc.) résultent de l&apos;annonce, des échanges sur la Plateforme et des
+            CGV applicables.
+          </li>
+          <li>
+            Tout engagement conclu en dehors de la Plateforme est sous la seule responsabilité des parties ; la
+            Plateforme n&apos;en garantit ni la traçabilité ni l&apos;exécution.
+          </li>
+        </ul>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">9. Paiements (synthèse)</h2>
+        <p className="mt-3 text-slate-600">
+          Lorsque le paiement en ligne est proposé, il est traité par un prestataire de paiement tiers. Les montants, les
+          frais de service, les échéances (acompte, solde), les délais de virement au Prestataire et les cas de
+          remboursement sont décrits dans les{" "}
+          <Link href="/cgv" className="text-gs-orange hover:underline">
+            CGV
+          </Link>
+          . La Plateforme n&apos;est pas une banque et ne conserve pas les fonds hors du cadre défini avec le prestataire
+          de paiement.
+        </p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">10. Caution, incidents et annulations (synthèse)</h2>
+        <p className="mt-3 text-slate-600">
+          Une caution peut être prévue pour certaines locations ; elle n&apos;est pas une pénalité contractuelle au sens
+          d&apos;une sanction forfaitaire, mais un mécanisme de garantie encadré par les CGV. Les délais de déclaration
+          d&apos;incident, les règles de preuve, les remboursements et les politiques d&apos;annulation (flexible,
+          standard, stricte, etc.) sont intégralement précisés dans les{" "}
+          <Link href="/cgv" className="text-gs-orange hover:underline">
+            CGV
+          </Link>
+          .
+        </p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">11. Messagerie et conduite des échanges</h2>
+        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
+          <li>Les échanges doivent rester courtois, loyaux et professionnels.</li>
+          <li>Sont interdits : harcèlement, menaces, discrimination, contenus illicites ou contraires aux bonnes mœurs.</li>
+          <li>
+            Il est recommandé de conserver sur la Plateforme les échanges relatifs à une réservation ; ils peuvent servir
+            d&apos;éléments d&apos;information en cas de difficulté, dans les limites prévues par les CGV et la loi.
+          </li>
+        </ul>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">12. Propriété intellectuelle</h2>
+        <p className="mt-3 text-slate-600">
+          La structure du site, les marques, logos et contenus éditoriaux de {siteConfig.name} sont protégés. Les
+          contenus publiés par les Utilisateurs (textes, photos) restent leur propriété ; en les publiant, ils accordent
+          à la Plateforme une licence non exclusive d&apos;exploitation pour les besoins du service (affichage,
+          promotion raisonnable du service). L&apos;Utilisateur garantit disposer des droits nécessaires sur les contenus
+          transmis.
+        </p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">13. Sécurité, fraude et sanctions</h2>
+        <p className="mt-3 text-slate-600">
+          La Plateforme peut limiter, suspendre ou clôturer un compte en cas de fraude ou de suspicion sérieuse, de
+          non-respect des CGU ou des CGV, de comportement abusif envers d&apos;autres Utilisateurs ou de tentative
+          d&apos;atteinte à la sécurité du service.
+        </p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">14. Données personnelles</h2>
+        <p className="mt-3 text-slate-600">
+          Le traitement des données personnelles est décrit dans la{" "}
+          <Link href="/confidentialite" className="text-gs-orange hover:underline">
+            politique de confidentialité
+          </Link>
+          . Les traceurs et cookies sont couverts par la{" "}
+          <Link href="/cookies" className="text-gs-orange hover:underline">
+            politique cookies
+          </Link>
+          .
+        </p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">15. Responsabilité</h2>
+        <ul className="mt-3 list-disc space-y-1 pl-6 text-slate-600">
+          <li>
+            La Plateforme s&apos;efforce d&apos;assurer la disponibilité du service mais ne garantit pas une absence totale
+            d&apos;interruptions ni l&apos;adéquation du matériel loué aux besoins spécifiques du Client.
+          </li>
+          <li>
+            Sauf faute lourde ou obligation légale impérative, la responsabilité de {siteConfig.name} ne saurait être
+            engagée pour les dommages indirects ou pour les litiges nés exclusivement entre Prestataire et Client, sous
+            réserve des stipulations des CGV concernant le rôle du service de paiement.
+          </li>
+          <li>
+            La Plateforme n&apos;est pas responsable des dommages causés par le matériel loué, de son mauvais usage ou
+            des événements survenant hors de son périmètre technique strict.
+          </li>
+        </ul>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">16. Support</h2>
+        <p className="mt-3 text-slate-600">
+          Pour toute question relative au fonctionnement du service :{" "}
+          <a href="mailto:support@getsoundon.com" className="text-gs-orange hover:underline">
+            support@getsoundon.com
+          </a>
+          . Merci d&apos;indiquer la référence de réservation ou le lien de l&apos;annonce et, si possible, des captures
+          d&apos;écran.
+        </p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">17. Modification des CGU</h2>
+        <p className="mt-3 text-slate-600">
+          Les CGU peuvent être mises à jour. La version applicable est celle publiée sur le site à la date d&apos;utilisation
+          du service, sous réserve des dispositions impératives. Pour les réservations en cours, les documents acceptés au
+          moment de la commande demeurent pertinents pour cette commande, complétés par les mises à jour légalement
+          notifiées le cas échéant.
+        </p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold text-black">18. Droit applicable</h2>
+        <p className="mt-3 text-slate-600">
+          Les présentes CGU sont régies par le droit français. En cas de litige relatif à l&apos;utilisation de la
+          Plateforme, les parties rechercheront une solution amiable avant toute action judiciaire. Les tribunaux
+          compétents sont déterminés conformément aux règles de droit commun, sous réserve d&apos;éventuelles dispositions
+          impératives applicables aux consommateurs.
+        </p>
+      </section>
+
+      <section className="mt-12 border-t border-slate-200 pt-10">
+        <h2 className="text-xl font-semibold text-black">Documents liés</h2>
+        <ul className="mt-3 list-disc space-y-2 pl-6 text-slate-600">
+          <li>
+            <Link href="/cgv" className="text-gs-orange hover:underline">
+              Conditions générales de vente (CGV)
+            </Link>{" "}
+            — paiement, annulation, caution, litiges et remboursements.
+          </li>
+          <li>
+            <Link href="/confidentialite" className="text-gs-orange hover:underline">
+              Politique de confidentialité
+            </Link>
+          </li>
+          <li>
+            <Link href="/cookies" className="text-gs-orange hover:underline">
+              Politique de cookies
+            </Link>
+          </li>
+          <li>
+            <Link href="/mentions-legales" className="text-gs-orange hover:underline">
+              Mentions légales
+            </Link>
+          </li>
+        </ul>
+        <p className="mt-4 text-sm text-slate-500">
+          Le présent document est fourni à titre informatif et peut nécessiter une relecture juridique avant adoption
+          définitive.
         </p>
       </section>
     </LegalPageLayout>

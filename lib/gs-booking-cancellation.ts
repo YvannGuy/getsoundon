@@ -85,7 +85,7 @@ export function normalizeCancellationPolicy(
 
 /**
  * Indications pour l’admin (pas une obligation légale — décision manuelle).
- * Aligné sur les grilles Flexible / Standard / Strict affichées locataire / prestataire.
+ * Aligné sur les grilles Flexible / Standard / Strict affichées client / prestataire.
  */
 export function adminPolicyGuidanceText(
   policy: GsListingCancellationPolicy,

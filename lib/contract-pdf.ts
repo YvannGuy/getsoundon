@@ -55,17 +55,17 @@ export async function generateContractPdf(data: ContractData): Promise<Uint8Arra
   };
 
   drawText(
-    data.snapshotLines?.length ? "CONTRAT DE LOCATION (MATÉRIEL / PACK)" : "CONTRAT DE RÉSERVATION DE SALLE",
+    data.snapshotLines?.length ? "CONTRAT DE LOCATION (MATÉRIEL / PACK)" : "CONTRAT DE LOCATION DE MATÉRIEL",
     { size: 16, bold: true }
   );
   drawLine();
 
-  drawText(`N° d'offre : ${data.offerId}`);
+  drawText(`N° de réservation : ${data.offerId}`);
   drawText(`Date du contrat : ${data.paidAt}`);
   drawLine();
 
   drawText("ENTRE LES PARTIES :", { bold: true });
-  const loueurText = data.template?.raisonSociale
+  const prestataireText = data.template?.raisonSociale
     ? `${data.template.raisonSociale}${
         data.template.codePostal && data.template.ville
           ? `, ${data.template.codePostal} ${data.template.ville}`
@@ -74,8 +74,8 @@ export async function generateContractPdf(data: ContractData): Promise<Uint8Arra
             : ""
       }${data.template?.siret ? `, SIRET ${data.template.siret}` : ""}`
     : `${data.ownerName} (${data.ownerEmail})`;
-  drawText(`Loueur (propriétaire) : ${loueurText}`, { indent: 10 });
-  drawText(`Locataire : ${data.seekerName} (${data.seekerEmail})`, { indent: 10 });
+  drawText(`Prestataire : ${prestataireText}`, { indent: 10 });
+  drawText(`Client : ${data.seekerName} (${data.seekerEmail})`, { indent: 10 });
   drawLine();
 
   drawText("OBJET :", { bold: true });
@@ -84,7 +84,7 @@ export async function generateContractPdf(data: ContractData): Promise<Uint8Arra
     drawText(`Location du matériel / pack « ${data.salleName} » (annonce — ${data.salleCity}).`);
     drawText(`Usage : événement ${eventLabel}.`, { indent: 10 });
   } else {
-    drawText(`Location de la salle « ${data.salleName} » située à ${data.salleCity}.`);
+    drawText(`Location du matériel « ${data.salleName} » — ${data.salleCity}.`);
     drawText(`Usage : événement ${eventLabel}.`, { indent: 10 });
   }
   drawLine();
@@ -104,13 +104,15 @@ export async function generateContractPdf(data: ContractData): Promise<Uint8Arra
 
   drawText("CONDITIONS :", { bold: true });
   drawText(
-    "• Le locataire s'engage à utiliser les lieux conformément à l'usage prévu et à les rendre en bon état.",
+    data.snapshotLines?.length
+      ? "• Le client s'engage à utiliser le matériel conformément à l'usage prévu et à le restituer en bon état."
+      : "• Le client s'engage à utiliser le matériel conformément à l'usage prévu et à le restituer en bon état.",
     { indent: 10 }
   );
   drawText(
     data.snapshotLines?.length
-      ? "• Le loueur s'engage à mettre le matériel / pack à disposition aux dates convenues."
-      : "• Le loueur s'engage à mettre la salle à disposition aux dates convenues.",
+      ? "• Le prestataire s'engage à mettre le matériel / pack à disposition aux dates convenues."
+      : "• Le prestataire s'engage à mettre le matériel à disposition aux dates convenues.",
     { indent: 10 }
   );
   drawText(
@@ -125,7 +127,7 @@ export async function generateContractPdf(data: ContractData): Promise<Uint8Arra
   }
   drawLine();
 
-  drawText("Le présent contrat est établi électroniquement suite au paiement de l'offre sur la plateforme GetSoundOn.");
+  drawText("Le présent contrat est établi électroniquement suite au paiement de la réservation sur la plateforme GetSoundOn.");
   drawText(
     "Chaque partie reconnaît avoir pris connaissance des conditions et les accepter."
   );
@@ -143,7 +145,7 @@ export async function generateContractPdf(data: ContractData): Promise<Uint8Arra
       annex.drawText(text, { x, y: ay, size, font: f });
       ay -= size + 3;
     };
-    drawAnnex("ANNEXE - DÉTAIL FIGÉ AU MOMENT DE L'OFFRE", { size: 12, bold: true });
+    drawAnnex("ANNEXE - DÉTAIL FIGÉ AU MOMENT DE LA RÉSERVATION", { size: 12, bold: true });
     ay -= 4;
     for (const line of data.snapshotLines) {
       if (ay < 72) break;

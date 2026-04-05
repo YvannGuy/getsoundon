@@ -26,11 +26,11 @@ type Props = {
 function formatType(type: string) {
   switch (type) {
     case "owner":
-      return "Propriétaire";
+      return "Prestataire";
     case "admin":
       return "Admin";
     default:
-      return "Locataire";
+      return "Client";
   }
 }
 

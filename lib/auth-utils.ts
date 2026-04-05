@@ -9,7 +9,7 @@ function normalizeUserType(raw: string | null | undefined): string {
 /**
  * Détermine le type effectif de l'utilisateur (admin, owner, seeker).
  * La source de vérité pour le menu header / dashboard est **`profiles.user_type`** dès qu’une ligne profil existe.
- * Les métadonnées auth ne peuvent **pas** promouvoir « owner » si un profil existe (corrige locataires avec ancien tab prestataire).
+ * Les métadonnées auth ne peuvent **pas** promouvoir « owner » si un profil existe (corrige les comptes client avec ancien onglet prestataire).
  */
 export async function getEffectiveUserType(
   user: User | null,
@@ -33,7 +33,7 @@ export async function getEffectiveUserType(
   if (fromDb === "owner") return "owner";
   if (fromDb === "seeker") return "seeker";
 
-  // Ligne `profiles` présente mais user_type vide ou inattendu → locataire (pas de repli metadata « owner »)
+  // Ligne `profiles` présente mais user_type vide ou inattendu → client (pas de repli metadata « owner »)
   if (profile != null) {
     return "seeker";
   }
@@ -69,7 +69,7 @@ export function canAccessOwnerDashboard(
 }
 
 /**
- * Lien « publier une annonce matériel » : espace prestataire si éligible, sinon inscription loueur.
+ * Lien « publier une annonce matériel » : espace prestataire si éligible, sinon inscription prestataire.
  */
 export function getPublishMaterialListingHref(
   userType: EffectiveUserType | null,

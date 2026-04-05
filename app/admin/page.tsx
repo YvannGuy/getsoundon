@@ -99,7 +99,7 @@ export default async function AdminDashboardPage() {
       icon: Package,
       hint: "Litiges sur réservations matériel",
     },
-    { href: "/admin/materiel-annulations", label: "Annulations matériel", icon: Ban, hint: "Demandes locataires" },
+    { href: "/admin/materiel-annulations", label: "Annulations matériel", icon: Ban, hint: "Demandes clients" },
     { href: "/admin/factures", label: "Factures", icon: FileText, hint: "PDF réservations matériel" },
     { href: "/admin/paiements-virements", label: "Paiements & virements", icon: Wallet, hint: "Flux financiers prestataires" },
     { href: "/admin/parametres", label: "Paramètres", icon: Settings, hint: "Plateforme" },
@@ -108,7 +108,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-6 p-4 pb-24 md:space-y-8 md:p-8 md:pb-8">
       <div>
-        <h1 className="text-xl font-bold text-black md:text-2xl">Dashboard admin</h1>
+        <h1 className="text-xl font-bold text-black md:text-2xl">Tableau de bord admin</h1>
         <p className="mt-1 text-sm text-slate-600">
           Pilotage GetSoundOn : utilisateurs, annonces, réservations, incidents/annulations, factures et flux financiers.
           Stripe Dashboard reste la source de vérité pour les détails Connect.

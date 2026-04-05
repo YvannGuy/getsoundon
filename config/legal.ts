@@ -16,7 +16,7 @@ export const legalConfig = {
       pays: "France",
     },
     tvaIntracommunautaire: "", // Non assujetti TVA
-    email: "contact@getsoundon.com",
+    email: "support@getsoundon.com",
   },
 
   /** Directeur de la publication (obligatoire LCEN) */
@@ -30,7 +30,7 @@ export const legalConfig = {
   },
 
   /** Données personnelles - DPO si désigné */
-  dpoEmail: "contact@getsoundon.com",
+  dpoEmail: "support@getsoundon.com",
 
   /** Médiation consommation (obligatoire avant mise en ligne B2C) */
   mediation: {

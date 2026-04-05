@@ -127,7 +127,7 @@ export default async function ProviderStorefrontPage({ params }: PageProps) {
           />
           <ProviderStorefrontBody />
         </main>
-        <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
+        <LandingFooter publishListingHref={publishListingHref} />
       </div>
     );
   }
@@ -216,7 +216,7 @@ export default async function ProviderStorefrontPage({ params }: PageProps) {
           )}
         </section>
       </main>
-      <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
+      <LandingFooter publishListingHref={publishListingHref} />
     </div>
   );
 }

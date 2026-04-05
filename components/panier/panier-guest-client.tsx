@@ -113,7 +113,7 @@ export function PanierGuestClient({ stripeCheckoutCancelled = false }: Props) {
       <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
         <p className="font-medium">Connexion requise pour payer</p>
         <p className="mt-1 text-amber-900/90">
-          Tu peux préparer ton panier ici. Pour régler, connecte-toi ou crée un compte locataire — ton panier sera
+          Tu peux préparer ton panier ici. Pour régler, connecte-toi ou crée un compte client — ton panier sera
           repris automatiquement.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">

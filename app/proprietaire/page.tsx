@@ -243,7 +243,7 @@ export default async function ProprietaireDashboardPage({
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="font-landing-heading text-lg text-gs-dark">Dernières réservations payées</CardTitle>
             <Link href="/proprietaire/materiel" className="text-sm font-medium text-black hover:underline">
-              Locations →
+              Réservations →
             </Link>
           </CardHeader>
           <CardContent>
@@ -253,7 +253,7 @@ export default async function ProprietaireDashboardPage({
                 <p className="text-slate-500">Aucune réservation payée récente</p>
                 <Link href="/proprietaire/materiel" className="mt-3">
                   <Button size="sm" className="bg-gs-orange hover:brightness-95">
-                    Ouvrir les locations matériel
+                    Ouvrir les réservations matériel
                   </Button>
                 </Link>
               </div>
@@ -294,7 +294,7 @@ export default async function ProprietaireDashboardPage({
 
       <Card className="mt-6 border-0 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="font-landing-heading text-lg text-gs-dark">Locations matériel</CardTitle>
+          <CardTitle className="font-landing-heading text-lg text-gs-dark">Réservations matériel</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-12 text-center">
@@ -305,7 +305,7 @@ export default async function ProprietaireDashboardPage({
               href="/proprietaire/materiel"
               className="mt-4 inline-flex h-9 items-center justify-center rounded-md bg-gs-orange px-4 text-sm font-medium text-white transition hover:brightness-95"
             >
-              Ouvrir les locations matériel
+              Ouvrir les réservations matériel
             </Link>
           </div>
         </CardContent>

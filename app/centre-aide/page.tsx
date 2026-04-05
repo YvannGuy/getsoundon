@@ -81,8 +81,8 @@ export default async function CentreAidePage({
           </div>
           <p className="font-landing-body mt-4 text-[15px] leading-relaxed text-[#555]">
             Choisissez le type de demande et décrivez votre besoin. Notre équipe répond sur{" "}
-            <a href="mailto:contact@getsoundon.com" className="font-semibold text-gs-orange hover:underline">
-              contact@getsoundon.com
+            <a href={`mailto:${siteConfig.supportEmail}`} className="font-semibold text-gs-orange hover:underline">
+              {siteConfig.supportEmail}
             </a>
             .
           </p>

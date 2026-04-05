@@ -15,7 +15,7 @@ export default function PlanDuSitePage() {
       <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Plan du site</h1>
       <p className="mt-2 max-w-[640px] text-sm text-slate-600">
         Retrouvez ici les pages publiques autour de la location de matériel, l&apos;espace prestataire, l&apos;espace
-        locataire et le centre d&apos;aide.
+        client et le centre d&apos;aide.
       </p>
 
       <section className="mt-8 space-y-6">
@@ -42,37 +42,32 @@ export default function PlanDuSitePage() {
                 Avantages prestataires
               </Link>
             </li>
-            <li>
-              <Link href="/blog" className="text-blue-700 hover:underline">
-                Blog
-              </Link>
-            </li>
           </ul>
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Espace locataire (organisateur)</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Espace client</h2>
           <ul className="mt-3 list-disc space-y-1 pl-6 text-sm text-slate-700">
             <li>
               <Link href="/auth?tab=login&userType=organizer" className="text-blue-700 hover:underline">
-                Connexion locataire
+                Connexion client
               </Link>
             </li>
             <li>
               <Link href="/auth?tab=signup&userType=organizer" className="text-blue-700 hover:underline">
-                Inscription locataire
+                Inscription client
               </Link>
             </li>
             <li>
               <Link href="/dashboard" className="text-blue-700 hover:underline">
-                Tableau de bord locataire
+                Tableau de bord client
               </Link>
             </li>
           </ul>
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Espace prestataire (loueur)</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Espace prestataire</h2>
           <ul className="mt-3 list-disc space-y-1 pl-6 text-sm text-slate-700">
             <li>
               <Link href="/auth?tab=login&userType=owner" className="text-blue-700 hover:underline">
@@ -102,12 +97,12 @@ export default function PlanDuSitePage() {
             </li>
             <li>
               <Link href="/centre-aide/organisateur" className="text-blue-700 hover:underline">
-                Aide pour les organisateurs
+                Aide client
               </Link>
             </li>
             <li>
               <Link href="/centre-aide/proprietaire" className="text-blue-700 hover:underline">
-                Aide pour les propriétaires
+                Aide prestataire
               </Link>
             </li>
             <li>

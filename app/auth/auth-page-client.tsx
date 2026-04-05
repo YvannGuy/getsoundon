@@ -390,16 +390,17 @@ function SignupFormContent({
       </div>
       <p className="font-landing-body mt-5 text-xs leading-relaxed text-gs-dark/80 sm:text-sm">
         En créant mon compte, j&apos;accepte les{" "}
-        <Link href="/cgv" className="font-medium text-gs-orange underline-offset-2 hover:underline">
-          conditions générales
+        <Link href="/cgu" className="font-medium text-gs-orange underline-offset-2 hover:underline">
+          conditions générales d&apos;utilisation (CGU)
         </Link>
-        , la{" "}
+        , les{" "}
+        <Link href="/cgv" className="font-medium text-gs-orange underline-offset-2 hover:underline">
+          conditions générales de vente (CGV)
+        </Link>
+        {" "}
+        et la{" "}
         <Link href="/confidentialite" className="font-medium text-gs-orange underline-offset-2 hover:underline">
           politique de confidentialité
-        </Link>{" "}
-        et les{" "}
-        <Link href="/cgu" className="font-medium text-gs-orange underline-offset-2 hover:underline">
-          CGU
         </Link>
         .
       </p>

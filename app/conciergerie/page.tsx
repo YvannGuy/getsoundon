@@ -126,7 +126,7 @@ export default async function ConciergeriePage({
           </Link>
         </p>
       </main>
-      <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
+      <LandingFooter publishListingHref={publishListingHref} />
     </div>
   );
 }

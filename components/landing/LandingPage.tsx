@@ -42,7 +42,7 @@ export async function LandingPage() {
       <LandingBrands />
       <LandingFinalCta />
       <LandingFaq />
-      <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
+      <LandingFooter publishListingHref={publishListingHref} />
     </main>
   );
 }

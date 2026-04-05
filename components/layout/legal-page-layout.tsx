@@ -63,7 +63,7 @@ export async function LegalPageLayout({
           </Link>
         </div>
       </main>
-      <LandingFooter isLoggedIn={!!user} publishListingHref={publishListingHref} />
+      <LandingFooter publishListingHref={publishListingHref} />
     </div>
   );
 }

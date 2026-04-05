@@ -32,7 +32,7 @@ export default async function ProprietaireMaterielOrderPage({
       vm={vm}
       paidQuery={paid}
       backHref="/proprietaire/materiel"
-      backLabel="Locations matériel"
+      backLabel="Réservations matériel"
     />
   );
 }
