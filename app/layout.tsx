@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Manrope, Montserrat } from "next/font/google";
 import type { Graph, Organization, WebSite, ContactPoint, SearchAction } from "schema-dts";
 
-import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 
 import { Analytics } from "@/components/Analytics";
 import { CookieProvider } from "@/components/cookies/CookieProvider";
