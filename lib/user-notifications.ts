@@ -1,6 +1,11 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTelegramMessageToChat, type NotificationChannel } from "@/lib/telegram";
 
+/**
+ * Notifications multi-canal (Telegram + email).
+ * `sendEmail` doit envoyer un vrai message : un no-op empêche toute livraison email
+ * lorsque le canal est « email », « both », ou en secours si Telegram échoue.
+ */
 type SendUserNotificationArgs = {
   userId: string;
   telegramText: string;

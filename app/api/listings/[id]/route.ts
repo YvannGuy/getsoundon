@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { siteConfig } from "@/config/site";
 import {
   findMockListingById,
   mockGsListingsEnabled,
   mockListingToDetail,
 } from "@/lib/mock-gs-listings";
+import {
+  sendGsListingDeactivatedProviderEmail,
+  sendGsListingPublishedProviderEmail,
+} from "@/lib/email";
 import { providerStripeCanReceivePayments } from "@/lib/gs-provider-stripe-connect";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -156,6 +161,34 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Aucune modification fournie." }, { status: 400 });
     }
 
+    let priorActive: boolean | null = null;
+    let priorTitle: string | null = null;
+    if (payload.isActive !== undefined) {
+      const { data: priorRow } = await supabase
+        .from("gs_listings")
+        .select("is_active, title, moderation_status")
+        .eq("id", listingId)
+        .eq("owner_id", user.id)
+        .maybeSingle();
+      const pr = priorRow as {
+        is_active?: boolean | null;
+        title?: string | null;
+        moderation_status?: string | null;
+      } | null;
+      priorActive = pr?.is_active ?? null;
+      priorTitle = pr?.title?.trim() ?? null;
+      const mod = pr?.moderation_status ?? "approved";
+      if (payload.isActive === true && (mod === "pending" || mod === "rejected")) {
+        return NextResponse.json(
+          {
+            error:
+              "Publication impossible : l’annonce est en attente de modération ou a été refusée. Contactez le support ou attendez la validation GetSoundOn.",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     const { data, error } = await supabase
       .from("gs_listings")
       .update(updatePayload)
@@ -171,6 +204,25 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
     if (!data) {
       return NextResponse.json({ error: "Listing introuvable ou acces refuse." }, { status: 404 });
+    }
+
+    if (payload.isActive !== undefined && priorActive !== null) {
+      const newActive = (data as { is_active?: boolean | null }).is_active === true;
+      const title =
+        String((data as { title?: string | null }).title ?? priorTitle ?? "Annonce").trim() || "Annonce";
+      const siteBase = siteConfig.url.replace(/\/$/, "");
+      const manageUrl = `${siteBase}/proprietaire/materiel/listing/${listingId}/reglages`;
+      const catalogueUrl = `${siteBase}/catalogue`;
+      const to = user.email?.trim();
+      if (to && !priorActive && newActive) {
+        await sendGsListingPublishedProviderEmail(to, {
+          listingTitle: title,
+          catalogueUrl,
+          manageUrl,
+        }).catch(() => null);
+      } else if (to && priorActive && !newActive) {
+        await sendGsListingDeactivatedProviderEmail(to, { listingTitle: title, manageUrl }).catch(() => null);
+      }
     }
 
     return NextResponse.json({ data });
@@ -195,6 +247,14 @@ export async function DELETE(_: Request, context: RouteContext) {
       return NextResponse.json({ error: "Authentification requise." }, { status: 401 });
     }
 
+    const { data: priorDel } = await supabase
+      .from("gs_listings")
+      .select("is_active, title")
+      .eq("id", listingId)
+      .eq("owner_id", user.id)
+      .maybeSingle();
+    const priorD = priorDel as { is_active?: boolean | null; title?: string | null } | null;
+
     const { data, error } = await supabase
       .from("gs_listings")
       .update({ is_active: false })
@@ -208,6 +268,16 @@ export async function DELETE(_: Request, context: RouteContext) {
     }
     if (!data) {
       return NextResponse.json({ error: "Listing introuvable ou acces refuse." }, { status: 404 });
+    }
+
+    if (priorD?.is_active === true) {
+      const title = priorD.title?.trim() || "Annonce";
+      const siteBase = siteConfig.url.replace(/\/$/, "");
+      const manageUrl = `${siteBase}/proprietaire/materiel/listing/${listingId}/reglages`;
+      const to = user.email?.trim();
+      if (to) {
+        await sendGsListingDeactivatedProviderEmail(to, { listingTitle: title, manageUrl }).catch(() => null);
+      }
     }
 
     return NextResponse.json({ data });

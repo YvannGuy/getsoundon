@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { getAuthUserEmail } from "@/lib/auth-user-email";
+import { sendGsBookingPayoutSentProviderEmail } from "@/lib/email";
 import { getProviderNetTransferCents } from "@/lib/gs-booking-platform-fee";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyCronRequest } from "@/lib/cron/auth";
+import { siteConfig } from "@/config/site";
 
 /**
  * Cron — Versement Connect des prestataires (réservations matériel `gs_bookings`).
@@ -24,7 +27,7 @@ export async function POST(request: Request) {
   const { data: bookings } = await admin
     .from("gs_bookings")
     .select(
-      "id, provider_id, customer_id, total_price, provider_net_eur, payout_due_at, payout_status, stripe_payment_intent_id, incident_status, deposit_claim_status"
+      "id, provider_id, customer_id, listing_id, total_price, provider_net_eur, payout_due_at, payout_status, stripe_payment_intent_id, incident_status, deposit_claim_status"
     )
     .in("status", ["accepted", "completed"])
     .in("payout_status", ["pending", "scheduled", "blocked"])
@@ -41,6 +44,7 @@ export async function POST(request: Request) {
       id: string;
       provider_id: string;
       customer_id: string;
+      listing_id: string | null;
       total_price: number | string;
       provider_net_eur?: number | string | null;
       payout_status: string | null;
@@ -129,6 +133,23 @@ export async function POST(request: Request) {
           updated_at: paidAt,
         })
         .eq("id", row.id);
+
+      const siteBase = siteConfig.url.replace(/\/$/, "");
+      let listingTitle = "Réservation matériel";
+      if (row.listing_id) {
+        const { data: lr } = await admin.from("gs_listings").select("title").eq("id", row.listing_id).maybeSingle();
+        const t = (lr as { title?: string } | null)?.title?.trim();
+        if (t) listingTitle = t;
+      }
+      const providerTo = await getAuthUserEmail(admin, row.provider_id);
+      if (providerTo) {
+        const amountEurStr = (payoutAmountCents / 100).toFixed(2);
+        await sendGsBookingPayoutSentProviderEmail(providerTo, {
+          listingTitle,
+          amountEurStr,
+          bookingUrl: `${siteBase}/proprietaire/materiel/${row.id}`,
+        }).catch(() => null);
+      }
 
       paid += 1;
     } catch (error) {

@@ -10,6 +10,7 @@ import {
   ChevronRight,
   ClipboardList,
   FileText,
+  Flag,
   Headphones,
   Home,
   Menu,
@@ -29,6 +30,7 @@ export type AdminSidebarBadgeCounts = {
   utilisateurs: number;
   conciergeRequests: number;
   incidentsMateriel: number;
+  reportsNew: number;
 };
 
 type AdminSidebarProps = {
@@ -47,6 +49,14 @@ const navItems = (counts: AdminSidebarBadgeCounts) => [
     badgeTone: "info" as const,
   },
   { href: "/admin/annonces-materiel", label: "Annonces", icon: Megaphone },
+  {
+    href: "/admin/signalements",
+    label: "Signalements",
+    icon: Flag,
+    badgeKey: "reportsNew",
+    badge: counts.reportsNew,
+    badgeTone: "warning" as const,
+  },
   { href: "/admin/reservations-materiel", label: "Réservations", icon: ClipboardList },
   {
     href: "/admin/incidents-materiel",
@@ -76,6 +86,7 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
     utilisateurs: badgeCounts.utilisateurs,
     conciergeRequests: badgeCounts.conciergeRequests,
     incidentsMateriel: badgeCounts.incidentsMateriel,
+    reportsNew: badgeCounts.reportsNew,
   };
 
   useEffect(() => {
@@ -120,6 +131,7 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
     badgeCounts.utilisateurs,
     badgeCounts.conciergeRequests,
     badgeCounts.incidentsMateriel,
+    badgeCounts.reportsNew,
   ]);
 
   const sidebarContent = (
@@ -193,7 +205,9 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
                             ? "bg-red-100 text-red-700"
                             : item.badgeTone === "info"
                               ? "bg-blue-100 text-blue-700"
-                              : "bg-amber-100 text-amber-700"
+                              : item.badgeTone === "warning"
+                                ? "bg-amber-100 text-amber-800"
+                                : "bg-amber-100 text-amber-700"
                       )}
                     >
                       {badge > 99 ? "99+" : badge}
@@ -209,7 +223,9 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
                       ? "bg-red-500"
                       : item.badgeTone === "info"
                         ? "bg-blue-500"
-                        : "bg-amber-500"
+                        : item.badgeTone === "warning"
+                          ? "bg-amber-500"
+                          : "bg-amber-500"
                   )}
                 >
                   {badge > 99 ? "99+" : badge}
@@ -318,7 +334,9 @@ export function AdminSidebar({ badgeCounts, userEmail }: AdminSidebarProps) {
                           ? "bg-red-100 text-red-700"
                           : item.badgeTone === "info"
                             ? "bg-blue-100 text-blue-700"
-                            : "bg-amber-100 text-amber-700"
+                            : item.badgeTone === "warning"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-amber-100 text-amber-700"
                     )}
                   >
                     {badge > 99 ? "99+" : badge}

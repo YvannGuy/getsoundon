@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { siteConfig } from "@/config/site";
+import { getAuthUserEmail } from "@/lib/auth-user-email";
+import { sendGsBookingNewDemandProviderEmail } from "@/lib/email";
 import { providerStripeCanReceivePayments } from "@/lib/gs-provider-stripe-connect";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { sendUserNotification } from "@/lib/user-notifications";
 
 const createBookingSchema = z.object({
   listingId: z.string().uuid(),
@@ -96,6 +100,36 @@ export async function POST(request: Request) {
     if (error) {
       return NextResponse.json({ error: "Creation de booking impossible." }, { status: 400 });
     }
+
+    const inserted = data as { id: string };
+    const { data: listingMeta } = await admin
+      .from("gs_listings")
+      .select("title")
+      .eq("id", payload.listingId)
+      .maybeSingle();
+    const listingTitle =
+      (listingMeta as { title?: string } | null)?.title?.trim() || "Annonce matériel";
+    const siteBase = siteConfig.url.replace(/\/$/, "");
+    const statusLabel = initialStatus === "accepted" ? "awaiting_payment" : "pending";
+
+    void sendUserNotification({
+      userId: listingRow.owner_id,
+      telegramText:
+        statusLabel === "pending"
+          ? `📩 Nouvelle demande de réservation pour « ${listingTitle} ». Répondez depuis votre espace prestataire.`
+          : `💳 Une réservation avec paiement en ligne a été initiée pour « ${listingTitle} ».`,
+      sendEmail: async () => {
+        const to = await getAuthUserEmail(admin, listingRow.owner_id);
+        if (!to) return;
+        await sendGsBookingNewDemandProviderEmail(to, {
+          listingTitle,
+          startDate: payload.startDate,
+          endDate: payload.endDate,
+          statusLabel,
+          bookingUrl: `${siteBase}/proprietaire/materiel/${inserted.id}`,
+        });
+      },
+    }).catch(() => null);
 
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {

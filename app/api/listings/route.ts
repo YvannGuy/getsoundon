@@ -1,12 +1,20 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { getPlatformSettings } from "@/app/actions/admin-settings";
+import { siteConfig } from "@/config/site";
 import { CATALOGUE_SEGMENTS, isCatalogueSegmentSlug } from "@/lib/catalogue-segments";
 import {
   locationSearchFragments,
   sanitizeIlikeToken,
 } from "@/lib/listings-filter-utils";
 import { filterMockListings, mockGsListingsEnabled } from "@/lib/mock-gs-listings";
+import {
+  sendGsListingPublishedProviderEmail,
+  sendGsListingSubmittedProviderEmail,
+  sendNewCatalogListingPendingAdminNotification,
+  sendNewCatalogListingPublishedAdminNotification,
+} from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
 
 const createListingSchema = z.object({
@@ -186,6 +194,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Role provider requis." }, { status: 403 });
     }
 
+    const platformSettings = await getPlatformSettings();
+    const { validation_manuelle, mode_publication } = platformSettings.validation;
+    const isActive = !validation_manuelle || mode_publication === "auto";
+
     const { data, error } = await supabase
       .from("gs_listings")
       .insert({
@@ -197,12 +209,62 @@ export async function POST(request: Request) {
         location: payload.location,
         lat: payload.lat ?? null,
         lng: payload.lng ?? null,
+        is_active: isActive,
+        moderation_status: isActive ? "approved" : "pending",
       })
       .select("id, owner_id, title, description, category, price_per_day, location, lat, lng, is_active, created_at")
       .single();
 
     if (error) {
       return NextResponse.json({ error: "Creation du listing impossible." }, { status: 400 });
+    }
+
+    const row = data as {
+      id: string;
+      title: string;
+      location: string | null;
+    };
+    const siteBase = siteConfig.url.replace(/\/$/, "");
+    const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const adminDashboardUrl = `${siteBase}/admin`;
+    const locationLabel = row.location?.trim() || "—";
+
+    if (adminEmails.length > 0) {
+      if (isActive) {
+        await sendNewCatalogListingPublishedAdminNotification(
+          adminEmails,
+          row.title,
+          locationLabel,
+          adminDashboardUrl
+        ).catch(() => null);
+      } else {
+        await sendNewCatalogListingPendingAdminNotification(
+          adminEmails,
+          row.title,
+          locationLabel,
+          adminDashboardUrl
+        ).catch(() => null);
+      }
+    }
+
+    const providerTo = user.email?.trim();
+    const manageUrl = `${siteBase}/proprietaire/materiel/listing/${row.id}/reglages`;
+    if (providerTo) {
+      if (isActive) {
+        await sendGsListingPublishedProviderEmail(providerTo, {
+          listingTitle: row.title,
+          catalogueUrl: `${siteBase}/catalogue`,
+          manageUrl,
+        }).catch(() => null);
+      } else {
+        await sendGsListingSubmittedProviderEmail(providerTo, {
+          listingTitle: row.title,
+          manageUrl,
+        }).catch(() => null);
+      }
     }
 
     return NextResponse.json({ data }, { status: 201 });

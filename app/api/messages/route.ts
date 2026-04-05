@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { createClient } from "@/lib/supabase/server";
+import { siteConfig } from "@/config/site";
+import { getAuthUserEmail } from "@/lib/auth-user-email";
+import { sendGsBookingThreadMessageEmail } from "@/lib/email";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { sendUserNotification } from "@/lib/user-notifications";
 
 const sendMessageSchema = z.object({
@@ -157,10 +160,37 @@ export async function POST(request: Request) {
 
     const preview = payload.content.length > 80 ? payload.content.slice(0, 80) + "…" : payload.content;
 
+    const admin = createAdminClient();
+    const { data: bookingRow } = await admin
+      .from("gs_bookings")
+      .select("listing_id")
+      .eq("id", payload.bookingId)
+      .maybeSingle();
+    const lid = (bookingRow as { listing_id?: string } | null)?.listing_id;
+    let listingTitle = "Réservation matériel";
+    if (lid) {
+      const { data: li } = await admin.from("gs_listings").select("title").eq("id", lid).maybeSingle();
+      const t = (li as { title?: string } | null)?.title?.trim();
+      if (t) listingTitle = t;
+    }
+    const siteBase = siteConfig.url.replace(/\/$/, "");
+    const bookingUrl =
+      recipientId === participants.customer_id
+        ? `${siteBase}/dashboard/materiel/${payload.bookingId}`
+        : `${siteBase}/proprietaire/materiel/${payload.bookingId}`;
+
     sendUserNotification({
       userId: recipientId,
       telegramText: `💬 Nouveau message concernant ta location matériel :\n« ${preview} »`,
-      sendEmail: async () => Promise.resolve(),
+      sendEmail: async () => {
+        const to = await getAuthUserEmail(admin, recipientId);
+        if (!to) return;
+        await sendGsBookingThreadMessageEmail(to, {
+          listingTitle,
+          preview: payload.content,
+          bookingUrl,
+        });
+      },
     }).catch(() => null);
 
     return NextResponse.json({ data }, { status: 201 });

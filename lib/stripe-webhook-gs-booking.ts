@@ -240,10 +240,8 @@ export async function handleGsBookingCheckoutCompleted(
           .from("gs_bookings")
           .update({ deposit_hold_status: "failed", updated_at: new Date().toISOString() })
           .eq("id", bookingId);
-        return;
-      }
-
-      if (!customerId) {
+        // Ne pas return : les emails de confirmation de paiement doivent partir malgré l’échec de l’empreinte.
+      } else if (!customerId) {
         console.error("[webhook] gs_booking: customer manquant sur PI, empreinte caution impossible", {
           bookingId,
           paymentIntentId,
@@ -253,51 +251,52 @@ export async function handleGsBookingCheckoutCompleted(
           .from("gs_bookings")
           .update({ deposit_hold_status: "failed", updated_at: new Date().toISOString() })
           .eq("id", bookingId);
-        return;
-      }
-
-      const depositPi = await stripe.paymentIntents.create(
-        {
-          amount: depositAmountCents,
-          currency: "eur",
-          customer: customerId,
-          payment_method: pmId,
-          // hold seulement — pas de débit immédiat
-          capture_method: "manual",
-          confirm: true,
-          off_session: true,
-          metadata: {
-            gs_booking_id: bookingId,
-            deposit_type: "gs_booking",
-            deposit_release_due_at: resolvedDepositReleaseDueAt,
-          },
-        },
-        { idempotencyKey: `gs-deposit-hold-${bookingId}` }
-      );
-
-      const holdStatus = depositPi.status === "requires_capture" ? "authorized" : "failed";
-      await supabase
-        .from("gs_bookings")
-        .update({
-          deposit_payment_intent_id: depositPi.id,
-          deposit_hold_status: holdStatus,
-          deposit_amount_cents: depositAmountCents,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", bookingId);
-
-      if (holdStatus === "authorized") {
-        console.log("[webhook] gs_booking: empreinte caution autorisée", {
-          depositPiId: depositPi.id,
-          depositAmountCents,
-          bookingId,
-        });
+        // Ne pas return : idem.
       } else {
-        console.warn("[webhook] gs_booking: empreinte caution status inattendu", {
-          depositPiId: depositPi.id,
-          status: depositPi.status,
-          bookingId,
-        });
+
+        const depositPi = await stripe.paymentIntents.create(
+          {
+            amount: depositAmountCents,
+            currency: "eur",
+            customer: customerId,
+            payment_method: pmId,
+            // hold seulement — pas de débit immédiat
+            capture_method: "manual",
+            confirm: true,
+            off_session: true,
+            metadata: {
+              gs_booking_id: bookingId,
+              deposit_type: "gs_booking",
+              deposit_release_due_at: resolvedDepositReleaseDueAt,
+            },
+          },
+          { idempotencyKey: `gs-deposit-hold-${bookingId}` }
+        );
+
+        const holdStatus = depositPi.status === "requires_capture" ? "authorized" : "failed";
+        await supabase
+          .from("gs_bookings")
+          .update({
+            deposit_payment_intent_id: depositPi.id,
+            deposit_hold_status: holdStatus,
+            deposit_amount_cents: depositAmountCents,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", bookingId);
+
+        if (holdStatus === "authorized") {
+          console.log("[webhook] gs_booking: empreinte caution autorisée", {
+            depositPiId: depositPi.id,
+            depositAmountCents,
+            bookingId,
+          });
+        } else {
+          console.warn("[webhook] gs_booking: empreinte caution status inattendu", {
+            depositPiId: depositPi.id,
+            status: depositPi.status,
+            bookingId,
+          });
+        }
       }
     } catch (depositErr) {
       console.error("[webhook] gs_booking: erreur empreinte caution", bookingId, depositErr);

@@ -3,6 +3,8 @@
 import PDFDocument from "pdfkit";
 
 import { siteConfig } from "@/config/site";
+import { getAuthUserEmail } from "@/lib/auth-user-email";
+import { sendGsInvoiceAvailableEmail } from "@/lib/email";
 import { computeGsBookingPaymentSplit } from "@/lib/gs-booking-platform-fee";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -182,9 +184,7 @@ export async function generateInvoicesForCompletedBookings() {
       });
       if (uploadError) throw uploadError;
 
-      const { data: signed } = await admin.storage.from("invoices").createSignedUrl(path, 60 * 60 * 24 * 7);
-
-      await admin.from("gs_invoices").insert({
+      const { error: insertError } = await admin.from("gs_invoices").insert({
         booking_id: b.id,
         provider_id: b.provider_id,
         customer_id: b.customer_id,
@@ -193,6 +193,28 @@ export async function generateInvoicesForCompletedBookings() {
         invoice_total_eur: net,
         currency: "EUR",
       });
+      if (insertError) throw insertError;
+
+      const siteBase = siteConfig.url.replace(/\/$/, "");
+      const listingTitle = b.listing_id ? listingMap.get(b.listing_id)?.title?.trim() : undefined;
+      const providerTo = await getAuthUserEmail(admin, b.provider_id);
+      if (providerTo) {
+        await sendGsInvoiceAvailableEmail(providerTo, {
+          invoiceNumber,
+          role: "provider",
+          dashboardUrl: `${siteBase}/proprietaire/contrat`,
+          listingTitle: listingTitle || undefined,
+        }).catch(() => null);
+      }
+      const customerTo = await getAuthUserEmail(admin, b.customer_id);
+      if (customerTo) {
+        await sendGsInvoiceAvailableEmail(customerTo, {
+          invoiceNumber,
+          role: "customer",
+          dashboardUrl: `${siteBase}/dashboard/materiel/${b.id}`,
+          listingTitle: listingTitle || undefined,
+        }).catch(() => null);
+      }
 
       generated += 1;
     } catch (err) {

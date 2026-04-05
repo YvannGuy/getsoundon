@@ -73,7 +73,7 @@ export default async function HistoriquePaiementPage({
       </Link>
 
       <h1 className="text-2xl font-bold text-black">Historique des transactions</h1>
-      <p className="mt-2 text-slate-500">Toutes vos transactions passées</p>
+      <p className="mt-1 text-slate-500">Toutes vos transactions passées</p>
 
       <Card className="mt-8 border-0 shadow-sm">
         <CardHeader>

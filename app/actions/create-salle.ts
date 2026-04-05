@@ -2,6 +2,8 @@
 
 import { getPlatformSettings } from "@/app/actions/admin-settings";
 import {
+  sendGsListingPublishedProviderEmail,
+  sendGsListingSubmittedProviderEmail,
   sendNewCatalogListingPendingAdminNotification,
   sendNewCatalogListingPublishedAdminNotification,
 } from "@/lib/email";
@@ -299,6 +301,7 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
     lat: lat ?? null,
     lng: lng ?? null,
     is_active: status === "approved",
+    moderation_status: status === "approved" ? "approved" : "pending",
     deposit_amount: gsDeposit,
     immediate_confirmation: gsImmediate,
     cancellation_policy: gsCancellationPolicy,
@@ -387,6 +390,25 @@ export async function createSalleFromOnboarding(formData: FormData): Promise<Cre
             );
         })
       );
+    }
+  }
+
+  const providerTo = user.email?.trim();
+  const siteBase = siteUrl.replace(/\/$/, "");
+  const manageListingUrl = `${siteBase}/proprietaire/materiel/listing/${lid}/reglages`;
+  const cataloguePublicUrl = `${siteBase}/catalogue`;
+  if (providerTo) {
+    if (status === "pending") {
+      await sendGsListingSubmittedProviderEmail(providerTo, {
+        listingTitle,
+        manageUrl: manageListingUrl,
+      }).catch(() => null);
+    } else {
+      await sendGsListingPublishedProviderEmail(providerTo, {
+        listingTitle,
+        catalogueUrl: cataloguePublicUrl,
+        manageUrl: manageListingUrl,
+      }).catch(() => null);
     }
   }
 

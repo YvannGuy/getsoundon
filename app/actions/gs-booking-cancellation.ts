@@ -3,7 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { siteConfig } from "@/config/site";
 import { isUserAdmin } from "@/lib/admin-access";
+import { getAuthUserEmail } from "@/lib/auth-user-email";
+import {
+  sendGsBookingCancellationDecisionEmail,
+  sendGsBookingCancellationRequestedCustomerEmail,
+  sendGsBookingCancellationRequestedProviderEmail,
+  type GsCancellationDecisionKind,
+} from "@/lib/email";
 import {
   adminPolicyGuidanceText,
   evaluateCancellationRequestEligibility,
@@ -17,6 +25,7 @@ import { getPostHogClient } from "@/lib/posthog-server";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserOrNull } from "@/lib/supabase/server";
+import { sendUserNotification } from "@/lib/user-notifications";
 
 const requestSchema = z.object({
   bookingId: z.string().uuid(),
@@ -58,7 +67,7 @@ export async function requestGsBookingCancellation(
   const { data: bookingRaw } = await admin
     .from("gs_bookings")
     .select(
-      "id, customer_id, status, stripe_payment_intent_id, check_in_status, check_out_status, incident_status, payout_status",
+      "id, customer_id, provider_id, listing_id, status, stripe_payment_intent_id, check_in_status, check_out_status, incident_status, payout_status",
     )
     .eq("id", parsed.data.bookingId)
     .maybeSingle();
@@ -100,6 +109,48 @@ export async function requestGsBookingCancellation(
     properties: { booking_id: booking.id, booking_status: booking.status },
   });
   await posthog.shutdown();
+
+  const b = booking as GsBookingForCancellationEligibility & {
+    provider_id: string;
+    listing_id: string;
+  };
+  const { data: listingRow } = await admin
+    .from("gs_listings")
+    .select("title")
+    .eq("id", b.listing_id)
+    .maybeSingle();
+  const listingTitle =
+    (listingRow as { title?: string } | null)?.title?.trim() || "Annonce matériel";
+  const siteBase = siteConfig.url.replace(/\/$/, "");
+
+  await Promise.all([
+    sendUserNotification({
+      userId: b.provider_id,
+      telegramText: `⚠️ Demande d’annulation pour « ${listingTitle} ». L’administration va examiner la demande.`,
+      sendEmail: async () => {
+        const to = await getAuthUserEmail(admin, b.provider_id);
+        if (!to) return;
+        await sendGsBookingCancellationRequestedProviderEmail(to, {
+          listingTitle,
+          bookingUrl: `${siteBase}/proprietaire/materiel/${b.id}`,
+          reasonPreview: parsed.data.reason,
+        });
+      },
+    }).catch(() => null),
+    sendUserNotification({
+      userId: user.id,
+      telegramText:
+        "✅ Ta demande d’annulation a bien été enregistrée. Tu seras informé(e) de la décision par email ou sur ton canal de notification.",
+      sendEmail: async () => {
+        const to = await getAuthUserEmail(admin, user.id);
+        if (!to) return;
+        await sendGsBookingCancellationRequestedCustomerEmail(to, {
+          listingTitle,
+          bookingUrl: `${siteBase}/dashboard/materiel/${b.id}`,
+        });
+      },
+    }).catch(() => null),
+  ]);
 
   revalidatePath("/dashboard/materiel");
   revalidatePath(`/dashboard/materiel/${booking.id}`);
@@ -167,7 +218,7 @@ export async function decideGsBookingCancellationRequest(
   const { data: bookingRaw } = await admin
     .from("gs_bookings")
     .select(
-      "id, total_price, checkout_total_eur, payout_status, stripe_payment_intent_id, deposit_payment_intent_id, deposit_hold_status, status",
+      "id, customer_id, provider_id, listing_id, total_price, checkout_total_eur, payout_status, stripe_payment_intent_id, deposit_payment_intent_id, deposit_hold_status, status",
     )
     .eq("id", request.booking_id)
     .maybeSingle();
@@ -176,6 +227,9 @@ export async function decideGsBookingCancellationRequest(
 
   const booking = bookingRaw as {
     id: string;
+    customer_id: string;
+    provider_id: string;
+    listing_id: string;
     total_price: number | string;
     checkout_total_eur?: number | string | null;
     payout_status: string | null;
@@ -217,6 +271,48 @@ export async function decideGsBookingCancellationRequest(
       .eq("status", "pending");
 
     if (error) return { error: error.message };
+
+    const { data: listingRowRej } = await admin
+      .from("gs_listings")
+      .select("title")
+      .eq("id", booking.listing_id)
+      .maybeSingle();
+    const listingTitleRej =
+      (listingRowRej as { title?: string } | null)?.title?.trim() || "Annonce matériel";
+    const siteBaseRej = siteConfig.url.replace(/\/$/, "");
+    await Promise.all([
+      sendUserNotification({
+        userId: booking.customer_id,
+        telegramText: `ℹ️ Ta demande d’annulation pour « ${listingTitleRej} » n’a pas été acceptée.`,
+        sendEmail: async () => {
+          const to = await getAuthUserEmail(admin, booking.customer_id);
+          if (!to) return;
+          await sendGsBookingCancellationDecisionEmail(to, {
+            listingTitle: listingTitleRej,
+            bookingUrl: `${siteBaseRej}/dashboard/materiel/${booking.id}`,
+            role: "customer",
+            decision: "reject",
+            refundEur: null,
+          });
+        },
+      }).catch(() => null),
+      sendUserNotification({
+        userId: booking.provider_id,
+        telegramText: `ℹ️ La demande d’annulation client pour « ${listingTitleRej} » a été refusée par l’administration.`,
+        sendEmail: async () => {
+          const to = await getAuthUserEmail(admin, booking.provider_id);
+          if (!to) return;
+          await sendGsBookingCancellationDecisionEmail(to, {
+            listingTitle: listingTitleRej,
+            bookingUrl: `${siteBaseRej}/proprietaire/materiel/${booking.id}`,
+            role: "provider",
+            decision: "reject",
+            refundEur: null,
+          });
+        },
+      }).catch(() => null),
+    ]);
+
     revalidatePath("/admin/materiel-annulations");
     revalidatePath(`/dashboard/materiel/${booking.id}`);
     revalidatePath(`/proprietaire/commandes/${booking.id}`);
@@ -324,6 +420,52 @@ export async function decideGsBookingCancellationRequest(
     console.error("[decideGsBookingCancellation] booking update", bookErr);
     return { error: "Demande enregistrée mais mise à jour réservation échouée — vérifier en admin." };
   }
+
+  let decisionKind: GsCancellationDecisionKind = "approve_no_refund";
+  if (newStatus === "approved_full_refund") decisionKind = "approve_full";
+  else if (newStatus === "approved_partial_refund") decisionKind = "approve_partial";
+
+  const { data: listingRowDec } = await admin
+    .from("gs_listings")
+    .select("title")
+    .eq("id", booking.listing_id)
+    .maybeSingle();
+  const listingTitleDec =
+    (listingRowDec as { title?: string } | null)?.title?.trim() || "Annonce matériel";
+  const siteBaseDec = siteConfig.url.replace(/\/$/, "");
+
+  await Promise.all([
+    sendUserNotification({
+      userId: booking.customer_id,
+      telegramText: `📋 Décision sur ton annulation pour « ${listingTitleDec} » : consulte ton email ou ton espace réservation.`,
+      sendEmail: async () => {
+        const to = await getAuthUserEmail(admin, booking.customer_id);
+        if (!to) return;
+        await sendGsBookingCancellationDecisionEmail(to, {
+          listingTitle: listingTitleDec,
+          bookingUrl: `${siteBaseDec}/dashboard/materiel/${booking.id}`,
+          role: "customer",
+          decision: decisionKind,
+          refundEur: refundEur,
+        });
+      },
+    }).catch(() => null),
+    sendUserNotification({
+      userId: booking.provider_id,
+      telegramText: `📋 Annulation traitée pour « ${listingTitleDec} ». Vérifie les détails dans ton espace.`,
+      sendEmail: async () => {
+        const to = await getAuthUserEmail(admin, booking.provider_id);
+        if (!to) return;
+        await sendGsBookingCancellationDecisionEmail(to, {
+          listingTitle: listingTitleDec,
+          bookingUrl: `${siteBaseDec}/proprietaire/materiel/${booking.id}`,
+          role: "provider",
+          decision: decisionKind,
+          refundEur: refundEur,
+        });
+      },
+    }).catch(() => null),
+  ]);
 
   revalidatePath("/admin/materiel-annulations");
   revalidatePath(`/dashboard/materiel/${booking.id}`);

@@ -2,6 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 
+import { siteConfig } from "@/config/site";
+import { getAuthUserEmail } from "@/lib/auth-user-email";
+import {
+  sendGsBookingAcceptedCustomerEmail,
+  sendGsBookingIncidentDeclaredCustomerEmail,
+  sendGsBookingIncidentDeclaredProviderEmail,
+  sendGsBookingIncidentResolvedPartyEmail,
+  sendGsBookingRefusedCustomerEmail,
+} from "@/lib/email";
 import { getPostHogClient } from "@/lib/posthog-server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -70,10 +79,27 @@ export async function acceptGsBookingAction(
 
   if (updateError) return { success: false, error: updateError.message };
 
+  const { data: listingMeta } = await admin
+    .from("gs_listings")
+    .select("title")
+    .eq("id", row.listing_id)
+    .maybeSingle();
+  const listingTitle =
+    (listingMeta as { title?: string } | null)?.title?.trim() || "Annonce matériel";
+  const siteBase = siteConfig.url.replace(/\/$/, "");
+
   await sendUserNotification({
     userId: row.customer_id,
     telegramText: `✅ Ta demande de location matériel a été acceptée. Tu peux maintenant procéder au paiement sur GetSoundOn.`,
-    sendEmail: async () => Promise.resolve(),
+    sendEmail: async () => {
+      const to = await getAuthUserEmail(admin, row.customer_id);
+      if (!to) return;
+      await sendGsBookingAcceptedCustomerEmail(
+        to,
+        listingTitle,
+        `${siteBase}/dashboard/materiel/${bookingId}`
+      );
+    },
   }).catch(() => null);
 
   const posthog = getPostHogClient();
@@ -124,10 +150,27 @@ export async function refuseGsBookingAction(
 
   if (updateError) return { success: false, error: updateError.message };
 
+  const { data: listingMetaRef } = await admin
+    .from("gs_listings")
+    .select("title")
+    .eq("id", row.listing_id)
+    .maybeSingle();
+  const listingTitleRef =
+    (listingMetaRef as { title?: string } | null)?.title?.trim() || "Annonce matériel";
+  const siteBaseRef = siteConfig.url.replace(/\/$/, "");
+
   await sendUserNotification({
     userId: row.customer_id,
     telegramText: `❌ Ta demande de location matériel n'a pas pu être acceptée par le prestataire. Tu peux chercher d'autres équipements sur GetSoundOn.`,
-    sendEmail: async () => Promise.resolve(),
+    sendEmail: async () => {
+      const to = await getAuthUserEmail(admin, row.customer_id);
+      if (!to) return;
+      await sendGsBookingRefusedCustomerEmail(
+        to,
+        listingTitleRef,
+        `${siteBaseRef}/dashboard/materiel/${bookingId}`
+      );
+    },
   }).catch(() => null);
 
   const posthogRefuse = getPostHogClient();
@@ -350,7 +393,9 @@ export async function reportIncidentAction(
   const admin = createAdminClient();
   const { data: booking } = await admin
     .from("gs_bookings")
-    .select("id, provider_id, customer_id, status, incident_status, incident_deadline_at, end_date")
+    .select(
+      "id, provider_id, customer_id, listing_id, status, incident_status, incident_deadline_at, end_date"
+    )
     .eq("id", bookingId)
     .maybeSingle();
 
@@ -360,6 +405,7 @@ export async function reportIncidentAction(
     id: string;
     provider_id: string;
     customer_id: string;
+    listing_id: string;
     status: string;
     incident_status: string | null;
     incident_deadline_at: string | null;
@@ -396,6 +442,31 @@ export async function reportIncidentAction(
     .is("incident_status", null);
 
   if (error) return { success: false, error: error.message };
+
+  const siteBase = siteConfig.url.replace(/\/$/, "");
+  let listingTitle = "Annonce";
+  const { data: listingRow } = await admin
+    .from("gs_listings")
+    .select("title")
+    .eq("id", row.listing_id)
+    .maybeSingle();
+  const lt = (listingRow as { title?: string } | null)?.title?.trim();
+  if (lt) listingTitle = lt;
+
+  const customerEmail = await getAuthUserEmail(admin, row.customer_id);
+  if (customerEmail) {
+    await sendGsBookingIncidentDeclaredCustomerEmail(customerEmail, {
+      listingTitle,
+      bookingUrl: `${siteBase}/dashboard/materiel/${bookingId}`,
+    }).catch(() => null);
+  }
+  const providerEmail = await getAuthUserEmail(admin, user.id);
+  if (providerEmail) {
+    await sendGsBookingIncidentDeclaredProviderEmail(providerEmail, {
+      listingTitle,
+      bookingUrl: `${siteBase}/proprietaire/materiel/${bookingId}`,
+    }).catch(() => null);
+  }
 
   await sendUserNotification({
     userId: row.customer_id,
@@ -461,7 +532,9 @@ export async function resolveIncidentAdminAction(
 
   const { data: booking } = await admin
     .from("gs_bookings")
-    .select("id, customer_id, provider_id, incident_status, payout_status, deposit_amount, deposit_hold_status, deposit_claim_status")
+    .select(
+      "id, customer_id, provider_id, listing_id, incident_status, payout_status, deposit_amount, deposit_hold_status, deposit_claim_status"
+    )
     .eq("id", bookingId)
     .maybeSingle();
 
@@ -471,6 +544,7 @@ export async function resolveIncidentAdminAction(
     id: string;
     customer_id: string;
     provider_id: string;
+    listing_id: string;
     incident_status: string | null;
     payout_status: string | null;
     deposit_amount: number | string | null;
@@ -526,6 +600,37 @@ export async function resolveIncidentAdminAction(
         ? `✅ L'incident signalé sur ta location matériel a été validé. L'administration va statuer sur ta caution.`
         : `✅ L'incident signalé sur ta location matériel a été traité par l'administration GetSoundOn.`
       : `ℹ️ L'incident signalé sur ta location matériel a été examiné et rejeté. Ta caution sera libérée normalement.`;
+
+  const siteBase = siteConfig.url.replace(/\/$/, "");
+  let listingTitleResolved = "Annonce";
+  const { data: listingResolved } = await admin
+    .from("gs_listings")
+    .select("title")
+    .eq("id", row.listing_id)
+    .maybeSingle();
+  const ltr = (listingResolved as { title?: string } | null)?.title?.trim();
+  if (ltr) listingTitleResolved = ltr;
+
+  const providerMail = await getAuthUserEmail(admin, row.provider_id);
+  if (providerMail) {
+    await sendGsBookingIncidentResolvedPartyEmail(providerMail, {
+      role: "provider",
+      listingTitle: listingTitleResolved,
+      bookingUrl: `${siteBase}/proprietaire/materiel/${bookingId}`,
+      decision,
+      cautionDecisionPending: keepBlocked,
+    }).catch(() => null);
+  }
+  const customerMail = await getAuthUserEmail(admin, row.customer_id);
+  if (customerMail) {
+    await sendGsBookingIncidentResolvedPartyEmail(customerMail, {
+      role: "customer",
+      listingTitle: listingTitleResolved,
+      bookingUrl: `${siteBase}/dashboard/materiel/${bookingId}`,
+      decision,
+      cautionDecisionPending: keepBlocked,
+    }).catch(() => null);
+  }
 
   await Promise.all([
     sendUserNotification({

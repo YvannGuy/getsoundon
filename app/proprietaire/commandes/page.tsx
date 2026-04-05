@@ -1,8 +1,8 @@
-import DashboardMaterielPage from "@/app/dashboard/materiel/page";
-
-// Vue "Mes commandes" unifiée : réutilise l'écran client matériel existant dans l'univers /proprietaire.
+/**
+ * « Mes commandes » prestataire : même écran opérationnel que Réservations
+ * (liste, filtres, calendrier, check-in/out). L’ancienne réutilisation de la
+ * vue client `/dashboard/materiel` était incohérente pour un owner.
+ */
 export const dynamic = "force-dynamic";
 
-export default function ProprietaireCommandesPage(props: { searchParams: Promise<Record<string, string | undefined>> }) {
-  return <DashboardMaterielPage {...props} />;
-}
+export { default } from "../materiel/page";

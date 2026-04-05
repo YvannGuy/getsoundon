@@ -35,8 +35,10 @@ export function AdminAnnoncesFilters({ initial }: Props) {
             className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-800"
           >
             <option value="all">Toutes</option>
-            <option value="active">En ligne</option>
-            <option value="inactive">Inactives / en pause</option>
+            <option value="pending">En attente (modération)</option>
+            <option value="online">En ligne</option>
+            <option value="rejected">Refusées</option>
+            <option value="hidden">Masquées (validées, hors catalogue)</option>
           </select>
         </div>
 

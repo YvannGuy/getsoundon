@@ -27,6 +27,7 @@ const rateLimitedPaths = [
   "/api/stripe/webhook",
   "/api/cron/",
   "/api/messages",
+  "/api/reports",
 ];
 
 function shouldRateLimit(pathname: string) {

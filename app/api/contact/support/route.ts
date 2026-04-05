@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { sendSupportContactEmail } from "@/lib/email";
+import { sendContactFormAcknowledgementEmail, sendSupportContactEmail } from "@/lib/email";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const HELP_TYPES = new Set([
@@ -48,6 +48,10 @@ export async function POST(request: Request) {
     if (!result.success) {
       return NextResponse.redirect(new URL("/centre-aide?error=send", request.url), 303);
     }
+
+    await sendContactFormAcknowledgementEmail(email, {
+      contextLine: `Merci pour votre message concernant « ${helpType} ».`,
+    }).catch(() => null);
 
     return NextResponse.redirect(new URL("/centre-aide?sent=1", request.url), 303);
   } catch {

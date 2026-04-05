@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { sendHowItWorksContactEmail } from "@/lib/email";
+import { sendContactFormAcknowledgementEmail, sendHowItWorksContactEmail } from "@/lib/email";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const bodySchema = z.object({
@@ -26,6 +26,10 @@ export async function POST(request: Request) {
     if (!result.success) {
       return NextResponse.json({ error: "Envoi impossible pour le moment." }, { status: 502 });
     }
+    await sendContactFormAcknowledgementEmail(data.email, {
+      contextLine:
+        "Merci pour votre demande depuis la page « Comment ça marche » (location de matériel).",
+    }).catch(() => null);
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (e instanceof z.ZodError) {

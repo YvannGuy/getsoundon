@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { ListingZoneMapCard } from "@/components/items/listing-zone-map-card";
+import { ReportTrigger } from "@/components/reporting/report-modal";
 import {
   cancellationPolicyLegalNoteShort,
   getCancellationPolicyLabel,
@@ -716,6 +717,16 @@ export function ListingDetailPremiumView({
                     </>
                   )}
                 </p>
+
+                <div className="mt-4 border-t border-gs-line pt-3 text-center">
+                  <ReportTrigger
+                    target={{
+                      type: "listing",
+                      listingId: listing.id,
+                      label: listing.title,
+                    }}
+                  />
+                </div>
               </div>
             </aside>
 

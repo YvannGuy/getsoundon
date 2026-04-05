@@ -1,29 +1,29 @@
-import Image from "next/image";
 import Link from "next/link";
 import { AddSalleAutoOpen } from "@/components/proprietaire/add-salle-modal";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Banknote, Inbox, LayoutGrid } from "lucide-react";
+import {
+  Banknote,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  LayoutGrid,
+  Package,
+  PlusCircle,
+  Receipt,
+  Truck,
+  Wallet,
+} from "lucide-react";
 
 import { ConnectLoginButton } from "@/components/paiement/connect-login-button";
 import { ConnectOnboardingButton } from "@/components/paiement/connect-onboarding-button";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { computeGsBookingPaymentSplit } from "@/lib/gs-booking-platform-fee";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
-
-type ListingImageRow = { url: string; is_cover?: boolean; position?: number };
-
-function pickCoverUrl(images: ListingImageRow[] | null | undefined): string {
-  if (!images?.length) return "/img.png";
-  const cover = images.find((i) => i.is_cover);
-  if (cover?.url) return cover.url;
-  return [...images].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))[0]?.url ?? "/img.png";
-}
 
 const BOOKING_STATUS_LABEL: Record<string, string> = {
   pending: "En attente",
@@ -32,6 +32,23 @@ const BOOKING_STATUS_LABEL: Record<string, string> = {
   cancelled: "Annulée",
   completed: "Terminée",
 };
+
+function providerNetEurFromRow(row: {
+  total_price?: number | string;
+  provider_net_eur?: number | string | null;
+}): number {
+  const fromCol =
+    row.provider_net_eur != null && row.provider_net_eur !== ""
+      ? Number(row.provider_net_eur)
+      : NaN;
+  if (Number.isFinite(fromCol) && fromCol > 0) return fromCol;
+  const gross = Number(row.total_price ?? 0);
+  try {
+    return computeGsBookingPaymentSplit(gross).providerNetEur;
+  } catch {
+    return 0;
+  }
+}
 
 export default async function ProprietaireDashboardPage({
   searchParams,
@@ -48,138 +65,222 @@ export default async function ProprietaireDashboardPage({
   if (!user) return null;
 
   const admin = createAdminClient();
-  const since30Iso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const endDateSince = new Date();
+  endDateSince.setDate(endDateSince.getDate() - 30);
+  const endDateSinceStr = endDateSince.toISOString().slice(0, 10);
 
-  const [{ data: profile }, { data: listingsData }, { data: bookings30 }, { data: recentBookings }] =
-    await Promise.all([
-      supabase.from("profiles").select("stripe_account_id, first_name, full_name").eq("id", user.id).single(),
-      admin
+  const [
+    { data: profile },
+    { count: pendingCount },
+    { count: acceptedCount },
+    { data: completed30Rows },
+    { data: payoutPendingRows },
+    { data: recentBookings },
+  ] = await Promise.all([
+    supabase.from("profiles").select("stripe_account_id, first_name, full_name").eq("id", user.id).single(),
+    admin
+      .from("gs_bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("provider_id", user.id)
+      .eq("status", "pending")
+      .not("stripe_payment_intent_id", "is", null),
+    admin
+      .from("gs_bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("provider_id", user.id)
+      .eq("status", "accepted")
+      .not("stripe_payment_intent_id", "is", null),
+    admin
+      .from("gs_bookings")
+      .select("total_price, provider_net_eur")
+      .eq("provider_id", user.id)
+      .eq("status", "completed")
+      .gte("end_date", endDateSinceStr),
+    admin
+      .from("gs_bookings")
+      .select("provider_net_eur, total_price, payout_due_at")
+      .eq("provider_id", user.id)
+      .not("stripe_payment_intent_id", "is", null)
+      .in("status", ["accepted", "completed"])
+      .in("payout_status", ["pending", "scheduled"])
+      .limit(500),
+    admin
+      .from("gs_bookings")
+      .select("id, listing_id, total_price, status, created_at")
+      .eq("provider_id", user.id)
+      .not("stripe_payment_intent_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(5),
+  ]);
+
+  const annoncesActives =
+    (
+      await admin
         .from("gs_listings")
-        .select("id, title, location, is_active, created_at, gs_listing_images ( url, is_cover, position )")
+        .select("id", { count: "exact", head: true })
         .eq("owner_id", user.id)
-        .order("created_at", { ascending: false }),
-      admin
-        .from("gs_bookings")
-        .select("total_price, provider_net_eur")
-        .eq("provider_id", user.id)
-        .not("stripe_payment_intent_id", "is", null)
-        .gte("created_at", since30Iso),
-      admin
-        .from("gs_bookings")
-        .select("id, total_price, status, created_at, stripe_payment_intent_id")
-        .eq("provider_id", user.id)
-        .not("stripe_payment_intent_id", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(5),
-    ]);
+        .eq("is_active", true)
+    ).count ?? 0;
 
-  const listings = (listingsData ?? []) as Array<{
-    id: string;
-    title: string;
-    location: string | null;
-    is_active: boolean | null;
-    created_at: string;
-    gs_listing_images: ListingImageRow[] | null;
+  const completed30 = (completed30Rows ?? []) as Array<{
+    total_price?: number | string;
+    provider_net_eur?: number | string | null;
   }>;
+  const completed30Count = completed30.length;
+  const netTermine30 = completed30.reduce((s, b) => s + providerNetEurFromRow(b), 0);
 
-  const revenu30 = (bookings30 ?? []).reduce((sum, b) => {
-    const row = b as { total_price?: number | string; provider_net_eur?: number | string | null };
-    const fromCol = row.provider_net_eur != null && row.provider_net_eur !== "" ? Number(row.provider_net_eur) : NaN;
-    if (Number.isFinite(fromCol) && fromCol > 0) return sum + fromCol;
-    const gross = Number(row.total_price ?? 0);
-    try {
-      return sum + computeGsBookingPaymentSplit(gross).providerNetEur;
-    } catch {
-      return sum;
+  const payoutRows = (payoutPendingRows ?? []) as Array<{
+    provider_net_eur?: number | string | null;
+    total_price?: number | string;
+    payout_due_at: string | null;
+  }>;
+  let gainsEnAttente = 0;
+  let prochainVirement: Date | null = null;
+  const nowMs = Date.now();
+  for (const row of payoutRows) {
+    gainsEnAttente += providerNetEurFromRow(row);
+    if (row.payout_due_at) {
+      const d = new Date(row.payout_due_at);
+      if (!Number.isNaN(d.getTime()) && d.getTime() > nowMs) {
+        if (!prochainVirement || d.getTime() < prochainVirement.getTime()) {
+          prochainVirement = d;
+        }
+      }
     }
-  }, 0);
-  const annoncesCount = listings.length;
-  const annoncesActives = listings.filter((l) => l.is_active === true).length;
+  }
 
-  const metrics = [
+  const recent = (recentBookings ?? []) as Array<{
+    id: string;
+    listing_id: string;
+    total_price?: number;
+    status?: string;
+    created_at: string;
+  }>;
+  const listingIds = [...new Set(recent.map((b) => b.listing_id))];
+  let listingTitles: Record<string, string> = {};
+  if (listingIds.length > 0) {
+    const { data: listings } = await admin
+      .from("gs_listings")
+      .select("id, title")
+      .in("id", listingIds);
+    for (const l of (listings ?? []) as Array<{ id: string; title: string }>) {
+      listingTitles[l.id] = l.title;
+    }
+  }
+
+  const hasStripe = !!(profile as { stripe_account_id?: string | null } | null)?.stripe_account_id;
+  const demandesEnAttente = pendingCount ?? 0;
+  const locationsEnCours = acceptedCount ?? 0;
+
+  const kpis = [
     {
-      label: "Annonces catalogue",
-      value: String(annoncesCount),
-      icon: LayoutGrid,
-      color: "text-black",
-      bgColor: "bg-gs-orange/10",
-    },
-    {
-      label: "Visibles sur le catalogue",
+      label: "Annonces en ligne",
       value: String(annoncesActives),
-      icon: Inbox,
-      color: "text-emerald-600",
+      icon: LayoutGrid,
+      color: "text-emerald-700",
       bgColor: "bg-emerald-100",
     },
     {
-      label: "Volume net prestataire (30 j., après commission)",
-      value: `${revenu30.toFixed(0)} €`,
-      icon: Banknote,
+      label: "Demandes à répondre",
+      value: String(demandesEnAttente),
+      icon: Clock,
       color: "text-amber-700",
       bgColor: "bg-amber-100",
+    },
+    {
+      label: "Locations confirmées",
+      value: String(locationsEnCours),
+      icon: Package,
+      color: "text-sky-700",
+      bgColor: "bg-sky-100",
+    },
+    {
+      label: "Locations terminées · 30 j.",
+      value: String(completed30Count),
+      sub: `Net ~ ${Math.round(netTermine30)} €`,
+      icon: CheckCircle2,
+      color: "text-slate-700",
+      bgColor: "bg-slate-100",
+    },
+    {
+      label: "Gains en attente de virement",
+      value: `${Math.round(gainsEnAttente)} €`,
+      sub: prochainVirement
+        ? `Prochain : ${format(prochainVirement, "d MMM yyyy", { locale: fr })}`
+        : gainsEnAttente > 0
+          ? "Échéance selon fin de location"
+          : undefined,
+      icon: Wallet,
+      color: "text-amber-800",
+      bgColor: "bg-amber-50",
+    },
+  ];
+
+  const quickActions = [
+    {
+      title: "Ajouter une annonce",
+      description: "Publier du matériel sur le catalogue",
+      href: "/proprietaire/ajouter-annonce",
+      icon: PlusCircle,
+    },
+    {
+      title: "Mes annonces",
+      description: "Statut, visibilité, réglages",
+      href: "/proprietaire/annonces",
+      icon: LayoutGrid,
+    },
+    {
+      title: "Mes commandes",
+      description: "Liste, calendrier, check-in / check-out",
+      href: "/proprietaire/commandes",
+      icon: Package,
+    },
+    {
+      title: "Livraisons & retraits",
+      description: "Logistique des locations",
+      href: "/proprietaire/logistique",
+      icon: Truck,
+    },
+    {
+      title: "Paiements",
+      description: "Stripe Connect, moyens de paiement",
+      href: "/proprietaire/paiement",
+      icon: CreditCard,
+    },
+    {
+      title: "Factures",
+      description: "PDF générés automatiquement",
+      href: "/proprietaire/contrat",
+      icon: Receipt,
     },
   ];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-8 pt-6 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
       <AddSalleAutoOpen initialOpen={openAddAnnonce} />
+
+      {/* 1. En-tête */}
       <div className="mb-8">
-        <h1 className="font-landing-heading text-2xl font-bold text-gs-dark">Prestataire · Tableau de bord</h1>
-        <p className="font-landing-body mt-1 text-slate-600">Annonces catalogue, réservations matériel et paiements</p>
+        <h1 className="text-2xl font-bold text-black">Tableau de bord</h1>
+        <p className="mt-1 text-slate-500">
+          Annonces catalogue, réservations reçues, paiements et factures.
+        </p>
       </div>
 
-      <Card id="recevoir-paiements" className="mt-6 border-0 shadow-sm scroll-mt-24">
-        <CardContent className="p-5">
-          {(profile as { stripe_account_id?: string | null } | null)?.stripe_account_id ? (
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-100">
-                  <Banknote className="h-6 w-6 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-black">Paiements activés</p>
-                  <p className="mt-0.5 text-sm text-slate-600">
-                    Gérez vos paiements et vos transferts depuis votre espace Stripe.
-                  </p>
-                </div>
-              </div>
-              <ConnectLoginButton hasStripeAccount={true} className="shrink-0">
-                Ouvrir l&apos;espace Stripe
-              </ConnectLoginButton>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gs-orange/10">
-                  <Banknote className="h-6 w-6 text-gs-orange" />
-                </div>
-                <div>
-                  <p className="font-semibold text-black">Recevoir les paiements</p>
-                  <p className="mt-0.5 text-sm text-slate-600">
-                    Pour encaisser les réservations catalogue, activez Stripe Connect.
-                  </p>
-                </div>
-              </div>
-              <ConnectOnboardingButton className="shrink-0 bg-gs-orange hover:brightness-95">
-                Activer les paiements
-              </ConnectOnboardingButton>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {metrics.map((m) => {
+      {/* 2. KPI */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {kpis.map((m) => {
           const Icon = m.icon;
           return (
             <Card key={m.label} className="border-0 shadow-sm">
-              <CardContent className="flex items-center gap-4 p-5">
-                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${m.bgColor}`}>
-                  <Icon className={`h-6 w-6 ${m.color}`} />
+              <CardContent className="flex items-start gap-3 p-5">
+                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${m.bgColor}`}>
+                  <Icon className={`h-5 w-5 ${m.color}`} />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-black">{m.value}</p>
+                <div className="min-w-0">
+                  <p className="text-xl font-bold tabular-nums text-black">{m.value}</p>
                   <p className="text-sm text-slate-500">{m.label}</p>
+                  {m.sub ? <p className="mt-1 text-xs text-slate-500">{m.sub}</p> : null}
                 </div>
               </CardContent>
             </Card>
@@ -187,127 +288,134 @@ export default async function ProprietaireDashboardPage({
         })}
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="font-landing-heading text-lg text-gs-dark">Mes annonces</CardTitle>
-            <Link href="/proprietaire/annonces" className="text-sm font-medium text-black hover:underline">
-              Voir tout →
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {listings.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-12 text-center">
-                <Inbox className="mb-3 h-12 w-12 text-slate-300" />
-                <p className="text-slate-500">Aucune annonce pour le moment</p>
-                <Link
-                  href="/proprietaire/ajouter-annonce"
-                  className="mt-3 inline-flex h-9 items-center justify-center rounded-md bg-gs-orange px-3 text-sm font-medium text-white transition hover:brightness-95"
-                >
-                  Ajouter une annonce
-                </Link>
-              </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {listings.slice(0, 4).map((l) => (
-                  <div key={l.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                    <div className="relative h-32">
-                      <Image src={pickCoverUrl(l.gs_listing_images)} alt={l.title} fill className="object-cover" />
-                    </div>
-                    <div className="p-4">
-                      <p className="font-semibold text-black">{l.title}</p>
-                      <p className="text-sm text-slate-500">{l.location ?? "—"}</p>
-                      <span
-                        className={`mt-2 inline-block text-sm font-medium ${
-                          l.is_active ? "text-emerald-600" : "text-slate-500"
-                        }`}
-                      >
-                        {l.is_active ? "Visible catalogue" : "Masquée"}
-                      </span>
-                      <div className="mt-3 flex gap-2">
-                        <Link href={`/proprietaire/materiel/listing/${l.id}/reglages`} className="flex-1">
-                          <Button size="sm" className="w-full bg-gs-orange hover:brightness-95">
-                            Réglages
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* 3. À traiter */}
+      {(demandesEnAttente > 0 || !hasStripe) && (
+        <div className="mt-6 space-y-3">
+          {demandesEnAttente > 0 ? (
+            <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-amber-950">
+                <span className="font-semibold">{demandesEnAttente}</span>{" "}
+                {demandesEnAttente === 1
+                  ? "demande de réservation attend votre réponse."
+                  : "demandes de réservation attendent votre réponse."}
+              </p>
+              <Link
+                href="/proprietaire/commandes?status=pending"
+                className="inline-flex h-9 shrink-0 items-center justify-center rounded-md bg-gs-orange px-4 text-sm font-medium text-white transition hover:brightness-95"
+              >
+                Répondre aux demandes
+              </Link>
+            </div>
+          ) : null}
 
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="font-landing-heading text-lg text-gs-dark">Dernières réservations payées</CardTitle>
-            <Link href="/proprietaire/materiel" className="text-sm font-medium text-black hover:underline">
-              Réservations →
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {(recentBookings ?? []).length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-12 text-center">
-                <Banknote className="mb-3 h-12 w-12 text-slate-300" />
-                <p className="text-slate-500">Aucune réservation payée récente</p>
-                <Link href="/proprietaire/materiel" className="mt-3">
-                  <Button size="sm" className="bg-gs-orange hover:brightness-95">
-                    Ouvrir les réservations matériel
-                  </Button>
-                </Link>
+          {!hasStripe ? (
+            <div
+              id="recevoir-paiements"
+              className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between scroll-mt-24"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gs-orange/10">
+                  <Banknote className="h-5 w-5 text-gs-orange" />
+                </div>
+                <div>
+                  <p className="font-semibold text-black">Activer les paiements</p>
+                  <p className="text-sm text-slate-600">
+                    Sans Stripe Connect, vous ne pouvez pas encaisser les réservations catalogue.
+                  </p>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {(recentBookings ?? []).map((b) => {
-                  const row = b as { id: string; total_price?: number; status?: string; created_at: string };
-                  return (
-                    <div
-                      key={row.id}
-                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-3"
-                    >
-                      <div>
-                        <p className="font-medium text-black">
-                          {BOOKING_STATUS_LABEL[row.status ?? ""] ?? row.status ?? "—"}
-                        </p>
-                        <p className="text-sm text-slate-500">
-                          {format(new Date(row.created_at), "d MMM yyyy", { locale: fr })}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-black">{Number(row.total_price ?? 0)} €</p>
-                      </div>
-                    </div>
-                  );
-                })}
-                <Link
-                  href="/proprietaire/paiement"
-                  className="mt-2 block text-center text-sm font-medium text-gs-orange hover:underline"
-                >
-                  Paiements & Stripe →
-                </Link>
+              <ConnectOnboardingButton className="shrink-0 bg-gs-orange hover:brightness-95">
+                Configurer Stripe
+              </ConnectOnboardingButton>
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {/* Stripe connecté : accès rapide (hors grille KPI) */}
+      {hasStripe ? (
+        <Card className="mt-6 border-0 shadow-sm">
+          <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100">
+                <Banknote className="h-5 w-5 text-emerald-600" />
               </div>
-            )}
+              <div>
+                <p className="font-semibold text-black">Paiements activés</p>
+                <p className="text-sm text-slate-600">Virements et relevés dans votre espace Stripe.</p>
+              </div>
+            </div>
+            <ConnectLoginButton hasStripeAccount={true} className="shrink-0">
+              Ouvrir Stripe
+            </ConnectLoginButton>
           </CardContent>
         </Card>
+      ) : null}
+
+      {/* 4. Actions rapides */}
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold text-black">Actions rapides</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {quickActions.map((a) => {
+            const Icon = a.icon;
+            return (
+              <Link key={a.href} href={a.href} className="group block">
+                <Card className="h-full border-0 shadow-sm transition group-hover:shadow-md">
+                  <CardContent className="flex gap-3 p-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-black">{a.title}</p>
+                      <p className="text-sm text-slate-500">{a.description}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
-      <Card className="mt-6 border-0 shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="font-landing-heading text-lg text-gs-dark">Réservations matériel</CardTitle>
+      {/* Activité récente (léger) */}
+      <Card className="mt-8 border-0 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-lg">Dernière activité</CardTitle>
+          <Link
+            href="/proprietaire/commandes"
+            className="text-sm font-medium text-black hover:underline"
+          >
+            Tout voir →
+          </Link>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-12 text-center">
-            <p className="max-w-md text-slate-600">
-              Demandes, check-in/out, cautions, incidents et messagerie pour vos réservations catalogue.
+          {recent.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-slate-200 py-10 text-center text-sm text-slate-500">
+              Aucune réservation payée pour l’instant. Les nouvelles commandes apparaîtront ici.
             </p>
-            <Link
-              href="/proprietaire/materiel"
-              className="mt-4 inline-flex h-9 items-center justify-center rounded-md bg-gs-orange px-4 text-sm font-medium text-white transition hover:brightness-95"
-            >
-              Ouvrir les réservations matériel
-            </Link>
-          </div>
+          ) : (
+            <ul className="space-y-2">
+              {recent.map((row) => (
+                <li key={row.id}>
+                  <Link
+                    href={`/proprietaire/materiel/${row.id}`}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50/80 px-4 py-3 transition hover:bg-slate-100"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-black">
+                        {listingTitles[row.listing_id] ?? "Location catalogue"}
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        {BOOKING_STATUS_LABEL[row.status ?? ""] ?? row.status ?? "—"} ·{" "}
+                        {format(new Date(row.created_at), "d MMM yyyy", { locale: fr })}
+                      </p>
+                    </div>
+                    <span className="shrink-0 font-semibold text-black">{Number(row.total_price ?? 0)} €</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
     </div>

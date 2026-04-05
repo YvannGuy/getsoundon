@@ -23,10 +23,8 @@ export default async function DashboardPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
-        <h1 className="font-landing-heading text-2xl font-bold text-gs-dark">Client · Tableau de bord</h1>
-        <p className="font-landing-body mt-1 text-slate-600">
-          Suivez vos réservations matériel sur GetSoundOn
-        </p>
+        <h1 className="text-2xl font-bold text-black">Client · Tableau de bord</h1>
+        <p className="mt-1 text-slate-500">Suivez vos réservations matériel sur GetSoundOn</p>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -64,7 +62,7 @@ export default async function DashboardPage() {
 
       <Card className="mt-6 border-0 shadow-sm">
         <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0 pb-2">
-          <CardTitle className="font-landing-heading text-lg text-gs-dark">Catalogue</CardTitle>
+          <CardTitle className="text-lg">Catalogue</CardTitle>
           <Link href="/catalogue" className="text-sm font-medium text-black hover:underline">
             Parcourir le catalogue →
           </Link>

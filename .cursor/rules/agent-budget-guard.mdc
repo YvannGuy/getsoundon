@@ -48,7 +48,7 @@ You must default to **COMPOSER** unless there is a strong reason to use an AGENT
 
 ## Required response format before execution
 
-Before suggesting implementation, always answer in this exact format:
+Before suggesting implementation, always answer in this exact format — **sauf si Decision = AGENT** : dans ce cas, place d’abord le bloc utilisateur de la section « Notification utilisateur… », puis enchaîne avec ce format :
 
 Decision: COMPOSER / AGENT / CLARIFY FIRST / DO MANUALLY
 Why: <one short sentence>
@@ -89,3 +89,19 @@ If AGENT is recommended, you must also state:
 - why Composer is not enough
 - what exact output justifies the extra cost
 - what could go wrong if AGENT is used too early
+
+## Notification utilisateur quand la tâche nécessite l’Agent
+
+Cursor ne peut pas afficher une alerte système séparée : **c’est ta réponse qui sert de notification.**
+
+Quand ta classification est **AGENT** (et seulement dans ce cas), tu **dois** commencer ta réponse par le bloc ci-dessous, **avant** toute autre phrase (y compris avant « Decision: » si tu enchaînes avec le format budget). Utilise le français pour ce bloc.
+
+```markdown
+> **Notification — cette tâche nécessite le mode Agent**  
+> *Pourquoi :* [une phrase courte]  
+> *Action :* ouvre un chat en **mode Agent** (ou relance cette demande depuis l’Agent) plutôt que Composer pour ce chantier.
+```
+
+Ensuite seulement : le format « Decision / Why / Scope… » et le détail. Si tu restes en Composer malgré un besoin Agent, rappelle dans ce bloc que l’exécution complète attend le mode Agent.
+
+Quand la classification est **CLARIFY FIRST** mais que, une fois précisée, la tâche sera manifestement un chantier Agent, tu peux ajouter une ligne : *« Une fois le périmètre fixé, ce sera probablement à traiter en mode Agent. »*

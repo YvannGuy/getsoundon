@@ -33,6 +33,7 @@ export default async function AdminLayout({
     utilisateurs: 0,
     conciergeRequests: 0,
     incidentsMateriel: 0,
+    reportsNew: 0,
   };
 
   try {
@@ -49,6 +50,16 @@ export default async function AdminLayout({
 
     badgeCounts.utilisateurs = newUsersCount ?? 0;
     badgeCounts.incidentsMateriel = openIncidents ?? 0;
+
+    try {
+      const { count: newReports } = await admin
+        .from("gs_reports")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "new");
+      badgeCounts.reportsNew = newReports ?? 0;
+    } catch {
+      badgeCounts.reportsNew = 0;
+    }
 
     try {
       const { count } = await admin

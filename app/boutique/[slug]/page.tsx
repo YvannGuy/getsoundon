@@ -6,6 +6,7 @@ import { MapPin } from "lucide-react";
 
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
+import { BoutiqueReportSection } from "@/components/reporting/boutique-report-section";
 import { ProviderStoreHero } from "@/components/storefront/provider-store-hero";
 import { ProviderStorefrontBody } from "@/components/storefront/provider-storefront-body";
 import { siteConfig } from "@/config/site";
@@ -157,6 +158,7 @@ export default async function ProviderStorefrontPage({ params }: PageProps) {
         accountDisplayName={accountDisplayName}
         accountEmail={accountEmail}
       />
+      <BoutiqueReportSection providerId={provider.id} displayName={displayName} />
       <main>
         <ProviderStoreHero
           name={displayName}

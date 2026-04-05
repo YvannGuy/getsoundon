@@ -5,8 +5,10 @@ import { fr } from "date-fns/locale";
 import { Megaphone } from "lucide-react";
 
 import { AdminAnnoncesFilters } from "./annonces-filters";
+import { AdminAnnoncesModerationButtons } from "@/components/admin/admin-annonces-moderation-buttons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
+import { GS_LISTING_MODERATION } from "@/lib/gs-listing-moderation";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -26,9 +28,32 @@ type ListingRow = {
   price_per_day: number | string | null;
   location: string | null;
   is_active: boolean | null;
+  moderation_status: string | null;
+  moderation_rejection_reason: string | null;
   created_at: string;
   updated_at: string;
 };
+
+function normalizeModerationFilter(status: string | undefined): string {
+  const s = (status ?? "all").trim();
+  if (s === "active") return "online";
+  if (s === "inactive") return "hidden";
+  return s || "all";
+}
+
+function listingStateLabel(r: ListingRow): { label: string; className: string } {
+  const mod = r.moderation_status ?? GS_LISTING_MODERATION.APPROVED;
+  if (mod === GS_LISTING_MODERATION.REJECTED) {
+    return { label: "Refusée", className: "bg-red-100 text-red-800" };
+  }
+  if (mod === GS_LISTING_MODERATION.PENDING) {
+    return { label: "En attente", className: "bg-amber-100 text-amber-800" };
+  }
+  if (r.is_active) {
+    return { label: "En ligne", className: "bg-emerald-100 text-emerald-700" };
+  }
+  return { label: "Masquée", className: "bg-slate-100 text-slate-700" };
+}
 
 function sanitize(raw: string): string {
   return raw.trim().replace(/[%_\\]/g, "");
@@ -60,6 +85,7 @@ export default async function AdminAnnoncesPage({
   const page = Math.max(1, parseInt(String(sp.page || "1"), 10) || 1);
   const fromIdx = (page - 1) * PAGE_SIZE;
   const toIdx = fromIdx + PAGE_SIZE - 1;
+  const filterStatus = normalizeModerationFilter(sp.status);
 
   const admin = createAdminClient();
 
@@ -79,13 +105,20 @@ export default async function AdminAnnoncesPage({
   if (!emptyReason) {
     let q = admin
       .from("gs_listings")
-      .select("id, owner_id, title, category, price_per_day, location, is_active, created_at, updated_at", {
-        count: "exact",
-      })
+      .select(
+        "id, owner_id, title, category, price_per_day, location, is_active, moderation_status, moderation_rejection_reason, created_at, updated_at",
+        { count: "exact" }
+      )
       .order("created_at", { ascending: false });
 
-    if (sp.status === "active") q = q.eq("is_active", true);
-    if (sp.status === "inactive") q = q.eq("is_active", false);
+    if (filterStatus === "pending") q = q.eq("moderation_status", GS_LISTING_MODERATION.PENDING);
+    if (filterStatus === "online") {
+      q = q.eq("moderation_status", GS_LISTING_MODERATION.APPROVED).eq("is_active", true);
+    }
+    if (filterStatus === "rejected") q = q.eq("moderation_status", GS_LISTING_MODERATION.REJECTED);
+    if (filterStatus === "hidden") {
+      q = q.eq("moderation_status", GS_LISTING_MODERATION.APPROVED).eq("is_active", false);
+    }
     if (dateFromIso) q = q.gte("created_at", dateFromIso);
     if (dateToIso) q = q.lte("created_at", dateToIso);
 
@@ -120,15 +153,15 @@ export default async function AdminAnnoncesPage({
         <div>
           <h1 className="text-xl font-bold text-black md:text-2xl">Annonces</h1>
           <p className="mt-1 max-w-4xl text-sm text-slate-600">
-            Vue admin des annonces matériel : statut actif/inactif, prestataire, prix et publication. Aligné avec l’espace
-            prestataire.
+            Modération des annonces catalogue : publier, masquer ou refuser, avec notification email au prestataire. Les
+            annonces « en ligne » sont <code className="rounded bg-slate-100 px-1 text-xs">approved</code> + visibles.
           </p>
         </div>
       </div>
 
       <AdminAnnoncesFilters
         initial={{
-          status: sp.status ?? "all",
+          status: filterStatus,
           date_from: sp.date_from ?? "",
           date_to: sp.date_to ?? "",
           search: sp.search ?? "",
@@ -190,7 +223,7 @@ export default async function AdminAnnoncesPage({
                   <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
                     <th className="px-4 py-3">Titre</th>
                     <th className="px-4 py-3">Prestataire</th>
-                    <th className="px-4 py-3">Statut</th>
+                    <th className="px-4 py-3">Modération</th>
                     <th className="px-4 py-3">Prix / jour</th>
                     <th className="px-4 py-3">Localisation</th>
                     <th className="px-4 py-3">Créée le</th>
@@ -201,6 +234,7 @@ export default async function AdminAnnoncesPage({
                   {rows.map((r) => {
                     const owner = ownerMap.get(r.owner_id);
                     const price = Number(r.price_per_day ?? 0);
+                    const st = listingStateLabel(r);
                     return (
                       <tr key={r.id} className="hover:bg-slate-50/80">
                         <td className="max-w-[240px] truncate px-4 py-3 font-semibold text-slate-900" title={r.title}>
@@ -210,30 +244,36 @@ export default async function AdminAnnoncesPage({
                           {owner?.full_name || owner?.email || "—"}
                         </td>
                         <td className="px-4 py-3">
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                              r.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"
-                            }`}
-                          >
-                            {r.is_active ? "En ligne" : "Inactive"}
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${st.className}`}>
+                            {st.label}
                           </span>
+                          {r.moderation_rejection_reason ? (
+                            <p className="mt-1 max-w-[200px] truncate text-[11px] text-slate-500" title={r.moderation_rejection_reason}>
+                              {r.moderation_rejection_reason}
+                            </p>
+                          ) : null}
                         </td>
                         <td className="px-4 py-3 font-semibold text-slate-900">
                           {Number.isFinite(price) ? `${price.toFixed(2)} €` : "—"}
                         </td>
                         <td className="px-4 py-3 text-slate-700">{r.location ?? "—"}</td>
                         <td className="px-4 py-3 text-slate-700">{format(new Date(r.created_at), "d MMM yyyy", { locale: fr })}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-col gap-1.5">
+                        <td className="px-4 py-3 align-top">
+                          <div className="flex max-w-[220px] flex-col gap-2">
                             <span className="text-xs font-mono text-slate-500" title={r.id}>
                               {r.id.slice(0, 8)}…
                             </span>
                             <Link
-                              href={`/dashboard/materiel/${r.id}`}
+                              href={`/items/${r.id}`}
                               className="text-sm font-semibold text-gs-orange underline-offset-2 hover:underline"
                             >
-                              Voir (vue publique)
+                              Voir la fiche
                             </Link>
+                            <AdminAnnoncesModerationButtons
+                              listingId={r.id}
+                              moderationStatus={r.moderation_status}
+                              isActive={r.is_active}
+                            />
                           </div>
                         </td>
                       </tr>
@@ -262,7 +302,8 @@ export default async function AdminAnnoncesPage({
 
 function buildQuery(sp: { status?: string; date_from?: string; date_to?: string; search?: string }) {
   const p = new URLSearchParams();
-  if (sp.status && sp.status !== "all") p.set("status", sp.status);
+  const st = normalizeModerationFilter(sp.status);
+  if (st && st !== "all") p.set("status", st);
   if (sp.date_from?.trim()) p.set("date_from", sp.date_from.trim());
   if (sp.date_to?.trim()) p.set("date_to", sp.date_to.trim());
   if (sp.search?.trim()) p.set("search", sp.search.trim());

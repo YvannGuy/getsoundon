@@ -141,7 +141,7 @@ export default async function DashboardMaterielPage({
     : null;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
       {/* Bannière de confirmation */}
       {paidParam && (
         <div className="mb-6 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4">
@@ -182,7 +182,7 @@ export default async function DashboardMaterielPage({
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Mes commandes</h1>
+          <h1 className="text-2xl font-bold text-black">Mes commandes</h1>
           <p className="mt-1 text-sm text-slate-500">
             {rows.length === 0
               ? "Aucune commande passée pour le moment."
