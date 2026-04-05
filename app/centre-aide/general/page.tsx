@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { PublicSiteShell } from "@/components/landing/public-site-shell";
@@ -11,7 +12,10 @@ export const metadata: Metadata = {
   alternates: { canonical: buildCanonical("/centre-aide/general") },
 };
 
-const FAQ_GENERAL = [
+const linkLegal =
+  "font-semibold text-gs-orange underline-offset-2 hover:underline";
+
+const FAQ_GENERAL: { q: string; a: ReactNode }[] = [
   {
     q: "Qu'est-ce que GetSoundOn ?",
     a: `${siteConfig.name} est une place de marché pour louer ou proposer du matériel événementiel : sono, DJ, lumière, vidéo, micros et services associés (livraison, installation, technicien), en Île-de-France.`,
@@ -22,7 +26,16 @@ const FAQ_GENERAL = [
   },
   {
     q: "La consultation du catalogue est-elle payante ?",
-    a: "Non. Parcourir les annonces est gratuit. Des frais peuvent s’appliquer uniquement lors d’une réservation ou d’un paiement validé, selon les conditions affichées.",
+    a: (
+      <>
+        Non. Parcourir les annonces est gratuit. Pour une réservation payée via la plateforme, un frais de service à la
+        charge du client et une commission à la charge du prestataire peuvent s’appliquer selon les{" "}
+        <Link href="/cgv" className={linkLegal}>
+          CGV
+        </Link>{" "}
+        (article 6 — typiquement 3 % et 15 % du prix de location).
+      </>
+    ),
   },
   {
     q: "Pourquoi l’Île-de-France en priorité ?",
@@ -61,8 +74,32 @@ const FAQ_GENERAL = [
     a: `Contactez ${siteConfig.supportEmail} en décrivant la situation (annonce, réservation, utilisateur). Nous traitons les signalements dans les meilleurs délais.`,
   },
   {
-    q: "Où sont les mentions légales et la politique de confidentialité ?",
-    a: "Liens en pied de page : mentions légales, CGU, CGV le cas échéant, confidentialité et cookies.",
+    q: "Où sont les mentions légales, les CGU / CGV et la politique de confidentialité ?",
+    a: (
+      <>
+        Elles sont accessibles en pied de page sur toutes les pages, et ici :{" "}
+        <Link href="/mentions-legales" className={linkLegal}>
+          Mentions légales
+        </Link>
+        ,{" "}
+        <Link href="/cgu" className={linkLegal}>
+          CGU
+        </Link>
+        ,{" "}
+        <Link href="/cgv" className={linkLegal}>
+          CGV
+        </Link>
+        ,{" "}
+        <Link href="/confidentialite" className={linkLegal}>
+          Politique de confidentialité
+        </Link>
+        . Pour les cookies et le bandeau de consentement :{" "}
+        <Link href="/cookies" className={linkLegal}>
+          Gestion des cookies
+        </Link>
+        .
+      </>
+    ),
   },
   {
     q: "Partenariats ou presse ?",
@@ -70,7 +107,7 @@ const FAQ_GENERAL = [
   },
 ];
 
-function FaqItem({ question, answer }: { question: string; answer: string }) {
+function FaqItem({ question, answer }: { question: string; answer: ReactNode }) {
   return (
     <div className="mb-8">
       <h3 className="font-landing-heading text-base font-bold text-gs-dark">{question}</h3>

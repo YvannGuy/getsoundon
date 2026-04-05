@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Manrope, Montserrat } from "next/font/google";
 import type { Graph, Organization, WebSite, ContactPoint, SearchAction } from "schema-dts";
 
+import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
+
 import { Analytics } from "@/components/Analytics";
 import { CookieProvider } from "@/components/cookies/CookieProvider";
 import { MarketingThirdPartyScripts } from "@/components/cookies/MarketingThirdPartyScripts";
@@ -98,6 +100,7 @@ export default function RootLayout({
           {children}
           <ScrollToTop />
           <Analytics />
+          <VercelAnalytics />
           <MarketingThirdPartyScripts />
         </CookieProvider>
       </body>

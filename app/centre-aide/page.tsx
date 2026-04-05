@@ -72,6 +72,40 @@ export default async function CentreAidePage({
           })}
         </div>
 
+        <div className="mt-12 rounded-2xl border border-gs-line bg-white p-6 shadow-sm sm:p-8">
+          <h2 className="font-landing-heading text-lg font-bold text-gs-dark">Documents légaux</h2>
+          <p className="font-landing-body mt-2 text-sm leading-relaxed text-[#555]">
+            Les mêmes liens figurent en pied de page sur tout le site.
+          </p>
+          <ul className="font-landing-body mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[#555]">
+            <li>
+              <Link href="/mentions-legales" className="font-semibold text-gs-orange hover:underline">
+                Mentions légales
+              </Link>
+            </li>
+            <li>
+              <Link href="/cgu" className="font-semibold text-gs-orange hover:underline">
+                CGU
+              </Link>
+            </li>
+            <li>
+              <Link href="/cgv" className="font-semibold text-gs-orange hover:underline">
+                CGV
+              </Link>
+            </li>
+            <li>
+              <Link href="/confidentialite" className="font-semibold text-gs-orange hover:underline">
+                Confidentialité
+              </Link>
+            </li>
+            <li>
+              <Link href="/cookies" className="font-semibold text-gs-orange hover:underline">
+                Cookies
+              </Link>
+            </li>
+          </ul>
+        </div>
+
         <div className="mt-14 rounded-2xl border border-gs-line bg-white p-6 shadow-sm sm:p-8">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gs-orange/10">

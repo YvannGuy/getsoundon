@@ -18,7 +18,7 @@ const FAQ_PRESTATAIRE = [
   },
   {
     q: "Publier une annonce est-il payant ?",
-    a: "La mise en ligne d’annonces est en principe gratuite. Des frais de plateforme peuvent s’appliquer au moment d’une transaction réussie, selon les règles en vigueur sur GetSoundOn.",
+    a: "La mise en ligne d’annonces est en principe gratuite. En cas de réservation payée via la plateforme, une commission est prélevée sur le prix de location (voir les CGV — typiquement 15 % à la charge du prestataire). Les frais de service payés par le client sont distincts.",
   },
   {
     q: "Comment recevoir des demandes et réservations ?",
@@ -38,7 +38,7 @@ const FAQ_PRESTATAIRE = [
   },
   {
     q: "Comment gérer les échanges avec les clients ?",
-    a: "Ouvrez « Réservations reçues » dans votre tableau de bord prestataire : les échanges liés aux réservations matériel y sont regroupés par réservation.",
+    a: "Ouvrez « Réservations » (matériel) dans votre tableau de bord prestataire : les échanges liés aux réservations matériel y sont regroupés par réservation.",
   },
   {
     q: "Comment modifier ou désactiver mon annonce ?",
@@ -117,7 +117,7 @@ export default function CentreAideProprietairePage() {
             href="/auth?tab=signup&userType=owner"
             className="font-landing-btn inline-flex rounded-lg bg-gs-orange px-5 py-2.5 text-sm text-white transition hover:brightness-105"
           >
-            Louer mon matériel
+            Publier mon matériel
           </Link>
           <Link
             href="/comment-ca-marche"

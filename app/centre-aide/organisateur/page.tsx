@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: buildCanonical("/centre-aide/organisateur") },
 };
 
-const FAQ_LOCATAIRE = [
+const FAQ_CLIENT = [
   {
     q: "Comment trouver du matériel sur GetSoundOn ?",
     a: "Utilisez le catalogue ou la recherche : filtres par catégorie (sono, DJ, lumière, vidéo…), zone et budget. Ouvrez une fiche pour voir photos, tarif à la journée, options et zone d’intervention indicative.",
@@ -26,7 +26,7 @@ const FAQ_LOCATAIRE = [
   },
   {
     q: "Comment fonctionnent les demandes et les échanges avec un prestataire ?",
-    a: "Vous pouvez envoyer une demande ou réserver selon le cas, puis échanger avec le prestataire depuis votre espace (réservations matériel, fil de messages lié à la location) pour préciser dates, retrait ou livraison, etc.",
+    a: "Vous pouvez envoyer une demande ou réserver selon le cas, puis échanger avec le prestataire depuis votre espace (réservations matériel, fil de messages lié à la réservation) pour préciser dates, retrait ou livraison, etc.",
   },
   {
     q: "Puis-je ajouter la livraison ou un technicien ?",
@@ -38,7 +38,7 @@ const FAQ_LOCATAIRE = [
   },
   {
     q: "Que couvre la caution affichée ?",
-    a: "La caution est une garantie ; elle n’est en principe pas débitée comme un paiement de location. Les modalités exactes figurent sur l’annonce et le contrat / conditions associées.",
+    a: "La caution est une garantie ; elle n’est en principe pas débitée comme le paiement principal de la réservation. Les modalités exactes figurent sur l’annonce et le contrat / conditions associées.",
   },
   {
     q: "Puis-je annuler ou modifier des dates ?",
@@ -76,9 +76,9 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
 }
 
 export default function CentreAideOrganisateurPage() {
-  const half = Math.ceil(FAQ_LOCATAIRE.length / 2);
-  const left = FAQ_LOCATAIRE.slice(0, half);
-  const right = FAQ_LOCATAIRE.slice(half);
+  const half = Math.ceil(FAQ_CLIENT.length / 2);
+  const left = FAQ_CLIENT.slice(0, half);
+  const right = FAQ_CLIENT.slice(half);
 
   return (
     <PublicSiteShell>
