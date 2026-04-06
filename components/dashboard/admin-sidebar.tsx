@@ -17,6 +17,7 @@ import {
   Wallet,
   Megaphone,
   Package,
+  ScrollText,
   Settings,
   Users,
   X,
@@ -69,6 +70,7 @@ const navItems = (counts: AdminSidebarBadgeCounts) => [
   { href: "/admin/materiel-annulations", label: "Annulations matériel", icon: Ban },
   { href: "/admin/factures", label: "Factures", icon: FileText },
   { href: "/admin/paiements-virements", label: "Paiements & virements", icon: Wallet },
+  { href: "/admin/audit-logs", label: "Journal d’audit", icon: ScrollText },
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ];
 
