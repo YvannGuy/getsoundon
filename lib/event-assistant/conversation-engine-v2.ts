@@ -1,5 +1,5 @@
 import { v4 as uuid } from "uuid";
-import { ChatMessage, QuestionField, QualificationState } from "./types";
+import { ChatMessage, EventType, QuestionField, QualificationState, ServiceNeed } from "./types";
 import { 
   ConversationEngineState, 
   AssistantActionV2, 
@@ -10,6 +10,7 @@ import {
 } from "./v2-types";
 
 import { normalizeUserText, extractFacts, createCandidateSource } from "./extraction-engine";
+import { formatRequestedItemsForDisplay, mergeRequestedEquipmentState } from "./requested-equipment";
 import { 
   createInitialSlotsState, 
   applyCandidatesToSlots, 
@@ -54,7 +55,12 @@ export function createInitialConversationState(): ConversationEngineState {
       readyToRecommend: false
     },
     extractionLog: [],
-    
+
+    recommendationsTransitionDelivered: false,
+
+    requestedItems: [],
+    excludedEquipmentTypes: [],
+
     isExpanded: false,
     status: "idle"
   };
@@ -104,9 +110,20 @@ export class ConversationEngineImpl implements ConversationEngine {
     // 4. Resolve conflicts in slots
     updatedState = {
       ...updatedState,
-      slots: resolveAllSlotConflicts(updatedState.slots)
+      slots: resolveAllSlotConflicts(updatedState.slots),
     };
-    
+
+    const mergedEq = mergeRequestedEquipmentState(
+      updatedState.requestedItems ?? [],
+      updatedState.excludedEquipmentTypes ?? [],
+      userMessage.content,
+    );
+    updatedState = {
+      ...updatedState,
+      requestedItems: mergedEq.requestedItems,
+      excludedEquipmentTypes: mergedEq.excludedEquipmentTypes,
+    };
+
     // 5. Update dialogue memory for answered questions  
     updatedState = this.updateDialogueMemoryForAnswers(updatedState, extractionBatch);
     
@@ -133,9 +150,16 @@ export class ConversationEngineImpl implements ConversationEngine {
     // 10. Add assistant message to conversation
     updatedState = {
       ...updatedState,
-      messages: [...updatedState.messages, assistantResponse]
+      messages: [...updatedState.messages, assistantResponse],
     };
-    
+
+    if (assistantAction.type === "provide_recommendations") {
+      updatedState = {
+        ...updatedState,
+        recommendationsTransitionDelivered: true,
+      };
+    }
+
     return { updatedState, assistantResponse, lastAction: assistantAction };
   }
   
@@ -264,27 +288,43 @@ export class ConversationEngineImpl implements ConversationEngine {
   
   private decideNextAssistantAction(state: ConversationEngineState): AssistantActionV2 {
     const { qualification, dialogue, slots } = state;
-    
+    const transitionAlreadySent = state.recommendationsTransitionDelivered === true;
+
+    const postRecommendationAck: AssistantActionV2 = {
+      type: "acknowledge_info",
+      strategy: "contextual",
+      priority: 75,
+      reasoning: "Recommendations already introduced; continue dialogue",
+      payload: { postRecommendation: true },
+    };
+
     // Check if we should wrap up based on conversation analysis
     const flowAnalysis = analyzeConversationFlow(dialogue);
     const repeatingPattern = detectRepeatingPattern(dialogue);
-    
+
     if (flowAnalysis.recommendation === "wrap_up" || repeatingPattern.suggestion === "conclude") {
+      if (transitionAlreadySent) {
+        return postRecommendationAck;
+      }
       return {
         type: "provide_recommendations",
         strategy: "direct",
         priority: 100,
-        reasoning: "Conversation needs conclusion due to length or repetition"
+        reasoning: "Conversation needs conclusion due to length or repetition",
       };
     }
-    
-    // If ready to recommend, do it
-    if (qualification.readyToRecommend) {
+
+    if (qualification.readyToRecommend && transitionAlreadySent) {
+      return postRecommendationAck;
+    }
+
+    // If ready to recommend, transition message (une seule fois)
+    if (qualification.readyToRecommend && !transitionAlreadySent) {
       return {
         type: "provide_recommendations",
-        strategy: "direct", 
+        strategy: "direct",
         priority: 95,
-        reasoning: "Sufficient information collected for recommendations"
+        reasoning: "Sufficient information collected for recommendations",
       };
     }
     
@@ -399,22 +439,31 @@ export class ConversationEngineImpl implements ConversationEngine {
     
     switch (action.type) {
       case "ask_question":
-        content = this.generateQuestionText(action.targetField!, action.strategy, state);
+        content = this.prefixFirstTurnRecapIfNeeded(
+          state,
+          this.generateQuestionText(action.targetField!, action.strategy, state),
+        );
         kind = "question";
         break;
-        
+
       case "request_clarification":
-        content = this.generateClarificationText(action.targetField!, state);
+        content = this.prefixFirstTurnRecapIfNeeded(
+          state,
+          this.generateClarificationText(action.targetField!, state),
+        );
         kind = "clarification";
         break;
         
       case "acknowledge_info":
-        content = this.generateAcknowledgmentText(state);
+        content =
+          action.payload && (action.payload as { postRecommendation?: boolean }).postRecommendation
+            ? this.generatePostRecommendationText(state)
+            : this.generateAcknowledgmentText(state);
         kind = "message";
         break;
-        
+
       case "provide_recommendations":
-        content = "Parfait ! Je peux maintenant vous proposer une configuration adaptée à votre événement.";
+        content = this.generateRecommendationIntroText(state);
         kind = "recommendation";
         break;
         
@@ -444,6 +493,77 @@ export class ConversationEngineImpl implements ConversationEngine {
   // GÉNÉRATION DE TEXTE
   // ============================================================================
   
+  private isFirstUserTurn(state: ConversationEngineState): boolean {
+    return state.messages.filter((m) => m.role === "user").length === 1;
+  }
+
+  /** Reformule ce qui est déjà résolu avant la première question de suivi. */
+  private generateUnderstoodRecapParagraph(state: ConversationEngineState): string | null {
+    const parts: string[] = [];
+
+    const et = getSlotValue(state.slots.eventType) as EventType | null;
+    const eventLabels: Partial<Record<EventType, string>> = {
+      conference: "une conférence",
+      wedding: "un mariage",
+      birthday: "un anniversaire",
+      cocktail: "un cocktail",
+      corporate: "un événement corporate",
+      private_party: "une soirée / fête",
+    };
+    if (et) parts.push(eventLabels[et] ?? `un événement (${String(et)})`);
+
+    const gc = getSlotValue(state.slots.guestCount);
+    if (typeof gc === "number") parts.push(`environ ${gc} personnes`);
+
+    const loc = getSlotValue(state.slots.location);
+    if (loc && (loc.city || loc.label)) parts.push(`à ${loc.city ?? loc.label}`);
+
+    const ed = getSlotValue(state.slots.eventDate) as { raw?: string } | null;
+    if (ed?.raw) parts.push(`prévu le ${ed.raw}`);
+
+    const sn = getSlotValue(state.slots.serviceNeeds) as ServiceNeed[] | null;
+    if (sn?.length) {
+      const needLabels: Partial<Record<ServiceNeed, string>> = {
+        sound: "son / enceintes",
+        microphones: "micros",
+        dj: "DJ",
+        lighting: "lumière",
+        led_screen: "écran",
+        video: "vidéo",
+        audiovisual: "audiovisuel",
+        full_service: "clé en main",
+      };
+      parts.push(`besoin : ${sn.map((s) => needLabels[s] ?? s).join(", ")}`);
+    }
+
+    const vt = getSlotValue(state.slots.venueType);
+    if (vt) parts.push(`type de lieu : ${String(vt).replace(/_/g, " ")}`);
+
+    const io = getSlotValue(state.slots.indoorOutdoor);
+    if (io === "indoor") parts.push("en intérieur");
+    if (io === "outdoor") parts.push("en extérieur");
+
+    if (getSlotValue(state.slots.deliveryNeeded) === true) parts.push("avec livraison");
+    if (getSlotValue(state.slots.installationNeeded) === true) parts.push("avec installation");
+    if (getSlotValue(state.slots.technicianNeeded) === true) parts.push("avec technicien");
+
+    if (state.requestedItems?.length) {
+      parts.push(`matériel : ${formatRequestedItemsForDisplay(state.requestedItems)}`);
+    }
+
+    const cx = getSlotValue(state.slots.constraints) as string[] | null;
+    if (cx?.length) parts.push(`précision matériel : ${cx.join(", ")}`);
+
+    if (parts.length === 0) return null;
+    return `Voici ce que j’ai compris : ${parts.join(" — ")}.`;
+  }
+
+  private prefixFirstTurnRecapIfNeeded(state: ConversationEngineState, body: string): string {
+    if (!this.isFirstUserTurn(state)) return body;
+    const recap = this.generateUnderstoodRecapParagraph(state);
+    return recap ? `${recap}\n\n${body}` : body;
+  }
+
   private generateQuestionText(field: QuestionField, strategy: string, state: ConversationEngineState): string {
     const baseQuestions: Record<QuestionField, string[]> = {
       eventType: [
@@ -459,8 +579,8 @@ export class ConversationEngineImpl implements ConversationEngine {
         "Où aura lieu l'événement ?"
       ],
       indoorOutdoor: [
-        "L'événement aura-t-il lieu en intérieur ou en extérieur ?",
-        "Est-ce en salle ou en plein air ?"
+        "Ce sera en intérieur ou en extérieur ?",
+        "Est-ce en salle couverte ou en plein air ?",
       ],
       serviceNeeds: [
         "De quoi avez-vous besoin : son, micros, DJ, éclairage, écran ?",
@@ -514,6 +634,32 @@ export class ConversationEngineImpl implements ConversationEngine {
     return `Pouvez-vous clarifier l'information concernant ${field} ?`;
   }
   
+  private generateRecommendationIntroText(state: ConversationEngineState): string {
+    const et = getSlotValue(state.slots.eventType);
+    const gc = getSlotValue(state.slots.guestCount);
+    const loc = getSlotValue(state.slots.location);
+    const io = getSlotValue(state.slots.indoorOutdoor);
+    const parts: string[] = [];
+    if (et) parts.push(String(et).replace(/_/g, " "));
+    if (typeof gc === "number") parts.push(`environ ${gc} personnes`);
+    if (loc && (loc.city || loc.label)) parts.push(`à ${loc.city ?? loc.label}`);
+    if (io === "indoor") parts.push("en intérieur");
+    if (io === "outdoor") parts.push("en extérieur");
+    const recap = parts.length ? parts.join(", ") : "votre événement";
+    return `Très bien — voici ce que je retiens : ${recap}. La configuration recommandée est détaillée juste en dessous dans l’interface.`;
+  }
+
+  /** Après la transition reco, réponses courtes pour éviter la répétition de la phrase d’intro. */
+  private generatePostRecommendationText(state: ConversationEngineState): string {
+    const variants = [
+      "C’est noté. Souhaitez-vous modifier un détail (date, lieu, nombre d’invités ou besoins son / lumière) ?",
+      "D’accord. Dites-moi si vous voulez affiner le brief ou explorer une autre option.",
+      "Parfait. Je reste disponible pour ajuster la configuration ou répondre à une question précise.",
+    ];
+    const n = (state.dialogue.conversationTurns + state.messages.length) % variants.length;
+    return variants[n];
+  }
+
   private generateAcknowledgmentText(state: ConversationEngineState): string {
     const resolvedFields = Object.entries(state.slots)
       .filter(([_, slot]) => slot.status === "resolved")

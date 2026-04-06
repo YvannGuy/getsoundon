@@ -1,5 +1,6 @@
 import { v4 as uuid } from "uuid";
 import { QuestionField, EventType, ServiceNeed, IndoorOutdoor, VenueType } from "./types";
+import { FirstTurnPatternExtractor } from "./first-turn-extraction";
 import { 
   NormalizedText, 
   ExtractionBatch, 
@@ -17,8 +18,8 @@ export function normalizeUserText(text: string): NormalizedText {
   const cleaned = text
     .toLowerCase()
     .trim()
-    .replace(/[^\w\sàâäéèêëïîôöùûüÿç]/g, ' ')
-    .replace(/\s+/g, ' ');
+    .replace(/[^\w\sàâäéèêëïîôöùûüÿç/\-:]/g, " ")
+    .replace(/\s+/g, " ");
     
   const tokens = cleaned.split(' ').filter(t => t.length > 1);
   
@@ -54,10 +55,11 @@ function generateSemanticSignals(text: string, tokens: string[]): Record<string,
   
   // Service signals
   const servicePatterns = {
-    'sound': ['son', 'sonorisation', 'audio', 'enceinte'],
-    'microphones': ['micro', 'microphone', 'hf', 'sans fil'],
-    'lighting': ['lumière', 'éclairage', 'led', 'spots'],
-    'screen': ['écran', 'projection', 'vidéo']
+    sound: ["son", "sonorisation", "audio", "enceinte", "enceintes", "sono", "colonne"],
+    microphones: ["micro", "micros", "microphone", "hf", "sans fil"],
+    lighting: ["lumière", "éclairage", "led", "spots"],
+    screen: ["écran", "projection", "vidéo"],
+    dj: ["dj", "disc jockey", "platine"],
   };
   
   const allPatterns = { ...eventTypePatterns, ...locationPatterns, ...servicePatterns };
@@ -114,10 +116,12 @@ class ExplicitValueExtractor {
       /([A-Z][a-zA-ZÀ-ÿ]+(?:\s+[A-Z][a-zA-ZÀ-ÿ]+)*)/
     ];
     
-    for (const pattern of locationPatterns) {
-      const match = normalized.original.match(pattern);
-      if (match && match[1] && match[1].length > 2) {
-        const location = match[1].trim();
+    const locLower = normalized.cleaned.match(
+      /(?:à|au|vers)\s+([a-zàâäéèêëïîôöùûüç0-9][a-zàâäéèêëïîôöùûüç0-9\s]{1,48}?)(?=\s+(?:le|la|pour|avec|,|$|\d{1,2}\s|janvier|février|mars|avril|mai|juin))/i,
+    );
+    if (locLower?.[1]) {
+      const location = locLower[1].trim();
+      if (location.length >= 3 && !/^(une|des|un|du|de|la|les)\b/i.test(location)) {
         extractions.push({
           id: uuid(),
           messageId,
@@ -125,19 +129,38 @@ class ExplicitValueExtractor {
           field: "location",
           rawValue: location,
           normalizedValue: { label: location, city: location },
-          confidence: 0.85,
+          confidence: 0.84,
           applied: false,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
         });
-        break;
+      }
+    } else {
+      for (const pattern of locationPatterns) {
+        const match = normalized.original.match(pattern);
+        if (match && match[1] && match[1].length > 2) {
+          const location = match[1].trim();
+          extractions.push({
+            id: uuid(),
+            messageId,
+            extractor: "explicit_value",
+            field: "location",
+            rawValue: location,
+            normalizedValue: { label: location, city: location },
+            confidence: 0.85,
+            applied: false,
+            createdAt: new Date().toISOString(),
+          });
+          break;
+        }
       }
     }
     
     // Extract date
     const datePatterns = [
       /(?:le\s+)?(\d{1,2}\s+(?:janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\s+\d{4})/i,
-      /(\d{1,2}\/\d{1,2}\/\d{2,4})/,
-      /(\d{1,2}-\d{1,2}-\d{2,4})/
+      /(?:le\s+)?(\d{1,2}\s+(?:janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre))\b/i,
+      /(\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?)/,
+      /(\d{1,2}-\d{1,2}-\d{2,4})/,
     ];
     
     for (const pattern of datePatterns) {
@@ -177,7 +200,7 @@ class SemanticExtractor {
     };
     
     for (const [signal, eventType] of Object.entries(eventTypeMapping)) {
-      if (semanticSignals[signal] && semanticSignals[signal] > 0.6) {
+      if (semanticSignals[signal] && semanticSignals[signal] > 0.55) {
         extractions.push({
           id: uuid(),
           messageId,
@@ -185,9 +208,9 @@ class SemanticExtractor {
           field: "eventType",
           rawValue: signal,
           normalizedValue: eventType,
-          confidence: semanticSignals[signal],
+          confidence: Math.max(0.82, semanticSignals[signal]),
           applied: false,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
         });
       }
     }
@@ -224,10 +247,11 @@ class SemanticExtractor {
     
     // Extract service needs
     const serviceMapping: Record<string, ServiceNeed> = {
-      'sound': 'sound',
-      'microphones': 'microphones',
-      'lighting': 'lighting', 
-      'screen': 'led_screen'
+      sound: "sound",
+      microphones: "microphones",
+      lighting: "lighting",
+      screen: "led_screen",
+      dj: "dj",
     };
     
     const detectedServices: ServiceNeed[] = [];
@@ -245,9 +269,9 @@ class SemanticExtractor {
         field: "serviceNeeds",
         rawValue: detectedServices,
         normalizedValue: detectedServices,
-        confidence: 0.8,
+        confidence: 0.85,
         applied: false,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
     }
     
@@ -303,18 +327,21 @@ class ContextualExtractor {
       });
     }
     
-    // Venue type inference
-    const venuePatterns: Record<string, VenueType> = {
-      'appartement': 'apartment',
-      'maison': 'private_home',
-      hôtel: 'hotel',
-      hotel: 'hotel',
-      'salle': 'event_hall',
-      'jardin': 'garden',
-      'terrasse': 'terrace'
-    };
-    
-    for (const [pattern, venueType] of Object.entries(venuePatterns)) {
+    const venuePatterns: Array<[string, VenueType]> = [
+      ["salle des fêtes", "event_hall"],
+      ["salle des fetes", "event_hall"],
+      ["salle municipale", "event_hall"],
+      ["salle polyvalente", "event_hall"],
+      ["appartement", "apartment"],
+      ["maison", "private_home"],
+      ["hôtel", "hotel"],
+      ["hotel", "hotel"],
+      ["salle", "event_hall"],
+      ["jardin", "garden"],
+      ["terrasse", "terrace"],
+    ];
+
+    for (const [pattern, venueType] of venuePatterns) {
       if (cleaned.includes(pattern)) {
         extractions.push({
           id: uuid(),
@@ -367,24 +394,115 @@ class ContextualExtractor {
 }
 
 // ============================================================================
+// FUSION MULTI-EXTRACTEURS (évite conflits serviceNeeds / eventType, etc.)
+// ============================================================================
+
+function consolidateExtractions(entries: ExtractionLogEntry[]): ExtractionLogEntry[] {
+  const byField = new Map<string, ExtractionLogEntry[]>();
+  for (const e of entries) {
+    const list = byField.get(e.field) ?? [];
+    list.push(e);
+    byField.set(e.field, list);
+  }
+
+  const mergeArrays: QuestionField[] = ["serviceNeeds", "constraints"];
+  const takeMaxConf: QuestionField[] = [
+    "eventType",
+    "location",
+    "indoorOutdoor",
+    "venueType",
+    "eventDate",
+    "guestCount",
+  ];
+  const boolFields = ["deliveryNeeded", "installationNeeded", "technicianNeeded"] as const;
+
+  const out: ExtractionLogEntry[] = [];
+
+  for (const field of byField.keys()) {
+    const arr = byField.get(field)!;
+    if (mergeArrays.includes(field as QuestionField)) {
+      const merged: unknown[] = [];
+      const seen = new Set<string>();
+      let maxC = 0;
+      for (const e of arr) {
+        const v = e.normalizedValue;
+        if (Array.isArray(v)) {
+          for (const item of v) {
+            const key = JSON.stringify(item);
+            if (!seen.has(key)) {
+              seen.add(key);
+              merged.push(item);
+            }
+          }
+        }
+        maxC = Math.max(maxC, e.confidence);
+      }
+      if (merged.length > 0) {
+        out.push({
+          ...arr[0],
+          id: uuid(),
+          normalizedValue: merged,
+          rawValue: merged,
+          confidence: Math.min(0.95, maxC + 0.04),
+          extractor: "consolidated",
+          applied: false,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    } else if (takeMaxConf.includes(field as QuestionField)) {
+      const extractorRank = (e: ExtractionLogEntry) => {
+        if (e.extractor === "first_turn_patterns") return 4;
+        if (e.extractor === "explicit_value") return 3;
+        if (e.extractor === "contextual") return 2;
+        if (e.extractor === "semantic") return 1;
+        return 0;
+      };
+      out.push(
+        arr.reduce((a, b) => {
+          const ra = extractorRank(a);
+          const rb = extractorRank(b);
+          if (ra !== rb) return ra > rb ? a : b;
+          return a.confidence >= b.confidence ? a : b;
+        }),
+      );
+    } else if (boolFields.includes(field as (typeof boolFields)[number])) {
+      const anyTrue = arr.some((e) => e.normalizedValue === true);
+      const pick = arr.reduce((a, b) => (a.confidence >= b.confidence ? a : b));
+      out.push({
+        ...pick,
+        id: uuid(),
+        normalizedValue: anyTrue,
+        rawValue: anyTrue,
+        confidence: Math.min(0.95, pick.confidence),
+        applied: false,
+        createdAt: new Date().toISOString(),
+      });
+    } else {
+      out.push(...arr);
+    }
+  }
+  return out;
+}
+
+// ============================================================================
 // PIPELINE PRINCIPAL
 // ============================================================================
 
 export function extractFacts(
-  normalized: NormalizedText, 
+  normalized: NormalizedText,
   messageId: string,
-  context?: { previousExtractions?: ExtractionLogEntry[] }
+  context?: { previousExtractions?: ExtractionLogEntry[] },
 ): ExtractionBatch {
   const allExtractions: ExtractionLogEntry[] = [];
-  
-  // Run all extractors
+
   allExtractions.push(...ExplicitValueExtractor.extract(normalized, messageId));
+  allExtractions.push(...FirstTurnPatternExtractor.extract(normalized, messageId));
   allExtractions.push(...SemanticExtractor.extract(normalized, messageId));
   allExtractions.push(...ContextualExtractor.extract(normalized, messageId, context?.previousExtractions));
-  
-  // Filter duplicates and low confidence
-  const filteredExtractions = deduplicateExtractions(allExtractions);
-  const highConfidenceExtractions = filteredExtractions.filter(e => e.confidence >= 0.5);
+
+  let filteredExtractions = deduplicateExtractions(allExtractions);
+  filteredExtractions = consolidateExtractions(filteredExtractions);
+  const highConfidenceExtractions = filteredExtractions.filter((e) => e.confidence >= 0.5);
   
   return {
     messageId,

@@ -7,6 +7,12 @@ import { RecommendationInput, SetupRecommendationV2, EquipmentLineItem } from ".
 import { defaultRecommendationEngineV2 } from "./recommendation-engine-v2";
 import { getSlotValue } from "./slots-engine";
 import { ConversationEngineState } from "./v2-types";
+import {
+  filterServiceNeedsForExclusions,
+  requestedItemsToExplicitRequests,
+  type RequestedEquipmentItem,
+  type RequestedEquipmentType,
+} from "./requested-equipment";
 
 // ============================================================================
 // CONVERSION BRIEF → INPUT
@@ -66,6 +72,35 @@ export function convertSlotsToRecommendationInput(slots: ConversationEngineState
     // Budget
     budgetRange: getSlotValue(slots.budgetRange) || undefined
   };
+}
+
+/**
+ * Slots + besoins matériel structurés (`requestedItems`) + exclusions pour le moteur V2.
+ */
+function buildRecommendationInputFromParts(
+  slots: ConversationEngineState["slots"],
+  requestedItems?: RequestedEquipmentItem[],
+  excludedEquipmentTypes?: RequestedEquipmentType[],
+): RecommendationInput {
+  const base = convertSlotsToRecommendationInput(slots);
+  const items = requestedItems ?? [];
+  const excluded = excludedEquipmentTypes ?? [];
+  const filteredNeeds = filterServiceNeedsForExclusions(base.serviceNeeds, excluded);
+  return {
+    ...base,
+    serviceNeeds: filteredNeeds,
+    explicitEquipmentRequests: requestedItemsToExplicitRequests(items, excluded),
+  };
+}
+
+export function convertEngineStateToRecommendationInput(
+  state: ConversationEngineState,
+): RecommendationInput {
+  return buildRecommendationInputFromParts(
+    state.slots,
+    state.requestedItems,
+    state.excludedEquipmentTypes,
+  );
 }
 
 // ============================================================================
@@ -191,10 +226,19 @@ export function buildRecommendedSetupsV2(brief: EventBrief): UiRecommendedSetups
 }
 
 /**
- * Version pour système V2 avec slots
+ * Version pour système V2 avec slots uniquement (pas de `requestedItems` / exclusions).
  */
 export function buildRecommendedSetupsFromSlots(slots: ConversationEngineState['slots']): UiRecommendedSetups {
-  const input = convertSlotsToRecommendationInput(slots);
+  const input = buildRecommendationInputFromParts(slots);
+  const recommendationsV2 = defaultRecommendationEngineV2.generateRecommendations(input);
+  return convertV2RecommendationToUI(recommendationsV2);
+}
+
+/** Recommandations à partir de l’état moteur complet (quantités matériel + exclusions). */
+export function buildRecommendedSetupsFromEngineState(
+  state: ConversationEngineState,
+): UiRecommendedSetups {
+  const input = convertEngineStateToRecommendationInput(state);
   const recommendationsV2 = defaultRecommendationEngineV2.generateRecommendations(input);
   return convertV2RecommendationToUI(recommendationsV2);
 }

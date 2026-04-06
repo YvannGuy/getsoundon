@@ -9,7 +9,11 @@ import {
   ConversationEngineImpl 
 } from "@/lib/event-assistant/conversation-engine-v2";
 import { ConversationEngineState } from "@/lib/event-assistant/v2-types";
-import { buildRecommendedSetupsAdaptive as buildRecommendedSetups } from "@/lib/event-assistant/recommendation-bridge";
+import {
+  buildRecommendedSetupsAdaptive,
+  buildRecommendedSetupsFromEngineState,
+  isRecommendationV2Enabled,
+} from "@/lib/event-assistant/recommendation-bridge";
 import { rankProvidersAdaptive as rankProviders } from "@/lib/event-assistant/matching-bridge-v2";
 import { getMockProviders } from "@/lib/event-assistant/mocks";
 import { getSlotValue } from "@/lib/event-assistant/slots-engine";
@@ -189,7 +193,11 @@ function loadFromStorage(): ConversationEngineState | null {
     
     // Validate structure
     if (!parsed?.sessionId || !parsed?.messages || !parsed?.slots) return null;
-    return parsed;
+    return {
+      ...parsed,
+      requestedItems: parsed.requestedItems ?? [],
+      excludedEquipmentTypes: parsed.excludedEquipmentTypes ?? [],
+    };
   } catch {
     return null;
   }
@@ -242,7 +250,12 @@ export function useAssistantConversationV2() {
   // Computed values for compatibility with existing UI
   const brief = useMemo(() => convertSlotsToBrief(state.engine.slots), [state.engine.slots]);
   const providerPool = useMemo(() => getMockProviders(12), []);
-  const recommended = useMemo(() => buildRecommendedSetups(brief), [brief]);
+  const recommended = useMemo(() => {
+    if (isRecommendationV2Enabled()) {
+      return buildRecommendedSetupsFromEngineState(state.engine);
+    }
+    return buildRecommendedSetupsAdaptive(brief);
+  }, [state.engine, brief]);
   const rankedProviders = useMemo(
     () => rankProviders(brief, recommended, providerPool),
     [brief, recommended, providerPool]

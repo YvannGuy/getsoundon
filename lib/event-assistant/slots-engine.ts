@@ -44,8 +44,7 @@ export const FIELD_POLICIES: Record<QuestionField, FieldPolicy> = {
     maxAskedCount: 1,
     minConfidenceToResolve: 0.75,
     allowsInference: true,
-    dependsOn: ["venueType"],
-    conflictResolution: "context_based"
+    conflictResolution: "context_based",
   },
   serviceNeeds: {
     field: "serviceNeeds",

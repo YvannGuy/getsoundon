@@ -3,7 +3,7 @@
 import { Sparkles, Map, Shield } from "lucide-react";
 import { AssistantEntry } from "@/components/assistant/AssistantEntry";
 import { AssistantChat } from "@/components/assistant/AssistantChat";
-import { useAssistantConversationAdapter } from "@/hooks/useAssistantConversationAdapter";
+import { useAssistantRemote } from "@/hooks/useAssistantRemote";
 
 const featureCards = [
   {
@@ -24,7 +24,7 @@ const featureCards = [
 ];
 
 export function LandingSmartEventAssistantV2() {
-  const assistant = useAssistantConversationAdapter();
+  const assistant = useAssistantRemote({ sessionScope: "landing" });
 
   return (
     <section className="bg-gradient-to-b from-gs-beige via-gs-beige to-white px-4 py-14 sm:py-18 lg:py-24">
@@ -34,9 +34,9 @@ export function LandingSmartEventAssistantV2() {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
               Assistant configuration
             </p>
-            {assistant.version === "v2" && (
-              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                Moteur V2
+            {assistant.version === "remote" && (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
+                Serveur · persistance
               </span>
             )}
           </div>
@@ -56,53 +56,34 @@ export function LandingSmartEventAssistantV2() {
             </div>
             
             {/* Debug info for V2 */}
-            {assistant.version === "v2" && assistant.dialogueStats && (
+            {assistant.version === "remote" && assistant.meta && (
               <div className="flex items-center gap-4 text-xs text-slate-500">
-                <span>Tours: {assistant.dialogueStats.conversationTurns}</span>
-                <span>Extractions: {assistant.dialogueStats.extractionCount}</span>
+                <span>Prestataires: {assistant.meta.provider_count}</span>
+                {assistant.meta.matches_stub ? <span className="text-amber-600">Stub catalogue</span> : null}
               </div>
             )}
           </div>
 
           <div className="space-y-5 px-5 pb-6 pt-5 sm:px-6 lg:px-8">
+            {assistant.error ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                {assistant.error}
+              </div>
+            ) : null}
             {!assistant.state.isExpanded ? (
               <AssistantEntry
-                onSubmit={assistant.sendUserMessage}
+                onSubmit={(text) => void assistant.sendUserMessage(text)}
               />
             ) : (
               <AssistantChat
                 state={assistant.state}
                 readyForResults={assistant.readyForResults}
                 rankedProviders={assistant.rankedProviders}
-                sendUserMessage={assistant.sendUserMessage}
+                sendUserMessage={(text) => void assistant.sendUserMessage(text)}
               />
             )}
           </div>
         </div>
-
-        {assistant.version === "v2" && assistant.canUpgrade && (
-          <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
-            <div className="flex items-center gap-2 text-sm text-blue-700">
-              <Sparkles className="h-4 w-4" />
-              <span className="font-medium">Nouveau moteur conversationnel V2 disponible !</span>
-            </div>
-            <p className="mt-1 text-xs text-blue-600">
-              Anti-répétition, meilleure mémoire, qualification plus intelligente.
-            </p>
-            <button
-              onClick={() => {
-                // Enable V2 for this session
-                if (typeof window !== "undefined") {
-                  localStorage.setItem("assistant_force_v2", "true");
-                  window.location.reload();
-                }
-              }}
-              className="mt-2 rounded-md bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700"
-            >
-              Activer V2
-            </button>
-          </div>
-        )}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {featureCards.map((card) => (
@@ -123,54 +104,31 @@ export function LandingSmartEventAssistantV2() {
   );
 }
 
-// Debug component for development
+// Debug component for development (état exposé côté UI bridge uniquement)
 export function AssistantV2Debug() {
-  const assistant = useAssistantConversationAdapter();
-  
-  if (assistant.version !== "v2" || !assistant.engineState) return null;
-  
-  const { slots, dialogue, qualification } = assistant.engineState;
-  
+  const assistant = useAssistantRemote({ sessionScope: "landing" });
+
+  if (assistant.version !== "remote") return null;
+
+  const q = assistant.state.qualification;
+
   return (
     <div className="fixed bottom-4 right-4 w-80 rounded-lg border bg-white p-4 text-xs shadow-lg">
-      <h4 className="font-semibold mb-2">Assistant V2 Debug</h4>
-      
+      <h4 className="font-semibold mb-2">Assistant serveur (debug)</h4>
+
       <div className="space-y-2">
         <div>
-          <span className="font-medium">Qualification:</span> {qualification.stage} ({qualification.completionScore}%)
+          <span className="font-medium">Session:</span> {assistant.sessionId ?? "—"}
         </div>
-        
         <div>
-          <span className="font-medium">Dialogue:</span> {dialogue.conversationTurns} tours, {dialogue.askedQuestions.length} questions
+          <span className="font-medium">Qualification:</span> {q.stage} ({q.completionScore}%)
         </div>
-        
-        <div>
-          <span className="font-medium">Slots résolus:</span>
-          <div className="ml-2">
-            {Object.entries(slots)
-              .filter(([_, slot]) => slot.status === "resolved")
-              .map(([key, slot]) => (
-                <div key={key} className="text-green-600">
-                  {key}: {JSON.stringify(slot.resolvedValue)}
-                </div>
-              ))
-            }
+        {assistant.meta ? (
+          <div>
+            <span className="font-medium">Meta:</span> providers={assistant.meta.provider_count}
+            {assistant.meta.matches_stub ? ", stub" : ""}
           </div>
-        </div>
-        
-        <div>
-          <span className="font-medium">Candidats:</span>
-          <div className="ml-2">
-            {Object.entries(slots)
-              .filter(([_, slot]) => slot.candidates.length > 0 && slot.status !== "resolved")
-              .map(([key, slot]) => (
-                <div key={key} className="text-orange-600">
-                  {key}: {slot.candidates.length} candidats
-                </div>
-              ))
-            }
-          </div>
-        </div>
+        ) : null}
       </div>
     </div>
   );

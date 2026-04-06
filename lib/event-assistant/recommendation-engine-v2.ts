@@ -777,19 +777,17 @@ export class RecommendationEngineV2Impl implements RecommendationEngineV2 {
     const equipmentSection = recommendation[section] as EquipmentLineItem[];
     const sub = request.subcategory;
     
-    // Adapter quantité si spécifiée
+    // Adapter quantité si spécifiée (sans sous-catégorie : 1re ligne de la section, ex. NLP / requestedItems)
     if (request.quantity && request.quantity.kind === "exact") {
-      const relevantItem = (sub
-        ? equipmentSection.find(
-            item =>
-              item.subcategory === sub ||
-              item.subcategory.includes(sub)
-          )
-        : undefined) ??
-        equipmentSection.find(
-          item =>
-            sub != null && item.subcategory.includes(sub)
-        );
+      const relevantItem =
+        sub != null
+          ? equipmentSection.find(
+              item =>
+                item.subcategory === sub ||
+                item.subcategory.includes(sub)
+            ) ??
+            equipmentSection.find(item => item.subcategory.includes(sub))
+          : equipmentSection[0];
 
       if (relevantItem) {
         relevantItem.quantity = request.quantity.value;
@@ -797,9 +795,9 @@ export class RecommendationEngineV2Impl implements RecommendationEngineV2 {
         return true;
       }
     }
-    
+
     // Ajouter équipement si pas présent
-    if (request.subcategory || request.brand) {
+    if (request.subcategory || request.brand || request.quantity?.kind === "exact") {
       const newItem: EquipmentLineItem = {
         category: RECOMMENDATION_SECTION_TO_EQUIPMENT[section],
         subcategory: request.subcategory || request.category,

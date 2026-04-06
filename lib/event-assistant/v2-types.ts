@@ -1,4 +1,5 @@
 import { EventType, ServiceNeed, IndoorOutdoor, VenueType, QuestionField, ChatMessage, QualificationState } from "./types";
+import type { RequestedEquipmentItem, RequestedEquipmentType } from "./requested-equipment";
 
 // ============================================================================
 // SYSTÈME DE SLOTS V2
@@ -142,7 +143,14 @@ export type ConversationEngineState = {
   // Derived results
   recommendations?: unknown[];
   rankedProviders?: unknown[];
-  
+  /** Une fois true, on ne renvoie plus le message de transition « provide_recommendations » (évite la boucle). */
+  recommendationsTransitionDelivered?: boolean;
+
+  /** Besoins matériel structurés (type + quantité), alimentés à chaque message utilisateur. */
+  requestedItems: RequestedEquipmentItem[];
+  /** Types explicitement exclus (négations simples), cumulatif sur la session. */
+  excludedEquipmentTypes: RequestedEquipmentType[];
+
   // UI state
   isExpanded: boolean;
   status: "idle" | "listening" | "processing" | "responding" | "ready" | "error";
