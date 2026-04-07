@@ -23,8 +23,9 @@ import { getSlotValue } from "./slots-engine";
 // ============================================================================
 
 export function convertBriefToMatchingInput(
-  brief: EventBrief, 
-  recommendation?: SetupRecommendationV2
+  brief: EventBrief,
+  recommendation?: SetupRecommendationV2,
+  engineContext?: Pick<ConversationEngineState, "requestedItems" | "excludedEquipmentTypes">,
 ): MatchingInputV2 {
   return {
     eventType: brief.eventType.value || undefined,
@@ -61,13 +62,20 @@ export function convertBriefToMatchingInput(
     technicianRequired: brief.technicianNeeded.value || false,
     
     qualityPreference: inferQualityPreference(brief),
-    proximityPreference: "moderate"
+    proximityPreference: "moderate",
+
+    userRequestedEquipment: engineContext?.requestedItems?.map((i) => ({
+      type: i.type,
+      quantity: i.quantity,
+    })),
+    excludedEquipmentTypes: engineContext?.excludedEquipmentTypes,
   };
 }
 
 export function convertSlotsToMatchingInput(
-  slots: ConversationEngineState['slots'],
-  recommendation?: SetupRecommendationV2
+  slots: ConversationEngineState["slots"],
+  recommendation?: SetupRecommendationV2,
+  engineContext?: Pick<ConversationEngineState, "requestedItems" | "excludedEquipmentTypes">,
 ): MatchingInputV2 {
   const locationValue = getSlotValue(slots.location);
   
@@ -103,7 +111,13 @@ export function convertSlotsToMatchingInput(
     technicianRequired: getSlotValue(slots.technicianNeeded) || false,
     
     qualityPreference: "standard",
-    proximityPreference: "moderate"
+    proximityPreference: "moderate",
+
+    userRequestedEquipment: engineContext?.requestedItems?.map((i) => ({
+      type: i.type,
+      quantity: i.quantity,
+    })),
+    excludedEquipmentTypes: engineContext?.excludedEquipmentTypes,
   };
 }
 
@@ -529,10 +543,15 @@ function convertV2ScoringToV1(match: MatchResult) {
 export function rankProvidersV2(
   brief: EventBrief,
   setup: UiRecommendedSetups | SetupRecommendationV2,
-  providers: MatchingProvider[]
+  providers: MatchingProvider[],
+  engineContext?: Pick<ConversationEngineState, "requestedItems" | "excludedEquipmentTypes">,
 ): Array<{ provider: MatchingProvider; score: any }> {
   // Convertir les inputs
-  const matchingInput = convertBriefToMatchingInput(brief, isV2Setup(setup) ? setup : undefined);
+  const matchingInput = convertBriefToMatchingInput(
+    brief,
+    isV2Setup(setup) ? setup : undefined,
+    engineContext,
+  );
   const providersV2 = convertV1ProvidersToV2(providers);
   
   // Utiliser le moteur V2
@@ -552,11 +571,12 @@ function isV2Setup(setup: UiRecommendedSetups | SetupRecommendationV2): setup is
 export function rankProvidersAdaptive(
   brief: EventBrief,
   setup: UiRecommendedSetups | SetupRecommendationV2,
-  providers: MatchingProvider[]
+  providers: MatchingProvider[],
+  engineContext?: Pick<ConversationEngineState, "requestedItems" | "excludedEquipmentTypes">,
 ): Array<{ provider: MatchingProvider; score: any }> {
   if (isMatchingV2Enabled()) {
     console.debug("🔍 Utilisation moteur matching V2");
-    return rankProvidersV2(brief, setup, providers);
+    return rankProvidersV2(brief, setup, providers, engineContext);
   } else {
     console.debug("🔍 Utilisation moteur matching V1");
     return rankProvidersV1(brief, setup as UiRecommendedSetups, providers);

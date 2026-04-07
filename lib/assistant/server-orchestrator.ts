@@ -55,7 +55,10 @@ export function runAssistantTurn(
     const useStub = process.env.ASSISTANT_USE_PROVIDER_STUB === "1";
     const providers: MatchingProvider[] = useStub ? getMockProviders(12) : [];
     const rankedProviders = providers.length
-      ? rankProvidersV2(brief, recommended, providers)
+      ? rankProvidersV2(brief, recommended, providers, {
+          requestedItems: syncedState.requestedItems,
+          excludedEquipmentTypes: syncedState.excludedEquipmentTypes,
+        })
       : [];
     return {
       engineState: syncedState,
@@ -81,7 +84,12 @@ export function runAssistantTurn(
   const recommended = buildRecommendedSetupsFromEngineState(updatedState);
   const useStub = process.env.ASSISTANT_USE_PROVIDER_STUB === "1";
   const providers: MatchingProvider[] = useStub ? getMockProviders(12) : [];
-  const rankedProviders = providers.length ? rankProvidersV2(brief, recommended, providers) : [];
+  const rankedProviders = providers.length
+    ? rankProvidersV2(brief, recommended, providers, {
+        requestedItems: updatedState.requestedItems,
+        excludedEquipmentTypes: updatedState.excludedEquipmentTypes,
+      })
+    : [];
   const readyForResults = updatedState.qualification.readyToRecommend;
 
   return {

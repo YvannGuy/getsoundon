@@ -756,4 +756,105 @@ describe('Moteur de Matching V2 - Hard Filtering + Scoring Explicable', () => {
       expect(match.scoring!.dimensions.inventory_fit.score).toBe(50);
     });
   });
+
+  describe('User requestedItems + exclusions', () => {
+    it('favorise le prestataire qui couvre la lumière demandée explicitement', () => {
+      const soundOnly = createMockProvider({
+        id: 'sound-only',
+        capabilities: {
+          ...defaultCapabilities,
+          categories: ['sound'],
+          inventory: [
+            { category: 'sound', quantity: 12, qualityTier: 'standard' },
+            { category: 'microphones', quantity: 6, qualityTier: 'standard' },
+          ],
+        },
+      });
+      const soundLight = createMockProvider({
+        id: 'sound-light',
+        capabilities: {
+          ...defaultCapabilities,
+          categories: ['sound', 'lighting'],
+          inventory: [
+            { category: 'sound', quantity: 12, qualityTier: 'standard' },
+            { category: 'microphones', quantity: 6, qualityTier: 'standard' },
+            { category: 'lighting', quantity: 10, qualityTier: 'standard' },
+          ],
+        },
+      });
+
+      const input = createMatchingInput({
+        requiredEquipment: [
+          {
+            category: 'sound_system',
+            subcategory: 'speakers',
+            quantity: 2,
+            label: 'Son',
+            description: '',
+            priority: 'essential',
+            reasoning: '',
+          },
+        ],
+        userRequestedEquipment: [{ type: 'lighting', quantity: 4 }],
+      });
+
+      const results = engine.findMatches(input, [soundOnly, soundLight], {
+        ...DEFAULT_MATCHING_CONFIG,
+        hardFilter: {
+          ...DEFAULT_MATCHING_CONFIG.hardFilter,
+          enableInventoryFiltering: false,
+        },
+        results: {
+          ...DEFAULT_MATCHING_CONFIG.results,
+          minScoreThreshold: 0,
+        },
+        scoring: {
+          ...DEFAULT_MATCHING_CONFIG.scoring,
+          penalizeIncompleteData: false,
+        },
+      });
+
+      expect(results.matches.length).toBe(2);
+      const invSoundOnly = results.matches.find((m) => m.provider.id === 'sound-only')!.scoring!
+        .dimensions.inventory_fit.score;
+      const invSoundLight = results.matches.find((m) => m.provider.id === 'sound-light')!.scoring!
+        .dimensions.inventory_fit.score;
+      expect(invSoundLight).toBeGreaterThan(invSoundOnly);
+      expect(results.matches[0]!.provider.id).toBe('sound-light');
+    });
+
+    it('pénalise les prestataires orientés DJ quand dj est exclu', () => {
+      const djProvider = createMockProvider({
+        id: 'dj-pro',
+        capabilities: {
+          ...defaultCapabilities,
+          categories: ['sound', 'dj'],
+        },
+      });
+      const corporateProvider = createMockProvider({
+        id: 'corp',
+        capabilities: {
+          ...defaultCapabilities,
+          categories: ['sound', 'microphones'],
+        },
+      });
+
+      const input = createMatchingInput({
+        excludedEquipmentTypes: ['dj'],
+      });
+
+      const results = engine.findMatches(input, [djProvider, corporateProvider], {
+        ...DEFAULT_MATCHING_CONFIG,
+        hardFilter: { ...DEFAULT_MATCHING_CONFIG.hardFilter, enableInventoryFiltering: false },
+      });
+
+      const djMatch = results.matches.find((m) => m.provider.id === 'dj-pro')!;
+      const corpMatch = results.matches.find((m) => m.provider.id === 'corp')!;
+      const djSpec = djMatch.scoring!.dimensions.specialization_fit.details as {
+        exclusionPenalty?: number;
+      };
+      expect(djSpec.exclusionPenalty).toBeGreaterThan(0);
+      expect(corpMatch.scoring!.total).toBeGreaterThan(djMatch.scoring!.total);
+    });
+  });
 });

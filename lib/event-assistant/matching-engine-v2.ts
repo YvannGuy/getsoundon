@@ -25,8 +25,14 @@ import {
   estimateSetupComplexity,
   isFullServiceProvider,
   DEFAULT_PROVIDER_TRUST_SCORE,
-  MIN_RATING_COUNT_FOR_RELIABILITY
+  MIN_RATING_COUNT_FOR_RELIABILITY,
+  normalizeCategory,
 } from "./matching-rules-v2";
+import {
+  mergeRecoAndUserInventoryRequirements,
+  userLinesToInventoryRequirements,
+  specializationPenaltyForExcludedEquipment,
+} from "./matching-user-requested";
 
 // ============================================================================
 // IMPLEMENTATION MOTEUR V2
@@ -161,14 +167,11 @@ export class MatchingEngineV2Impl implements MatchingEngineV2 {
       provider.capabilities.inventory &&
       provider.capabilities.inventory.length > 0
     ) {
-      const inventoryFit = calculateInventoryFit(
-        input.requiredEquipment.map(eq => ({
-          category: eq.category,
-          subcategory: eq.subcategory,
-          quantity: eq.quantity
-        })),
-        provider.capabilities.inventory
+      const mergedReq = mergeRecoAndUserInventoryRequirements(
+        input.requiredEquipment,
+        input.userRequestedEquipment,
       );
+      const inventoryFit = calculateInventoryFit(mergedReq, provider.capabilities.inventory);
       
       if (inventoryFit.overallFit < config.hardFilter.minEquipmentCoverage) {
         excludeReasons.push("insufficient_inventory");
@@ -294,30 +297,42 @@ export class MatchingEngineV2Impl implements MatchingEngineV2 {
         details: { status: "unknown" }
       };
     }
-    
-    const inventoryFit = calculateInventoryFit(
-      input.requiredEquipment.map(eq => ({
-        category: eq.category,
-        subcategory: eq.subcategory,
-        quantity: eq.quantity
-      })),
-      provider.capabilities.inventory
+
+    const mergedReq = mergeRecoAndUserInventoryRequirements(
+      input.requiredEquipment,
+      input.userRequestedEquipment,
     );
-    
-    const score = Math.round(inventoryFit.overallFit * 100);
-    
+
+    const inventoryFit = calculateInventoryFit(mergedReq, provider.capabilities.inventory);
+
+    let score = Math.round(inventoryFit.overallFit * 100);
+
+    // Bonus MVP : plusieurs familles demandées explicitement par l’utilisateur et bien couvertes
+    const userOnly = userLinesToInventoryRequirements(input.userRequestedEquipment);
+    const distinctUserBuckets = new Set(userOnly.map((u) => normalizeCategory(u.category))).size;
+    if (distinctUserBuckets >= 2 && userOnly.length > 0) {
+      const userFit = calculateInventoryFit(userOnly, provider.capabilities.inventory);
+      if (userFit.overallFit >= 0.75) {
+        score = Math.min(100, score + 5);
+      }
+    }
+
+    const reqCount = Math.max(mergedReq.length, input.requiredEquipment.length, 1);
+
     return {
       score,
       weight: DEFAULT_MATCHING_CONFIG.scoring.weights.inventory_fit,
       rationale: score >= 80 
-        ? `Excellent fit (${inventoryFit.sufficient.length}/${input.requiredEquipment.length} catégories)`
+        ? `Excellent fit (${inventoryFit.sufficient.length}/${reqCount} catégories)`
         : score >= 60 
           ? "Fit partiel, certains équipements manquants"
           : "Fit insuffisant pour ce setup",
       details: {
         overallFit: inventoryFit.overallFit,
         sufficient: inventoryFit.sufficient.join(", "),
-        missing: inventoryFit.missing.join(", ")
+        missing: inventoryFit.missing.join(", "),
+        mergedRequirementCount: mergedReq.length,
+        userRequestedDistinct: distinctUserBuckets,
       }
     };
   }
@@ -437,16 +452,25 @@ export class MatchingEngineV2Impl implements MatchingEngineV2 {
       input.eventType,
       provider.capabilities.specializations || []
     );
-    
-    const score = Math.round(baseScore * specializationBonus);
-    
+
+    let score = Math.round(baseScore * specializationBonus);
+
+    const exclusionPen = specializationPenaltyForExcludedEquipment(
+      provider,
+      input.excludedEquipmentTypes,
+    );
+    score = Math.max(0, score - exclusionPen);
+
     let rationale = "Prestataire généraliste";
     if (specializationBonus > 1.4) {
       rationale = `Spécialisé ${input.eventType}`;
     } else if (specializationBonus > 1.1) {
       rationale = `Expérience ${input.eventType}`;
     }
-    
+    if (exclusionPen > 0) {
+      rationale = `${rationale} — ajusté (exclusions utilisateur)`;
+    }
+
     return {
       score: Math.min(100, score),
       weight: DEFAULT_MATCHING_CONFIG.scoring.weights.specialization_fit,
@@ -454,11 +478,12 @@ export class MatchingEngineV2Impl implements MatchingEngineV2 {
       details: {
         eventType: input.eventType,
         specializationBonus,
-        providerSpecializations: provider.capabilities.specializations || []
-      }
+        providerSpecializations: provider.capabilities.specializations || [],
+        exclusionPenalty: exclusionPen,
+      },
     };
   }
-  
+
   private scoreProximityFit(provider: ProviderV2, input: MatchingInputV2): DimensionScore {
     if (!input.location.city) {
       return {
@@ -636,7 +661,11 @@ export class MatchingEngineV2Impl implements MatchingEngineV2 {
   }
   
   private calculateCompatibility(provider: ProviderV2, input: MatchingInputV2) {
-    const requiredEquipmentCategories = input.requiredEquipment.map(eq => eq.category);
+    const mergedReq = mergeRecoAndUserInventoryRequirements(
+      input.requiredEquipment,
+      input.userRequestedEquipment,
+    );
+    const requiredEquipmentCategories = mergedReq.map((eq) => eq.category);
     const requiredServices = input.requiredServices.map(s => s.service);
     
     // Equipment coverage

@@ -257,8 +257,12 @@ export function useAssistantConversationV2() {
     return buildRecommendedSetupsAdaptive(brief);
   }, [state.engine, brief]);
   const rankedProviders = useMemo(
-    () => rankProviders(brief, recommended, providerPool),
-    [brief, recommended, providerPool]
+    () =>
+      rankProviders(brief, recommended, providerPool, {
+        requestedItems: state.engine.requestedItems,
+        excludedEquipmentTypes: state.engine.excludedEquipmentTypes,
+      }),
+    [brief, recommended, providerPool, state.engine.requestedItems, state.engine.excludedEquipmentTypes],
   );
 
   const readyForResults = state.engine.qualification.readyToRecommend;

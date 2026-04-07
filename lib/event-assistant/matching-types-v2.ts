@@ -150,6 +150,11 @@ export type MatchingInputV2 = {
   // Préférences
   qualityPreference?: "basic" | "standard" | "premium";
   proximityPreference?: "strict" | "moderate" | "flexible";
+
+  /** Besoins matériel structurés côté utilisateur (assistant) — fusionnés avec requiredEquipment pour l’inventaire */
+  userRequestedEquipment?: Array<{ type: string; quantity: number }>;
+  /** Types exclus (négations simples), pénalisation des profils alignés (ex. pas de DJ) */
+  excludedEquipmentTypes?: string[];
 };
 
 // ============================================================================
