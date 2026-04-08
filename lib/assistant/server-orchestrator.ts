@@ -11,6 +11,7 @@ import type { ChatMessage, MatchingProvider, ProviderScoreBreakdown } from "@/li
 import type { ConversationEngineState } from "@/lib/event-assistant/v2-types";
 import type { UiRecommendedSetups } from "@/lib/event-assistant/types";
 
+import { polishAssistantMessageWithResponsesApi, replaceLastAssistantContent } from "./openai-assistant-llm";
 import { convertSlotsToBrief } from "./slots-to-brief";
 
 /** Anciennes sessions sans flag : déjà un message reco → ne pas rejouer la transition. */
@@ -40,13 +41,13 @@ export type RunAssistantTurnResult = {
 };
 
 /**
- * Un tour complet : moteur V2 + reco (slots → V2) + matching V2.
+ * Un tour complet : moteur V2 + reco + matching V2 ; optionnellement polish du message assistant via OpenAI Responses API.
  * Côté serveur : pas de `window` / localStorage — on force les chemins V2 explicites.
  */
-export function runAssistantTurn(
+export async function runAssistantTurn(
   previousEngineState: ConversationEngineState,
   userText: string,
-): RunAssistantTurnResult {
+): Promise<RunAssistantTurnResult> {
   const syncedState = withRecommendationsTransitionSynced(previousEngineState);
   const trimmed = userText.trim();
   if (!trimmed) {
@@ -92,8 +93,26 @@ export function runAssistantTurn(
     : [];
   const readyForResults = updatedState.qualification.readyToRecommend;
 
+  let engineState = updatedState;
+  const last = updatedState.messages[updatedState.messages.length - 1];
+  if (last?.role === "assistant") {
+    const polished = await polishAssistantMessageWithResponsesApi({
+      engineState: updatedState,
+      brief,
+      recommended,
+      rankedProviders,
+      matchesStub: useStub || providers.length === 0,
+      readyForResults,
+      lastUserMessage: trimmed,
+      draftAssistantMessage: last,
+    });
+    if (polished) {
+      engineState = replaceLastAssistantContent(updatedState, polished);
+    }
+  }
+
   return {
-    engineState: updatedState,
+    engineState,
     brief,
     recommended,
     rankedProviders,

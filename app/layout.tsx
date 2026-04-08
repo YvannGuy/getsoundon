@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Manrope, Montserrat } from "next/font/google";
 import type { Graph, Organization, WebSite, ContactPoint, SearchAction } from "schema-dts";
 
-import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
+import { Analytics } from "@vercel/analytics/next";
 
-import { Analytics } from "@/components/Analytics";
+import { Analytics as GoogleAnalytics } from "@/components/Analytics";
 import { CookieProvider } from "@/components/cookies/CookieProvider";
 import { MarketingThirdPartyScripts } from "@/components/cookies/MarketingThirdPartyScripts";
 import { siteConfig } from "@/config/site";
@@ -99,8 +99,8 @@ export default function RootLayout({
         <CookieProvider>
           {children}
           <ScrollToTop />
+          <GoogleAnalytics />
           <Analytics />
-          <VercelAnalytics />
           <MarketingThirdPartyScripts />
         </CookieProvider>
       </body>

@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       engineState = loaded.snapshot.engine_state;
     }
 
-    const turn = runAssistantTurn(engineState, message);
+    const turn = await runAssistantTurn(engineState, message);
 
     const payload = {
       engine_state: turn.engineState,

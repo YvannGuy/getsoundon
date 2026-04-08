@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     }
 
     const engineState = parsed.data.engine_state as unknown as ConversationEngineState;
-    const turn = runAssistantTurn(engineState, parsed.data.message);
+    const turn = await runAssistantTurn(engineState, parsed.data.message);
 
     return NextResponse.json({
       engine_state: turn.engineState,
